@@ -11,6 +11,11 @@ Hệ thống bao gồm các thành phần chính (Kiến trúc 4 lớp):
 3. **Analysis/Backend**: FastAPI/NestJS xử lý các sự kiện mạng, kiểm tra luật và lưu trữ dữ liệu sự kiện/incident vào MongoDB.
 4. **Dashboard**: ReactJS + D3.js cung cấp biểu đồ và giao diện trực quan thời gian thực.
 
+## 🤝 Quy trình phát triển (Git & GitHub Workflow)
+
+Tất cả các thành viên tham gia phát triển dự án cần tuân thủ quy trình phân nhánh, commit và Pull Request chuẩn. Chi tiết quy trình được viết rõ tại tài liệu:
+👉 **[Quy trình làm việc với Git & GitHub](../GITHUB_WORKFLOW.md)** (nằm ở thư mục gốc của dự án).
+
 ## 🚀 Hướng dẫn cài đặt môi trường
 
 ### 1. Yêu cầu hệ thống
