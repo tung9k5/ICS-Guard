@@ -1,0 +1,25 @@
+[
+    {
+        "_id": "plc-factory-01",
+        "name": "PLC Điều Khiển Trạm Trộn",
+        "type": "plc",
+        "zone": "Zone-A",
+        "ip_address": "192.168.10.15",
+        "mac_address": "00:1A:2B:3C:4D:5E",
+        "status": "online",
+        "risk_score": 50,
+        "api_key": "api_key_plc_01",
+        "baseline_metrics": {
+            "bytes_per_second_max": 25000,
+            "connection_rate_max": 20
+        },
+        "firmware_version": "v2.4.1",
+        "hardware_model": "Siemens S7-1200",
+        "created_at": {
+            "$date": "2026-06-21T00:00:00Z"
+        },
+        "updated_at": {
+            "$date": "2026-06-21T00:00:00Z"
+        }
+    }
+]
