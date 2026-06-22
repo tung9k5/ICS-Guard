@@ -6,7 +6,13 @@ services:
     build:
       context: ./frontend
     ports:
-      - "${FRONTEND_PORT:-3000}:80"
+      # Map chính xác cổng FRONTEND_PORT (ví dụ: 3000 -> 3000)
+      - "${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"
+    volumes:
+      # Mount code để hot-reload
+      - ./frontend:/app
+      # Giữ lại node_modules trong container
+      - /app/node_modules
     depends_on:
       - backend
     restart: always
@@ -17,12 +23,15 @@ services:
       context: ./backend
     ports:
       - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - ./backend:/app
     environment:
       - MONGO_URI=${MONGO_URI}
       - MONGO_DB=${MONGO_DB}
       - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER:-guest}:${RABBITMQ_DEFAULT_PASS:-guest}@rabbitmq:5672/
       - INFLUXDB_URL=http://influxdb:8086
       - JWT_SECRET=${JWT_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
     depends_on:
       - mongodb
       - rabbitmq
@@ -90,6 +99,17 @@ services:
     depends_on:
       - frontend
       - backend
+    restart: always
+
+  # 8. AI Engine (Python/FastAPI)
+  ai-engine:
+    build:
+      context: ./ai-engine
+    ports:
+      - "${AI_ENGINE_PORT:-5000}:5000"
+    volumes:
+      - ./ai-engine:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 5000 --reload
     restart: always
 
 volumes:
