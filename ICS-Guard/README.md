@@ -51,7 +51,7 @@ Tất cả các thành viên tham gia phát triển dự án cần tuân thủ q
    ```
 
 4. **Truy cập các dịch vụ**
-   - Frontend Dashboard: `http://localhost:5173`
+   - Frontend Dashboard: `http://localhost:3000`
    - Backend API: `http://localhost:8000/docs` (Swagger UI)
    - RabbitMQ Management: `http://localhost:15672`
    - MongoDB: Truy cập qua cổng `27017` bằng MongoDB Compass.
