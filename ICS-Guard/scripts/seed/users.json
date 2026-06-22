@@ -5,7 +5,7 @@
         "full_name": "SOC Administrator",
         "role": "admin",
         "is_active": true,
-        "password_hash": "$2b$12$TEMP_HASH",
+        "password_hash": "$2b$12$.E/q4YTSCKapRS3Xfa6daenNDEDqwYoVafUaotE9yF1PEjo7e7sWu",
         "login_failures": {
             "count": 0,
             "last_failed_at": null,
