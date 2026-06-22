@@ -1,2 +1,10 @@
 fastapi
 uvicorn[standard]
+passlib[bcrypt]
+bcrypt==3.2.2
+python-jose[cryptography]
+pydantic[email]
+motor
+python-multipart
+python-dotenv
+pydantic-settings
