@@ -42,10 +42,15 @@ Tất cả các thành viên tham gia phát triển dự án cần tuân thủ q
    - Chạy toàn bộ stack dự án chỉ với một lệnh duy nhất:
    ```bash
    docker-compose up -d --build
+
+   - nếu chạy docker-compose up -d --build thì:
+   - tự cài requirements.txt trong backend
+   - tự cài node modules trong frontend
+   - chỉ chạy lại docker khi frontend và backend cài thêm thư viên mới.
    ```
 
 4. **Truy cập các dịch vụ**
-   - Frontend Dashboard: `http://localhost:3000` (hoặc `http://localhost` qua Nginx proxy)
+   - Frontend Dashboard: `http://localhost:5173`
    - Backend API: `http://localhost:8000/docs` (Swagger UI)
    - RabbitMQ Management: `http://localhost:15672`
    - MongoDB: Truy cập qua cổng `27017` bằng MongoDB Compass.
