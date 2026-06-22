@@ -46,11 +46,12 @@ Tất cả các thành viên tham gia phát triển dự án cần tuân thủ q
    - nếu chạy docker-compose up -d --build thì:
    - tự cài requirements.txt trong backend
    - tự cài node modules trong frontend
+   - tự tạo database kết nối mongodb localhost dán vào là kêt nối db: mongodb://admin:123456@localhost:27017/
    - chỉ chạy lại docker khi frontend và backend cài thêm thư viên mới.
    ```
 
 4. **Truy cập các dịch vụ**
-   - Frontend Dashboard: `http://localhost:5173`
+   - Frontend Dashboard: `http://localhost:3000`
    - Backend API: `http://localhost:8000/docs` (Swagger UI)
    - RabbitMQ Management: `http://localhost:15672`
    - MongoDB: Truy cập qua cổng `27017` bằng MongoDB Compass.
