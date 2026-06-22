@@ -46,6 +46,7 @@ Tất cả các thành viên tham gia phát triển dự án cần tuân thủ q
    - nếu chạy docker-compose up -d --build thì:
    - tự cài requirements.txt trong backend
    - tự cài node modules trong frontend
+   - tự tạo database kết nối mongodb localhost dán vào là kêt nối db: mongodb://admin:123456@localhost:27017/
    - chỉ chạy lại docker khi frontend và backend cài thêm thư viên mới.
    ```
 
