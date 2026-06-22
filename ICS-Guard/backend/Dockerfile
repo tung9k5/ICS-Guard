@@ -1,16 +1,13 @@
-FROM python:3.11-slim
+FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy requirements and install
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY package*.json ./
 
-# Copy source code
+RUN npm install --only=production
+
 COPY . .
 
-# Expose port
-EXPOSE 8000
+EXPOSE 5000
 
-# Run FastAPI app (assuming main.py is in src directory)
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["npm", "start"]
