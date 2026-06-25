@@ -1,13 +1,10 @@
-import dotenv from 'dotenv';
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-
-// Load env variables
-dotenv.config();
 
 // Database context and models
 import { connectDB, User, Device, Rule } from './models/index.js';
@@ -18,6 +15,8 @@ import ipBlockMiddleware from './middlewares/ipBlockMiddleware.js';
 // Services
 import { initTelegramBot } from './services/telegramService.js';
 import { connectQueue } from './services/queueService.js';
+import { connectMqtt } from './services/mqttService.js';
+import { initInflux } from './services/influxService.js';
 
 // Routes
 import authRoutes from './routes/authRoutes.js';
@@ -25,6 +24,7 @@ import userRoutes from './routes/userRoutes.js';
 import deviceRoutes from './routes/deviceRoutes.js';
 import auditRoutes from './routes/auditRoutes.js';
 import incidentRoutes from './routes/incidentRoutes.js';
+import telemetryRoutes from './routes/telemetryRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -57,10 +57,14 @@ app.get('/', (req, res) => {
 
 // Mount Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/v1/auth', authRoutes);
+app.use('/v1/auth', authRoutes);
+app.use('/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/devices', deviceRoutes);
 app.use('/api/audits', auditRoutes);
 app.use('/api/incidents', incidentRoutes);
+app.use('/api/telemetry', telemetryRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {
@@ -121,6 +125,13 @@ const seedDatabase = async () => {
       }
     } else {
       console.log(`[Bootstrap] Users collection already has ${userCount} records. Skipping seeding.`);
+      // Enforce admin_soc password to always be Admin@123 for local usage
+      const adminUser = await User.findOne({ username: 'admin_soc' });
+      if (adminUser) {
+        adminUser.password_hash = await bcrypt.hash('Admin@123', 10);
+        await adminUser.save();
+        console.log('[Bootstrap] Ensured admin_soc password is "Admin@123" in existing database.');
+      }
     }
 
     // Seed Devices
@@ -157,6 +168,12 @@ const seedDatabase = async () => {
 const startServer = async () => {
   // Sync databases & seed default assets
   await seedDatabase();
+
+  // Initialize InfluxDB database
+  await initInflux();
+
+  // Connect to Mosquitto MQTT Broker
+  connectMqtt();
 
   // Connect to RabbitMQ (background task listener)
   try {

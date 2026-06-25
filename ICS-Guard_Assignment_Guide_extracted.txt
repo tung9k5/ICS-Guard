@@ -1,0 +1,342 @@
+BTEC FPT
+Khoa Công nghệ Thông tin
+
+
+ĐỒ ÁN TỐT NGHIỆP
+ICS-GUARD
+Hệ thống Giám sát & Bảo vệ Hạ tầng IoT Quan trọng
+khỏi Tấn công Mạng theo Thời gian Thực
+Hà Nội, 2026
+1. Giới thiệu
+Các hệ thống hạ tầng quan trọng — bao gồm lưới điện, hệ thống cấp nước, mạng giao thông và cơ sở công nghiệp — đang ngày càng tích hợp thiết bị IoT để tự động hoá và tăng hiệu quả vận hành. Tuy nhiên, sự kết nối này cũng mở ra bề mặt tấn công rộng lớn cho các mối đe doạ mạng.
+Thực tế cho thấy các cuộc tấn công vào SCADA, smart meter và PLC công nghiệp có thể gây mất điện diện rộng, ô nhiễm nguồn nước hoặc đình trệ sản xuất. Phần lớn sự cố xảy ra vì không có hệ thống giám sát chuyên biệt đủ khả năng phát hiện sớm và phản ứng tự động.
+Mục tiêu đồ án
+Xây dựng hệ thống ICS-Guard — một nền tảng bảo mật IoT chuyên biệt cho hạ tầng quan trọng — có khả năng: thu thập dữ liệu từ thiết bị IoT công nghiệp, phát hiện hành vi bất thường và tấn công mạng bằng AI, tự động phản ứng và cảnh báo theo thời gian thực, hiển thị trực quan trên Security Operations Dashboard.
+2. Mục tiêu đồ án
+Sinh viên cần xây dựng một hệ thống có đầy đủ các năng lực sau:
+Thu thập dữ liệu từ nhiều thiết bị IoT công nghiệp (cảm biến, camera, PLC, smart meter).
+Truyền dữ liệu an toàn qua giao thức MQTT với mã hoá TLS.
+Phân tích và phân loại sự kiện theo thời gian thực.
+Phát hiện các hành vi tấn công: brute force, DDoS, port scan, man-in-the-middle.
+Tự động phản ứng: cô lập thiết bị, chặn IP, leo thang cảnh báo.
+Hiển thị Security Operations Dashboard với bản đồ topo và biểu đồ thống kê.
+Tích hợp AI phân tích và đưa ra khuyến nghị xử lý sự cố (khuyến khích).
+3. Yêu cầu chức năng
+Module 1: Quản lý Hệ thống & Xác thực
+Cung cấp cơ sở hạ tầng quản trị cho toàn bộ nền tảng, đảm bảo chỉ người dùng hợp lệ mới có quyền thao tác.
+STT
+Chức năng
+Mô tả chi tiết
+Ghi chú
+1
+Đăng nhập / Đăng xuất
+Xác thực bằng JWT, refresh token, brute-force lockout sau 5 lần thất bại
+Bắt buộc
+2
+Quản lý người dùng
+CRUD tài khoản, phân quyền Role-Based (Admin / Analyst / Viewer)
+Bắt buộc
+3
+Quản lý thiết bị IoT
+Đăng ký, cấu hình và theo dõi trạng thái online/offline của thiết bị
+Bắt buộc
+4
+Audit Log hệ thống
+Ghi lại mọi thao tác quản trị với timestamp và user agent
+Bắt buộc
+Module 2: Thu thập Dữ liệu IoT
+Nhận và lưu trữ dữ liệu telemetry từ các thiết bị đầu cuối, đảm bảo tính toàn vẹn và bảo mật trong quá trình truyền tải.
+STT
+Chức năng
+Mô tả chi tiết
+Ghi chú
+1
+MQTT Broker
+Nhận dữ liệu từ thiết bị IoT qua giao thức MQTT (TLS 1.3), hỗ trợ QoS 0/1/2
+Bắt buộc
+2
+REST API Ingestion
+Endpoint nhận log từ agent cài đặt trên máy chủ Linux/Windows
+Bắt buộc
+3
+Device Simulator
+Module giả lập thiết bị IoT để kiểm thử (nhiệt độ, trạng thái, cảnh báo)
+Bắt buộc
+4
+Data Validation
+Kiểm tra schema, chống replay attack, từ chối payload bất hợp lệ
+Bắt buộc
+5
+Time-series Storage
+Lưu dữ liệu telemetry vào InfluxDB với retention policy tự động
+Bắt buộc
+Ví dụ payload từ cảm biến IoT:
+{ "device_id": "plc-01", "location": "Zone-A", "timestamp": "2026-06-08T09:00:00Z",
+  "type": "anomaly", "value": 98.5, "unit": "%CPU", "severity": "HIGH" }
+Module 3: Phân tích & Phát hiện Mối đe doạ
+Phân tích dữ liệu telemetry và log để nhận diện các hành vi nguy hiểm, phân loại theo mức độ nghiêm trọng.
+STT
+Chức năng
+Mô tả chi tiết
+Ghi chú
+1
+Log Parser
+Chuẩn hoá log từ nhiều nguồn (Syslog, JSON, CSV) thành định dạng thống nhất
+Bắt buộc
+2
+Anomaly Detector
+Phát hiện lưu lượng bất thường, spike đột ngột, hành vi ngoài ngưỡng cho phép
+Bắt buộc
+3
+Attack Classifier
+Phân loại tấn công: DDoS, Port Scan, Brute Force, MITM, Malware C2
+Bắt buộc
+4
+CVE Correlator
+Đối chiếu lỗ hổng thiết bị với CVE/NVD database để tính điểm rủi ro
+Bắt buộc
+5
+Risk Scoring
+Tính điểm rủi ro tổng hợp cho từng thiết bị dựa trên lịch sử sự kiện
+Nâng cao
+Module 4: Rule Engine & Tự động phản ứng
+Cho phép cấu hình quy tắc phát hiện và hành động phản ứng tự động khi điều kiện được thoả mãn.
+STT
+Chức năng
+Mô tả chi tiết
+Ghi chú
+1
+Rule Builder
+Giao diện tạo/sửa/xoá rule với điều kiện: field, operator, threshold, time window
+Bắt buộc
+2
+Correlation Engine
+Ghép nối nhiều sự kiện để phát hiện chuỗi tấn công phức tạp
+Bắt buộc
+3
+Auto Block IP
+Tự động thêm IP vào blacklist và gọi API firewall khi rule kích hoạt
+Bắt buộc
+4
+Device Isolation
+Cô lập thiết bị IoT bị nhiễm ra khỏi mạng thông qua API quản trị switch
+Nâng cao
+5
+Playbook Engine
+Thực thi chuỗi hành động định sẵn (playbook) theo loại tấn công
+Nâng cao
+Ví dụ cấu hình Rule:
+Rule: DEVICE_BRUTE_FORCE
+Điều kiện: eventType = "AUTH_FAILED" AND count > 10 AND window = 2 phút AND same device_id
+Hành động: [1] Gửi cảnh báo Severity=Critical  [2] Tự động block IP nguồn  [3] Ghi incident log
+Rule: ABNORMAL_TRAFFIC_SPIKE
+Điều kiện: bytes_per_second > baseline * 5.0 AND duration > 30 giây
+Hành động: [1] Sinh cảnh báo Severity=High  [2] Bắt đầu packet capture  [3] Thông báo SOC team
+Module 5: Security Operations Dashboard
+Giao diện trực quan cho đội vận hành SOC, hiển thị trạng thái toàn bộ hạ tầng và các mối đe doạ hiện hành.
+STT
+Chức năng
+Mô tả chi tiết
+Ghi chú
+1
+Network Topology Map
+Bản đồ topo thiết bị IoT theo zone, màu sắc thể hiện trạng thái an toàn/nguy hiểm
+Bắt buộc
+2
+Threat Heatmap
+Biểu đồ nhiệt hiển thị tần suất và vị trí tấn công theo thời gian
+Bắt buộc
+3
+Alert Feed
+Hàng đợi cảnh báo thời gian thực, lọc theo severity, device, type
+Bắt buộc
+4
+KPI Metrics
+Thẻ tổng hợp: tổng sự kiện, tổng cảnh báo, thiết bị online, MTTD, MTTR
+Bắt buộc
+5
+Historical Analysis
+Biểu đồ xu hướng tấn công theo ngày/tuần, top attacker IP, top thiết bị bị nhắm
+Bắt buộc
+6
+Incident Timeline
+Dòng thời gian sự cố với đầy đủ context: ai làm gì, lúc nào, kết quả ra sao
+Nâng cao
+Module 6: Hệ thống Cảnh báo Đa kênh
+Gửi thông báo kịp thời đến đúng người qua nhiều kênh truyền thông.
+STT
+Chức năng
+Mô tả chi tiết
+Ghi chú
+1
+Email Alert
+Gửi email với nội dung cấu trúc: device, event, severity, recommended action
+Bắt buộc
+2
+Telegram Bot
+Thông báo tức thì qua Telegram với inline button xác nhận hoặc escalate
+Bắt buộc
+3
+In-app Notification
+Chuông thông báo WebSocket trong dashboard, badge đếm chưa đọc
+Bắt buộc
+4
+Severity Routing
+Định tuyến cảnh báo đúng channel theo mức: Info/Medium → email, High/Critical → Telegram
+Bắt buộc
+5
+Zalo OA Integration
+Tích hợp gửi cảnh báo qua Zalo Official Account (bonus)
+Tuỳ chọn
+Ví dụ nội dung cảnh báo:
+[ICS-GUARD ALERT] Severity: CRITICAL
+Device   : plc-factory-01 | Zone A - Nha may so 3
+Event    : DEVICE_BRUTE_FORCE detected
+Source IP: 185.220.101.45 (TOR exit node)
+Time     : 2026-06-08 09:15:33 ICT
+Action   : IP auto-blocked | Device quarantined
+Recommend: Verify physical access log, rotate device credentials
+Module 7: AI Security Assistant (Khuyến khích)
+Tích hợp mô hình ngôn ngữ lớn để phân tích sự cố nâng cao và đưa ra khuyến nghị có giải thích.
+STT
+Chức năng
+Mô tả chi tiết
+Ghi chú
+1
+Log Interpretation
+AI giải thích log kỹ thuật thành ngôn ngữ tự nhiên dễ hiểu cho analyst
+Bonus
+2
+Attack Reasoning
+Phân tích chuỗi sự kiện, suy luận về mục tiêu và kỹ thuật tấn công (MITRE ATT&CK)
+Bonus
+3
+Remediation Advice
+Đề xuất bước khắc phục cụ thể với độ ưu tiên và nguy cơ tái phát
+Bonus
+4
+Report Generator
+Tự động tạo báo cáo sự cố đầy đủ từ timeline dữ liệu thô
+Bonus
+Các API AI có thể sử dụng:
+OpenAI API (GPT-4o)
+Anthropic Claude API
+DeepSeek API (chi phí thấp, phù hợp sinh viên)
+Ollama Local (chạy model offline, không cần API key)
+4. Yêu cầu Phi chức năng
+Ngoài các chức năng nghiệp vụ, hệ thống phải đáp ứng các tiêu chuẩn kỹ thuật và vận hành sau:
+Bảo mật: Toàn bộ API sử dụng JWT authentication; giao tiếp MQTT phải có TLS; mật khẩu lưu bằng bcrypt.
+Hiệu năng: Dashboard phải phản hồi trong vòng 2 giây; pipeline xử lý sự kiện dưới 500ms end-to-end.
+Giao diện: Responsive, hoạt động trên màn hình 1080p và tablet; không cần hỗ trợ IE.
+API Design: Chuẩn RESTful, có Swagger/OpenAPI documentation đầy đủ với ví dụ request/response.
+Logging: Ứng dụng phải ghi đầy đủ log cấu trúc (structured logging) có thể phân tích bằng chính ICS-Guard.
+Mã nguồn: Lưu trên GitHub với commit có ý nghĩa, README rõ ràng và hướng dẫn cài đặt.
+Triển khai: Docker Compose cho toàn bộ stack, có thể khởi động bằng một lệnh duy nhất.
+Kiểm thử: Tối thiểu 60% code coverage cho các module nghiệp vụ cốt lõi.
+5. Công nghệ Đề xuất
+Thành phần
+Công nghệ đề xuất
+Ghi chú
+IoT Protocol
+MQTT (Eclipse Mosquitto)
+TLS 1.3, QoS 1/2, retain message
+Device Simulation
+Python paho-mqtt / Node.js MQTT.js
+Giả lập thiết bị PLC, cảm biến
+Backend API
+FastAPI (Python) hoặc NestJS
+Async, tích hợp tốt với ML stack
+AI/ML Engine
+Python: scikit-learn, PyTorch
+Anomaly detection, classification
+Time-series DB
+InfluxDB
+Lưu telemetry, retention policy
+Event DB
+MongoDB hoặc PostgreSQL
+Lưu sự kiện, rule, incident
+Message Queue
+RabbitMQ hoặc Redis Streams
+Decoupling giữa ingest và analysis
+Frontend
+ReactJS + D3.js / Recharts
+Network graph, heatmap, real-time
+Real-time Push
+WebSocket (Socket.io)
+Cập nhật dashboard tức thì
+Deployment
+Docker + Docker Compose
+Một lệnh khởi động toàn bộ stack
+Firewall/Proxy
+Nginx
+Reverse proxy, rate limiting
+CI/CD (tuỳ chọn)
+GitHub Actions
+Auto build, test, deploy
+Lưu ý: Sinh viên được phép thay thế bất kỳ công nghệ nào trong bảng trên bằng lựa chọn tương đương, nhưng cần giải thích lý do trong báo cáo thiết kế.
+6. Kết quả Đầu ra
+Sinh viên phải nộp đủ các hạng mục sau vào thời hạn quy định:
+Source Code: Toàn bộ mã nguồn trên GitHub (repository public hoặc thêm giáo viên hướng dẫn làm collaborator).
+Database Script: Script khởi tạo schema và dữ liệu mẫu (seeder).
+API Documentation: Swagger UI hoặc Postman Collection đầy đủ, có thể chạy được.
+UML Diagrams: Use Case Diagram, Class Diagram, Sequence Diagram (ít nhất 3 luồng chính), Deployment Diagram.
+Architecture Diagram: Sơ đồ kiến trúc 4 lớp (IoT → Collection → Analysis → Dashboard) với giải thích.
+Testing Report: Kết quả Unit Test, Integration Test, và ít nhất 2 kịch bản kiểm thử bảo mật.
+User Manual: Hướng dẫn cài đặt (Docker Compose), hướng dẫn sử dụng từng module, hướng dẫn tạo rule.
+Báo cáo Đồ án: Tài liệu hoàn chỉnh theo mẫu quy định, tối thiểu 40 trang.
+Slide Thuyết trình: Tối đa 20 slide, bao gồm demo live hoặc video demo 5–10 phút.
+Video Demo: Ghi lại toàn bộ demo chức năng, upload lên YouTube/Drive và đính link vào báo cáo.
+7. Tiêu chí Chấm điểm
+STT
+Tiêu chí
+Trọng số
+Nội dung đánh giá
+1
+Phân tích Yêu cầu
+15%
+Use Case đầy đủ; Requirement Specification rõ ràng, phân loại Functional/Non-functional
+2
+Thiết kế Hệ thống
+20%
+ERD, Class Diagram, Sequence Diagram (min 3), Architecture Diagram IoT 4 lớp
+3
+Lập trình & Chức năng
+30%
+Các module hoạt động đúng; coding convention; API design chuẩn RESTful; bảo mật cơ bản JWT/TLS
+4
+Kiểm thử
+10%
+Unit Test min 60% coverage; Integration Test; ít nhất 1 kịch bản attack simulation có kết quả
+5
+Báo cáo & Thuyết trình
+15%
+Báo cáo đầy đủ, logic; trình bày rõ ràng; demo live thuyết phục; trả lời câu hỏi tốt
+6
+Tính Sáng tạo & Mở rộng
+10%
+AI Assistant; ML anomaly detection; Telegram bot thông minh; Cloud deployment; Zalo OA
+8. Mức độ Mở rộng
+Căn cứ vào khả năng triển khai thực tế, đồ án được phân theo 3 mức độ:
+Mức độ
+Yêu cầu tối thiểu để đạt
+Khá
+Hoàn thành Module 1–4 và Module 6; Dashboard cơ bản với ít nhất 3 loại biểu đồ; Rule Engine tạo được rule đơn giản; cảnh báo Email hoạt động.
+Giỏi
+Hoàn thành tất cả Module 1–6 đầy đủ; Network Topology Map hiển thị thiết bị IoT thời gian thực; Device Simulator giả lập ít nhất 3 loại tấn công; Telegram Bot hoạt động; Auto Block IP khi rule kích hoạt.
+Xuất sắc
+Đủ tiêu chí Giỏi + ít nhất 2 trong số: AI Security Assistant phân tích sự cố; ML model phát hiện anomaly (F1-score > 0.8 trên tập test); Playbook Engine tự động hoá phản ứng; Triển khai trên Cloud (AWS/GCP/Azure) có HTTPS; MITRE ATT&CK mapping.
+9. Gợi ý Kịch bản Demo
+Sinh viên nên chuẩn bị ít nhất 3 kịch bản demo sau trong buổi thuyết trình:
+Kịch bản 1 — Tấn công SSH Brute Force vào thiết bị IoT
+Khởi động Device Simulator, gửi 15 lần AUTH_FAILED liên tiếp trong 1 phút từ cùng IP.
+Hệ thống phát hiện và kích hoạt Rule DEVICE_BRUTE_FORCE.
+Cảnh báo Telegram nhận được trong vòng 10 giây.
+IP nguồn được tự động block; log ghi nhận đầy đủ.
+Kịch bản 2 — Traffic Spike bất thường từ PLC
+Simulator gửi telemetry với bytes_per_second tăng đột ngột gấp 8 lần baseline.
+Anomaly Detector đánh dấu thiết bị nguy hiểm, cập nhật màu đỏ trên Topology Map.
+Incident Timeline ghi lại toàn bộ diễn biến với timestamp chính xác.
+Kịch bản 3 — Báo cáo Compliance và Risk Assessment
+Truy cập màn hình Risk Scoring, xem điểm rủi ro tổng hợp cho từng Zone.
+Xuất báo cáo PDF theo chuẩn NIST CSF với danh sách khuyến nghị ưu tiên.
+— Hết tài liệu hướng dẫn đồ án ICS-Guard —
