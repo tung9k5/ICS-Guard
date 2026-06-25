@@ -36,4 +36,14 @@ export default {
       ...options
     });
   },
+
+  getProfile(options = {}) {
+    return Promise.resolve({ 
+      data: { 
+        username: 'admin_soc', 
+        full_name: 'SOC Administrator',
+        role: 'admin' 
+      } 
+    });
+  },
 };

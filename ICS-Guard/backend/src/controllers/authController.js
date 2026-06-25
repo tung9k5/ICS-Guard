@@ -20,16 +20,24 @@ const generateRefreshToken = (user) => {
 };
 
 export const login = async (req, res) => {
-  const { username, password } = req.body;
+  console.log('[Login Request Body]', req.body);
+  const usernameInput = req.body.username || req.body.username_or_email;
+  const { password } = req.body;
   const rawIp = req.ip || req.connection.remoteAddress;
   const ipAddress = rawIp.replace(/^::ffff:/, '');
 
-  if (!username || !password) {
+  if (!usernameInput || !password) {
     return res.status(400).json({ error: 'Bad Request', message: 'Username and password are required.' });
   }
 
   try {
-    const user = await User.findOne({ username });
+    // Support logging in by either username or email
+    const user = await User.findOne({
+      $or: [
+        { username: usernameInput },
+        { email: usernameInput }
+      ]
+    });
 
     // Handle brute force user lockout check
     if (user) {
@@ -84,6 +92,8 @@ export const login = async (req, res) => {
       message: 'Login successful.',
       accessToken,
       refreshToken,
+      access_token: accessToken,
+      refresh_token: refreshToken,
       user: {
         id: user._id,
         username: user.username,
@@ -156,6 +166,8 @@ export const refresh = async (req, res) => {
     return res.status(200).json({
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
+      access_token: newAccessToken,
+      refresh_token: newRefreshToken,
     });
 
   } catch (error) {

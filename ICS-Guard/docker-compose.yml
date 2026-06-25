@@ -26,6 +26,7 @@ services:
     volumes:
       - ./backend:/app
     environment:
+      - PORT=8000
       - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-123456}@mongodb:27017/${MONGO_DB}?authSource=admin
       - MONGO_DB=${MONGO_DB}
       - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER:-guest}:${RABBITMQ_DEFAULT_PASS:-guest}@rabbitmq:5672/
@@ -112,6 +113,20 @@ services:
       - ./ai-engine:/app
     command: uvicorn main:app --host 0.0.0.0 --port 5000 --reload
     restart: always
+
+  # 9. IoT Device Simulator (Python Asyncio)
+  simulator:
+    build:
+      context: ./iot/simulator
+    environment:
+      - MQTT_HOST=mosquitto
+      - MQTT_PORT=1883
+      - BACKEND_URL=http://backend:8000
+    depends_on:
+      - mosquitto
+      - backend
+    restart: always
+
 
 volumes:
   mongodb_data:
