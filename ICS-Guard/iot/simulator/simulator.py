@@ -5,7 +5,12 @@ import random
 import asyncio
 import urllib.request
 import urllib.parse
+import sys
 import paho.mqtt.client as mqtt
+
+# Ensure stdout handles UTF-8 (emojis and unicode characters) correctly on Windows consoles
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
 # Load env variables manually from root .env if it exists
 dotenv_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
@@ -202,7 +207,11 @@ async def trigger_periodic_brute_force():
 
 async def main():
     device_sim_tasks = [simulate_device(d) for d in DEVICES]
-    await asyncio.gather(*device_sim_tasks)
+    attack_tasks = [
+        trigger_periodic_traffic_spike(),
+        trigger_periodic_brute_force()
+    ]
+    await asyncio.gather(*device_sim_tasks, *attack_tasks)
 
 if __name__ == "__main__":
     try:

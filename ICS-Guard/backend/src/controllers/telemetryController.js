@@ -77,20 +77,20 @@ export const ingestTelemetryLog = async (req, res) => {
           metadata: { source_ip, failedAttempts: failedCount }
         });
 
-        // 5. Send Telegram and Email notifications
+        // 5. Send Telegram and Email notifications asynchronously
         const alertText = `🚨 *CRITICAL SECURITY ALERT: SSH BRUTE FORCE*\n\nDevice: *${device_id}*\nZone: *${zone}*\nAttacker IP: *${source_ip || 'unknown'}*\nAction: *IP Auto-Blocked*\nSeverity: *CRITICAL*`;
         
-        await sendTelegramAlert(alertText, [
+        sendTelegramAlert(alertText, [
           { text: `🚫 Cô lập thiết bị ${device_id}`, callback_data: `quarantine_device:${device_id}` }
-        ]);
-
-        await sendEmailAlert({
+        ]).catch(err => console.error('[TelemetryController] Telegram send error:', err));
+        
+        sendEmailAlert({
           subject: `[ICS-GUARD CRITICAL] SSH Brute Force Attack on ${device_id}`,
           text: `Critical Alert: SSH Brute force attack detected on device ${device_id} from IP ${source_ip}. IP has been auto-blocked.`,
           html: `<h3>Critical Infrastructure Security Alert</h3>
                  <p>SSH Brute force attack detected on device <strong>${device_id}</strong> in <strong>${zone}</strong> from IP <strong>${source_ip}</strong>.</p>
                  <p><strong>Action Taken:</strong> Source IP address has been automatically blocked on application gateways.</p>`
-        });
+        }).catch(err => console.error('[TelemetryController] Email send error:', err));
       }
     }
 
