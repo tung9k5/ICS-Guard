@@ -6,6 +6,7 @@ import asyncio
 import urllib.request
 import urllib.parse
 import sys
+import ssl
 import paho.mqtt.client as mqtt
 
 # Import modularized components
@@ -47,6 +48,18 @@ try:
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1, "ics_guard_simulator")
 except AttributeError:
     client = mqtt.Client("ics_guard_simulator")
+
+# Setup TLS if ca.crt exists
+ca_cert_path = os.path.join(os.path.dirname(__file__), "certs", "ca.crt")
+if os.path.exists(ca_cert_path):
+    print(f"[Simulator] Enabling TLS using CA certificate at: {ca_cert_path}")
+    try:
+        client.tls_set(ca_certs=ca_cert_path)
+        client.tls_insecure_set(True)
+        if MQTT_PORT == 1883:
+            MQTT_PORT = int(os.getenv("MQTT_TLS_PORT", 8883))
+    except Exception as e:
+        print(f"[Simulator] Failed to configure TLS: {e}")
 
 # Global dict to store current anomaly state for each device
 # "normal", "traffic_spike"
