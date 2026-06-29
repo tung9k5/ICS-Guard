@@ -8,6 +8,12 @@ import urllib.parse
 import sys
 import paho.mqtt.client as mqtt
 
+# Import modularized components
+from plc import generate_plc_payload
+from sensor import generate_sensor_payload
+from smart_meter import generate_smart_meter_payload
+from attacks import trigger_periodic_traffic_spike, trigger_periodic_brute_force
+
 # Ensure stdout handles UTF-8 (emojis and unicode characters) correctly on Windows consoles
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
@@ -91,20 +97,6 @@ async def simulate_device(device):
     zone = device["zone"]
     device_type = device["type"]
     
-    # Base configuration values
-    base_temp = 35.0
-    base_cpu = 10.0
-    base_bps = 5000
-    
-    if device_type == "PLC":
-        base_temp = 42.0
-        base_cpu = 15.0
-        base_bps = 12000
-    elif device_type == "SmartMeter":
-        base_temp = 30.0
-        base_cpu = 5.0
-        base_bps = 2000
-    
     topic = f"ics/telemetry/{device_id}"
     
     # Stagger startups randomly
@@ -114,35 +106,14 @@ async def simulate_device(device):
         # Check current anomaly state
         state = device_anomaly_states.get(device_id, "normal")
         
-        if state == "traffic_spike":
-            # Simulate a massive DDoS/Spike
-            temp = base_temp + random.uniform(5.0, 10.0)
-            cpu = base_cpu + random.uniform(40.0, 60.0)
-            bps = int(base_bps * 8 + random.randint(5000, 15000)) # 8x spike
+        # Dispatch to the appropriate generator
+        if device_type == "PLC":
+            payload = generate_plc_payload(device, state)
+        elif device_type == "SmartMeter":
+            payload = generate_smart_meter_payload(device, state)
         else:
-            # Normal variations
-            temp = base_temp + random.uniform(-2.0, 2.0)
-            cpu = base_cpu + random.uniform(-1.0, 1.0)
-            bps = int(base_bps + random.randint(-500, 500))
-        
-        # Keep values in bound
-        cpu = max(0.1, min(100.0, cpu))
-        temp = max(10.0, temp)
-        bps = max(100, bps)
-        
-        payload = {
-            "device_id": device_id,
-            "zone": zone,
-            "device_type": device_type,
-            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-            "metrics": {
-                "temperature": round(temp, 2),
-                "cpu_usage": round(cpu, 2),
-                "bytes_per_second": bps
-            },
-            "status": "active"
-        }
-        
+            payload = generate_sensor_payload(device, state)
+            
         try:
             client.publish(topic, json.dumps(payload), qos=1)
         except Exception as e:
@@ -150,66 +121,11 @@ async def simulate_device(device):
             
         await asyncio.sleep(5.0)
 
-async def trigger_periodic_traffic_spike():
-    """Periodically triggers a traffic spike on a random PLC device to simulate attack."""
-    # Start after 60 seconds
-    await asyncio.sleep(60)
-    plcs = [d for d in DEVICES if d["type"] == "PLC"]
-    
-    while True:
-        target_plc = random.choice(plcs)
-        target_id = target_plc["_id"]
-        
-        print(f"\n🚨 [Simulator Anomaly] Triggering ABNORMAL_TRAFFIC_SPIKE on {target_id}...")
-        device_anomaly_states[target_id] = "traffic_spike"
-        
-        # Spike lasts for 30 seconds
-        await asyncio.sleep(30)
-        
-        print(f"✅ [Simulator Anomaly] Restoring {target_id} to normal traffic levels.\n")
-        device_anomaly_states[target_id] = "normal"
-        
-        # Wait 90 seconds before next spike
-        await asyncio.sleep(90)
-
-async def trigger_periodic_brute_force():
-    """Periodically triggers SSH Brute Force failed logins on a random PLC via REST API."""
-    # Start after 40 seconds
-    await asyncio.sleep(40)
-    plcs = [d for d in DEVICES if d["type"] == "PLC"]
-    attacker_ip = "185.220.101.45"
-    
-    while True:
-        target_plc = random.choice(plcs)
-        target_id = target_plc["_id"]
-        
-        print(f"\n🚨 [Simulator Anomaly] Triggering DEVICE_BRUTE_FORCE attack simulation on {target_id} from IP {attacker_ip}...")
-        
-        # Send 12 failed authentication log packets over REST Ingest quickly (1.5 seconds apart)
-        for i in range(12):
-            payload = {
-                "device_id": target_id,
-                "log_type": "auth",
-                "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                "event": "AUTH_FAILED",
-                "source_ip": attacker_ip,
-                "username": "admin_root"
-            }
-            # Send REST post asynchronously in background to not block loop
-            loop = asyncio.get_event_loop()
-            loop.run_in_executor(None, send_rest_log, payload)
-            await asyncio.sleep(1.5)
-            
-        print(f"✅ [Simulator Anomaly] Completed brute force simulation burst on {target_id}.\n")
-        
-        # Wait 120 seconds before next brute force simulation
-        await asyncio.sleep(120)
-
 async def main():
     device_sim_tasks = [simulate_device(d) for d in DEVICES]
     attack_tasks = [
-        trigger_periodic_traffic_spike(),
-        trigger_periodic_brute_force()
+        trigger_periodic_traffic_spike(DEVICES, device_anomaly_states),
+        trigger_periodic_brute_force(DEVICES, BACKEND_URL, send_rest_log)
     ]
     await asyncio.gather(*device_sim_tasks, *attack_tasks)
 
