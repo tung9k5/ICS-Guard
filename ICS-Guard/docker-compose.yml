@@ -120,7 +120,7 @@ services:
       context: ./iot/simulator
     environment:
       - MQTT_HOST=mosquitto
-      - MQTT_PORT=1883
+      - MQTT_PORT=8883
       - BACKEND_URL=http://backend:8000
     depends_on:
       - mosquitto

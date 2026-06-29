@@ -1,14 +1,39 @@
 import mqtt from 'mqtt';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { writeTelemetry } from './influxService.js';
 import { Alert, Incident, IncidentTimeline } from '../models/index.js';
 import { sendEmailAlert } from './emailService.js';
 import { sendTelegramAlert } from './telegramService.js';
 
-const MQTT_URL = process.env.MQTT_URL || 'mqtt://mosquitto:1883';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+let MQTT_URL = process.env.MQTT_URL || 'mqtt://mosquitto:1883';
 
 export const connectMqtt = () => {
+  const options = {};
+  
+  // Setup TLS configuration if ca.crt exists
+  const caCertPath = path.resolve(__dirname, '../certs/ca.crt');
+  if (fs.existsSync(caCertPath)) {
+    console.log(`[MqttService] Found CA Certificate at: ${caCertPath}. Configuring TLS...`);
+    try {
+      options.ca = fs.readFileSync(caCertPath);
+      options.rejectUnauthorized = false; // Allow self-signed certificate hostname mismatches
+      
+      // Update protocol and port for TLS
+      if (MQTT_URL.startsWith('mqtt://')) {
+        MQTT_URL = MQTT_URL.replace('mqtt://', 'mqtts://').replace(':1883', ':8883');
+      }
+    } catch (err) {
+      console.error('[MqttService] Failed to load CA certificate:', err.message);
+    }
+  }
+
   console.log(`[MqttService] Connecting to MQTT Broker at: ${MQTT_URL}...`);
-  const client = mqtt.connect(MQTT_URL);
+  const client = mqtt.connect(MQTT_URL, options);
 
   client.on('connect', () => {
     console.log(`[MqttService] Connected to MQTT Broker successfully.`);

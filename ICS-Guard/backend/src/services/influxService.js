@@ -11,14 +11,22 @@ console.log(`[InfluxService] Initializing. InfluxDB URL: ${INFLUXDB_URL}, DB: ${
 export const initInflux = async () => {
   try {
     const queryUrl = `${INFLUXDB_URL}/query`;
-    const createDbQuery = encodeURIComponent(`CREATE DATABASE ${DB_NAME}`);
     
+    // 1. Create database
+    const createDbQuery = encodeURIComponent(`CREATE DATABASE ${DB_NAME}`);
     await axios.post(queryUrl, `q=${createDbQuery}`, {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
     console.log(`[InfluxService] InfluxDB database "${DB_NAME}" initialized successfully.`);
+    
+    // 2. Create Retention Policy of 14 days
+    const createRpQuery = encodeURIComponent(`CREATE RETENTION POLICY two_weeks_telemetry ON ${DB_NAME} DURATION 14d REPLICATION 1 DEFAULT`);
+    await axios.post(queryUrl, `q=${createRpQuery}`, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    });
+    console.log(`[InfluxService] InfluxDB retention policy "two_weeks_telemetry" (14d) checked/initialized.`);
   } catch (error) {
-    console.error('[InfluxService] Failed to initialize database, trying again in background...', error.message);
+    console.error('[InfluxService] Failed to initialize database or retention policy:', error.message);
   }
 };
 

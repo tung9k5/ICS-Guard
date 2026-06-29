@@ -1,5 +1,5 @@
 // Script to seed InfluxDB for ICS-Guard
-// Located in backend/database/seed_influx.js
+// Located in backend/src/database/seed_influx.js
 const http = require('http');
 
 const INFLUX_URL = 'http://localhost:8086';

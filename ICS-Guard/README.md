@@ -1,72 +1,145 @@
 # ICS-Guard: Industrial Cyber Security System
 
-Dự án Hệ thống Giám sát và Cảnh báo An toàn Không gian Mạng cho IoT/ICS. 
-*(Phiên bản giản lược thành phần AI để tối ưu tài nguyên phát triển).*
+Dự án Hệ thống Giám sát và Cảnh báo An toàn Không gian Mạng cho các hệ thống công nghiệp IoT/ICS (Industrial Control Systems).
 
-## 🌟 Tổng quan dự án (Architecture)
+---
 
-Hệ thống bao gồm các thành phần chính (Kiến trúc 4 lớp):
-1. **IoT Protocol**: Sử dụng MQTT (Eclipse Mosquitto) cho các thiết bị.
-2. **Collection/Queue**: RabbitMQ (Message Queue) để tiếp nhận sự kiện và InfluxDB lưu Telemetry.
-3. **Analysis/Backend**: FastAPI/NestJS xử lý các sự kiện mạng, kiểm tra luật và lưu trữ dữ liệu sự kiện/incident vào MongoDB.
-4. **Dashboard**: ReactJS + D3.js cung cấp biểu đồ và giao diện trực quan thời gian thực.
+## 🌟 SƠ ĐỒ TRIỂN KHAI HẠ TẦNG UML (DEPLOYMENT DIAGRAM)
+
+Dưới đây là sơ đồ kiến trúc triển khai thực tế của hệ thống dựa trên mạng Docker Bridge, mô tả các container dịch vụ và các cổng giao tiếp:
+
+```mermaid
+graph TD
+    subgraph Host["Máy chủ vật lý (Host OS)"]
+        UserBrowser["Trình duyệt người dùng"]
+        MongoCompass["MongoDB Compass (Quản trị DB)"]
+    end
+
+    subgraph Docker["Hệ sinh thái Docker Compose"]
+        Nginx["Nginx Reverse Proxy (Container)<br>Cổng: 80 / 443"]
+        Frontend["Frontend SOC Dashboard (React)<br>Cổng: 3000"]
+        Backend["Backend Security API (Node.js)<br>Cổng: 8000"]
+        
+        MongoDB["MongoDB Database (Event DB)<br>Cổng: 27017"]
+        InfluxDB["InfluxDB (Time-series Telemetry)<br>Cổng: 8086"]
+        Mosquitto["Mosquitto MQTT Broker (TLS 1.3)<br>Cổng: 8883 (TLS) / 1883"]
+        RabbitMQ["RabbitMQ Message Queue<br>Cổng: 5672 / 15672 (Admin)"]
+        
+        AIEngine["AI Assistant (FastAPI/Llama)<br>Cổng: 5000"]
+        Simulator["Device Simulator (Python)<br>(Chạy ngầm trong network)"]
+    end
+
+    %% Kết nối từ ngoài vào
+    UserBrowser -->|HTTP/HTTPS| Nginx
+    UserBrowser -->|Direct Access| Frontend
+    MongoCompass -->|Connect| MongoDB
+
+    %% Định tuyến Nginx
+    Nginx -->|Proxy /| Frontend
+    Nginx -->|Proxy /api| Backend
+
+    %% Kết nối trong Docker Network
+    Simulator -->|MQTTS / Cổng 8883| Mosquitto
+    Simulator -->|REST API Ingest| Backend
+    
+    Backend -->|Read/Write| MongoDB
+    Backend -->|Write Telemetry| InfluxDB
+    Backend -->|AMQP Queue| RabbitMQ
+    Backend -->|Subscribe Telemetry| Mosquitto
+    Backend -->|Analyze Logs| AIEngine
+```
+
+---
 
 ## 🤝 Quy trình phát triển (Git & GitHub Workflow)
 
 Tất cả các thành viên tham gia phát triển dự án cần tuân thủ quy trình phân nhánh, commit và Pull Request chuẩn. Chi tiết quy trình được viết rõ tại tài liệu:
-👉 **[Quy trình làm việc với Git & GitHub](../GITHUB_WORKFLOW.md)** (nằm ở thư mục gốc của dự án).
+👉 **[Quy trình làm việc với Git & GitHub (docs/GITHUB_WORKFLOW.md)](docs/GITHUB_WORKFLOW.md)**.
 
-## 🚀 Hướng dẫn cài đặt môi trường
+---
+
+## 🚀 HƯỚNG DẪN CÀI ĐẶT & VẬN HÀNH CHI TIẾT (USER MANUAL)
 
 ### 1. Yêu cầu hệ thống
-- Docker & Docker Compose
-- Git
-- Node.js (nếu phát triển Frontend)
-- Python 3.9+ / Node.js (nếu phát triển Backend)
+Trước khi chạy dự án, hãy đảm bảo máy tính của bạn đã cài đặt các công cụ sau:
+*   **Docker & Docker Compose** (Bắt buộc)
+*   **Git** (Để đồng bộ mã nguồn)
+*   **MongoDB Compass** (Khuyến nghị dùng để giám sát dữ liệu)
 
-### 2. Cài đặt
+### 2. Các bước khởi động nhanh (Quick Start)
 
-1. **Clone dự án**
-   ```bash
-   git clone <repo_url>
-   cd ICS-Guard
-   ```
+#### Bước 2.1: Clone dự án và tạo file môi trường `.env`
+```bash
+# Clone dự án
+git clone <repo_url>
+cd ICS-Guard
 
-2. **Cấu hình môi trường**
-   - Copy file `.env.example` thành `.env` và cập nhật các biến môi trường:
-   ```bash
-   cp .env.example .env
-   ```
+# Tạo tệp cấu hình môi trường từ tệp mẫu
+cp .env.example .env
+```
 
-3. **Khởi động hệ thống bằng Docker Compose**
-   - Chạy toàn bộ stack dự án chỉ với một lệnh duy nhất:
-   ```bash
-   docker-compose up -d --build
+#### Bước 2.2: Khởi chạy các container bằng Docker Compose
+```bash
+docker-compose up -d --build
+```
+Lệnh này sẽ tự động:
+*   Tải về và khởi tạo 9 container dịch vụ.
+*   Cài đặt các thư viện phụ thuộc (`requirements.txt` cho Python, `node_modules` cho Frontend/Backend).
+*   Khởi chạy cấu hình mạng Docker Bridge dùng chung.
 
-   - nếu chạy docker-compose up -d --build thì:
-   - tự cài requirements.txt trong backend
-   - tự cài node modules trong frontend
-   - tự tạo database kết nối mongodb localhost dán vào là kêt nối db: mongodb://admin:123456@localhost:27017/
-   - chỉ chạy lại docker khi frontend và backend cài thêm thư viên mới.
-   ```
+#### Bước 2.3: Khởi tạo cơ sở dữ liệu (Database Seeding)
+Hệ thống hỗ trợ nạp dữ liệu mẫu tự động qua API khi khởi chạy lần đầu. Để chủ động cấu hình đầy đủ Index và dữ liệu khởi tạo, bạn có thể thực hiện chạy thủ công trong container:
+```bash
+# Khởi tạo dữ liệu MongoDB (Users, Devices, Rules)
+docker-compose exec backend node src/database/seed_local.js
 
-4. **Truy cập các dịch vụ**
-   - Frontend Dashboard: `http://localhost:3000`
-   - Backend API: `http://localhost:8000/docs` (Swagger UI)
-   - RabbitMQ Management: `http://localhost:15672`
-   - MongoDB: Truy cập qua cổng `27017` bằng MongoDB Compass.
+# Khởi tạo dữ liệu InfluxDB & Retention Policy 14 ngày
+docker-compose exec backend node src/database/seed_influx.js
+```
 
-## 📁 Cấu trúc thư mục
-- `/frontend`: Mã nguồn giao diện (ReactJS).
-- `/backend`: Mã nguồn API (FastAPI/NestJS).
-- `/iot`: Code giả lập thiết bị IoT (Simulator).
-- `/infrastructure`: Cấu hình Docker, Nginx, Mosquitto, database scripts.
-- `/docs`: Tài liệu thiết kế UML, báo cáo.
-- `/tests`: Các kịch bản kiểm thử (unit test, integration test, bảo mật).
+---
 
-## 🛠 Công nghệ sử dụng
-- **Backend API**: FastAPI / NestJS
-- **Frontend Dashboard**: ReactJS, D3.js, Recharts
-- **Database**: MongoDB (Event DB), InfluxDB (Time-series)
-- **Message Broker & IoT**: RabbitMQ, MQTT (Mosquitto)
-- **Deployment**: Docker + Docker Compose, Nginx
+### 3. KIỂM TRA BẢO MẬT & KÊNH TRUYỀN TLS 1.3
+
+Kênh truyền MQTT giữa thiết bị giả lập và hệ thống được mã hóa an toàn qua giao thức TLS 1.3 (Cổng `8883`). Để xác thực:
+
+1.  **Xem log của container Simulator:**
+    ```bash
+    docker-compose logs -f simulator
+    ```
+    Nếu kết nối thành công, bạn sẽ thấy log in ra dạng:
+    ```text
+    [Simulator] Enabling TLS using CA certificate at: /app/certs/ca.crt
+    [Simulator] Connected to MQTT Broker successfully.
+    ```
+2.  **Xem log kết nối TLS của Broker Mosquitto:**
+    ```bash
+    docker-compose logs -f mosquitto
+    ```
+    Màn hình log sẽ xuất hiện thông tin chấp nhận kết nối TLS 1.3:
+    ```text
+    New connection from simulator on port 8883.
+    OpenSSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384
+    ```
+
+---
+
+### 4. ĐỊA CHỈ TRUY CẬP CÁC DỊCH VỤ
+
+| Dịch vụ | Địa chỉ truy cập | Tài khoản / Cấu hình mặc định |
+| :--- | :--- | :--- |
+| **SOC Dashboard (Frontend)** | [http://localhost:3000](http://localhost:3000) | Giao diện giám sát thời gian thực SOC |
+| **Backend API Swagger** | [http://localhost:8000/docs](http://localhost:8000/docs) | Tài liệu kiểm thử API tự động |
+| **RabbitMQ Management** | [http://localhost:15672](http://localhost:15672) | User/Pass: `guest` / `guest` |
+| **MongoDB Express** | `localhost:27017` | Kết nối qua Mongo Compass: `mongodb://admin:123456@localhost:27017/` |
+
+---
+
+## 📁 Cấu trúc thư mục dự án
+
+*   `/frontend`: Mã nguồn giao diện giám sát SOC (ReactJS + Vite).
+*   `/backend`: API dịch vụ và phân tích sự cố (NodeJS Express).
+*   `/iot/simulator`: Bộ giả lập thiết bị công nghiệp (PLC, Sensor, Smart Meter) và kịch bản tấn công.
+*   `/infrastructure`: Tệp cấu hình các container (Nginx, Mosquitto TLS, MongoDB init).
+*   `/docs`: Chứa toàn bộ báo cáo, hướng dẫn công việc và kế hoạch KPI.
+*   `/tests`: Thư mục chứa các kịch bản kiểm thử bảo mật và tích hợp.

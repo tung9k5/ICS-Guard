@@ -8,10 +8,50 @@ import { sendTelegramAlert } from '../services/telegramService.js';
 const bruteForceAttempts = {};
 
 export const ingestTelemetryLog = async (req, res) => {
-  const { device_id, log_type, event, source_ip, username } = req.body;
+  const { device_id, log_type, event, source_ip, username, timestamp } = req.body;
 
-  if (!device_id) {
-    return res.status(400).json({ error: 'Bad Request', message: 'device_id is required.' });
+  // 1. Basic JSON Schema validation
+  if (!device_id || typeof device_id !== 'string' || device_id.trim() === '') {
+    return res.status(400).json({ error: 'Bad Request', message: 'device_id is required and must be a non-empty string.' });
+  }
+
+  if (log_type && typeof log_type !== 'string') {
+    return res.status(400).json({ error: 'Bad Request', message: 'log_type must be a string.' });
+  }
+
+  if (event && typeof event !== 'string') {
+    return res.status(400).json({ error: 'Bad Request', message: 'event must be a string.' });
+  }
+
+  if (source_ip && typeof source_ip !== 'string') {
+    return res.status(400).json({ error: 'Bad Request', message: 'source_ip must be a string.' });
+  }
+
+  if (username && typeof username !== 'string') {
+    return res.status(400).json({ error: 'Bad Request', message: 'username must be a string.' });
+  }
+
+  // 2. Replay Attack Protection via Timestamp Validation
+  if (timestamp) {
+    if (typeof timestamp !== 'string') {
+      return res.status(400).json({ error: 'Bad Request', message: 'timestamp must be a string.' });
+    }
+
+    const logTime = new Date(timestamp);
+    if (isNaN(logTime.getTime())) {
+      return res.status(400).json({ error: 'Bad Request', message: 'Invalid timestamp format.' });
+    }
+
+    const now = Date.now();
+    const driftLimitMs = 5 * 60 * 1000; // 5 minutes clock drift / window
+
+    if (Math.abs(now - logTime.getTime()) > driftLimitMs) {
+      console.warn(`[TelemetryController] Replay Attack Blocked: timestamp drift is ${Math.abs(now - logTime.getTime())}ms. Payload timestamp: ${timestamp}, Server time: ${new Date().toISOString()}`);
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'Telemetry log rejected due to timestamp validation failure (potential Replay Attack).'
+      });
+    }
   }
 
   try {

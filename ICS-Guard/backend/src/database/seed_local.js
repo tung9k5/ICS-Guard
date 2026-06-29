@@ -1,5 +1,5 @@
 // Script to seed local MongoDB for ICS-Guard
-// Located in backend/database/seed_local.js
+// Located in backend/src/database/seed_local.js
 const fs = require('fs');
 const path = require('path');
 
@@ -13,7 +13,7 @@ console.log(`Connecting to database: ${dbName}...`);
 // Function to load and parse JSON using EJSON for MongoDB types
 function loadSeedData(filename) {
     // Locate the seed files in the root scripts/seed folder
-    const filePath = path.resolve(__dirname, '..', '..', 'scripts', 'seed', filename);
+    const filePath = path.resolve(__dirname, '..', '..', '..', 'scripts', 'seed', filename);
     console.log(`Reading seed file from: ${filePath}...`);
     const content = fs.readFileSync(filePath, 'utf8');
     return EJSON.parse(content);
@@ -75,7 +75,7 @@ try {
     db.audit_logs.createIndex({ timestamp: -1 });
     db.audit_logs.createIndex({ user_id: 1 });
     
-    console.log('✅ Database initialization and seeding completed successfully!');
+    print('✅ Database initialization and seeding completed successfully!');
 } catch (error) {
     console.error('❌ Error during seeding database:', error);
     quit(1);
