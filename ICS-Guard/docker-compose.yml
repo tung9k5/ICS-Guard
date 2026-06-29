@@ -111,6 +111,9 @@ services:
       - "${AI_ENGINE_PORT:-5000}:5000"
     volumes:
       - ./ai-engine:/app
+    environment:
+      - AI_MODEL_NAME=${AI_MODEL_NAME}
+      - OLLAMA_URL=${OLLAMA_URL}
     command: uvicorn main:app --host 0.0.0.0 --port 5000 --reload
     restart: always
 

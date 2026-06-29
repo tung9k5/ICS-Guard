@@ -1,39 +1,67 @@
-import requests
+import httpx
 import json
+import re
+import logging
 from datetime import datetime
 from typing import List
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+
 from app.core.models import Incident, Alert, AIAnalysis, MitreAttackMapping, RemediationAdvice
 from app.core.constants import Severity
 from app.assistant.prompts import get_incident_analysis_prompt
 from app.core.config import settings
 
-def analyze_incident(incident: Incident, alerts: List[Alert], model_name: str = None) -> AIAnalysis:
+# Setup basic logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def clean_json_string(text: str) -> str:
+    """Loại bỏ các block markdown có thể sinh ra từ LLM để parse JSON an toàn."""
+    text = re.sub(r'```json\n?', '', text)
+    text = re.sub(r'```\n?', '', text)
+    return text.strip()
+
+@retry(
+    stop=stop_after_attempt(3), 
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    retry=retry_if_exception_type((httpx.RequestError, httpx.TimeoutException)),
+    reraise=True
+)
+async def fetch_llm_analysis(payload: dict) -> str:
+    """Gọi LLM với cơ chế tự động retry khi gặp lỗi kết nối/timeout."""
+    # timeout: connect=10.0s, read=120.0s
+    timeout = httpx.Timeout(120.0, connect=10.0)
+    async with httpx.AsyncClient(timeout=timeout) as client:
+        response = await client.post(settings.OLLAMA_URL, json=payload)
+        response.raise_for_status()
+        return response.json().get("response", "{}")
+
+async def analyze_incident(incident: Incident, alerts: List[Alert], model_name: str = None) -> AIAnalysis:
     """
-    Sử dụng Ollama để phân tích sự cố bảo mật dựa trên Incident và các Alerts liên quan.
+    Sử dụng Ollama để phân tích sự cố bảo mật bất đồng bộ.
     """
     model_name = model_name or settings.AI_MODEL_NAME
-    
-    # Lấy prompt từ file prompts.py
     prompt = get_incident_analysis_prompt(incident, alerts)
 
     payload = {
         "model": model_name,
         "prompt": prompt,
         "stream": False,
-        "format": "json" # Yêu cầu trả về đúng chuẩn JSON
+        "format": "json"
     }
 
     try:
-        response = requests.post(settings.OLLAMA_URL, json=payload, timeout=120)
-        response.raise_for_status()
+        logger.info(f"Đang phân tích Incident {incident.id} với model {model_name}...")
+        start_time = datetime.utcnow()
         
-        result = response.json()
-        ai_response_text = result.get("response", "{}")
+        ai_response_text = await fetch_llm_analysis(payload)
         
-        # Phân tích chuỗi JSON trả về
-        parsed_data = json.loads(ai_response_text)
+        latency = (datetime.utcnow() - start_time).total_seconds()
+        logger.info(f"Hoàn thành gọi LLM trong {latency:.2f} giây.")
+
+        cleaned_text = clean_json_string(ai_response_text)
+        parsed_data = json.loads(cleaned_text)
         
-        # Mapping dữ liệu sang Pydantic Models để validate
         mitre_mappings = [MitreAttackMapping(**m) for m in parsed_data.get("mitre_attack_mappings", [])]
         
         remediation_steps = []
@@ -42,7 +70,7 @@ def analyze_incident(incident: Incident, alerts: List[Alert], model_name: str = 
             try:
                 priority_enum = Severity(priority_val)
             except ValueError:
-                priority_enum = Severity.MEDIUM # Fallback nếu model trả lời sai định dạng
+                priority_enum = Severity.MEDIUM
                 
             remediation_steps.append(RemediationAdvice(
                 step=r.get("step", "Không rõ"),
@@ -58,16 +86,14 @@ def analyze_incident(incident: Incident, alerts: List[Alert], model_name: str = 
             model_used=model_name,
             generated_at=datetime.utcnow()
         )
-        
         return analysis
 
     except Exception as e:
-        print(f"Lỗi khi gọi model AI: {e}")
-        # Fallback an toàn nếu có lỗi
+        logger.error(f"Lỗi nghiêm trọng khi phân tích AI: {str(e)}", exc_info=True)
         return AIAnalysis(
             incident_id=incident.id,
-            log_summary="Lỗi phân tích từ AI",
-            attack_reasoning=str(e),
+            log_summary="Lỗi phân tích từ AI do hệ thống.",
+            attack_reasoning=f"Ngoại lệ: {str(e)}",
             mitre_attack_mappings=[],
             remediation_advice=[],
             model_used=model_name,

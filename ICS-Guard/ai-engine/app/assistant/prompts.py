@@ -13,20 +13,21 @@ def get_incident_analysis_prompt(incident: Incident, alerts: List[Alert]) -> str
         alerts_context += f"  Source IP: {alert.source_ip}, Dest IP: {alert.destination_ip}\n"
     
     prompt = f"""
-You are an expert Cybersecurity ICS/OT Analyst. Analyze the following security incident and alerts.
-Provide your response strictly as a JSON object matching this structure EXACTLY (without any markdown formatting like ```json or trailing text):
+You are an expert Cybersecurity ICS/OT Analyst. Analyze the following security incident and alerts quickly and accurately.
+Output ONLY a valid JSON object matching this exact structure without any markdown formatting, reasoning, or trailing text. 
 
 {{
-  "log_summary": "Tóm tắt ngắn gọn sự cố bằng tiếng Việt.",
-  "attack_reasoning": "Phân tích kỹ thuật chuyên sâu về phương thức tấn công và mức độ ảnh hưởng bằng tiếng Việt.",
+  "log_summary": "Tóm tắt ngắn gọn sự cố bằng tiếng Việt (tối đa 3 câu).",
+  "attack_reasoning": "Phân tích kỹ thuật cốt lõi (tối đa 4 câu).",
   "mitre_attack_mappings": [
     {{"tactic": "...", "technique_id": "...", "technique_name": "..."}}
   ],
   "remediation_advice": [
-    {{"step": "Hành động khắc phục", "priority": "CRITICAL"}}
+    {{"step": "Hành động khắc phục thực tế", "priority": "CRITICAL"}}
   ]
 }}
-Note: priority must be one of: INFO, LOW, MEDIUM, HIGH, CRITICAL.
+
+Priority enum: INFO, LOW, MEDIUM, HIGH, CRITICAL.
 
 INCIDENT TITLE: {incident.title}
 INCIDENT DESCRIPTION: {incident.description}
