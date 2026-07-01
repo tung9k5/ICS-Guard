@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import http from '@/http/clients/api';
 import { Activity, ShieldAlert, Zap, RefreshCw, Cpu } from 'lucide-react';
+import { io } from 'socket.io-client';
 import './Dashboard.scss';
 
 const Dashboard = () => {
@@ -87,9 +88,32 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
-    // Auto refresh stats every 10 seconds to catch telemetry-triggered events
-    const interval = setInterval(fetchDashboardData, 10000);
-    return () => clearInterval(interval);
+
+    // Set up Socket.io client connection to backend
+    const socketUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace('/api', '');
+    console.log('[Dashboard WebSocket] Connecting to:', socketUrl);
+    const socket = io(socketUrl);
+
+    socket.on('connect', () => {
+      console.log('[Dashboard WebSocket] Connected successfully. ID:', socket.id);
+    });
+
+    const handleUpdate = () => {
+      console.log('[Dashboard WebSocket] Received update event. Refreshing dashboard data...');
+      fetchDashboardData();
+    };
+
+    socket.on('NEW_ALERT', handleUpdate);
+    socket.on('NEW_INCIDENT', handleUpdate);
+    socket.on('DEVICE_STATUS_CHANGED', handleUpdate);
+
+    socket.on('disconnect', () => {
+      console.log('[Dashboard WebSocket] Disconnected.');
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, [selectedIncident?._id]);
 
   const selectIncident = (inc) => {

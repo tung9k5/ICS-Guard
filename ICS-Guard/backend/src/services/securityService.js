@@ -122,11 +122,27 @@ export const handleSuccessfulLogin = async (user) => {
   }
 };
 
+import socketService from './socketService.js';
+
 export const isolateDevice = async (device, triggeredBy = 'System', ipAddress = 'Internal') => {
   if (device.status === 'isolated' || device.status === 'quarantined') return;
 
   device.status = 'isolated'; // or 'quarantined'
   await device.save();
+
+  // Phát sự kiện WebSocket
+  socketService.emitDeviceStatusChanged(device);
+
+  // Send MQTT stop command to simulator to immediately cease any active attack simulations
+  try {
+    const { publishMqtt } = await import('./mqttService.js');
+    publishMqtt('ics/control/attack', {
+      device_id: device._id,
+      attack_type: 'stop'
+    });
+  } catch (mqttErr) {
+    console.error('[SecurityService] Failed to send MQTT stop command on isolation:', mqttErr);
+  }
 
   // Audit Log
   await AuditLog.create({

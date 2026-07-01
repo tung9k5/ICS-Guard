@@ -60,3 +60,30 @@ async def trigger_periodic_brute_force(devices, backend_url, send_rest_log_fn):
         
         # Wait 120 seconds before next brute force simulation
         await asyncio.sleep(120)
+
+async def run_traffic_spike_continuous(device_id, device_anomaly_states):
+    """Triggers a traffic spike on a specific device continuously."""
+    print(f"\n🚨 [Simulator Anomaly] Manually triggering ABNORMAL_TRAFFIC_SPIKE on {device_id}...")
+    device_anomaly_states[device_id] = "traffic_spike"
+
+async def run_brute_force_continuous(device_id, backend_url, send_rest_log_fn, device_anomaly_states):
+    """Triggers SSH Brute Force failed logins on a specific device continuously until stopped."""
+    attacker_ip = "185.220.101.45"
+    print(f"\n🚨 [Simulator Anomaly] Manually triggering DEVICE_BRUTE_FORCE attack on {device_id} from IP {attacker_ip}...")
+    device_anomaly_states[device_id] = "brute_force"
+    
+    while device_anomaly_states.get(device_id) == "brute_force":
+        payload = {
+            "device_id": device_id,
+            "log_type": "auth",
+            "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "event": "AUTH_FAILED",
+            "source_ip": attacker_ip,
+            "username": "admin_root"
+        }
+        # Send REST post asynchronously in background to not block loop
+        loop = asyncio.get_event_loop()
+        loop.run_in_executor(None, send_rest_log_fn, payload)
+        await asyncio.sleep(1.5)
+        
+    print(f"✅ [Simulator Anomaly] Stopped brute force simulation on {device_id}.\n")

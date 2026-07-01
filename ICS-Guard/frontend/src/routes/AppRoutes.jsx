@@ -5,6 +5,7 @@ import MainLayout from '@/layouts/MainLayout';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import Dashboard from '@/pages/Dashboard';
+import AttackerConsole from '@/pages/AttackerConsole';
 
 const AppRoutes = () => {
   return (
@@ -15,10 +16,12 @@ const AppRoutes = () => {
         <Route path="/register" element={<Register />} />
       </Route>
 
+      {/* Standalone Public Route for Attacker Console */}
+      <Route path="/attacker" element={<AttackerConsole />} />
+
       {/* Protected Routes */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<Dashboard />} />
-        {/* <Route path="/devices" element={<Devices />} /> */}
         
         {/* Fallback route within MainLayout */}
         <Route path="*" element={<Navigate to="/" replace />} />
