@@ -2,6 +2,8 @@ import { Alert, Incident, IncidentTimeline, Device } from '../models/index.js';
 import { registerFailedIpAttempt } from '../services/securityService.js';
 import { sendEmailAlert } from '../services/emailService.js';
 import { sendTelegramAlert } from '../services/telegramService.js';
+import { getActiveAdminSessions, addEmergencyAlert } from '../services/sessionRegistry.js';
+import socketService from '../services/socketService.js';
 
 // In-memory brute force tracker grouped by device_id + source_ip
 // Format: { 'plc-water-01:185.220.101.45': [timestamp1, timestamp2, ...] }
@@ -117,20 +119,36 @@ export const ingestTelemetryLog = async (req, res) => {
           metadata: { source_ip, failedAttempts: failedCount }
         });
 
-        // 5. Send Telegram and Email notifications asynchronously
-        const alertText = `🚨 *CRITICAL SECURITY ALERT: SSH BRUTE FORCE*\n\nDevice: *${device_id}*\nZone: *${zone}*\nAttacker IP: *${source_ip || 'unknown'}*\nAction: *IP Auto-Blocked*\nSeverity: *CRITICAL*`;
-        
-        sendTelegramAlert(alertText, [
-          { text: `🚫 Cô lập thiết bị ${device_id}`, callback_data: `quarantine_device:${device_id}` }
-        ]).catch(err => console.error('[TelemetryController] Telegram send error:', err));
-        
-        sendEmailAlert({
-          subject: `[ICS-GUARD CRITICAL] SSH Brute Force Attack on ${device_id}`,
-          text: `Critical Alert: SSH Brute force attack detected on device ${device_id} from IP ${source_ip}. IP has been auto-blocked.`,
-          html: `<h3>Critical Infrastructure Security Alert</h3>
-                 <p>SSH Brute force attack detected on device <strong>${device_id}</strong> in <strong>${zone}</strong> from IP <strong>${source_ip}</strong>.</p>
-                 <p><strong>Action Taken:</strong> Source IP address has been automatically blocked on application gateways.</p>`
-        }).catch(err => console.error('[TelemetryController] Email send error:', err));
+        // 6. Phát sự kiện WebSocket
+        socketService.emitNewAlert(alert);
+        socketService.emitNewIncident(incident);
+
+        // 5. Send notifications via appropriate channel (Smart Alert Routing)
+        const activeAdmins = getActiveAdminSessions();
+        if (activeAdmins.length > 0) {
+          console.log(`[AlertRouter] Active Admins online: ${activeAdmins.join(', ')}. Suppressing email/Telegram, adding to Emergency Queue.`);
+          addEmergencyAlert({
+            device_id,
+            attack_type: 'brute_force',
+            message: `Đang có thiết bị [${device_id}] bị tấn công Brute Force và có người dùng Admin [${activeAdmins.join(', ')}] đang đăng nhập!`,
+            admin_users: activeAdmins
+          });
+        } else {
+          console.log('[AlertRouter] No active Admins online. Sending notifications via Email and Telegram.');
+          const alertText = `🚨 *CRITICAL SECURITY ALERT: SSH BRUTE FORCE*\n\nDevice: *${device_id}*\nZone: *${zone}*\nAttacker IP: *${source_ip || 'unknown'}*\nAction: *IP Auto-Blocked*\nSeverity: *CRITICAL*`;
+          
+          sendTelegramAlert(alertText, [
+            { text: `🚫 Cô lập thiết bị ${device_id}`, callback_data: `quarantine_device:${device_id}` }
+          ]).catch(err => console.error('[TelemetryController] Telegram send error:', err));
+          
+          sendEmailAlert({
+            subject: `[ICS-GUARD CRITICAL] SSH Brute Force Attack on ${device_id}`,
+            text: `Critical Alert: SSH Brute force attack detected on device ${device_id} from IP ${source_ip}. IP has been auto-blocked.`,
+            html: `<h3>Critical Infrastructure Security Alert</h3>
+                   <p>SSH Brute force attack detected on device <strong>${device_id}</strong> in <strong>${zone}</strong> from IP <strong>${source_ip}</strong>.</p>
+                   <p><strong>Action Taken:</strong> Source IP address has been automatically blocked on application gateways.</p>`
+          }).catch(err => console.error('[TelemetryController] Email send error:', err));
+        }
       }
     }
 

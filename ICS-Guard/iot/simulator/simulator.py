@@ -13,7 +13,12 @@ import paho.mqtt.client as mqtt
 from plc import generate_plc_payload
 from sensor import generate_sensor_payload
 from smart_meter import generate_smart_meter_payload
-from attacks import trigger_periodic_traffic_spike, trigger_periodic_brute_force
+from attacks import (
+    trigger_periodic_traffic_spike,
+    trigger_periodic_brute_force,
+    run_traffic_spike_continuous,
+    run_brute_force_continuous
+)
 
 # Ensure stdout handles UTF-8 (emojis and unicode characters) correctly on Windows consoles
 if hasattr(sys.stdout, 'reconfigure'):
@@ -65,29 +70,16 @@ if os.path.exists(ca_cert_path):
 # "normal", "traffic_spike"
 device_anomaly_states = {d["_id"]: "normal" for d in DEVICES}
 
+# Global event loop reference
+MAIN_LOOP = None
+
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("[Simulator] Connected to MQTT Broker successfully.")
+        client.subscribe("ics/control/attack", qos=1)
+        print("[Simulator] Subscribed to topic 'ics/control/attack'.")
     else:
         print(f"[Simulator] Failed to connect, return code {rc}")
-
-client.on_connect = on_connect
-
-# Connect to broker with retry logic
-connected = False
-for retry in range(10):
-    try:
-        client.connect(MQTT_HOST, MQTT_PORT, 60)
-        client.loop_start()
-        connected = True
-        break
-    except Exception as e:
-        print(f"[Simulator] Connection failed to MQTT Broker (retry {retry+1}/10): {e}")
-        time.sleep(5)
-
-if not connected:
-    print("[Simulator] Could not connect to MQTT Broker. Exiting.")
-    exit(1)
 
 def send_rest_log(payload):
     """Helper to send auth logs/telemetry via REST Ingestion using built-in urllib."""
@@ -104,6 +96,53 @@ def send_rest_log(payload):
             response.read()
     except Exception as e:
         print(f"[Simulator] Failed to send REST log: {e}")
+
+def on_message(client, userdata, msg):
+    try:
+        payload = json.loads(msg.payload.decode("utf-8"))
+        print(f"[Simulator Control] Received command on {msg.topic}: {payload}")
+        device_id = payload.get("device_id")
+        attack_type = payload.get("attack_type")
+        
+        if not device_id or not attack_type:
+            return
+
+        if attack_type == "traffic_spike":
+            if MAIN_LOOP:
+                asyncio.run_coroutine_threadsafe(
+                    run_traffic_spike_continuous(device_id, device_anomaly_states),
+                    MAIN_LOOP
+                )
+        elif attack_type == "brute_force":
+            if MAIN_LOOP:
+                asyncio.run_coroutine_threadsafe(
+                    run_brute_force_continuous(device_id, BACKEND_URL, send_rest_log, device_anomaly_states),
+                    MAIN_LOOP
+                )
+        elif attack_type == "stop":
+            device_anomaly_states[device_id] = "normal"
+            print(f"[Simulator Control] Force restored {device_id} to normal state.")
+    except Exception as e:
+        print(f"[Simulator Control] Failed to process message: {e}")
+
+client.on_connect = on_connect
+client.on_message = on_message
+
+# Connect to broker with retry logic
+connected = False
+for retry in range(10):
+    try:
+        client.connect(MQTT_HOST, MQTT_PORT, 60)
+        client.loop_start()
+        connected = True
+        break
+    except Exception as e:
+        print(f"[Simulator] Connection failed to MQTT Broker (retry {retry+1}/10): {e}")
+        time.sleep(5)
+
+if not connected:
+    print("[Simulator] Could not connect to MQTT Broker. Exiting.")
+    exit(1)
 
 async def simulate_device(device):
     device_id = device["_id"]
@@ -129,18 +168,26 @@ async def simulate_device(device):
             
         try:
             client.publish(topic, json.dumps(payload), qos=1)
+            # Log telemetry in console (print only if device is under attack)
+            if state != "normal":
+                metrics = payload.get("metrics", {})
+                bps = metrics.get("bytes_per_second", 0)
+                temp = metrics.get("temperature", 0)
+                cpu = metrics.get("cpu_usage", 0)
+                print(f"[Telemetry Log] Device: {device_id} | Status: {state.upper()} | CPU: {cpu}% | Temp: {temp} C | Traffic: {bps} Bps")
         except Exception as e:
             print(f"[Simulator] Publish error on {device_id}: {e}")
             
         await asyncio.sleep(5.0)
 
 async def main():
+    global MAIN_LOOP
+    MAIN_LOOP = asyncio.get_running_loop()
+    
     device_sim_tasks = [simulate_device(d) for d in DEVICES]
-    attack_tasks = [
-        trigger_periodic_traffic_spike(DEVICES, device_anomaly_states),
-        trigger_periodic_brute_force(DEVICES, BACKEND_URL, send_rest_log)
-    ]
-    await asyncio.gather(*device_sim_tasks, *attack_tasks)
+    # Disable periodic automatic attacks, and only keep the device simulation loops.
+    # Users trigger attacks manually via the Attacker Console!
+    await asyncio.gather(*device_sim_tasks)
 
 if __name__ == "__main__":
     try:

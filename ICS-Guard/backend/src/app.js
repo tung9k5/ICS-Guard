@@ -5,6 +5,9 @@ import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import http from 'http';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJsdoc from 'swagger-jsdoc';
 
 // Database context and models
 import { connectDB, User, Device, Rule } from './models/index.js';
@@ -17,6 +20,7 @@ import { initTelegramBot } from './services/telegramService.js';
 import { connectQueue } from './services/queueService.js';
 import { connectMqtt } from './services/mqttService.js';
 import { initInflux } from './services/influxService.js';
+import { initSocket } from './services/socketService.js';
 
 // Routes
 import authRoutes from './routes/authRoutes.js';
@@ -25,11 +29,13 @@ import deviceRoutes from './routes/deviceRoutes.js';
 import auditRoutes from './routes/auditRoutes.js';
 import incidentRoutes from './routes/incidentRoutes.js';
 import telemetryRoutes from './routes/telemetryRoutes.js';
+import attackRoutes from './routes/attackRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
 
 // Enable CORS
@@ -43,6 +49,44 @@ app.set('trust proxy', true);
 
 // 1. Apply global IP block middleware BEFORE any other route
 app.use(ipBlockMiddleware);
+
+// 2. Configure Swagger UI
+const swaggerOptions = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'ICS-Guard API Documentation',
+      version: '1.0.0',
+      description: 'API Document for ICS-Guard System (Industrial Control Systems Security Guard)',
+    },
+    servers: [
+      {
+        url: 'http://localhost:8000',
+        description: 'Development Server',
+      },
+    ],
+    components: {
+      securitySchemes: {
+        BearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+          description: 'Enter JWT token in format: Bearer <token>',
+        },
+      },
+    },
+    security: [
+      {
+        BearerAuth: [],
+      },
+    ],
+  },
+  apis: ['./src/routes/*.js', './src/controllers/*.js'],
+};
+
+const swaggerSpec = swaggerJsdoc(swaggerOptions);
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Base route for API overview
 app.get('/', (req, res) => {
@@ -65,6 +109,7 @@ app.use('/api/devices', deviceRoutes);
 app.use('/api/audits', auditRoutes);
 app.use('/api/incidents', incidentRoutes);
 app.use('/api/telemetry', telemetryRoutes);
+app.use('/api/attacks', attackRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {
@@ -113,11 +158,12 @@ const seedDatabase = async () => {
     if (userCount === 0) {
       const usersData = parseSeedFile('users.json');
       if (usersData && usersData.length > 0) {
-        // Override admin_soc's password hash so it can be logged in with "Admin@123"
+        // Override admin_soc's password hash and email
         for (let user of usersData) {
           if (user.username === 'admin_soc') {
             user.password_hash = await bcrypt.hash('Admin@123', 10);
-            console.log('[Bootstrap] Overriding admin_soc password to "Admin@123" for local usage.');
+            user.email = 'lam9k5@gmail.com';
+            console.log('[Bootstrap] Overriding admin_soc password to "Admin@123" and email to "lam9k5@gmail.com" for local usage.');
           }
         }
         await User.insertMany(usersData);
@@ -125,12 +171,13 @@ const seedDatabase = async () => {
       }
     } else {
       console.log(`[Bootstrap] Users collection already has ${userCount} records. Skipping seeding.`);
-      // Enforce admin_soc password to always be Admin@123 for local usage
+      // Enforce admin_soc password to always be Admin@123 and email to be lam9k5@gmail.com
       const adminUser = await User.findOne({ username: 'admin_soc' });
       if (adminUser) {
         adminUser.password_hash = await bcrypt.hash('Admin@123', 10);
+        adminUser.email = 'lam9k5@gmail.com';
         await adminUser.save();
-        console.log('[Bootstrap] Ensured admin_soc password is "Admin@123" in existing database.');
+        console.log('[Bootstrap] Ensured admin_soc password is "Admin@123" and email is "lam9k5@gmail.com" in existing database.');
       }
     }
 
@@ -185,7 +232,10 @@ const startServer = async () => {
   // Initialize Telegram Bot
   initTelegramBot();
 
-  app.listen(PORT, () => {
+  // Initialize Socket.io service
+  initSocket(server);
+
+  server.listen(PORT, () => {
     console.log(`\n=============================================================`);
     console.log(`🛡️  ICS-GUARD SECURITY API RUNNING ON PORT ${PORT}  🛡️`);
     console.log(`Database (MongoDB): ${process.env.MONGO_URI || 'mongodb://localhost:27017/ics_guard'}`);
