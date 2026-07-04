@@ -8,8 +8,15 @@ import urllib.parse
 import sys
 import paho.mqtt.client as mqtt
 
+# Add parent directory to sys.path to import payloads, agents, etc.
+import sys
+import os
+parent_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
 # Import modularized components
-from payload_generators import (
+from payloads.payload_generators import (
     generate_gateway_payload,
     generate_controller_payload,
     generate_chip_payload,
@@ -54,7 +61,7 @@ except AttributeError:
     client = mqtt.Client("ics_guard_simulator")
 
 # Setup TLS if ca.crt exists
-ca_cert_path = os.path.join(os.path.dirname(__file__), "certs", "ca.crt")
+ca_cert_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "certificates", "ca.crt"))
 if os.path.exists(ca_cert_path):
     print(f"[Simulator] Enabling TLS using CA certificate at: {ca_cert_path}")
     try:
