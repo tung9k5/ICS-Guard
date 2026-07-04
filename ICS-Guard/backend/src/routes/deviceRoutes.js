@@ -7,6 +7,7 @@ import {
   deleteDevice,
   isolateDeviceEndpoint,
   unisolateDeviceEndpoint,
+  rollbackDeviceEndpoint,
 } from '../controllers/deviceController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 import { authorize } from '../middlewares/rbacMiddleware.js';
@@ -32,10 +33,13 @@ router.put('/:id', authorize(['Admin', 'Analyst']), auditLogger('DEVICE_UPDATE')
 // DELETE /api/devices/:id - Admin, Analyst (Audited)
 router.delete('/:id', authorize(['Admin', 'Analyst']), auditLogger('DEVICE_DELETE'), deleteDevice);
 
-// POST /api/devices/:id/isolate - Admin, Analyst (Audited)
-router.post('/:id/isolate', authorize(['Admin', 'Analyst']), auditLogger('DEVICE_ISOLATE'), isolateDeviceEndpoint);
+// POST /api/devices/:id/isolate - Admin, L3 SOC Manager (Audited)
+router.post('/:id/isolate', authorize(['admin', 'l3_manager']), auditLogger('DEVICE_ISOLATE'), isolateDeviceEndpoint);
 
-// POST /api/devices/:id/unisolate - Admin, Analyst (Audited)
-router.post('/:id/unisolate', authorize(['Admin', 'Analyst']), auditLogger('DEVICE_UNISOLATE'), unisolateDeviceEndpoint);
+// POST /api/devices/:id/unisolate - Admin, L3 SOC Manager (Audited)
+router.post('/:id/unisolate', authorize(['admin', 'l3_manager']), auditLogger('DEVICE_UNISOLATE'), unisolateDeviceEndpoint);
+
+// POST /api/devices/:id/rollback - Admin, L3 SOC Manager, OT Operator (Audited)
+router.post('/:id/rollback', authorize(['admin', 'l3_manager', 'ot_operator']), auditLogger('DEVICE_ROLLBACK'), rollbackDeviceEndpoint);
 
 export default router;

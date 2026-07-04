@@ -108,42 +108,33 @@ const seedDatabase = async () => {
       });
     };
 
-    // Seed Users
-    const userCount = await User.countDocuments();
-    if (userCount === 0) {
-      const usersData = parseSeedFile('users.json');
-      if (usersData && usersData.length > 0) {
-        // Override admin_soc's password hash so it can be logged in with "Admin@123"
-        for (let user of usersData) {
-          if (user.username === 'admin_soc') {
-            user.password_hash = await bcrypt.hash('Admin@123', 10);
-            console.log('[Bootstrap] Overriding admin_soc password to "Admin@123" for local usage.');
-          }
-        }
-        await User.insertMany(usersData);
-        console.log(`[Bootstrap] Seeded ${usersData.length} users into MongoDB.`);
+    // Seed Users (Force refresh to apply the new enterprise roles schema)
+    console.log('[Bootstrap] Wiping and re-seeding Users collection to apply new enterprise roles...');
+    await User.deleteMany({});
+    const usersData = parseSeedFile('users.json');
+    if (usersData && usersData.length > 0) {
+      for (let user of usersData) {
+        let plainPassword = 'User@123';
+        if (user.username === 'admin_soc') plainPassword = 'Admin@123';
+        else if (user.username === 'l1_analyst') plainPassword = 'L1@123';
+        else if (user.username === 'l2_responder') plainPassword = 'L2@123';
+        else if (user.username === 'l3_manager') plainPassword = 'L3@123';
+        else if (user.username === 'ot_operator') plainPassword = 'OT@123';
+        
+        user.password_hash = await bcrypt.hash(plainPassword, 10);
+        console.log(`[Bootstrap] Seeding user "${user.username}" with password "${plainPassword}"`);
       }
-    } else {
-      console.log(`[Bootstrap] Users collection already has ${userCount} records. Skipping seeding.`);
-      // Enforce admin_soc password to always be Admin@123 for local usage
-      const adminUser = await User.findOne({ username: 'admin_soc' });
-      if (adminUser) {
-        adminUser.password_hash = await bcrypt.hash('Admin@123', 10);
-        await adminUser.save();
-        console.log('[Bootstrap] Ensured admin_soc password is "Admin@123" in existing database.');
-      }
+      await User.insertMany(usersData);
+      console.log(`[Bootstrap] Seeded ${usersData.length} users into MongoDB.`);
     }
 
-    // Seed Devices
-    const deviceCount = await Device.countDocuments();
-    if (deviceCount === 0) {
-      const devicesData = parseSeedFile('devices.json');
-      if (devicesData && devicesData.length > 0) {
-        await Device.insertMany(devicesData);
-        console.log(`[Bootstrap] Seeded ${devicesData.length} devices into MongoDB.`);
-      }
-    } else {
-      console.log(`[Bootstrap] Devices collection already has ${deviceCount} records. Skipping seeding.`);
+    // Seed Devices (Force refresh to apply the new hierarchical schema)
+    const devicesData = parseSeedFile('devices.json');
+    if (devicesData && devicesData.length > 0) {
+      console.log('[Bootstrap] Wiping and re-seeding Devices collection to apply new schema...');
+      await Device.deleteMany({});
+      await Device.insertMany(devicesData);
+      console.log(`[Bootstrap] Seeded ${devicesData.length} devices into MongoDB.`);
     }
 
     // Seed Rules

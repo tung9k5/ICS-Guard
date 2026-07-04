@@ -5,6 +5,8 @@ const DB_NAME = process.env.INFLUXDB_DB || 'ics_telemetry';
 
 console.log(`[InfluxService] Initializing. InfluxDB URL: ${INFLUXDB_URL}, DB: ${DB_NAME}`);
 
+let isInfluxAvailable = true;
+
 /**
  * Initialize database if not exists (for InfluxDB 1.8)
  */
@@ -25,8 +27,10 @@ export const initInflux = async () => {
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
     console.log(`[InfluxService] InfluxDB retention policy "two_weeks_telemetry" (14d) checked/initialized.`);
+    isInfluxAvailable = true;
   } catch (error) {
-    console.error('[InfluxService] Failed to initialize database or retention policy:', error.message);
+    isInfluxAvailable = false;
+    console.warn('[InfluxService] Failed to initialize database or retention policy. Telemetry writing to InfluxDB will be disabled.');
   }
 };
 
@@ -35,6 +39,8 @@ export const initInflux = async () => {
  * Format: measurement,tag1=val1,tag2=val2 field1=val1,field2=val2
  */
 export const writeTelemetry = async (data) => {
+  if (!isInfluxAvailable) return;
+
   const { device_id, zone, device_type, metrics } = data;
   if (!device_id || !metrics) return;
 

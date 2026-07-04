@@ -15,32 +15,9 @@
     position: relative;
   }
 
-  .logout-floating-btn {
-    position: absolute;
-    top: 1.5rem;
-    right: 2rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background-color: var(--danger-color);
-    color: var(--text-primary);
-    border: none;
-    border-radius: 0.5rem;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    z-index: 50;
-
-    &:hover {
-      background-color: #dc2626; /* red-600 */
-      transform: translateY(-1px);
-    }
-  }
-
   .main-content {
     flex: 1;
-    padding: 2rem;
+    padding: 0;
     overflow-y: auto;
     color: var(--text-content);
   }

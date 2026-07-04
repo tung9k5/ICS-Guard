@@ -1,5 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { Device, BlockedIp, AuditLog } from '../models/index.js';
+import { Device, BlockedIp, AuditLog, User } from '../models/index.js';
 
 let bot = null;
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
@@ -155,9 +155,9 @@ export const _testSpies = {
 };
 
 // Send Telegram alerts
-export const sendTelegramAlert = async (text, inlineButtons = []) => {
+export const sendTelegramAlert = async (text, inlineButtons = [], customChatId = null) => {
   if (process.env.NODE_ENV === 'test') {
-    _testSpies.sendTelegramAlertCalls.push({ text, inlineButtons });
+    _testSpies.sendTelegramAlertCalls.push({ text, inlineButtons, customChatId });
     return { message_id: 9999, text, chat: { id: 'test' } };
   }
 
@@ -166,8 +166,6 @@ export const sendTelegramAlert = async (text, inlineButtons = []) => {
     bot = mockBot;
   }
 
-  const targetChat = isBotConfigured ? chatId : 'MOCK_CHAT_ID';
-
   const options = {};
   if (inlineButtons && inlineButtons.length > 0) {
     options.reply_markup = {
@@ -175,12 +173,54 @@ export const sendTelegramAlert = async (text, inlineButtons = []) => {
     };
   }
 
+  // 1. Nếu truyền customChatId trực tiếp (ví dụ: Test connection API)
+  if (customChatId) {
+    try {
+      const message = await bot.sendMessage(customChatId, text, options);
+      return message;
+    } catch (error) {
+      console.error(`[TelegramService] Failed to send Telegram to customChatId ${customChatId}:`, error);
+      return null;
+    }
+  }
+
+  // 2. Định tuyến động: Gửi thông báo đến toàn bộ Admin và L3 Manager trong DB
   try {
-    const message = await bot.sendMessage(targetChat, text, options);
-    return message;
+    const activeResponders = await User.find({
+      role: { $in: ['admin', 'l3_manager'] },
+      'contactInfo.telegramChatId': { $ne: null },
+      isAlertEnabled: true
+    });
+
+    if (activeResponders && activeResponders.length > 0) {
+      console.log(`[TelegramService] Định tuyến cảnh báo động đến ${activeResponders.length} cán bộ SOC...`);
+      let lastMessage = null;
+      for (const responder of activeResponders) {
+        const targetChat = responder.contactInfo.telegramChatId;
+        try {
+          lastMessage = await bot.sendMessage(targetChat, text, options);
+        } catch (err) {
+          console.error(`[TelegramService] Gửi tin nhắn lỗi cho ${responder.username} (${targetChat}):`, err);
+        }
+      }
+      return lastMessage;
+    } else {
+      // Fallback về cấu hình tĩnh của ENV nếu chưa có ai cài đặt Chat ID
+      const targetChat = isBotConfigured ? chatId : 'MOCK_CHAT_ID';
+      console.log(`[TelegramService] Chưa có manager cấu hình Chat ID. Fallback về mặc định: ${targetChat}`);
+      const message = await bot.sendMessage(targetChat, text, options);
+      return message;
+    }
   } catch (error) {
-    console.error('[TelegramService] Failed to send Telegram alert:', error);
-    return null;
+    console.error('[TelegramService] Lỗi định tuyến thông báo Telegram động:', error);
+    // Fallback khẩn cấp
+    const targetChat = isBotConfigured ? chatId : 'MOCK_CHAT_ID';
+    try {
+      const message = await bot.sendMessage(targetChat, text, options);
+      return message;
+    } catch (err) {
+      return null;
+    }
   }
 };
 

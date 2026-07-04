@@ -38,8 +38,8 @@ export const createUser = async (req, res) => {
       return res.status(409).json({ error: 'Conflict', message: 'Username already exists.' });
     }
 
-    if (!['admin', 'analyst', 'viewer'].includes(role)) {
-      return res.status(400).json({ error: 'Bad Request', message: 'Invalid role. Must be admin, analyst, or viewer.' });
+    if (!['admin', 'l1_analyst', 'l2_responder', 'l3_manager', 'ot_operator'].includes(role)) {
+      return res.status(400).json({ error: 'Bad Request', message: 'Invalid role. Must be admin, l1_analyst, l2_responder, l3_manager, or ot_operator.' });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -80,7 +80,7 @@ export const updateUser = async (req, res) => {
     }
 
     if (role !== undefined) {
-      if (!['admin', 'analyst', 'viewer'].includes(role)) {
+      if (!['admin', 'l1_analyst', 'l2_responder', 'l3_manager', 'ot_operator'].includes(role)) {
         return res.status(400).json({ error: 'Bad Request', message: 'Invalid role.' });
       }
       user.role = role;

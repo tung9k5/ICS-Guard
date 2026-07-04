@@ -6,7 +6,7 @@ import VInput from '@/components/common/VInput/VInput';
 import VButton from '@/components/common/VButton/VButton';
 import './AuthForms.scss';
 
-const Login = () => {
+const Login = ({ isAttacker = false }) => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ username_or_email: '', password: '' });
   const [error, setError] = useState('');
@@ -48,9 +48,15 @@ const Login = () => {
           localStorage.removeItem('remembered_account');
         }
 
-        localStorage.setItem('access_token', response.access_token);
-        localStorage.setItem('refresh_token', response.refresh_token);
-        navigate('/', { replace: true });
+        if (isAttacker) {
+          localStorage.setItem('attacker_access_token', response.access_token);
+          localStorage.setItem('attacker_refresh_token', response.refresh_token);
+          navigate('/attacker', { replace: true });
+        } else {
+          localStorage.setItem('access_token', response.access_token);
+          localStorage.setItem('refresh_token', response.refresh_token);
+          navigate('/', { replace: true });
+        }
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
@@ -114,12 +120,14 @@ const Login = () => {
         </div>
       </form>
 
-      <div className="auth-form-footer">
-        Chưa có tài khoản?{' '}
-        <Link to="/register" className="auth-link">
-          Đăng ký ngay
-        </Link>
-      </div>
+      {!isAttacker && (
+        <div className="auth-form-footer">
+          Chưa có tài khoản?{' '}
+          <Link to="/register" className="auth-link">
+            Đăng ký ngay
+          </Link>
+        </div>
+      )}
     </div>
   );
 };

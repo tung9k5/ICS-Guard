@@ -1,1 +1,1 @@
-from .attack_sim import trigger_periodic_traffic_spike, trigger_periodic_brute_force
+from .attack_sim import run_attack_continuous, stop_attack_continuous
