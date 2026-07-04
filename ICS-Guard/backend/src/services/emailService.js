@@ -1,4 +1,5 @@
 import nodemailer from 'nodemailer';
+import { User } from '../models/index.js';
 
 let transporter = null;
 
@@ -70,7 +71,22 @@ export const sendEmailAlert = async ({ subject, text, html }) => {
   try {
     const mailTransporter = await getTransporter();
     const from = process.env.SMTP_FROM || '"ICS-Guard Alerts" <alerts@ics-guard.local>';
-    const to = process.env.SMTP_TO || 'admin@ics-guard.local'; // Default recipient if not specified
+    
+    // Fetch all active Admin user emails dynamically
+    let recipients = [];
+    try {
+      const admins = await User.find({ role: 'admin', is_active: true }, 'email');
+      recipients = admins.map(admin => admin.email).filter(Boolean);
+    } catch (dbErr) {
+      console.error('[EmailService] Failed to query admin emails:', dbErr);
+    }
+
+    if (recipients.length === 0) {
+      const fallbackTo = process.env.SMTP_TO || 'admin@ics-guard.local';
+      recipients.push(fallbackTo);
+    }
+
+    const to = recipients.join(', ');
 
     const info = await mailTransporter.sendMail({
       from,

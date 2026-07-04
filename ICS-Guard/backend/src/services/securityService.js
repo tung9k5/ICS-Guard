@@ -123,6 +123,8 @@ export const handleSuccessfulLogin = async (user) => {
   }
 };
 
+import socketService from './socketService.js';
+
 export const isolateDevice = async (device, triggeredBy = 'System', ipAddress = 'Internal') => {
   if (device.status === 'isolated') return;
 

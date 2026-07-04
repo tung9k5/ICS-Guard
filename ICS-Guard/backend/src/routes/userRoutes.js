@@ -3,6 +3,7 @@ import { getAllUsers, getUserById, createUser, updateUser, deleteUser } from '..
 import authMiddleware from '../middlewares/authMiddleware.js';
 import { authorize } from '../middlewares/rbacMiddleware.js';
 import auditLogger from '../middlewares/auditMiddleware.js';
+import { registerAdminHeartbeat } from '../services/sessionRegistry.js';
 
 const router = express.Router();
 
@@ -23,5 +24,13 @@ router.put('/:id', authorize('Admin'), auditLogger('USER_UPDATE'), updateUser);
 
 // DELETE /api/users/:id - Admin only (Audited)
 router.delete('/:id', authorize('Admin'), auditLogger('USER_DELETE'), deleteUser);
+
+// POST /api/users/heartbeat - Registered heartbeat for Admin users
+router.post('/heartbeat', (req, res) => {
+  if (req.user && req.user.role === 'admin') {
+    registerAdminHeartbeat(req.user.username);
+  }
+  return res.status(200).json({ status: 'ok' });
+});
 
 export default router;

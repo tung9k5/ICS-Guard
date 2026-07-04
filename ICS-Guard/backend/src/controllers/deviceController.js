@@ -112,6 +112,7 @@ export const updateDevice = async (req, res) => {
     }
 
     await device.save();
+    socketService.emitDeviceStatusChanged(device);
     return res.status(200).json({ message: 'Device updated successfully.', device });
   } catch (error) {
     console.error('UpdateDevice error:', error);
@@ -179,6 +180,7 @@ export const unisolateDeviceEndpoint = async (req, res) => {
 
     device.status = 'active';
     await device.save();
+    socketService.emitDeviceStatusChanged(device);
 
     const actor = req.user ? req.user.username : 'API Request';
 

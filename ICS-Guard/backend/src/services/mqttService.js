@@ -3,9 +3,11 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { writeTelemetry } from './influxService.js';
-import { Alert, Incident, IncidentTimeline } from '../models/index.js';
+import { Alert, Incident, IncidentTimeline, Device } from '../models/index.js';
 import { sendEmailAlert } from './emailService.js';
 import { sendTelegramAlert } from './telegramService.js';
+import { getActiveAdminSessions, addEmergencyAlert } from './sessionRegistry.js';
+import socketService from './socketService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -55,7 +57,7 @@ export const connectMqtt = () => {
       
       // 1. Write to InfluxDB
       await writeTelemetry(payload);
-
+ 
       // 2. Check metrics for anomalies
       await checkTelemetryAnomalies(payload);
 
@@ -84,6 +86,16 @@ export const publishMqtt = (topic, payload) => {
 const checkTelemetryAnomalies = async (payload) => {
   const { device_id, zone, metrics } = payload;
   if (!device_id || !metrics) return;
+
+  // Bypass checks if device is isolated/quarantined
+  try {
+    const device = await Device.findById(device_id);
+    if (device && (device.status === 'isolated' || device.status === 'quarantined')) {
+      return;
+    }
+  } catch (err) {
+    console.error('[MqttService] Failed to check device status during anomaly check:', err);
+  }
 
   const { bytes_per_second, temperature } = metrics;
   const now = Date.now();
@@ -130,15 +142,31 @@ const checkTelemetryAnomalies = async (payload) => {
         metadata: { bytes_per_second }
       });
 
-      // Telegram & Email Notifications
-      const alertText = `🚨 *SECURITY ALERT: TRAFFIC SPIKE*\n\nDevice: *${device_id}*\nZone: *${zone || 'unknown'}*\nTraffic: *${bytes_per_second.toLocaleString()} Bps*\nSeverity: *HIGH*`;
-      await sendTelegramAlert(alertText);
-      await sendEmailAlert({
-        subject: `[ICS-GUARD ALERT] Traffic Spike on ${device_id}`,
-        text: `Security Alert: Device ${device_id} in ${zone} is transmitting abnormally high traffic (${bytes_per_second} Bps).`,
-        html: `<p><strong>Security Alert:</strong> Device <strong>${device_id}</strong> in <strong>${zone}</strong> is transmitting abnormally high traffic (<code>${bytes_per_second.toLocaleString()} Bps</code>).</p>
-               <p>Recommended Action: Investigate device processes and rate limit network ports.</p>`
-      });
+      // Phát sự kiện WebSocket
+      socketService.emitNewAlert(alert);
+      socketService.emitNewIncident(incident);
+
+      // Smart Alert Routing
+      const activeAdmins = getActiveAdminSessions();
+      if (activeAdmins.length > 0) {
+        console.log(`[AlertRouter] Active Admins online: ${activeAdmins.join(', ')}. Suppressing email/Telegram, adding to Emergency Queue.`);
+        addEmergencyAlert({
+          device_id,
+          attack_type: 'traffic_spike',
+          message: `Đang có thiết bị [${device_id}] bị tấn công DDoS (Traffic Spike) và có người dùng Admin [${activeAdmins.join(', ')}] đang đăng nhập!`,
+          admin_users: activeAdmins
+        });
+      } else {
+        console.log('[AlertRouter] No active Admins online. Sending notifications via Email and Telegram.');
+        const alertText = `🚨 *SECURITY ALERT: TRAFFIC SPIKE*\n\nDevice: *${device_id}*\nZone: *${zone || 'unknown'}*\nTraffic: *${bytes_per_second.toLocaleString()} Bps*\nSeverity: *HIGH*`;
+        await sendTelegramAlert(alertText);
+        await sendEmailAlert({
+          subject: `[ICS-GUARD ALERT] Traffic Spike on ${device_id}`,
+          text: `Security Alert: Device ${device_id} in ${zone} is transmitting abnormally high traffic (${bytes_per_second} Bps).`,
+          html: `<p><strong>Security Alert:</strong> Device <strong>${device_id}</strong> in <strong>${zone}</strong> is transmitting abnormally high traffic (<code>${bytes_per_second.toLocaleString()} Bps</code>).</p>
+                 <p>Recommended Action: Investigate device processes and rate limit network ports.</p>`
+        });
+      }
     }
   }
 
@@ -183,15 +211,31 @@ const checkTelemetryAnomalies = async (payload) => {
         metadata: { temperature }
       });
 
-      // Telegram & Email Notifications
-      const alertText = `🚨 *SECURITY ALERT: CRITICAL OVERHEAT*\n\nDevice: *${device_id}*\nZone: *${zone || 'unknown'}*\nTemperature: *${temperature} °C*\nSeverity: *HIGH*`;
-      await sendTelegramAlert(alertText);
-      await sendEmailAlert({
-        subject: `[ICS-GUARD ALERT] Overheat Alert on ${device_id}`,
-        text: `Security Alert: Device ${device_id} in ${zone} is running at critically high temperature (${temperature} °C).`,
-        html: `<p><strong>Security Alert:</strong> Device <strong>${device_id}</strong> in <strong>${zone}</strong> is running at critically high temperature (<code>${temperature} °C</code>).</p>
-               <p>Recommended Action: Shutdown or isolate the physical device to prevent damage.</p>`
-      });
+      // Phát sự kiện WebSocket
+      socketService.emitNewAlert(alert);
+      socketService.emitNewIncident(incident);
+
+      // Smart Alert Routing
+      const activeAdmins = getActiveAdminSessions();
+      if (activeAdmins.length > 0) {
+        console.log(`[AlertRouter] Active Admins online: ${activeAdmins.join(', ')}. Suppressing email/Telegram, adding to Emergency Queue.`);
+        addEmergencyAlert({
+          device_id,
+          attack_type: 'overheat',
+          message: `Đang có thiết bị [${device_id}] bị quá nhiệt (Critical Overheat) và có người dùng Admin [${activeAdmins.join(', ')}] đang đăng nhập!`,
+          admin_users: activeAdmins
+        });
+      } else {
+        console.log('[AlertRouter] No active Admins online. Sending notifications via Email and Telegram.');
+        const alertText = `🚨 *SECURITY ALERT: CRITICAL OVERHEAT*\n\nDevice: *${device_id}*\nZone: *${zone || 'unknown'}*\nTemperature: *${temperature} °C*\nSeverity: *HIGH*`;
+        await sendTelegramAlert(alertText);
+        await sendEmailAlert({
+          subject: `[ICS-GUARD ALERT] Overheat Alert on ${device_id}`,
+          text: `Security Alert: Device ${device_id} in ${zone} is running at critically high temperature (${temperature} °C).`,
+          html: `<p><strong>Security Alert:</strong> Device <strong>${device_id}</strong> in <strong>${zone}</strong> is running at critically high temperature (<code>${temperature} °C</code>).</p>
+                 <p>Recommended Action: Shutdown or isolate the physical device to prevent damage.</p>`
+        });
+      }
     }
   }
 };

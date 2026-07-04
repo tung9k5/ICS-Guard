@@ -22,7 +22,10 @@
     "mongoose": "^8.0.0",
     "amqplib": "^0.10.3",
     "mqtt": "^5.5.5",
-    "axios": "^1.6.8"
+    "axios": "^1.6.8",
+    "socket.io": "^4.7.5",
+    "swagger-ui-express": "^5.0.0",
+    "swagger-jsdoc": "^6.2.8"
   },
   "devDependencies": {}
 }
