@@ -1,6 +1,7 @@
 import { BlockedIp, AuditLog } from '../models/index.js';
 import { sendEmailAlert } from './emailService.js';
 import { sendTelegramAlert } from './telegramService.js';
+import { publishMqtt } from './mqttService.js';
 
 // In-memory tracker for failed IP attempts
 // Format: { '192.168.1.1': [timestamp1, timestamp2, ...] }
@@ -125,23 +126,16 @@ export const handleSuccessfulLogin = async (user) => {
 import socketService from './socketService.js';
 
 export const isolateDevice = async (device, triggeredBy = 'System', ipAddress = 'Internal') => {
-  if (device.status === 'isolated' || device.status === 'quarantined') return;
+  if (device.status === 'isolated') return;
 
   device.status = 'isolated'; // or 'quarantined'
   await device.save();
 
-  // Phát sự kiện WebSocket
-  socketService.emitDeviceStatusChanged(device);
-
-  // Send MQTT stop command to simulator to immediately cease any active attack simulations
+  // Automatically stop attack simulation on isolated device
   try {
-    const { publishMqtt } = await import('./mqttService.js');
-    publishMqtt('ics/control/attack', {
-      device_id: device._id,
-      attack_type: 'stop'
-    });
-  } catch (mqttErr) {
-    console.error('[SecurityService] Failed to send MQTT stop command on isolation:', mqttErr);
+    publishMqtt('ics/control/attack', { device_id: device._id, attack_type: 'stop' });
+  } catch (error) {
+    console.error('[SecurityService] Failed to publish stop attack command to MQTT:', error);
   }
 
   // Audit Log

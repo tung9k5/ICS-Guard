@@ -37,6 +37,15 @@ export default {
     });
   },
 
+  setupOnboarding(data, options = {}) {
+    return http({
+      url: '/v1/auth/setup-onboarding',
+      method: 'POST',
+      data,
+      ...options
+    });
+  },
+
   getProfile(options = {}) {
     return Promise.resolve({ 
       data: { 

@@ -7,6 +7,7 @@ import {
   deleteDevice,
   isolateDeviceEndpoint,
   unisolateDeviceEndpoint,
+  rollbackDeviceEndpoint,
 } from '../controllers/deviceController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 import { authorize } from '../middlewares/rbacMiddleware.js';
@@ -161,44 +162,13 @@ router.post('/', authorize(['Admin', 'Analyst']), auditLogger('DEVICE_CREATE'), 
 router.put('/:id', authorize(['Admin', 'Analyst']), auditLogger('DEVICE_UPDATE'), updateDevice);
 router.delete('/:id', authorize(['Admin', 'Analyst']), auditLogger('DEVICE_DELETE'), deleteDevice);
 
-/**
- * @openapi
- * /api/devices/{id}/isolate:
- *   post:
- *     summary: Manually isolate a device from the network
- *     tags: [Devices]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Device successfully isolated
- */
-router.post('/:id/isolate', authorize(['Admin', 'Analyst']), auditLogger('DEVICE_ISOLATE'), isolateDeviceEndpoint);
+// POST /api/devices/:id/isolate - Admin, L3 SOC Manager (Audited)
+router.post('/:id/isolate', authorize(['admin', 'l3_manager']), auditLogger('DEVICE_ISOLATE'), isolateDeviceEndpoint);
 
-/**
- * @openapi
- * /api/devices/{id}/unisolate:
- *   post:
- *     summary: Reconnect / un-isolate a quarantined device
- *     tags: [Devices]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Device reconnected successfully
- */
-router.post('/:id/unisolate', authorize(['Admin', 'Analyst']), auditLogger('DEVICE_UNISOLATE'), unisolateDeviceEndpoint);
+// POST /api/devices/:id/unisolate - Admin, L3 SOC Manager (Audited)
+router.post('/:id/unisolate', authorize(['admin', 'l3_manager']), auditLogger('DEVICE_UNISOLATE'), unisolateDeviceEndpoint);
+
+// POST /api/devices/:id/rollback - Admin, L3 SOC Manager, OT Operator (Audited)
+router.post('/:id/rollback', authorize(['admin', 'l3_manager', 'ot_operator']), auditLogger('DEVICE_ROLLBACK'), rollbackDeviceEndpoint);
 
 export default router;

@@ -352,3 +352,175 @@
     transform: rotate(360deg);
   }
 }
+
+/* Device Status Board Styles (copied from AttackerConsole.scss) */
+.system-tree-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.zone-branch {
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.01);
+  margin-top: 10px;
+
+  .zone-branch-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background-color: rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .zone-title {
+      font-weight: 600;
+      color: #e6edf3;
+      font-size: 0.95rem;
+    }
+  }
+
+  .zone-branch-content {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+  }
+}
+
+.tree-node-wrapper {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.tree-node-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 0.35rem;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+
+  &.selected {
+    background-color: rgba(57, 255, 20, 0.08) !important;
+    border-color: rgba(57, 255, 20, 0.25) !important;
+  }
+
+  .node-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #8b949e;
+  }
+
+  .node-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+
+    .node-name {
+      font-weight: 500;
+      color: #e6edf3;
+      font-size: 0.88rem;
+    }
+
+    .node-id {
+      color: #8b949e;
+      font-size: 0.75rem;
+    }
+
+    $color-gateway: #3b82f6; // Blue
+    $color-controller: #a855f7; // Purple
+    $color-chip: #ec4899; // Pink
+    $color-sensor: #eab308; // Yellow
+    $color-actuator: #06b6d4; // Cyan
+
+    .node-badge-type {
+      font-size: 0.68rem;
+      padding: 0.1rem 0.4rem;
+      border-radius: 0.25rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+
+      &.node-type-gateway { background-color: rgba($color-gateway, 0.15); color: lighten($color-gateway, 10%); border-color: rgba($color-gateway, 0.3); }
+      &.node-type-controller { background-color: rgba($color-controller, 0.15); color: lighten($color-controller, 10%); border-color: rgba($color-controller, 0.3); }
+      &.node-type-chip { background-color: rgba($color-chip, 0.15); color: lighten($color-chip, 10%); border-color: rgba($color-chip, 0.3); }
+      &.node-type-sensor { background-color: rgba($color-sensor, 0.15); color: lighten($color-sensor, 10%); border-color: rgba($color-sensor, 0.3); }
+      &.node-type-actuator { background-color: rgba($color-actuator, 0.15); color: lighten($color-actuator, 10%); border-color: rgba($color-actuator, 0.3); }
+    }
+
+    .node-badge-status {
+      font-size: 0.68rem;
+      padding: 0.1rem 0.4rem;
+      border-radius: 0.25rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+
+      &.status-active {
+        background-color: rgba(57, 255, 20, 0.15);
+        color: #39ff14;
+        border-color: rgba(57, 255, 20, 0.3);
+      }
+
+      &.status-isolated, &.status-quarantined {
+        background-color: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+        border-color: rgba(239, 68, 68, 0.3);
+      }
+
+      &.status-offline {
+        background-color: rgba(108, 117, 125, 0.15);
+        color: #6c757d;
+        border-color: rgba(108, 117, 125, 0.3);
+      }
+    }
+  }
+}
+
+.node-children {
+  margin-top: 0.5rem;
+  border-left: 1px dashed rgba(255, 255, 255, 0.08);
+  padding-left: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+@keyframes attack-border-pulse {
+  0% { border-color: rgba(255, 0, 60, 0.4); box-shadow: 0 0 5px rgba(255, 0, 60, 0.15); }
+  50% { border-color: rgba(255, 0, 60, 1); box-shadow: 0 0 15px rgba(255, 0, 60, 0.45); }
+  100% { border-color: rgba(255, 0, 60, 0.4); box-shadow: 0 0 5px rgba(255, 0, 60, 0.15); }
+}
+
+.device-attack-blink {
+  animation: attack-border-pulse 1.5s infinite ease-in-out !important;
+}
+
+@keyframes banner-pulse {
+  0% { border-color: rgba(255, 0, 60, 0.4); background-color: rgba(255, 0, 60, 0.06); }
+  50% { border-color: rgba(255, 0, 60, 0.8); background-color: rgba(255, 0, 60, 0.12); }
+  100% { border-color: rgba(255, 0, 60, 0.4); background-color: rgba(255, 0, 60, 0.06); }
+}

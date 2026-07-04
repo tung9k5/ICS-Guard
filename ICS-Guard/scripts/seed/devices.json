@@ -1,852 +1,852 @@
 [
   {
+    "_id": "gw-water-01",
+    "name": "Water Zone Gateway 01",
+    "type": "Gateway",
+    "node_type": "gateway",
+    "zone": "Zone-A",
+    "ipAddress": "192.168.10.1",
+    "macAddress": "00:1A:2B:3C:00:01",
+    "status": "active",
+    "risk_score": 0.0,
+    "api_key": "key_gw_water_01",
+    "baseline_metrics": { "bytes_per_second_max": 50000, "connection_rate_max": 50 },
+    "firmware_version": "3.2.1",
+    "hardware_model": "Moxa EDS-408A",
+    "parent_id": null,
+    "icon_path": "Network"
+  },
+  {
     "_id": "plc-water-01",
     "name": "Water Treatment PLC 01",
-    "type": "PLC",
+    "type": "Controller",
+    "node_type": "controller",
     "zone": "Zone-A",
     "ipAddress": "192.168.10.11",
     "macAddress": "00:1A:2B:3C:01:01",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_plc_water_01",
-    "baseline_metrics": {
-      "bytes_per_second_max": 25000,
-      "connection_rate_max": 20
-    },
+    "baseline_metrics": { "bytes_per_second_max": 25000, "connection_rate_max": 20 },
     "firmware_version": "1.0.2",
-    "hardware_model": "Siemens S7-1200"
+    "hardware_model": "Siemens S7-1200",
+    "parent_id": "gw-water-01",
+    "icon_path": "Cpu"
   },
   {
     "_id": "plc-water-02",
     "name": "Water Treatment PLC 02",
-    "type": "PLC",
+    "type": "Controller",
+    "node_type": "controller",
     "zone": "Zone-A",
     "ipAddress": "192.168.10.12",
     "macAddress": "00:1A:2B:3C:01:02",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_plc_water_02",
-    "baseline_metrics": {
-      "bytes_per_second_max": 25000,
-      "connection_rate_max": 20
-    },
+    "baseline_metrics": { "bytes_per_second_max": 25000, "connection_rate_max": 20 },
     "firmware_version": "1.0.2",
-    "hardware_model": "Siemens S7-1200"
+    "hardware_model": "Siemens S7-1200",
+    "parent_id": "gw-water-01",
+    "icon_path": "Cpu"
   },
   {
-    "_id": "plc-water-03",
-    "name": "Water Treatment PLC 03",
-    "type": "PLC",
+    "_id": "chip-water-01",
+    "name": "ESP32 Water Node 01",
+    "type": "Chip",
+    "node_type": "chip",
     "zone": "Zone-A",
-    "ipAddress": "192.168.10.13",
-    "macAddress": "00:1A:2B:3C:01:03",
+    "ipAddress": "192.168.10.51",
+    "macAddress": "00:1A:2B:3C:0E:01",
     "status": "active",
     "risk_score": 0.0,
-    "api_key": "key_plc_water_03",
-    "baseline_metrics": {
-      "bytes_per_second_max": 25000,
-      "connection_rate_max": 20
-    },
-    "firmware_version": "1.0.2",
-    "hardware_model": "Siemens S7-1200"
+    "api_key": "key_chip_water_01",
+    "baseline_metrics": { "bytes_per_second_max": 3000, "connection_rate_max": 5 },
+    "firmware_version": "ESP-IDF 4.4",
+    "hardware_model": "ESP32-WROOM-32D",
+    "parent_id": "plc-water-01",
+    "icon_path": "Radio"
   },
   {
-    "_id": "plc-water-04",
-    "name": "Water Treatment PLC 04",
-    "type": "PLC",
+    "_id": "chip-water-02",
+    "name": "ESP32 Water Node 02",
+    "type": "Chip",
+    "node_type": "chip",
     "zone": "Zone-A",
-    "ipAddress": "192.168.10.14",
-    "macAddress": "00:1A:2B:3C:01:04",
+    "ipAddress": "192.168.10.52",
+    "macAddress": "00:1A:2B:3C:0E:02",
     "status": "active",
     "risk_score": 0.0,
-    "api_key": "key_plc_water_04",
-    "baseline_metrics": {
-      "bytes_per_second_max": 25000,
-      "connection_rate_max": 20
-    },
-    "firmware_version": "1.0.2",
-    "hardware_model": "Siemens S7-1200"
-  },
-  {
-    "_id": "plc-water-05",
-    "name": "Water Treatment PLC 05",
-    "type": "PLC",
-    "zone": "Zone-A",
-    "ipAddress": "192.168.10.15",
-    "macAddress": "00:1A:2B:3C:01:05",
-    "status": "active",
-    "risk_score": 0.0,
-    "api_key": "key_plc_water_05",
-    "baseline_metrics": {
-      "bytes_per_second_max": 25000,
-      "connection_rate_max": 20
-    },
-    "firmware_version": "1.0.2",
-    "hardware_model": "Siemens S7-1200"
+    "api_key": "key_chip_water_02",
+    "baseline_metrics": { "bytes_per_second_max": 3000, "connection_rate_max": 5 },
+    "firmware_version": "ESP-IDF 4.4",
+    "hardware_model": "ESP32-WROOM-32D",
+    "parent_id": "plc-water-02",
+    "icon_path": "Radio"
   },
   {
     "_id": "sensor-temp-01",
     "name": "Boiler Temperature Sensor 01",
     "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-A",
     "ipAddress": "192.168.10.21",
     "macAddress": "00:1A:2B:3C:02:01",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_sensor_temp_01",
-    "baseline_metrics": {
-      "bytes_per_second_max": 5000,
-      "connection_rate_max": 5
-    },
+    "baseline_metrics": { "bytes_per_second_max": 5000, "connection_rate_max": 5 },
     "firmware_version": "2.1.0",
-    "hardware_model": "Honeywell TempSense"
+    "hardware_model": "Honeywell TempSense",
+    "parent_id": "plc-water-01",
+    "icon_path": "Thermometer"
   },
   {
     "_id": "sensor-temp-02",
     "name": "Boiler Temperature Sensor 02",
     "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-A",
     "ipAddress": "192.168.10.22",
     "macAddress": "00:1A:2B:3C:02:02",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_sensor_temp_02",
-    "baseline_metrics": {
-      "bytes_per_second_max": 5000,
-      "connection_rate_max": 5
-    },
+    "baseline_metrics": { "bytes_per_second_max": 5000, "connection_rate_max": 5 },
     "firmware_version": "2.1.0",
-    "hardware_model": "Honeywell TempSense"
+    "hardware_model": "Honeywell TempSense",
+    "parent_id": "plc-water-01",
+    "icon_path": "Thermometer"
   },
   {
     "_id": "sensor-temp-03",
     "name": "Boiler Temperature Sensor 03",
     "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-A",
     "ipAddress": "192.168.10.23",
     "macAddress": "00:1A:2B:3C:02:03",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_sensor_temp_03",
-    "baseline_metrics": {
-      "bytes_per_second_max": 5000,
-      "connection_rate_max": 5
-    },
+    "baseline_metrics": { "bytes_per_second_max": 5000, "connection_rate_max": 5 },
     "firmware_version": "2.1.0",
-    "hardware_model": "Honeywell TempSense"
+    "hardware_model": "Honeywell TempSense",
+    "parent_id": "plc-water-02",
+    "icon_path": "Thermometer"
   },
   {
     "_id": "sensor-temp-04",
     "name": "Boiler Temperature Sensor 04",
     "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-A",
     "ipAddress": "192.168.10.24",
     "macAddress": "00:1A:2B:3C:02:04",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_sensor_temp_04",
-    "baseline_metrics": {
-      "bytes_per_second_max": 5000,
-      "connection_rate_max": 5
-    },
+    "baseline_metrics": { "bytes_per_second_max": 5000, "connection_rate_max": 5 },
     "firmware_version": "2.1.0",
-    "hardware_model": "Honeywell TempSense"
+    "hardware_model": "Honeywell TempSense",
+    "parent_id": "chip-water-01",
+    "icon_path": "Thermometer"
   },
   {
     "_id": "sensor-temp-05",
     "name": "Boiler Temperature Sensor 05",
     "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-A",
     "ipAddress": "192.168.10.25",
     "macAddress": "00:1A:2B:3C:02:05",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_sensor_temp_05",
-    "baseline_metrics": {
-      "bytes_per_second_max": 5000,
-      "connection_rate_max": 5
-    },
+    "baseline_metrics": { "bytes_per_second_max": 5000, "connection_rate_max": 5 },
     "firmware_version": "2.1.0",
-    "hardware_model": "Honeywell TempSense"
+    "hardware_model": "Honeywell TempSense",
+    "parent_id": "chip-water-02",
+    "icon_path": "Thermometer"
   },
   {
     "_id": "sensor-flow-01",
     "name": "Water Flow Sensor 01",
     "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-A",
     "ipAddress": "192.168.10.31",
     "macAddress": "00:1A:2B:3C:03:01",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_sensor_flow_01",
-    "baseline_metrics": {
-      "bytes_per_second_max": 8000,
-      "connection_rate_max": 5
-    },
+    "baseline_metrics": { "bytes_per_second_max": 8000, "connection_rate_max": 5 },
     "firmware_version": "1.4.3",
-    "hardware_model": "FlowMetrics F500"
+    "hardware_model": "FlowMetrics F500",
+    "parent_id": "plc-water-01",
+    "icon_path": "Droplets"
   },
   {
     "_id": "sensor-flow-02",
     "name": "Water Flow Sensor 02",
     "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-A",
     "ipAddress": "192.168.10.32",
     "macAddress": "00:1A:2B:3C:03:02",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_sensor_flow_02",
-    "baseline_metrics": {
-      "bytes_per_second_max": 8000,
-      "connection_rate_max": 5
-    },
+    "baseline_metrics": { "bytes_per_second_max": 8000, "connection_rate_max": 5 },
     "firmware_version": "1.4.3",
-    "hardware_model": "FlowMetrics F500"
+    "hardware_model": "FlowMetrics F500",
+    "parent_id": "plc-water-02",
+    "icon_path": "Droplets"
   },
   {
-    "_id": "sensor-flow-03",
-    "name": "Water Flow Sensor 03",
-    "type": "Sensor",
+    "_id": "actuator-valve-01",
+    "name": "Water Valve Actuator 01",
+    "type": "Actuator",
+    "node_type": "actuator",
     "zone": "Zone-A",
-    "ipAddress": "192.168.10.33",
-    "macAddress": "00:1A:2B:3C:03:03",
+    "ipAddress": "192.168.10.41",
+    "macAddress": "00:1A:2B:3C:0F:11",
     "status": "active",
     "risk_score": 0.0,
-    "api_key": "key_sensor_flow_03",
-    "baseline_metrics": {
-      "bytes_per_second_max": 8000,
-      "connection_rate_max": 5
-    },
-    "firmware_version": "1.4.3",
-    "hardware_model": "FlowMetrics F500"
+    "api_key": "key_actuator_valve_01",
+    "baseline_metrics": { "bytes_per_second_max": 4000, "connection_rate_max": 5 },
+    "firmware_version": "1.1.0",
+    "hardware_model": "Belimo FlowActuator",
+    "parent_id": "plc-water-01",
+    "icon_path": "ToggleLeft"
   },
   {
-    "_id": "sensor-flow-04",
-    "name": "Water Flow Sensor 04",
-    "type": "Sensor",
+    "_id": "actuator-valve-02",
+    "name": "Water Valve Actuator 02",
+    "type": "Actuator",
+    "node_type": "actuator",
     "zone": "Zone-A",
-    "ipAddress": "192.168.10.34",
-    "macAddress": "00:1A:2B:3C:03:04",
+    "ipAddress": "192.168.10.42",
+    "macAddress": "00:1A:2B:3C:0F:12",
     "status": "active",
     "risk_score": 0.0,
-    "api_key": "key_sensor_flow_04",
-    "baseline_metrics": {
-      "bytes_per_second_max": 8000,
-      "connection_rate_max": 5
-    },
-    "firmware_version": "1.4.3",
-    "hardware_model": "FlowMetrics F500"
+    "api_key": "key_actuator_valve_02",
+    "baseline_metrics": { "bytes_per_second_max": 4000, "connection_rate_max": 5 },
+    "firmware_version": "1.1.0",
+    "hardware_model": "Belimo FlowActuator",
+    "parent_id": "plc-water-02",
+    "icon_path": "ToggleLeft"
   },
   {
-    "_id": "sensor-flow-05",
-    "name": "Water Flow Sensor 05",
-    "type": "Sensor",
+    "_id": "actuator-siren-01",
+    "name": "Water Alert Siren 01",
+    "type": "Actuator",
+    "node_type": "actuator",
     "zone": "Zone-A",
-    "ipAddress": "192.168.10.35",
-    "macAddress": "00:1A:2B:3C:03:05",
+    "ipAddress": "192.168.10.43",
+    "macAddress": "00:1A:2B:3C:0F:13",
     "status": "active",
     "risk_score": 0.0,
-    "api_key": "key_sensor_flow_05",
-    "baseline_metrics": {
-      "bytes_per_second_max": 8000,
-      "connection_rate_max": 5
-    },
-    "firmware_version": "1.4.3",
-    "hardware_model": "FlowMetrics F500"
+    "api_key": "key_actuator_siren_01",
+    "baseline_metrics": { "bytes_per_second_max": 2000, "connection_rate_max": 2 },
+    "firmware_version": "1.0.0",
+    "hardware_model": "Industrial Siren S1",
+    "parent_id": "chip-water-01",
+    "icon_path": "Volume2"
+  },
+  {
+    "_id": "gw-power-01",
+    "name": "Power Zone Gateway 01",
+    "type": "Gateway",
+    "node_type": "gateway",
+    "zone": "Zone-B",
+    "ipAddress": "192.168.20.1",
+    "macAddress": "00:1A:2B:3C:00:02",
+    "status": "active",
+    "risk_score": 0.0,
+    "api_key": "key_gw_power_01",
+    "baseline_metrics": { "bytes_per_second_max": 60000, "connection_rate_max": 60 },
+    "firmware_version": "4.1.2",
+    "hardware_model": "Moxa SDS-3008",
+    "parent_id": null,
+    "icon_path": "Network"
   },
   {
     "_id": "plc-power-01",
     "name": "Substation Power PLC 01",
-    "type": "PLC",
+    "type": "Controller",
+    "node_type": "controller",
     "zone": "Zone-B",
     "ipAddress": "192.168.20.11",
     "macAddress": "00:1A:2B:3C:04:01",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_plc_power_01",
-    "baseline_metrics": {
-      "bytes_per_second_max": 30000,
-      "connection_rate_max": 25
-    },
+    "baseline_metrics": { "bytes_per_second_max": 30000, "connection_rate_max": 25 },
     "firmware_version": "4.2.1",
-    "hardware_model": "Schneider Modicon M580"
+    "hardware_model": "Schneider Modicon M580",
+    "parent_id": "gw-power-01",
+    "icon_path": "Cpu"
   },
   {
     "_id": "plc-power-02",
     "name": "Substation Power PLC 02",
-    "type": "PLC",
+    "type": "Controller",
+    "node_type": "controller",
     "zone": "Zone-B",
     "ipAddress": "192.168.20.12",
     "macAddress": "00:1A:2B:3C:04:02",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_plc_power_02",
-    "baseline_metrics": {
-      "bytes_per_second_max": 30000,
-      "connection_rate_max": 25
-    },
+    "baseline_metrics": { "bytes_per_second_max": 30000, "connection_rate_max": 25 },
     "firmware_version": "4.2.1",
-    "hardware_model": "Schneider Modicon M580"
+    "hardware_model": "Schneider Modicon M580",
+    "parent_id": "gw-power-01",
+    "icon_path": "Cpu"
   },
   {
-    "_id": "plc-power-03",
-    "name": "Substation Power PLC 03",
-    "type": "PLC",
+    "_id": "chip-power-01",
+    "name": "ESP32 Power Node 01",
+    "type": "Chip",
+    "node_type": "chip",
     "zone": "Zone-B",
-    "ipAddress": "192.168.20.13",
-    "macAddress": "00:1A:2B:3C:04:03",
+    "ipAddress": "192.168.20.51",
+    "macAddress": "00:1A:2B:3C:0E:11",
     "status": "active",
     "risk_score": 0.0,
-    "api_key": "key_plc_power_03",
-    "baseline_metrics": {
-      "bytes_per_second_max": 30000,
-      "connection_rate_max": 25
-    },
-    "firmware_version": "4.2.1",
-    "hardware_model": "Schneider Modicon M580"
+    "api_key": "key_chip_power_01",
+    "baseline_metrics": { "bytes_per_second_max": 3000, "connection_rate_max": 5 },
+    "firmware_version": "ESP-IDF 4.4",
+    "hardware_model": "ESP32-WROOM-32D",
+    "parent_id": "plc-power-01",
+    "icon_path": "Radio"
   },
   {
-    "_id": "plc-power-04",
-    "name": "Substation Power PLC 04",
-    "type": "PLC",
+    "_id": "chip-power-02",
+    "name": "ESP32 Power Node 02",
+    "type": "Chip",
+    "node_type": "chip",
     "zone": "Zone-B",
-    "ipAddress": "192.168.20.14",
-    "macAddress": "00:1A:2B:3C:04:04",
+    "ipAddress": "192.168.20.52",
+    "macAddress": "00:1A:2B:3C:0E:12",
     "status": "active",
     "risk_score": 0.0,
-    "api_key": "key_plc_power_04",
-    "baseline_metrics": {
-      "bytes_per_second_max": 30000,
-      "connection_rate_max": 25
-    },
-    "firmware_version": "4.2.1",
-    "hardware_model": "Schneider Modicon M580"
-  },
-  {
-    "_id": "plc-power-05",
-    "name": "Substation Power PLC 05",
-    "type": "PLC",
-    "zone": "Zone-B",
-    "ipAddress": "192.168.20.15",
-    "macAddress": "00:1A:2B:3C:04:05",
-    "status": "active",
-    "risk_score": 0.0,
-    "api_key": "key_plc_power_05",
-    "baseline_metrics": {
-      "bytes_per_second_max": 30000,
-      "connection_rate_max": 25
-    },
-    "firmware_version": "4.2.1",
-    "hardware_model": "Schneider Modicon M580"
+    "api_key": "key_chip_power_02",
+    "baseline_metrics": { "bytes_per_second_max": 3000, "connection_rate_max": 5 },
+    "firmware_version": "ESP-IDF 4.4",
+    "hardware_model": "ESP32-WROOM-32D",
+    "parent_id": "plc-power-02",
+    "icon_path": "Radio"
   },
   {
     "_id": "meter-elec-01",
     "name": "Smart Power Meter 01",
-    "type": "SmartMeter",
+    "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-B",
     "ipAddress": "192.168.20.21",
     "macAddress": "00:1A:2B:3C:05:01",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_meter_elec_01",
-    "baseline_metrics": {
-      "bytes_per_second_max": 4000,
-      "connection_rate_max": 2
-    },
+    "baseline_metrics": { "bytes_per_second_max": 4000, "connection_rate_max": 2 },
     "firmware_version": "3.0.1",
-    "hardware_model": "ABB EV-Meter"
+    "hardware_model": "ABB EV-Meter",
+    "parent_id": "plc-power-01",
+    "icon_path": "Zap"
   },
   {
     "_id": "meter-elec-02",
     "name": "Smart Power Meter 02",
-    "type": "SmartMeter",
+    "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-B",
     "ipAddress": "192.168.20.22",
     "macAddress": "00:1A:2B:3C:05:02",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_meter_elec_02",
-    "baseline_metrics": {
-      "bytes_per_second_max": 4000,
-      "connection_rate_max": 2
-    },
+    "baseline_metrics": { "bytes_per_second_max": 4000, "connection_rate_max": 2 },
     "firmware_version": "3.0.1",
-    "hardware_model": "ABB EV-Meter"
+    "hardware_model": "ABB EV-Meter",
+    "parent_id": "plc-power-01",
+    "icon_path": "Zap"
   },
   {
     "_id": "meter-elec-03",
     "name": "Smart Power Meter 03",
-    "type": "SmartMeter",
+    "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-B",
     "ipAddress": "192.168.20.23",
     "macAddress": "00:1A:2B:3C:05:03",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_meter_elec_03",
-    "baseline_metrics": {
-      "bytes_per_second_max": 4000,
-      "connection_rate_max": 2
-    },
+    "baseline_metrics": { "bytes_per_second_max": 4000, "connection_rate_max": 2 },
     "firmware_version": "3.0.1",
-    "hardware_model": "ABB EV-Meter"
+    "hardware_model": "ABB EV-Meter",
+    "parent_id": "plc-power-02",
+    "icon_path": "Zap"
   },
   {
     "_id": "meter-elec-04",
     "name": "Smart Power Meter 04",
-    "type": "SmartMeter",
+    "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-B",
     "ipAddress": "192.168.20.24",
     "macAddress": "00:1A:2B:3C:05:04",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_meter_elec_04",
-    "baseline_metrics": {
-      "bytes_per_second_max": 4000,
-      "connection_rate_max": 2
-    },
+    "baseline_metrics": { "bytes_per_second_max": 4000, "connection_rate_max": 2 },
     "firmware_version": "3.0.1",
-    "hardware_model": "ABB EV-Meter"
+    "hardware_model": "ABB EV-Meter",
+    "parent_id": "chip-power-01",
+    "icon_path": "Zap"
   },
   {
     "_id": "meter-elec-05",
     "name": "Smart Power Meter 05",
-    "type": "SmartMeter",
+    "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-B",
     "ipAddress": "192.168.20.25",
     "macAddress": "00:1A:2B:3C:05:05",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_meter_elec_05",
-    "baseline_metrics": {
-      "bytes_per_second_max": 4000,
-      "connection_rate_max": 2
-    },
+    "baseline_metrics": { "bytes_per_second_max": 4000, "connection_rate_max": 2 },
     "firmware_version": "3.0.1",
-    "hardware_model": "ABB EV-Meter"
+    "hardware_model": "ABB EV-Meter",
+    "parent_id": "chip-power-02",
+    "icon_path": "Zap"
   },
   {
     "_id": "relay-protect-01",
     "name": "Overcurrent Protection Relay 01",
-    "type": "Relay",
+    "type": "Actuator",
+    "node_type": "actuator",
     "zone": "Zone-B",
     "ipAddress": "192.168.20.31",
     "macAddress": "00:1A:2B:3C:06:01",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_relay_protect_01",
-    "baseline_metrics": {
-      "bytes_per_second_max": 12000,
-      "connection_rate_max": 10
-    },
+    "baseline_metrics": { "bytes_per_second_max": 12000, "connection_rate_max": 10 },
     "firmware_version": "2.0.5",
-    "hardware_model": "SEL-751 Protection Relay"
+    "hardware_model": "SEL-751 Protection Relay",
+    "parent_id": "plc-power-01",
+    "icon_path": "ToggleRight"
   },
   {
     "_id": "relay-protect-02",
     "name": "Overcurrent Protection Relay 02",
-    "type": "Relay",
+    "type": "Actuator",
+    "node_type": "actuator",
     "zone": "Zone-B",
     "ipAddress": "192.168.20.32",
     "macAddress": "00:1A:2B:3C:06:02",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_relay_protect_02",
-    "baseline_metrics": {
-      "bytes_per_second_max": 12000,
-      "connection_rate_max": 10
-    },
+    "baseline_metrics": { "bytes_per_second_max": 12000, "connection_rate_max": 10 },
     "firmware_version": "2.0.5",
-    "hardware_model": "SEL-751 Protection Relay"
+    "hardware_model": "SEL-751 Protection Relay",
+    "parent_id": "plc-power-01",
+    "icon_path": "ToggleRight"
   },
   {
     "_id": "relay-protect-03",
     "name": "Overcurrent Protection Relay 03",
-    "type": "Relay",
+    "type": "Actuator",
+    "node_type": "actuator",
     "zone": "Zone-B",
     "ipAddress": "192.168.20.33",
     "macAddress": "00:1A:2B:3C:06:03",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_relay_protect_03",
-    "baseline_metrics": {
-      "bytes_per_second_max": 12000,
-      "connection_rate_max": 10
-    },
+    "baseline_metrics": { "bytes_per_second_max": 12000, "connection_rate_max": 10 },
     "firmware_version": "2.0.5",
-    "hardware_model": "SEL-751 Protection Relay"
+    "hardware_model": "SEL-751 Protection Relay",
+    "parent_id": "plc-power-01",
+    "icon_path": "ToggleRight"
   },
   {
     "_id": "relay-protect-04",
     "name": "Overcurrent Protection Relay 04",
-    "type": "Relay",
+    "type": "Actuator",
+    "node_type": "actuator",
     "zone": "Zone-B",
     "ipAddress": "192.168.20.34",
     "macAddress": "00:1A:2B:3C:06:04",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_relay_protect_04",
-    "baseline_metrics": {
-      "bytes_per_second_max": 12000,
-      "connection_rate_max": 10
-    },
+    "baseline_metrics": { "bytes_per_second_max": 12000, "connection_rate_max": 10 },
     "firmware_version": "2.0.5",
-    "hardware_model": "SEL-751 Protection Relay"
+    "hardware_model": "SEL-751 Protection Relay",
+    "parent_id": "plc-power-02",
+    "icon_path": "ToggleRight"
   },
   {
     "_id": "relay-protect-05",
     "name": "Overcurrent Protection Relay 05",
-    "type": "Relay",
+    "type": "Actuator",
+    "node_type": "actuator",
     "zone": "Zone-B",
     "ipAddress": "192.168.20.35",
     "macAddress": "00:1A:2B:3C:06:05",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_relay_protect_05",
-    "baseline_metrics": {
-      "bytes_per_second_max": 12000,
-      "connection_rate_max": 10
-    },
+    "baseline_metrics": { "bytes_per_second_max": 12000, "connection_rate_max": 10 },
     "firmware_version": "2.0.5",
-    "hardware_model": "SEL-751 Protection Relay"
+    "hardware_model": "SEL-751 Protection Relay",
+    "parent_id": "plc-power-02",
+    "icon_path": "ToggleRight"
   },
   {
     "_id": "relay-protect-06",
     "name": "Overcurrent Protection Relay 06",
-    "type": "Relay",
+    "type": "Actuator",
+    "node_type": "actuator",
     "zone": "Zone-B",
     "ipAddress": "192.168.20.36",
     "macAddress": "00:1A:2B:3C:06:06",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_relay_protect_06",
-    "baseline_metrics": {
-      "bytes_per_second_max": 12000,
-      "connection_rate_max": 10
-    },
+    "baseline_metrics": { "bytes_per_second_max": 12000, "connection_rate_max": 10 },
     "firmware_version": "2.0.5",
-    "hardware_model": "SEL-751 Protection Relay"
+    "hardware_model": "SEL-751 Protection Relay",
+    "parent_id": "plc-power-02",
+    "icon_path": "ToggleRight"
   },
   {
     "_id": "relay-protect-07",
     "name": "Overcurrent Protection Relay 07",
-    "type": "Relay",
+    "type": "Actuator",
+    "node_type": "actuator",
     "zone": "Zone-B",
     "ipAddress": "192.168.20.37",
     "macAddress": "00:1A:2B:3C:06:07",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_relay_protect_07",
-    "baseline_metrics": {
-      "bytes_per_second_max": 12000,
-      "connection_rate_max": 10
-    },
+    "baseline_metrics": { "bytes_per_second_max": 12000, "connection_rate_max": 10 },
     "firmware_version": "2.0.5",
-    "hardware_model": "SEL-751 Protection Relay"
+    "hardware_model": "SEL-751 Protection Relay",
+    "parent_id": "chip-power-01",
+    "icon_path": "ToggleRight"
   },
   {
     "_id": "relay-protect-08",
     "name": "Overcurrent Protection Relay 08",
-    "type": "Relay",
+    "type": "Actuator",
+    "node_type": "actuator",
     "zone": "Zone-B",
     "ipAddress": "192.168.20.38",
     "macAddress": "00:1A:2B:3C:06:08",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_relay_protect_08",
-    "baseline_metrics": {
-      "bytes_per_second_max": 12000,
-      "connection_rate_max": 10
-    },
+    "baseline_metrics": { "bytes_per_second_max": 12000, "connection_rate_max": 10 },
     "firmware_version": "2.0.5",
-    "hardware_model": "SEL-751 Protection Relay"
+    "hardware_model": "SEL-751 Protection Relay",
+    "parent_id": "chip-power-02",
+    "icon_path": "ToggleRight"
   },
   {
-    "_id": "relay-protect-09",
-    "name": "Overcurrent Protection Relay 09",
-    "type": "Relay",
-    "zone": "Zone-B",
-    "ipAddress": "192.168.20.39",
-    "macAddress": "00:1A:2B:3C:06:09",
+    "_id": "gw-hvac-01",
+    "name": "HVAC Zone Gateway 01",
+    "type": "Gateway",
+    "node_type": "gateway",
+    "zone": "Zone-C",
+    "ipAddress": "192.168.30.1",
+    "macAddress": "00:1A:2B:3C:00:03",
     "status": "active",
     "risk_score": 0.0,
-    "api_key": "key_relay_protect_09",
-    "baseline_metrics": {
-      "bytes_per_second_max": 12000,
-      "connection_rate_max": 10
-    },
-    "firmware_version": "2.0.5",
-    "hardware_model": "SEL-751 Protection Relay"
-  },
-  {
-    "_id": "relay-protect-10",
-    "name": "Overcurrent Protection Relay 10",
-    "type": "Relay",
-    "zone": "Zone-B",
-    "ipAddress": "192.168.20.40",
-    "macAddress": "00:1A:2B:3C:06:10",
-    "status": "active",
-    "risk_score": 0.0,
-    "api_key": "key_relay_protect_10",
-    "baseline_metrics": {
-      "bytes_per_second_max": 12000,
-      "connection_rate_max": 10
-    },
-    "firmware_version": "2.0.5",
-    "hardware_model": "SEL-751 Protection Relay"
+    "api_key": "key_gw_hvac_01",
+    "baseline_metrics": { "bytes_per_second_max": 50000, "connection_rate_max": 50 },
+    "firmware_version": "3.5.0",
+    "hardware_model": "Moxa EDS-G308",
+    "parent_id": null,
+    "icon_path": "Network"
   },
   {
     "_id": "plc-hvac-01",
     "name": "HVAC Control PLC 01",
-    "type": "PLC",
+    "type": "Controller",
+    "node_type": "controller",
     "zone": "Zone-C",
     "ipAddress": "192.168.30.11",
     "macAddress": "00:1A:2B:3C:07:01",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_plc_hvac_01",
-    "baseline_metrics": {
-      "bytes_per_second_max": 20000,
-      "connection_rate_max": 15
-    },
+    "baseline_metrics": { "bytes_per_second_max": 20000, "connection_rate_max": 15 },
     "firmware_version": "1.8.2",
-    "hardware_model": "Johnson Controls Metasys"
+    "hardware_model": "Johnson Controls Metasys",
+    "parent_id": "gw-hvac-01",
+    "icon_path": "Cpu"
   },
   {
     "_id": "plc-hvac-02",
     "name": "HVAC Control PLC 02",
-    "type": "PLC",
+    "type": "Controller",
+    "node_type": "controller",
     "zone": "Zone-C",
     "ipAddress": "192.168.30.12",
     "macAddress": "00:1A:2B:3C:07:02",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_plc_hvac_02",
-    "baseline_metrics": {
-      "bytes_per_second_max": 20000,
-      "connection_rate_max": 15
-    },
+    "baseline_metrics": { "bytes_per_second_max": 20000, "connection_rate_max": 15 },
     "firmware_version": "1.8.2",
-    "hardware_model": "Johnson Controls Metasys"
+    "hardware_model": "Johnson Controls Metasys",
+    "parent_id": "gw-hvac-01",
+    "icon_path": "Cpu"
   },
   {
-    "_id": "plc-hvac-03",
-    "name": "HVAC Control PLC 03",
-    "type": "PLC",
+    "_id": "chip-hvac-01",
+    "name": "ESP32 HVAC Node 01",
+    "type": "Chip",
+    "node_type": "chip",
     "zone": "Zone-C",
-    "ipAddress": "192.168.30.13",
-    "macAddress": "00:1A:2B:3C:07:03",
+    "ipAddress": "192.168.30.51",
+    "macAddress": "00:1A:2B:3C:0E:21",
     "status": "active",
     "risk_score": 0.0,
-    "api_key": "key_plc_hvac_03",
-    "baseline_metrics": {
-      "bytes_per_second_max": 20000,
-      "connection_rate_max": 15
-    },
-    "firmware_version": "1.8.2",
-    "hardware_model": "Johnson Controls Metasys"
+    "api_key": "key_chip_hvac_01",
+    "baseline_metrics": { "bytes_per_second_max": 3000, "connection_rate_max": 5 },
+    "firmware_version": "ESP-IDF 4.4",
+    "hardware_model": "ESP32-WROOM-32D",
+    "parent_id": "plc-hvac-01",
+    "icon_path": "Radio"
   },
   {
-    "_id": "plc-hvac-04",
-    "name": "HVAC Control PLC 04",
-    "type": "PLC",
+    "_id": "chip-hvac-02",
+    "name": "ESP32 HVAC Node 02",
+    "type": "Chip",
+    "node_type": "chip",
     "zone": "Zone-C",
-    "ipAddress": "192.168.30.14",
-    "macAddress": "00:1A:2B:3C:07:04",
+    "ipAddress": "192.168.30.52",
+    "macAddress": "00:1A:2B:3C:0E:22",
     "status": "active",
     "risk_score": 0.0,
-    "api_key": "key_plc_hvac_04",
-    "baseline_metrics": {
-      "bytes_per_second_max": 20000,
-      "connection_rate_max": 15
-    },
-    "firmware_version": "1.8.2",
-    "hardware_model": "Johnson Controls Metasys"
-  },
-  {
-    "_id": "plc-hvac-05",
-    "name": "HVAC Control PLC 05",
-    "type": "PLC",
-    "zone": "Zone-C",
-    "ipAddress": "192.168.30.15",
-    "macAddress": "00:1A:2B:3C:07:05",
-    "status": "active",
-    "risk_score": 0.0,
-    "api_key": "key_plc_hvac_05",
-    "baseline_metrics": {
-      "bytes_per_second_max": 20000,
-      "connection_rate_max": 15
-    },
-    "firmware_version": "1.8.2",
-    "hardware_model": "Johnson Controls Metasys"
+    "api_key": "key_chip_hvac_02",
+    "baseline_metrics": { "bytes_per_second_max": 3000, "connection_rate_max": 5 },
+    "firmware_version": "ESP-IDF 4.4",
+    "hardware_model": "ESP32-WROOM-32D",
+    "parent_id": "plc-hvac-02",
+    "icon_path": "Radio"
   },
   {
     "_id": "sensor-gas-01",
     "name": "Gas Leakage Sensor 01",
     "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-C",
     "ipAddress": "192.168.30.21",
     "macAddress": "00:1A:2B:3C:08:01",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_sensor_gas_01",
-    "baseline_metrics": {
-      "bytes_per_second_max": 6000,
-      "connection_rate_max": 4
-    },
+    "baseline_metrics": { "bytes_per_second_max": 6000, "connection_rate_max": 4 },
     "firmware_version": "1.1.2",
-    "hardware_model": "Dr\u00e4ger PointGard"
+    "hardware_model": "Dräger PointGard",
+    "parent_id": "plc-hvac-01",
+    "icon_path": "Wind"
   },
   {
     "_id": "sensor-gas-02",
     "name": "Gas Leakage Sensor 02",
     "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-C",
     "ipAddress": "192.168.30.22",
     "macAddress": "00:1A:2B:3C:08:02",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_sensor_gas_02",
-    "baseline_metrics": {
-      "bytes_per_second_max": 6000,
-      "connection_rate_max": 4
-    },
+    "baseline_metrics": { "bytes_per_second_max": 6000, "connection_rate_max": 4 },
     "firmware_version": "1.1.2",
-    "hardware_model": "Dr\u00e4ger PointGard"
+    "hardware_model": "Dräger PointGard",
+    "parent_id": "plc-hvac-01",
+    "icon_path": "Wind"
   },
   {
     "_id": "sensor-gas-03",
     "name": "Gas Leakage Sensor 03",
     "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-C",
     "ipAddress": "192.168.30.23",
     "macAddress": "00:1A:2B:3C:08:03",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_sensor_gas_03",
-    "baseline_metrics": {
-      "bytes_per_second_max": 6000,
-      "connection_rate_max": 4
-    },
+    "baseline_metrics": { "bytes_per_second_max": 6000, "connection_rate_max": 4 },
     "firmware_version": "1.1.2",
-    "hardware_model": "Dr\u00e4ger PointGard"
+    "hardware_model": "Dräger PointGard",
+    "parent_id": "plc-hvac-02",
+    "icon_path": "Wind"
   },
   {
     "_id": "sensor-gas-04",
     "name": "Gas Leakage Sensor 04",
     "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-C",
     "ipAddress": "192.168.30.24",
     "macAddress": "00:1A:2B:3C:08:04",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_sensor_gas_04",
-    "baseline_metrics": {
-      "bytes_per_second_max": 6000,
-      "connection_rate_max": 4
-    },
+    "baseline_metrics": { "bytes_per_second_max": 6000, "connection_rate_max": 4 },
     "firmware_version": "1.1.2",
-    "hardware_model": "Dr\u00e4ger PointGard"
+    "hardware_model": "Dräger PointGard",
+    "parent_id": "chip-hvac-01",
+    "icon_path": "Wind"
   },
   {
     "_id": "sensor-gas-05",
     "name": "Gas Leakage Sensor 05",
     "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-C",
     "ipAddress": "192.168.30.25",
     "macAddress": "00:1A:2B:3C:08:05",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_sensor_gas_05",
-    "baseline_metrics": {
-      "bytes_per_second_max": 6000,
-      "connection_rate_max": 4
-    },
+    "baseline_metrics": { "bytes_per_second_max": 6000, "connection_rate_max": 4 },
     "firmware_version": "1.1.2",
-    "hardware_model": "Dr\u00e4ger PointGard"
+    "hardware_model": "Dräger PointGard",
+    "parent_id": "chip-hvac-02",
+    "icon_path": "Wind"
   },
   {
     "_id": "sensor-press-01",
     "name": "Ventilation Pressure Sensor 01",
     "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-C",
     "ipAddress": "192.168.30.31",
     "macAddress": "00:1A:2B:3C:09:01",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_sensor_press_01",
-    "baseline_metrics": {
-      "bytes_per_second_max": 7000,
-      "connection_rate_max": 5
-    },
+    "baseline_metrics": { "bytes_per_second_max": 7000, "connection_rate_max": 5 },
     "firmware_version": "2.2.1",
-    "hardware_model": "Setra Model 264"
+    "hardware_model": "Setra Model 264",
+    "parent_id": "plc-hvac-01",
+    "icon_path": "Gauge"
   },
   {
     "_id": "sensor-press-02",
     "name": "Ventilation Pressure Sensor 02",
     "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-C",
     "ipAddress": "192.168.30.32",
     "macAddress": "00:1A:2B:3C:09:02",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_sensor_press_02",
-    "baseline_metrics": {
-      "bytes_per_second_max": 7000,
-      "connection_rate_max": 5
-    },
+    "baseline_metrics": { "bytes_per_second_max": 7000, "connection_rate_max": 5 },
     "firmware_version": "2.2.1",
-    "hardware_model": "Setra Model 264"
+    "hardware_model": "Setra Model 264",
+    "parent_id": "plc-hvac-02",
+    "icon_path": "Gauge"
   },
   {
     "_id": "sensor-press-03",
     "name": "Ventilation Pressure Sensor 03",
     "type": "Sensor",
+    "node_type": "sensor",
     "zone": "Zone-C",
     "ipAddress": "192.168.30.33",
     "macAddress": "00:1A:2B:3C:09:03",
     "status": "active",
     "risk_score": 0.0,
     "api_key": "key_sensor_press_03",
-    "baseline_metrics": {
-      "bytes_per_second_max": 7000,
-      "connection_rate_max": 5
-    },
+    "baseline_metrics": { "bytes_per_second_max": 7000, "connection_rate_max": 5 },
     "firmware_version": "2.2.1",
-    "hardware_model": "Setra Model 264"
+    "hardware_model": "Setra Model 264",
+    "parent_id": "chip-hvac-01",
+    "icon_path": "Gauge"
   },
   {
-    "_id": "sensor-press-04",
-    "name": "Ventilation Pressure Sensor 04",
-    "type": "Sensor",
+    "_id": "actuator-fan-01",
+    "name": "Ventilation Fan Actuator 01",
+    "type": "Actuator",
+    "node_type": "actuator",
     "zone": "Zone-C",
-    "ipAddress": "192.168.30.34",
-    "macAddress": "00:1A:2B:3C:09:04",
+    "ipAddress": "192.168.30.41",
+    "macAddress": "00:1A:2B:3C:0F:21",
     "status": "active",
     "risk_score": 0.0,
-    "api_key": "key_sensor_press_04",
-    "baseline_metrics": {
-      "bytes_per_second_max": 7000,
-      "connection_rate_max": 5
-    },
-    "firmware_version": "2.2.1",
-    "hardware_model": "Setra Model 264"
+    "api_key": "key_actuator_fan_01",
+    "baseline_metrics": { "bytes_per_second_max": 4000, "connection_rate_max": 5 },
+    "firmware_version": "1.2.0",
+    "hardware_model": "Industrial Fan F100",
+    "parent_id": "plc-hvac-01",
+    "icon_path": "Fan"
   },
   {
-    "_id": "sensor-press-05",
-    "name": "Ventilation Pressure Sensor 05",
-    "type": "Sensor",
+    "_id": "actuator-fan-02",
+    "name": "Ventilation Fan Actuator 02",
+    "type": "Actuator",
+    "node_type": "actuator",
     "zone": "Zone-C",
-    "ipAddress": "192.168.30.35",
-    "macAddress": "00:1A:2B:3C:09:05",
+    "ipAddress": "192.168.30.42",
+    "macAddress": "00:1A:2B:3C:0F:22",
     "status": "active",
     "risk_score": 0.0,
-    "api_key": "key_sensor_press_05",
-    "baseline_metrics": {
-      "bytes_per_second_max": 7000,
-      "connection_rate_max": 5
-    },
-    "firmware_version": "2.2.1",
-    "hardware_model": "Setra Model 264"
+    "api_key": "key_actuator_fan_02",
+    "baseline_metrics": { "bytes_per_second_max": 4000, "connection_rate_max": 5 },
+    "firmware_version": "1.2.0",
+    "hardware_model": "Industrial Fan F100",
+    "parent_id": "plc-hvac-02",
+    "icon_path": "Fan"
+  },
+  {
+    "_id": "actuator-alarm-01",
+    "name": "Gas Emergency Alarm 01",
+    "type": "Actuator",
+    "node_type": "actuator",
+    "zone": "Zone-C",
+    "ipAddress": "192.168.30.43",
+    "macAddress": "00:1A:2B:3C:0F:23",
+    "status": "active",
+    "risk_score": 0.0,
+    "api_key": "key_actuator_alarm_01",
+    "baseline_metrics": { "bytes_per_second_max": 2000, "connection_rate_max": 2 },
+    "firmware_version": "1.0.0",
+    "hardware_model": "GasAlarm GA-200",
+    "parent_id": "chip-hvac-01",
+    "icon_path": "Bell"
+  },
+  {
+    "_id": "actuator-alarm-02",
+    "name": "Gas Emergency Alarm 02",
+    "type": "Actuator",
+    "node_type": "actuator",
+    "zone": "Zone-C",
+    "ipAddress": "192.168.30.44",
+    "macAddress": "00:1A:2B:3C:0F:24",
+    "status": "active",
+    "risk_score": 0.0,
+    "api_key": "key_actuator_alarm_02",
+    "baseline_metrics": { "bytes_per_second_max": 2000, "connection_rate_max": 2 },
+    "firmware_version": "1.0.0",
+    "hardware_model": "GasAlarm GA-200",
+    "parent_id": "chip-hvac-02",
+    "icon_path": "Bell"
   }
 ]

@@ -53,6 +53,19 @@ const deviceSchema = new mongoose.Schema({
   hardware_model: {
     type: String,
   },
+  node_type: {
+    type: String,
+    enum: ['gateway', 'controller', 'chip', 'sensor', 'actuator'],
+    default: 'sensor',
+  },
+  parent_id: {
+    type: String,
+    default: null,
+  },
+  icon_path: {
+    type: String,
+    default: 'Cpu',
+  },
   lastSeen: {
     type: Date,
     default: Date.now,

@@ -22,8 +22,8 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['admin', 'analyst', 'viewer'],
-    default: 'viewer',
+    enum: ['admin', 'l1_analyst', 'l2_responder', 'l3_manager', 'ot_operator'],
+    default: 'l1_analyst',
   },
   is_active: {
     type: Boolean,
@@ -42,6 +42,28 @@ const userSchema = new mongoose.Schema({
       type: Date,
       default: null,
     },
+  },
+  isFirstLogin: {
+    type: Boolean,
+    default: true,
+  },
+  contactInfo: {
+    telegramChatId: {
+      type: String,
+      default: null,
+    },
+    telegramUsername: {
+      type: String,
+      default: null,
+    },
+    phoneNumber: {
+      type: String,
+      default: null,
+    },
+  },
+  isAlertEnabled: {
+    type: Boolean,
+    default: true,
   },
 }, {
   timestamps: true,

@@ -9,9 +9,20 @@ const http = axios.create({
   },
 });
 
+// Helper to determine auth keys based on current URL path
+const getAuthKeys = () => {
+  const isAttacker = window.location.pathname.startsWith('/attacker');
+  return {
+    accessTokenKey: isAttacker ? 'attacker_access_token' : 'access_token',
+    refreshTokenKey: isAttacker ? 'attacker_refresh_token' : 'refresh_token',
+    loginUrl: isAttacker ? '/attacker/login' : '/login'
+  };
+};
+
 http.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token');
+    const { accessTokenKey } = getAuthKeys();
+    const token = localStorage.getItem(accessTokenKey);
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
@@ -42,12 +53,13 @@ http.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
+    const { accessTokenKey, refreshTokenKey, loginUrl } = getAuthKeys();
     
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (originalRequest.url.includes('/auth/refresh')) {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        window.location.href = '/login';
+        localStorage.removeItem(accessTokenKey);
+        localStorage.removeItem(refreshTokenKey);
+        window.location.href = loginUrl;
         return Promise.reject(error);
       }
 
@@ -68,7 +80,7 @@ http.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = localStorage.getItem('refresh_token');
+        const refreshToken = localStorage.getItem(refreshTokenKey);
         if (!refreshToken) {
           throw new Error('No refresh token available');
         }
@@ -78,9 +90,9 @@ http.interceptors.response.use(
         });
         
         if (data && data.access_token) {
-          localStorage.setItem('access_token', data.access_token);
+          localStorage.setItem(accessTokenKey, data.access_token);
           if (data.refresh_token) {
-            localStorage.setItem('refresh_token', data.refresh_token);
+            localStorage.setItem(refreshTokenKey, data.refresh_token);
           }
           
           originalRequest.headers['Authorization'] = `Bearer ${data.access_token}`;
@@ -91,9 +103,9 @@ http.interceptors.response.use(
         }
       } catch (err) {
         processQueue(err, null);
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        window.location.href = '/login';
+        localStorage.removeItem(accessTokenKey);
+        localStorage.removeItem(refreshTokenKey);
+        window.location.href = loginUrl;
         return Promise.reject(err);
       } finally {
         isRefreshing = false;

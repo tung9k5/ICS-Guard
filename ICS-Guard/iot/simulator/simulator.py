@@ -6,21 +6,20 @@ import asyncio
 import urllib.request
 import urllib.parse
 import sys
-import ssl
 import paho.mqtt.client as mqtt
 
 # Import modularized components
-from plc import generate_plc_payload
-from sensor import generate_sensor_payload
-from smart_meter import generate_smart_meter_payload
-from attacks import (
-    trigger_periodic_traffic_spike,
-    trigger_periodic_brute_force,
-    run_traffic_spike_continuous,
-    run_brute_force_continuous
+from payload_generators import (
+    generate_gateway_payload,
+    generate_controller_payload,
+    generate_chip_payload,
+    generate_sensor_payload,
+    generate_actuator_payload
 )
+from edge_gateway import EdgeGatewayController
+from attacks import run_attack_continuous, stop_attack_continuous
 
-# Ensure stdout handles UTF-8 (emojis and unicode characters) correctly on Windows consoles
+# Ensure stdout handles UTF-8 correctly
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8')
 
@@ -38,7 +37,7 @@ if os.path.exists(dotenv_path):
 
 # Load config
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
-with open(CONFIG_PATH, "r") as f:
+with open(CONFIG_PATH, "r", encoding="utf-8") as f:
     DEVICES = json.load(f)
 
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
@@ -67,8 +66,10 @@ if os.path.exists(ca_cert_path):
         print(f"[Simulator] Failed to configure TLS: {e}")
 
 # Global dict to store current anomaly state for each device
-# "normal", "traffic_spike"
 device_anomaly_states = {d["_id"]: "normal" for d in DEVICES}
+
+# Edge Gateway Controller for closed loop rules
+gateway_controller = EdgeGatewayController(DEVICES, device_anomaly_states)
 
 # Global event loop reference
 MAIN_LOOP = None
@@ -81,22 +82,6 @@ def on_connect(client, userdata, flags, rc):
     else:
         print(f"[Simulator] Failed to connect, return code {rc}")
 
-def send_rest_log(payload):
-    """Helper to send auth logs/telemetry via REST Ingestion using built-in urllib."""
-    url = f"{BACKEND_URL}/api/telemetry/ingest"
-    data = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
-        url, 
-        data=data, 
-        headers={"Content-Type": "application/json"},
-        method="POST"
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=5) as response:
-            response.read()
-    except Exception as e:
-        print(f"[Simulator] Failed to send REST log: {e}")
-
 def on_message(client, userdata, msg):
     try:
         payload = json.loads(msg.payload.decode("utf-8"))
@@ -107,21 +92,26 @@ def on_message(client, userdata, msg):
         if not device_id or not attack_type:
             return
 
-        if attack_type == "traffic_spike":
+        if attack_type == "stop":
             if MAIN_LOOP:
                 asyncio.run_coroutine_threadsafe(
-                    run_traffic_spike_continuous(device_id, device_anomaly_states),
+                    stop_attack_continuous(device_id, device_anomaly_states),
                     MAIN_LOOP
                 )
-        elif attack_type == "brute_force":
+        elif attack_type == "rollback":
+            print(f"🔄 [Simulator Safety] Nhận lệnh ROLLBACK trên thiết bị {device_id}.")
+            print(f"⚙️  Đang phục hồi chương trình OB1 từ phân vùng Backup an toàn...")
             if MAIN_LOOP:
                 asyncio.run_coroutine_threadsafe(
-                    run_brute_force_continuous(device_id, BACKEND_URL, send_rest_log, device_anomaly_states),
+                    stop_attack_continuous(device_id, device_anomaly_states),
                     MAIN_LOOP
                 )
-        elif attack_type == "stop":
-            device_anomaly_states[device_id] = "normal"
-            print(f"[Simulator Control] Force restored {device_id} to normal state.")
+        else:
+            if MAIN_LOOP:
+                asyncio.run_coroutine_threadsafe(
+                    run_attack_continuous(device_id, attack_type, device_anomaly_states),
+                    MAIN_LOOP
+                )
     except Exception as e:
         print(f"[Simulator Control] Failed to process message: {e}")
 
@@ -144,10 +134,31 @@ if not connected:
     print("[Simulator] Could not connect to MQTT Broker. Exiting.")
     exit(1)
 
+blocked_ips = set()
+
+async def sync_blocked_ips():
+    global blocked_ips
+    print("[Simulator Firewall] Khởi động tiến trình đồng bộ danh sách IP bị chặn...")
+    while True:
+        try:
+            url = f"{BACKEND_URL}/api/telemetry/blocked-ips"
+            req = urllib.request.Request(url)
+            with urllib.request.urlopen(req, timeout=3) as response:
+                if response.status == 200:
+                    data = json.loads(response.read().decode('utf-8'))
+                    new_blocked = {item["ipAddress"] for item in data if "ipAddress" in item}
+                    if new_blocked != blocked_ips:
+                        print(f"🛡️ [Simulator Firewall] Cập nhật danh sách đen IP: {new_blocked}")
+                        blocked_ips = new_blocked
+        except Exception as e:
+            # Lỗi mạng tạm thời, bỏ qua silently
+            pass
+        await asyncio.sleep(5.0)
+
 async def simulate_device(device):
     device_id = device["_id"]
     zone = device["zone"]
-    device_type = device["type"]
+    node_type = device.get("node_type", "sensor")
     
     topic = f"ics/telemetry/{device_id}"
     
@@ -155,26 +166,47 @@ async def simulate_device(device):
     await asyncio.sleep(random.uniform(0.1, 5.0))
     
     while True:
-        # Check current anomaly state
         state = device_anomaly_states.get(device_id, "normal")
         
-        # Dispatch to the appropriate generator
-        if device_type == "PLC":
-            payload = generate_plc_payload(device, state)
-        elif device_type == "SmartMeter":
-            payload = generate_smart_meter_payload(device, state)
+        # 1. Dispatch payload generation to the specific generator
+        if node_type == "gateway":
+            payload = generate_gateway_payload(device, state)
+        elif node_type == "controller":
+            payload = generate_controller_payload(device, state)
+        elif node_type == "chip":
+            payload = generate_chip_payload(device, state)
+        elif node_type == "actuator":
+            payload = generate_actuator_payload(device, state)
         else:
             payload = generate_sensor_payload(device, state)
             
+        # 2. Run Local Closed-Loop rules if applicable (modifying actuator payloads on the fly)
+        # We pass a list of 1 payload and execute rules
+        modified_payloads = gateway_controller.run_local_rules([payload])
+        final_payload = modified_payloads[0]
+        
+        # 2.5 Lọc các log nghiệp vụ độc hại từ IP bị chặn (Edge Firewall Simulation)
+        if "logs" in final_payload and isinstance(final_payload["logs"], list):
+            original_logs = final_payload["logs"]
+            filtered_logs = [log for log in original_logs if log.get("source_ip") not in blocked_ips]
+            if len(filtered_logs) < len(original_logs):
+                blocked_list = [log.get('source_ip') for log in original_logs if log.get('source_ip') in blocked_ips]
+                print(f"🛡️ [Simulator Firewall] BLOCK! Đã chặn {len(original_logs) - len(filtered_logs)} gói tin log độc hại từ IP: {blocked_list}")
+                final_payload["logs"] = filtered_logs
+        
+        # 3. Publish over MQTTS
         try:
-            client.publish(topic, json.dumps(payload), qos=1)
-            # Log telemetry in console (print only if device is under attack)
-            if state != "normal":
-                metrics = payload.get("metrics", {})
-                bps = metrics.get("bytes_per_second", 0)
-                temp = metrics.get("temperature", 0)
-                cpu = metrics.get("cpu_usage", 0)
-                print(f"[Telemetry Log] Device: {device_id} | Status: {state.upper()} | CPU: {cpu}% | Temp: {temp} C | Traffic: {bps} Bps")
+            # If the device is under signal_loss attack, simulate signal cut (do not publish)
+            if state == "signal_loss":
+                pass
+            else:
+                client.publish(topic, json.dumps(final_payload), qos=1)
+                
+            # Log telemetry in console if device is under attack or has logs
+            if state != "normal" or len(final_payload.get("logs", [])) > 0:
+                metrics = final_payload.get("metrics", {})
+                logs_count = len(final_payload.get("logs", []))
+                print(f"[Telemetry Log] Node: {device_id} ({node_type.upper()}) | State: {state.upper()} | Metrics: {metrics} | Logs: {logs_count}")
         except Exception as e:
             print(f"[Simulator] Publish error on {device_id}: {e}")
             
@@ -184,9 +216,10 @@ async def main():
     global MAIN_LOOP
     MAIN_LOOP = asyncio.get_running_loop()
     
+    # Chạy tác vụ đồng bộ IP chặn chạy ngầm
+    asyncio.create_task(sync_blocked_ips())
+    
     device_sim_tasks = [simulate_device(d) for d in DEVICES]
-    # Disable periodic automatic attacks, and only keep the device simulation loops.
-    # Users trigger attacks manually via the Attacker Console!
     await asyncio.gather(*device_sim_tasks)
 
 if __name__ == "__main__":

@@ -5,9 +5,14 @@ import { handleFailedLogin, handleSuccessfulLogin, registerFailedIpAttempt } fro
 
 const generateAccessToken = (user) => {
   return jwt.sign(
-    { id: user._id, username: user.username, role: user.role },
+    { 
+      id: user._id, 
+      username: user.username, 
+      role: user.role, 
+      isFirstLogin: user.isFirstLogin === undefined ? true : user.isFirstLogin 
+    },
     process.env.JWT_SECRET || 'ics_guard_access_secret_key_2026_@_secure',
-    { expiresIn: process.env.JWT_ACCESS_EXPIRY || '15m' }
+    { expiresIn: process.env.JWT_ACCESS_EXPIRY || '30d' }
   );
 };
 
@@ -15,7 +20,7 @@ const generateRefreshToken = (user) => {
   return jwt.sign(
     { id: user._id },
     process.env.JWT_SECRET || 'ics_guard_refresh_secret_key_2026_@_secure',
-    { expiresIn: process.env.JWT_REFRESH_EXPIRY || '7d' }
+    { expiresIn: process.env.JWT_REFRESH_EXPIRY || '365d' }
   );
 };
 
@@ -77,9 +82,9 @@ export const login = async (req, res) => {
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
-    // Calculate refresh token expiry date (7 days default)
+    // Calculate refresh token expiry date (365 days default)
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
+    expiresAt.setDate(expiresAt.getDate() + 365);
 
     // Save refresh token to database
     await RefreshToken.create({
@@ -98,6 +103,7 @@ export const login = async (req, res) => {
         id: user._id,
         username: user.username,
         role: user.role,
+        isFirstLogin: user.isFirstLogin === undefined ? true : user.isFirstLogin,
       },
     });
 
@@ -108,7 +114,7 @@ export const login = async (req, res) => {
 };
 
 export const refresh = async (req, res) => {
-  const { refreshToken } = req.body;
+  const refreshToken = req.body.refreshToken || req.body.refresh_token;
 
   if (!refreshToken) {
     return res.status(400).json({ error: 'Bad Request', message: 'Refresh token is required.' });
@@ -154,7 +160,7 @@ export const refresh = async (req, res) => {
     const newRefreshToken = generateRefreshToken(user);
 
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
+    expiresAt.setDate(expiresAt.getDate() + 365);
 
     // 6. Save new refresh token
     await RefreshToken.create({
@@ -177,7 +183,7 @@ export const refresh = async (req, res) => {
 };
 
 export const logout = async (req, res) => {
-  const { refreshToken } = req.body;
+  const refreshToken = req.body.refreshToken || req.body.refresh_token;
 
   if (!refreshToken) {
     return res.status(400).json({ error: 'Bad Request', message: 'Refresh token is required to log out.' });
@@ -201,8 +207,60 @@ export const logout = async (req, res) => {
   }
 };
 
+export const setupOnboarding = async (req, res) => {
+  const { newPassword, email, telegramChatId } = req.body;
+  const userId = req.user.id; // Từ authMiddleware
+
+  if (!newPassword || !email) {
+    return res.status(400).json({ error: 'Bad Request', message: 'Mật khẩu mới và email là bắt buộc.' });
+  }
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'Not Found', message: 'Không tìm thấy tài khoản.' });
+    }
+
+    // Băm mật khẩu mới
+    user.password_hash = await bcrypt.hash(newPassword, 10);
+    user.email = email;
+    
+    // Cập nhật thông tin liên hệ
+    if (!user.contactInfo) {
+      user.contactInfo = {};
+    }
+    user.contactInfo.telegramChatId = telegramChatId || null;
+    user.isFirstLogin = false;
+
+    await user.save();
+
+    // Tạo token mới phản ánh thông tin cập nhật
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    return res.status(200).json({
+      message: 'Thiết lập onboarding thành công.',
+      accessToken,
+      refreshToken,
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      user: {
+        id: user._id,
+        username: user.username,
+        role: user.role,
+        isFirstLogin: false
+      }
+    });
+
+  } catch (error) {
+    console.error('SetupOnboarding error:', error);
+    return res.status(500).json({ error: 'Internal Server Error', message: 'Lỗi thiết lập onboarding.' });
+  }
+};
+
 export default {
   login,
   refresh,
   logout,
+  setupOnboarding,
 };

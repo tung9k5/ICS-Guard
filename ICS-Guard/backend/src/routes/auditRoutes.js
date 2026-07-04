@@ -15,7 +15,7 @@ router.get('/logs', authorize(['Admin', 'Analyst']), getAuditLogs);
 // GET /api/audits/blocked-ips - Admin, Analyst
 router.get('/blocked-ips', authorize(['Admin', 'Analyst']), getBlockedIps);
 
-// POST /api/audits/unblock-ip - Admin only (Audited)
-router.post('/unblock-ip', authorize('Admin'), auditLogger('IP_MANUAL_UNBLOCK'), unblockIp);
+// POST /api/audits/unblock-ip - Admin, L3 SOC Manager (Audited)
+router.post('/unblock-ip', authorize(['admin', 'l3_manager']), auditLogger('IP_MANUAL_UNBLOCK'), unblockIp);
 
 export default router;

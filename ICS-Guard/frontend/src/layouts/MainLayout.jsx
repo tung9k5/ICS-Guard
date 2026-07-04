@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Outlet, Navigate, useNavigate } from 'react-router-dom';
-import { LogOut, AlertOctagon } from 'lucide-react';
+import React from 'react';
+import { Outlet, Navigate, useNavigate, useLocation, Link } from 'react-router-dom';
+import { LogOut, Shield, ShieldAlert } from 'lucide-react';
 import authApi from '@/api/auth';
 import http from '@/http/clients/api';
 import { io } from 'socket.io-client';
@@ -9,62 +9,26 @@ import './MainLayout.scss';
 const MainLayout = () => {
   const token = localStorage.getItem('access_token');
   const navigate = useNavigate();
-  
-  const [emergencyAlert, setEmergencyAlert] = useState(null);
-  const [quarantineLoading, setQuarantineLoading] = useState(false);
-  const lastAlertIdRef = useRef(null);
+  const location = useLocation();
 
   if (!token) {
     return <Navigate to="/login" replace />;
   }
 
-  // 1. Heartbeat Registry and WebSocket Socket.io client setup
-  useEffect(() => {
-    // Send initial heartbeat
-    const sendHeartbeat = async () => {
-      try {
-        await http.post('/users/heartbeat');
-      } catch (err) {
-        // Silently ignore heartbeat errors
-      }
-    };
-    sendHeartbeat();
-    const heartbeatInterval = setInterval(sendHeartbeat, 10000); // Heartbeat every 10 seconds
+  const getIsFirstLogin = () => {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.isFirstLogin === true;
+    } catch (e) {
+      return false;
+    }
+  };
 
-    // Initialize Socket.io connection to backend
-    const socketUrl = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api').replace('/api', '');
-    console.log('[WebSocket] Connecting to backend at:', socketUrl);
-    const socket = io(socketUrl);
+  if (getIsFirstLogin()) {
+    return <Navigate to="/onboarding" replace />;
+  }
 
-    socket.on('connect', () => {
-      console.log('[WebSocket] Connected successfully to backend Socket.io. ID:', socket.id);
-    });
-
-    // Listen to NEW_ALERT event for emergency modals
-    socket.on('NEW_ALERT', (alertData) => {
-      console.log('[WebSocket] Received NEW_ALERT:', alertData);
-      
-      const formattedAlert = {
-        id: alertData._id,
-        device_id: alertData.device_id,
-        message: `Cảnh báo [${alertData.rule_name}]: ${alertData.title} trên thiết bị ${alertData.device_id}! IP nguồn: ${alertData.source_ip || 'unknown'}`
-      };
-      
-      if (formattedAlert.id !== lastAlertIdRef.current) {
-        lastAlertIdRef.current = formattedAlert.id;
-        setEmergencyAlert(formattedAlert);
-      }
-    });
-
-    socket.on('disconnect', () => {
-      console.log('[WebSocket] Disconnected from backend.');
-    });
-
-    return () => {
-      clearInterval(heartbeatInterval);
-      socket.disconnect();
-    };
-  }, []);
+  const currentPath = location.pathname;
 
   const handleLogout = async () => {
     try {
@@ -99,15 +63,6 @@ const MainLayout = () => {
   return (
     <div className="main-layout">
       <div className="main-content-wrapper relative">
-        <button 
-          onClick={handleLogout}
-          className="logout-floating-btn"
-          title="Đăng xuất"
-        >
-          <LogOut size={20} />
-          <span>Đăng xuất</span>
-        </button>
-        
         <main className="main-content">
           <Outlet />
         </main>

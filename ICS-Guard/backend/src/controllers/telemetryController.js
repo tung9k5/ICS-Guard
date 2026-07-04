@@ -1,9 +1,18 @@
-import { Alert, Incident, IncidentTimeline, Device } from '../models/index.js';
+import { Alert, Incident, IncidentTimeline, Device, BlockedIp } from '../models/index.js';
 import { registerFailedIpAttempt } from '../services/securityService.js';
 import { sendEmailAlert } from '../services/emailService.js';
 import { sendTelegramAlert } from '../services/telegramService.js';
-import { getActiveAdminSessions, addEmergencyAlert } from '../services/sessionRegistry.js';
-import socketService from '../services/socketService.js';
+import { publishMqtt } from '../services/mqttService.js';
+
+export const getBlockedIpsPublic = async (req, res) => {
+  try {
+    const list = await BlockedIp.find({ expiresAt: { $gt: new Date() } });
+    return res.status(200).json(list);
+  } catch (err) {
+    console.error('getBlockedIpsPublic error:', err);
+    return res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
 
 // In-memory brute force tracker grouped by device_id + source_ip
 // Format: { 'plc-water-01:185.220.101.45': [timestamp1, timestamp2, ...] }
@@ -156,5 +165,69 @@ export const ingestTelemetryLog = async (req, res) => {
   } catch (error) {
     console.error('[TelemetryController] Ingestion error:', error);
     return res.status(500).json({ error: 'Internal Server Error', message: 'Failed to process telemetry log.' });
+  }
+};
+
+export const controlAttackEndpoint = async (req, res) => {
+  const { device_id, attack_type } = req.body;
+
+  if (!device_id || typeof device_id !== 'string') {
+    return res.status(400).json({ error: 'Bad Request', message: 'device_id is required and must be a string.' });
+  }
+
+  if (!attack_type || typeof attack_type !== 'string') {
+    return res.status(400).json({ error: 'Bad Request', message: 'attack_type is required and must be a string.' });
+  }
+
+  try {
+    console.log(`[TelemetryController] Dispatching attack control command for ${device_id}: ${attack_type}`);
+    
+    // Publish command to MQTT broker
+    const success = publishMqtt('ics/control/attack', { device_id, attack_type });
+    
+    if (!success) {
+      return res.status(500).json({ error: 'Internal Server Error', message: 'Failed to publish control command to MQTT broker.' });
+    }
+
+    // If attack_type is stop, ensure the status of the device in MongoDB is set back to active.
+    // Otherwise, set it to quarantined when under attack.
+    if (attack_type === 'stop') {
+      await Device.findByIdAndUpdate(device_id, { status: 'active' });
+    } else {
+      await Device.findByIdAndUpdate(device_id, { status: 'quarantined' });
+    }
+
+    return res.status(200).json({ status: 'success', message: `Command '${attack_type}' dispatched successfully to ${device_id}.` });
+  } catch (error) {
+    console.error('[TelemetryController] Control attack error:', error);
+    return res.status(500).json({ error: 'Internal Server Error', message: 'Failed to dispatch attack command.' });
+  }
+};
+
+export const testTelegramConnectionEndpoint = async (req, res) => {
+  const { telegramChatId } = req.body;
+  
+  if (!telegramChatId) {
+    return res.status(400).json({ error: 'Bad Request', message: 'telegramChatId is required.' });
+  }
+
+  try {
+    console.log(`[TelemetryController] Sending connection test message to chat ID: ${telegramChatId}`);
+    
+    // Gửi tin nhắn thử thông qua Telegram Bot đến chat ID được cấu hình
+    const message = await sendTelegramAlert(
+      `🔔 *ICS-GUARD SECURITY LINK*\n\nKết nối thành công! Tài khoản của bạn đã liên kết thành công với hệ thống để nhận tin nhắn cảnh báo an ninh mạng.`,
+      [],
+      telegramChatId
+    );
+
+    if (message) {
+      return res.status(200).json({ status: 'success', message: 'Đã gửi tin nhắn kiểm tra thành công.' });
+    } else {
+      return res.status(500).json({ error: 'Internal Server Error', message: 'Không thể gửi tin nhắn qua Telegram Bot (vui lòng đảm bảo bạn đã chat /start với Bot trước).' });
+    }
+  } catch (error) {
+    console.error('[TelemetryController] Test telegram connection error:', error);
+    return res.status(500).json({ error: 'Internal Server Error', message: 'Gặp lỗi trong quá trình gửi tin nhắn thử.' });
   }
 };

@@ -2,10 +2,13 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import AuthLayout from '@/layouts/AuthLayout';
 import MainLayout from '@/layouts/MainLayout';
+import AttackerLayout from '@/layouts/AttackerLayout';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import Dashboard from '@/pages/Dashboard';
 import AttackerConsole from '@/pages/AttackerConsole';
+
+import Onboarding from '@/pages/Onboarding';
 
 const AppRoutes = () => {
   return (
@@ -14,18 +17,22 @@ const AppRoutes = () => {
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/attacker/login" element={<Login isAttacker={true} />} />
+        <Route path="/onboarding" element={<Onboarding />} />
       </Route>
 
-      {/* Standalone Public Route for Attacker Console */}
-      <Route path="/attacker" element={<AttackerConsole />} />
-
-      {/* Protected Routes */}
+      {/* Protected SOC Dashboard Routes */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<Dashboard />} />
-        
-        {/* Fallback route within MainLayout */}
-        <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
+
+      {/* Protected Attacker Console Routes */}
+      <Route element={<AttackerLayout />}>
+        <Route path="/attacker" element={<AttackerConsole />} />
+      </Route>
+
+      {/* Fallback route */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };

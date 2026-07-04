@@ -14,7 +14,7 @@ const __dirname = path.dirname(__filename);
 
 let MQTT_URL = process.env.MQTT_URL || 'mqtt://mosquitto:1883';
 
-let client = null;
+let mqttClient = null;
 
 export const connectMqtt = () => {
   const options = {};
@@ -37,7 +37,8 @@ export const connectMqtt = () => {
   }
 
   console.log(`[MqttService] Connecting to MQTT Broker at: ${MQTT_URL}...`);
-  client = mqtt.connect(MQTT_URL, options);
+  const client = mqtt.connect(MQTT_URL, options);
+  mqttClient = client;
 
   client.on('connect', () => {
     console.log(`[MqttService] Connected to MQTT Broker successfully.`);
@@ -59,6 +60,9 @@ export const connectMqtt = () => {
  
       // 2. Check metrics for anomalies
       await checkTelemetryAnomalies(payload);
+
+      // 3. Process structured logs
+      await processStructuredLogs(payload);
     } catch (error) {
       // Ignore parsing errors for non-json
     }
@@ -70,12 +74,12 @@ export const connectMqtt = () => {
 };
 
 export const publishMqtt = (topic, payload) => {
-  if (client && client.connected) {
-    client.publish(topic, JSON.stringify(payload));
+  if (mqttClient && mqttClient.connected) {
+    mqttClient.publish(topic, typeof payload === 'string' ? payload : JSON.stringify(payload), { qos: 1 });
     console.log(`[MqttService] Published to ${topic}:`, payload);
     return true;
   }
-  console.warn(`[MqttService] Cannot publish, client not connected.`);
+  console.error('[MqttService] MQTT Client not connected, publish failed.');
   return false;
 };
 
@@ -232,6 +236,119 @@ const checkTelemetryAnomalies = async (payload) => {
                  <p>Recommended Action: Shutdown or isolate the physical device to prevent damage.</p>`
         });
       }
+    }
+  }
+};
+
+const processStructuredLogs = async (payload) => {
+  const { device_id, zone, logs } = payload;
+  if (!device_id || !logs || !Array.isArray(logs) || logs.length === 0) return;
+
+  for (const log of logs) {
+    const { event, log_level, source_ip, message } = log;
+    
+    // Only raise security Alerts/Incidents for WARN, ERROR, CRITICAL logs
+    if (log_level === 'INFO') continue;
+
+    // Map log event to Rule Name and Severity
+    let rule_name = '';
+    let severity = 'MEDIUM';
+    let alert_title = '';
+
+    if (event === 'OTA_HASH_MISMATCH') {
+      rule_name = 'MALICIOUS_OTA_UPDATE';
+      severity = 'CRITICAL';
+      alert_title = `Tấn công nâng cấp Firmware độc hại trên ${device_id}`;
+    } else if (event === 'WATCHDOG_RESET') {
+      rule_name = 'DEVICE_CRASH_WDT';
+      severity = 'HIGH';
+      alert_title = `Thiết bị sập do Watchdog Reset trên ${device_id}`;
+    } else if (event === 'SENSOR_SPOOFING_DETECTED') {
+      rule_name = 'SENSOR_DATA_SPOOFING';
+      severity = 'CRITICAL';
+      alert_title = `Giả mạo dữ liệu cảm biến trên ${device_id}`;
+    } else if (event === 'MOTOR_CURRENT_OVERLOAD') {
+      rule_name = 'ACTUATOR_MOTOR_OVERLOAD';
+      severity = 'HIGH';
+      alert_title = `Quá tải động cơ thiết bị chấp hành ${device_id}`;
+    } else if (event === 'UNAUTHORIZED_CMD') {
+      rule_name = 'UNAUTHORIZED_ACTUATOR_COMMAND';
+      severity = 'CRITICAL';
+      alert_title = `Lệnh điều khiển trái phép trên ${device_id}`;
+    } else if (event === 'FIRMWARE_CHECKSUM_ERROR' || event === 'SCAN_CYCLE_LIMIT_EXCEEDED') {
+      rule_name = 'PLC_LOGIC_TAMPERING';
+      severity = 'CRITICAL';
+      alert_title = `Thay đổi logic điều khiển PLC trên ${device_id}`;
+    } else if (event === 'ROUTE_MODIFIED') {
+      rule_name = 'GATEWAY_ROUTE_POISONING';
+      severity = 'CRITICAL';
+      alert_title = `Đầu độc bảng định tuyến Gateway trên ${device_id}`;
+    } else if (event === 'TLS_HANDSHAKE_FAILED') {
+      rule_name = 'GATEWAY_WAN_DOS';
+      severity = 'HIGH';
+      alert_title = `Tấn công Từ chối dịch vụ (DoS) trên Gateway ${device_id}`;
+    } else {
+      // General anomaly fallback
+      rule_name = 'GENERAL_ANOMALY';
+      severity = log_level === 'CRITICAL' ? 'CRITICAL' : 'HIGH';
+      alert_title = `Phát hiện hành vi bất thường trên ${device_id}`;
+    }
+
+    // Check recent alerts for this rule and device
+    const now = Date.now();
+    const recentAlert = await Alert.findOne({
+      device_id,
+      rule_name,
+      status: 'new',
+      detected_at: { $gt: new Date(now - 1.5 * 60 * 1000) }
+    });
+
+    if (!recentAlert) {
+      console.log(`⚠️ [Anomaly Log Detection] Raised ${rule_name} on ${device_id}: ${message}`);
+      
+      const alert = await Alert.create({
+        rule_name,
+        device_id,
+        title: alert_title,
+        description: message,
+        severity,
+        status: 'new',
+        source_ip: source_ip || '127.0.0.1',
+        detected_at: new Date()
+      });
+
+      const incident = await Incident.create({
+        title: `Sự cố: ${alert_title}`,
+        description: `Hệ thống phát hiện nhật ký bảo mật nghiêm trọng gửi lên từ thiết bị ${device_id} tại vùng mạng ${zone || 'unknown'}: "${message}".`,
+        severity,
+        status: 'investigating',
+        alert_ids: [alert._id]
+      });
+
+      alert.incident_id = incident._id;
+      await alert.save();
+
+      await IncidentTimeline.create({
+        incident_id: incident._id,
+        actor: 'Security Log Engine',
+        action_type: 'incident_created',
+        description: `Phát hiện mã sự kiện ${event}. Log: "${message}".`,
+        metadata: { event, log_level, source_ip }
+      });
+
+      // Telegram / Email alerts
+      const alertText = `🚨 *CRITICAL SECURITY ALERT: ${rule_name}*\n\nDevice: *${device_id}*\nZone: *${zone || 'unknown'}*\nEvent: *${event}*\nMessage: _${message}_\nSeverity: *${severity}*`;
+      sendTelegramAlert(alertText).catch(err => console.error('[MqttService] Telegram send error:', err));
+      sendEmailAlert({
+        subject: `[ICS-GUARD CRITICAL] ${rule_name} on ${device_id}`,
+        text: `Critical Alert: ${message} (Event: ${event})`,
+        html: `<h3>Critical Security Alert</h3>
+               <p><strong>Device:</strong> ${device_id}</p>
+               <p><strong>Zone:</strong> ${zone || 'unknown'}</p>
+               <p><strong>Event:</strong> ${event}</p>
+               <p><strong>Log Details:</strong> ${message}</p>
+               <p><strong>Action Taken:</strong> Flagged in SOC Dashboard and registered for AI analysis.</p>`
+      }).catch(err => console.error('[MqttService] Email send error:', err));
     }
   }
 };

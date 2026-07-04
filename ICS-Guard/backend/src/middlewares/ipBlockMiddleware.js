@@ -1,37 +1,28 @@
 import { BlockedIp } from '../models/index.js';
 
-const ipBlockMiddleware = async (req, res, next) => {
-  // Normalize request IP. In production with reverse proxies, you might use req.headers['x-forwarded-for']
-  const rawIp = req.ip || req.connection.remoteAddress;
-  const ipAddress = rawIp.replace(/^::ffff:/, ''); // normalize IPv6-mapped IPv4
+export const ipBlockMiddleware = async (req, res, next) => {
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  
+  // Chuẩn hóa địa chỉ IP (loại bỏ tiền tố IPv6 map IPv4 nếu có)
+  const cleanIp = clientIp.includes('::ffff:') ? clientIp.split('::ffff:')[1] : clientIp;
 
   try {
-    const blockRecord = await BlockedIp.findOne({
-      ipAddress,
-      expiresAt: { $gt: new Date() },
+    const isBlocked = await BlockedIp.findOne({
+      ipAddress: cleanIp,
+      expiresAt: { $gt: new Date() }
     });
 
-    if (blockRecord) {
-      return res.status(403).json({
-        error: 'Forbidden',
-        message: `Your IP address (${ipAddress}) has been blocked due to security reasons.`,
-        reason: blockRecord.reason,
-        blockedAt: blockRecord.blockedAt,
-        expiresAt: blockRecord.expiresAt,
+    if (isBlocked) {
+      return res.status(403).json({ 
+        error: 'Forbidden', 
+        message: 'Địa chỉ IP của bạn đã bị tường lửa ứng dụng chặn do phát hiện hành vi bất thường.' 
       });
     }
-
-    // Clean up expired blocks for this IP if any exist
-    await BlockedIp.deleteMany({
-      ipAddress,
-      expiresAt: { $lte: new Date() },
-    });
-
-    next();
   } catch (error) {
-    console.error('Error in ipBlockMiddleware:', error);
-    next(); // Fail-safe: allow request if check fails, but log error
+    console.error('IP block middleware error:', error);
   }
+  
+  next();
 };
 
 export default ipBlockMiddleware;
