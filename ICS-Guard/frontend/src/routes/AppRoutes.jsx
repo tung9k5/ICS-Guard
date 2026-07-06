@@ -6,6 +6,7 @@ import AttackerLayout from '@/layouts/AttackerLayout';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import Dashboard from '@/pages/Dashboard';
+import Assets from '@/pages/Assets';
 import AttackerConsole from '@/pages/AttackerConsole';
 
 import Onboarding from '@/pages/Onboarding';
@@ -24,6 +25,7 @@ const AppRoutes = () => {
       {/* Protected SOC Dashboard Routes */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/assets" element={<Assets />} />
       </Route>
 
       {/* Protected Attacker Console Routes */}

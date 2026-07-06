@@ -174,6 +174,14 @@ export const refresh = async (req, res) => {
       refreshToken: newRefreshToken,
       access_token: newAccessToken,
       refresh_token: newRefreshToken,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role,
+        isFirstLogin: user.isFirstLogin === undefined ? true : user.isFirstLogin,
+      }
     });
 
   } catch (error) {
@@ -203,6 +211,19 @@ export const logout = async (req, res) => {
     return res.status(200).json({ message: 'Successfully logged out.' });
   } catch (error) {
     console.error('Logout error:', error);
+    return res.status(500).json({ error: 'Internal Server Error', message: 'Something went wrong.' });
+  }
+};
+
+export const me = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password_hash');
+    if (!user) {
+      return res.status(404).json({ error: 'Not Found', message: 'User not found.' });
+    }
+    return res.status(200).json({ user });
+  } catch (error) {
+    console.error('Get profile error:', error);
     return res.status(500).json({ error: 'Internal Server Error', message: 'Something went wrong.' });
   }
 };
@@ -258,9 +279,72 @@ export const setupOnboarding = async (req, res) => {
   }
 };
 
+export const register = async (req, res) => {
+  console.log('[Register Request Body]', req.body);
+  const { username, email, password, full_name } = req.body;
+
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: 'Bad Request', message: 'Username, email and password are required.' });
+  }
+
+  try {
+    const existingUser = await User.findOne({
+      $or: [{ username }, { email }]
+    });
+
+    if (existingUser) {
+      return res.status(409).json({ error: 'Conflict', message: 'Username or email already exists.' });
+    }
+
+    const password_hash = await bcrypt.hash(password, 10);
+
+    const newUser = await User.create({
+      username,
+      email,
+      password_hash,
+      full_name: full_name || '',
+      role: 'admin',
+      isFirstLogin: false
+    });
+
+    const accessToken = generateAccessToken(newUser);
+    const refreshToken = generateRefreshToken(newUser);
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 365);
+
+    await RefreshToken.create({
+      userId: newUser._id,
+      token: refreshToken,
+      expiresAt,
+    });
+
+    return res.status(201).json({
+      message: 'Registration successful.',
+      accessToken,
+      refreshToken,
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      user: {
+        id: newUser._id,
+        username: newUser.username,
+        email: newUser.email,
+        role: newUser.role,
+        isFirstLogin: false
+      }
+    });
+
+  } catch (error) {
+    console.error('Registration error:', error);
+    return res.status(500).json({ error: 'Internal Server Error', message: 'Something went wrong.' });
+  }
+};
+
 export default {
   login,
   refresh,
   logout,
+  me,
   setupOnboarding,
+  register,
 };

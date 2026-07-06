@@ -5,6 +5,11 @@ const deviceSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: false, // Make it optional temporarily for backward compatibility
+  },
   name: {
     type: String,
     required: true,
@@ -24,6 +29,9 @@ const deviceSchema = new mongoose.Schema({
   ip_address: {
     type: String,
   },
+  description: {
+    type: String,
+  },
   macAddress: {
     type: String,
     required: true,
@@ -33,7 +41,7 @@ const deviceSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['active', 'isolated', 'online', 'offline', 'quarantined'],
+    enum: ['active', 'inactive', 'isolated', 'online', 'offline', 'quarantined'],
     default: 'active',
   },
   risk_score: {
