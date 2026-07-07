@@ -3,6 +3,7 @@ import { X, Save } from 'lucide-react';
 import VButton from '@/components/common/VButton/VButton';
 import VInput from '@/components/common/VInput/VInput';
 import deviceService from '@/services/deviceService';
+import { DEVICE_TYPES } from '@/constants/deviceConstants';
 
 const DeviceForm = ({ device, onClose, onSuccess }) => {
   const isEdit = !!device;
@@ -99,14 +100,21 @@ const DeviceForm = ({ device, onClose, onSuccess }) => {
             className="mb-4"
           />
 
-          <VInput 
-            label="Loại thiết bị"
-            name="type"
-            value={formData.type}
-            onChange={handleChange}
-            placeholder="Ví dụ: PLC, HMI, SCADA"
-            className="mb-4"
-          />
+          <div className="form-group mb-4">
+            <label className="v-input-label d-block mb-2">Loại thiết bị</label>
+            <select 
+              name="type" 
+              value={formData.type} 
+              onChange={handleChange}
+              className="v-input"
+              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
+            >
+              <option value="">Chọn loại thiết bị</option>
+              {DEVICE_TYPES.map(t => (
+                <option key={t.value} value={t.value}>{t.label} - {t.description}</option>
+              ))}
+            </select>
+          </div>
 
           <div className="form-group mb-4">
             <label className="v-input-label d-block mb-2">Trạng thái</label>
@@ -117,7 +125,7 @@ const DeviceForm = ({ device, onClose, onSuccess }) => {
               className="v-input"
               style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
             >
-              <option value="active">Đang hoạt động</option>
+              <option value="active">Hoạt động</option>
               <option value="inactive">Vô hiệu hóa</option>
             </select>
           </div>
