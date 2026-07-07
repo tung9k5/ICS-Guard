@@ -4,7 +4,7 @@ import authApi from '@/api/auth';
 import VButton from '@/components/common/VButton/VButton';
 import './IdleTimeout.scss';
 
-const IDLE_TIMEOUT_MS = 300000; // 5 minutes
+const IDLE_TIMEOUT_MS = 180000; // 3 minutes
 const COUNTDOWN_SECONDS = 30;
 
 const IdleTimeout = () => {
@@ -128,8 +128,12 @@ const IdleTimeout = () => {
     updateShowDialog(false);
     
     try {
-      if (localStorage.getItem('access_token')) {
-        await authApi.logout();
+      const isAttacker = location.pathname.startsWith('/attacker');
+      const refreshTokenKey = isAttacker ? 'attacker_refresh_token' : 'refresh_token';
+      const refreshToken = localStorage.getItem(refreshTokenKey);
+
+      if (refreshToken) {
+        await authApi.logout({ refreshToken });
       }
     } catch (e) {
       console.error('Logout error', e);
