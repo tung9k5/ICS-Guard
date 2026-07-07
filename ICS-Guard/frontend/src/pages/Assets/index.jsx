@@ -9,12 +9,12 @@ import VPagination from '@/components/common/UI/VPagination';
 import VHeaderPage from '@/components/common/VHeaderPage';
 import VFilterPage from '@/components/common/VFilterPage';
 import { DEVICE_TYPES } from '@/constants/deviceConstants';
+import { toast } from '@/utils/toast';
 import './Assets.scss';
 
 const Assets = () => {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   
   // Filter & Pagination States
   const [search, setSearch] = useState('');
@@ -31,7 +31,6 @@ const Assets = () => {
   const fetchDevices = useCallback(async () => {
     try {
       setLoading(true);
-      setError('');
       
       const params = {
         search,
@@ -60,7 +59,7 @@ const Assets = () => {
       }
     } catch (err) {
       console.error('Error fetching devices:', err);
-      setError('Không thể tải danh sách thiết bị. Vui lòng thử lại sau.');
+      toast.error('Không thể tải danh sách thiết bị. Vui lòng thử lại sau.');
     } finally {
       setLoading(false);
     }
@@ -88,16 +87,17 @@ const Assets = () => {
     if (window.confirm('Bạn có chắc chắn muốn xoá thiết bị này?')) {
       try {
         await deviceService.delete(id);
+        toast.success('Xoá thiết bị thành công');
         fetchDevices();
       } catch (err) {
         console.error('Error deleting device:', err);
-        alert('Có lỗi xảy ra khi xoá thiết bị');
+        toast.error('Có lỗi xảy ra khi xoá thiết bị');
       }
     }
   };
 
   const handleViewDevice = (device) => {
-    alert(`Xem chi tiết thiết bị: ${device.name}\nIP: ${device.ip_address}`);
+    toast.info(`Xem chi tiết thiết bị: ${device.name}\nIP: ${device.ip_address}`);
   };
 
   const handleFormSuccess = () => {
@@ -117,8 +117,6 @@ const Assets = () => {
         }
       />
 
-      {error && <div className="alert-error">{error}</div>}
-
       <div className="assets-content">
         <VFilterPage 
           searchPlaceholder="Tìm kiếm (Tên, Loại, IP)..."
@@ -128,7 +126,7 @@ const Assets = () => {
             setPage(1); // Reset page on search
           }}
         >
-          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+          <div className="filter-select-wrapper">
             <select 
               className="v-filter-select" 
               value={type} 
@@ -146,13 +144,13 @@ const Assets = () => {
             {type && (
               <X 
                 size={14} 
-                style={{ position: 'absolute', right: '30px', cursor: 'pointer', color: 'var(--text-muted)' }} 
+                className="clear-icon"
                 onClick={() => { setType(''); setPage(1); }}
               />
             )}
           </div>
 
-          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+          <div className="filter-select-wrapper">
             <select 
               className="v-filter-select" 
               value={status} 
@@ -169,7 +167,7 @@ const Assets = () => {
             {status && (
               <X 
                 size={14} 
-                style={{ position: 'absolute', right: '30px', cursor: 'pointer', color: 'var(--text-muted)' }} 
+                className="clear-icon"
                 onClick={() => { setStatus(''); setPage(1); }}
               />
             )}

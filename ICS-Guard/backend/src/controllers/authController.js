@@ -1,5 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import axios from 'axios';
 import { User, RefreshToken } from '../models/index.js';
 import { handleFailedLogin, handleSuccessfulLogin, registerFailedIpAttempt } from '../services/securityService.js';
 
@@ -340,6 +341,79 @@ export const register = async (req, res) => {
   }
 };
 
+export const googleLogin = async (req, res) => {
+  const { idToken } = req.body;
+  if (!idToken) {
+    return res.status(400).json({ error: 'Bad Request', message: 'Google ID token is required.' });
+  }
+
+  try {
+    const response = await axios.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+    const { email, name, sub } = response.data; // `sub` is Google user ID
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      // Create user if not exists
+      // Generate a random password since they login with Google
+      const randomPassword = Math.random().toString(36).slice(-10);
+      const password_hash = await bcrypt.hash(randomPassword, 10);
+      
+      user = await User.create({
+        username: email.split('@')[0] + '_' + sub.substring(0, 4),
+        email,
+        full_name: name,
+        password_hash,
+        role: 'admin', // default role, adjust if needed
+        isFirstLogin: false
+      });
+    }
+
+    // Lock check
+    const now = new Date();
+    if (user.login_failures && user.login_failures.lockout_until && user.login_failures.lockout_until > now) {
+      const waitTimeMin = Math.ceil((user.login_failures.lockout_until - now) / 60000);
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: `Account is locked. Please try again after ${waitTimeMin} minute(s).`,
+      });
+    }
+
+    await handleSuccessfulLogin(user);
+
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 365);
+
+    await RefreshToken.create({
+      userId: user._id,
+      token: refreshToken,
+      expiresAt,
+    });
+
+    return res.status(200).json({
+      message: 'Login successful.',
+      accessToken,
+      refreshToken,
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        isFirstLogin: user.isFirstLogin === undefined ? true : user.isFirstLogin,
+      },
+    });
+
+  } catch (error) {
+    console.error('Google login error:', error.response?.data || error);
+    return res.status(401).json({ error: 'Unauthorized', message: 'Invalid Google ID token.' });
+  }
+};
+
 export default {
   login,
   refresh,
@@ -347,4 +421,5 @@ export default {
   me,
   setupOnboarding,
   register,
+  googleLogin,
 };

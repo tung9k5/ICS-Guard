@@ -8,11 +8,7 @@ import {
   ChevronDown, ChevronRight, RefreshCw, Activity, ShieldCheck, LogOut
 } from 'lucide-react';
 import authApi from '@/api/auth';
-
-
-
-
-const ATTACK_SCENARIOS = {
+import { toast } from '@/utils/toast';const ATTACK_SCENARIOS = {
   gateway: [
     { type: 'wan_dos', name: 'Tấn công Từ chối dịch vụ WAN (WAN DoS)', desc: 'Spam handshake TLS làm cạn kiệt tài nguyên xử lý của Gateway.' },
     { type: 'route_poisoning', name: 'Đầu độc định tuyến (Route Poisoning)', desc: 'Chèn tuyến tĩnh giả mạo chuyển hướng lưu lượng về IP hacker.' }
@@ -61,7 +57,6 @@ const AttackerConsole = () => {
   const [selectedNodes, setSelectedNodes] = useState([]);
   const [selectedAttacks, setSelectedAttacks] = useState({}); // format: { [device_type]: attack_type }
   const [triggering, setTriggering] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
   const [collapsedZones, setCollapsedZones] = useState({ 'Zone-B': true, 'Zone-C': true });
 
   const handleLogout = async () => {
@@ -168,7 +163,7 @@ const AttackerConsole = () => {
 
   const handleLaunchAttack = async () => {
     if (selectedNodes.length === 0) {
-      alert('Vui lòng chọn ít nhất một thiết bị mục tiêu từ cây sơ đồ hệ thống.');
+      toast.error('Vui lòng chọn ít nhất một thiết bị mục tiêu từ cây sơ đồ hệ thống.');
       return;
     }
 
@@ -179,13 +174,12 @@ const AttackerConsole = () => {
     // Check if attacks are selected for each type
     const missingAttackTypes = typesToAttack.filter(type => !selectedAttacks[type]);
     if (missingAttackTypes.length > 0) {
-      alert(`Vui lòng cấu hình kịch bản tấn công cho nhóm thiết bị: ${missingAttackTypes.map(t => t.toUpperCase()).join(', ')}`);
+      toast.error(`Vui lòng cấu hình kịch bản tấn công cho nhóm thiết bị: ${missingAttackTypes.map(t => t.toUpperCase()).join(', ')}`);
       return;
     }
 
     try {
       setTriggering(true);
-      setSuccessMsg('');
 
       // Send attack commands in parallel for each target
       const attackPromises = selectedDevices.map(device => {
@@ -197,11 +191,11 @@ const AttackerConsole = () => {
       });
 
       await Promise.all(attackPromises);
-      setSuccessMsg(`🚀 Đã khởi động chiến dịch tấn công thành công trên ${selectedDevices.length} thiết bị!`);
+      toast.success(`🚀 Đã khởi động chiến dịch tấn công thành công trên ${selectedDevices.length} thiết bị!`);
       fetchDevices(); // refresh status
     } catch (error) {
       console.error('Lỗi khi kích hoạt tấn công:', error);
-      alert('Kích hoạt chiến dịch tấn công thất bại. Vui lòng kiểm tra kết nối Backend API.');
+      toast.error('Kích hoạt chiến dịch tấn công thất bại. Vui lòng kiểm tra kết nối Backend API.');
     } finally {
       setTriggering(false);
     }
@@ -209,13 +203,12 @@ const AttackerConsole = () => {
 
   const handleStopAttack = async () => {
     if (selectedNodes.length === 0) {
-      alert('Vui lòng chọn các thiết bị cần ngăn chặn/dừng tấn công.');
+      toast.error('Vui lòng chọn các thiết bị cần ngăn chặn/dừng tấn công.');
       return;
     }
 
     try {
       setTriggering(true);
-      setSuccessMsg('');
 
       const selectedDevices = devices.filter(d => selectedNodes.includes(d._id));
       const stopPromises = selectedDevices.map(device => {
@@ -226,11 +219,11 @@ const AttackerConsole = () => {
       });
 
       await Promise.all(stopPromises);
-      setSuccessMsg(`✅ Đã dừng tấn công và phục hồi trạng thái cho ${selectedDevices.length} thiết bị!`);
+      toast.success(`✅ Đã dừng tấn công và phục hồi trạng thái cho ${selectedDevices.length} thiết bị!`);
       fetchDevices();
     } catch (error) {
       console.error('Lỗi khi dừng tấn công:', error);
-      alert('Dừng tấn công thất bại.');
+      toast.error('Dừng tấn công thất bại.');
     } finally {
       setTriggering(false);
     }
@@ -354,11 +347,6 @@ const AttackerConsole = () => {
         </div>
       </div>
 
-      {successMsg && (
-        <div className="success-banner">
-          <span>{successMsg}</span>
-        </div>
-      )}
 
       {loading ? (
         <div className="loading-state">Đang tải cấu trúc sơ đồ hệ thống IoT...</div>

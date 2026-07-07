@@ -5,6 +5,7 @@ import authApi from '@/api/auth';
 import { Lock, User, Mail } from 'lucide-react';
 import VInput from '@/components/common/VInput/VInput';
 import VButton from '@/components/common/VButton/VButton';
+import { toast } from '@/utils/toast';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -14,15 +15,13 @@ const Register = () => {
     password: '',
     confirmPassword: ''
   });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Mật khẩu không khớp');
+      toast.error('Mật khẩu không khớp');
       return;
     }
 
@@ -36,10 +35,10 @@ const Register = () => {
       };
       
       await authApi.register(payload);
-      // Automatically navigate to login page after successful registration
-      navigate('/login', { state: { message: 'Đăng ký thành công! Vui lòng đăng nhập.' } });
+      toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
+      navigate('/login');
     } catch (err) {
-      setError(err.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+      toast.error(err.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
     } finally {
       setLoading(false);
     }
@@ -47,11 +46,10 @@ const Register = () => {
 
   return (
     <div className="auth-form-card">
-      {error && (
-        <div className="auth-error-alert">
-          {error}
-        </div>
-      )}
+      <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px' }}>Chào mừng</h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Điền thông tin để đăng ký tài khoản</p>
+      </div>
 
       <form onSubmit={handleSubmit}>
         <VInput

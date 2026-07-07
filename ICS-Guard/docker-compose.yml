@@ -13,6 +13,9 @@ services:
       - ./frontend:/app
       # Giữ lại node_modules trong container
       - /app/node_modules
+    environment:
+      - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+      - VITE_GOOGLE_GSI_CLIENT_URL=${VITE_GOOGLE_GSI_CLIENT_URL}
     depends_on:
       - backend
     restart: always

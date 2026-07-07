@@ -22,7 +22,7 @@ const GlobalLoading = () => {
 
     const handleHide = () => {
       const elapsedTime = Date.now() - startTimeRef.current;
-      const minDuration = 2000; // Ít nhất 2 giây
+      const minDuration = 1200; // Ít nhất 2 giây
 
       if (elapsedTime < minDuration) {
         const remainingTime = minDuration - elapsedTime;
