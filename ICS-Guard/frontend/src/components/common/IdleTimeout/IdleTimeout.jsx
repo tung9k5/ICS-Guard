@@ -4,7 +4,7 @@ import authApi from '@/api/auth';
 import VButton from '@/components/common/VButton/VButton';
 import './IdleTimeout.scss';
 
-const IDLE_TIMEOUT_MS = 6000; // 5 minutes
+const IDLE_TIMEOUT_MS = 180000; // 3 minutes
 const COUNTDOWN_SECONDS = 30;
 
 const IdleTimeout = () => {
