@@ -35,7 +35,7 @@ const injectVulnerabilityInfo = (deviceDoc) => {
 
 export const getAllDevices = async (req, res) => {
   try {
-    const { search, status, order, page = 1, per_page = 10 } = req.query;
+    const { search, status, type, order, page = 1, per_page = 10 } = req.query;
 
     // Xây dựng query filter
     let query = {};
@@ -56,6 +56,10 @@ export const getAllDevices = async (req, res) => {
 
     if (status) {
       query.status = status;
+    }
+
+    if (type) {
+      query.type = type;
     }
 
     // Thiết lập sorting

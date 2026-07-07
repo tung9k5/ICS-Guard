@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Server, Filter } from 'lucide-react';
+import { Plus, Search, Server, Filter, X } from 'lucide-react';
 import VButton from '@/components/common/VButton/VButton';
 import VInput from '@/components/common/VInput/VInput';
 import deviceService from '@/services/deviceService';
@@ -8,6 +8,7 @@ import DeviceForm from './DeviceForm';
 import VPagination from '@/components/common/UI/VPagination';
 import VHeaderPage from '@/components/common/VHeaderPage';
 import VFilterPage from '@/components/common/VFilterPage';
+import { DEVICE_TYPES } from '@/constants/deviceConstants';
 import './Assets.scss';
 
 const Assets = () => {
@@ -18,6 +19,7 @@ const Assets = () => {
   // Filter & Pagination States
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [type, setType] = useState('');
   const [order, setOrder] = useState('desc');
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
@@ -34,6 +36,7 @@ const Assets = () => {
       const params = {
         search,
         status,
+        type,
         order,
         page,
         per_page: perPage
@@ -61,7 +64,7 @@ const Assets = () => {
     } finally {
       setLoading(false);
     }
-  }, [search, status, order, page, perPage]);
+  }, [search, status, type, order, page, perPage]);
 
   // Use a slight debounce for search input
   useEffect(() => {
@@ -125,18 +128,52 @@ const Assets = () => {
             setPage(1); // Reset page on search
           }}
         >
-          <select 
-            className="v-filter-select" 
-            value={status} 
-            onChange={(e) => {
-              setStatus(e.target.value);
-              setPage(1);
-            }}
-          >
-            <option value="">Tất cả trạng thái</option>
-            <option value="active">Đang hoạt động</option>
-            <option value="inactive">Vô hiệu hóa</option>
-          </select>
+          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+            <select 
+              className="v-filter-select" 
+              value={type} 
+              onChange={(e) => {
+                setType(e.target.value);
+                setPage(1);
+              }}
+              style={{ paddingRight: type ? '28px' : undefined }}
+            >
+              <option value="">Tất cả thiết bị</option>
+              {DEVICE_TYPES.map(t => (
+                <option key={t.value} value={t.value}>{t.label}</option>
+              ))}
+            </select>
+            {type && (
+              <X 
+                size={14} 
+                style={{ position: 'absolute', right: '30px', cursor: 'pointer', color: 'var(--text-muted)' }} 
+                onClick={() => { setType(''); setPage(1); }}
+              />
+            )}
+          </div>
+
+          <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+            <select 
+              className="v-filter-select" 
+              value={status} 
+              onChange={(e) => {
+                setStatus(e.target.value);
+                setPage(1);
+              }}
+              style={{ paddingRight: status ? '28px' : undefined }}
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="active">Hoạt động</option>
+              <option value="inactive">Vô hiệu hóa</option>
+            </select>
+            {status && (
+              <X 
+                size={14} 
+                style={{ position: 'absolute', right: '30px', cursor: 'pointer', color: 'var(--text-muted)' }} 
+                onClick={() => { setStatus(''); setPage(1); }}
+              />
+            )}
+          </div>
 
           <select 
             className="v-filter-select" 

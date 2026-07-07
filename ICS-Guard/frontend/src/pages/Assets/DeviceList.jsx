@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Edit2, Trash2, Server, Activity, ChevronDown, ChevronUp } from 'lucide-react';
 import ActionMenu from '@/components/common/UI/ActionMenu';
 import VNoData from '@/components/common/UI/VNoData';
+import { getDeviceTypeLabel, getDeviceTypeStyle } from '@/constants/deviceConstants';
 
 const DeviceList = ({ devices, loading, onEdit, onDelete, onView }) => {
   const [expandedId, setExpandedId] = useState(null);
@@ -50,12 +51,19 @@ const DeviceList = ({ devices, loading, onEdit, onDelete, onView }) => {
                       <span className="truncate-text">{device.name}</span>
                     </div>
                   </td>
-                  <td><span className="badge badge-outline">{device.type || 'N/A'}</span></td>
+                  <td>
+                    <span className="badge badge-outline" style={getDeviceTypeStyle(device.type)}>
+                      {getDeviceTypeLabel(device.type) || 'N/A'}
+                    </span>
+                  </td>
                   <td>{device.ip_address || device.ipAddress || 'N/A'}</td>
                   <td>{device.mac_address || device.macAddress || 'N/A'}</td>
                   <td>
-                    <span className={`badge ${device.status === 'active' ? 'badge-success' : 'badge-danger'}`}>
-                      {device.status === 'active' ? 'Đang hoạt động' : 'Vô hiệu hóa'}
+                    <span 
+                      className={`badge ${device.status === 'active' ? 'badge-success' : 'badge-danger'}`}
+                      style={{ backgroundColor: device.status === 'active' ? '#E7FAD1' : '#FEECCA', color: device.status === 'active' ? '#1b5e20' : '#b71c1c' }}
+                    >
+                      {device.status === 'active' ? 'Hoạt động' : 'Vô hiệu hóa'}
                     </span>
                   </td>
                   <td className="text-muted">
@@ -106,7 +114,11 @@ const DeviceList = ({ devices, loading, onEdit, onDelete, onView }) => {
                 <div className="mobile-card-body">
                   <div className="detail-row">
                     <span className="detail-label">Loại thiết bị</span>
-                    <span className="detail-value">{device.type || 'N/A'}</span>
+                    <span className="detail-value">
+                      <span className="badge badge-outline" style={getDeviceTypeStyle(device.type)}>
+                        {getDeviceTypeLabel(device.type) || 'N/A'}
+                      </span>
+                    </span>
                     <div className="card-action-menu">
                       <ActionMenu actions={actions} direction="down" />
                     </div>
@@ -122,8 +134,11 @@ const DeviceList = ({ devices, loading, onEdit, onDelete, onView }) => {
                   <div className="detail-row">
                     <span className="detail-label">Trạng thái</span>
                     <span className="detail-value">
-                      <span className={`badge ${device.status === 'active' ? 'badge-success' : 'badge-danger'}`}>
-                        {device.status === 'active' ? 'Đang hoạt động' : 'Vô hiệu hóa'}
+                      <span 
+                        className={`badge ${device.status === 'active' ? 'badge-success' : 'badge-danger'}`}
+                        style={{ backgroundColor: device.status === 'active' ? '#E7FAD1' : '#FEECCA', color: device.status === 'active' ? '#1b5e20' : '#b71c1c' }}
+                      >
+                        {device.status === 'active' ? 'Hoạt động' : 'Vô hiệu hóa'}
                       </span>
                     </span>
                   </div>
