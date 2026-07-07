@@ -4,11 +4,11 @@ import VButton from '@/components/common/VButton/VButton';
 import VInput from '@/components/common/VInput/VInput';
 import deviceService from '@/services/deviceService';
 import { DEVICE_TYPES } from '@/constants/deviceConstants';
+import { toast } from '@/utils/toast';
 
 const DeviceForm = ({ device, onClose, onSuccess }) => {
   const isEdit = !!device;
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   
   const [formData, setFormData] = useState({
     name: device?.name || '',
@@ -27,34 +27,35 @@ const DeviceForm = ({ device, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.ipAddress || !formData.macAddress) {
-      setError('Vui lòng nhập đầy đủ Tên, IP và địa chỉ MAC');
+      toast.error('Vui lòng nhập đầy đủ Tên, IP và địa chỉ MAC');
       return;
     }
 
     const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
     if (!ipRegex.test(formData.ipAddress.trim())) {
-      setError('Địa chỉ IP không hợp lệ. Vui lòng nhập đúng định dạng IPv4 (VD: 192.168.1.100)');
+      toast.error('Địa chỉ IP không hợp lệ. Vui lòng nhập đúng định dạng IPv4 (VD: 192.168.1.100)');
       return;
     }
 
     const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
     if (!macRegex.test(formData.macAddress.trim())) {
-      setError('Địa chỉ MAC không hợp lệ. Vui lòng nhập đúng định dạng (VD: 00:1A:2B:3C:4D:5E hoặc 00-1A-2B-3C-4D-5E)');
+      toast.error('Địa chỉ MAC không hợp lệ. Vui lòng nhập đúng định dạng (VD: 00:1A:2B:3C:4D:5E hoặc 00-1A-2B-3C-4D-5E)');
       return;
     }
 
     try {
       setLoading(true);
-      setError('');
       if (isEdit) {
         await deviceService.update(device.id || device._id, formData);
+        toast.success('Cập nhật thiết bị thành công');
       } else {
         await deviceService.create(formData);
+        toast.success('Thêm mới thiết bị thành công');
       }
       onSuccess();
     } catch (err) {
       console.error('Lỗi khi lưu thiết bị:', err);
-      setError('Có lỗi xảy ra khi lưu thiết bị. Kiểm tra lại thông tin.');
+      toast.error('Có lỗi xảy ra khi lưu thiết bị. Kiểm tra lại thông tin.');
     } finally {
       setLoading(false);
     }
@@ -71,7 +72,6 @@ const DeviceForm = ({ device, onClose, onSuccess }) => {
         </div>
         
         <form onSubmit={handleSubmit} className="modal-body">
-          {error && <div className="alert-error mb-4">{error}</div>}
           
           <VInput 
             label="Tên thiết bị *"

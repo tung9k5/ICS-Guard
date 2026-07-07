@@ -23,15 +23,7 @@ const AuthLayout = () => {
       </div>
 
       <div className="auth-panel">
-        <div className="auth-header">
-          <img 
-            src="/logo.png" 
-            alt="ICS-Guard Logo" 
-            className="auth-logo" 
-            style={isAttacker ? { filter: 'hue-rotate(120deg) brightness(1.2)' } : {}} 
-          />
-          <p className="auth-subtitle">{isAttacker ? 'Hệ Thống Mô Phỏng Tấn Công' : 'Nền Tảng Giám Sát An Ninh'}</p>
-        </div>
+
         
         <Outlet />
       </div>

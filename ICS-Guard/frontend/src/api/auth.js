@@ -10,6 +10,15 @@ export default {
     });
   },
 
+  loginGoogle(data, options = {}) {
+    return http({
+      url: '/auth/google-login',
+      method: 'POST',
+      data,
+      ...options
+    });
+  },
+
   refreshToken(data, options = {}) {
     return http({
       url: '/auth/refresh',
