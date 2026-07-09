@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import './Header.scss';
 
-const Header = ({ toggleSidebar, user }) => {
+const Header = ({ toggleSidebar, user, onUpdateUser, onOpenProfile }) => {
   const { t } = useTranslation();
 
   return (
@@ -24,8 +24,12 @@ const Header = ({ toggleSidebar, user }) => {
           <Bell size={20} />
           <span className="notification-dot"></span>
         </button>
-        <div className="user-profile">
+        <div className="user-profile" onClick={onOpenProfile} style={{ cursor: 'pointer' }}>
+          {user?.avatar ? (
+            <img src={user.avatar} alt="Avatar" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+          ) : (
             <User size={16} />
+          )}
         </div>
       </div>
     </header>
