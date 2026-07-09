@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAllUsers, getUserById, createUser, updateUser, deleteUser } from '../controllers/userController.js';
+import { getAllUsers, getUserById, createUser, updateUser, deleteUser, updateProfile } from '../controllers/userController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 import { authorize } from '../middlewares/rbacMiddleware.js';
 import auditLogger from '../middlewares/auditMiddleware.js';
@@ -15,6 +15,9 @@ router.get('/', authorize(['Admin', 'Analyst', 'Viewer']), getAllUsers);
 
 // GET /api/users/:id - Admin, Analyst, Viewer
 router.get('/:id', authorize(['Admin', 'Analyst', 'Viewer']), getUserById);
+
+// PUT /api/users/profile - Update own profile (Audited)
+router.put('/profile', auditLogger('PROFILE_UPDATE'), updateProfile);
 
 // POST /api/users - Admin only (Audited)
 router.post('/', authorize('Admin'), auditLogger('USER_CREATE'), createUser);

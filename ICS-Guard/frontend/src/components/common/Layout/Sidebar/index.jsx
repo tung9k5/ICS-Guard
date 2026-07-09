@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShieldAlert, Network, Server, FileText, Settings, X, LogOut } from 'lucide-react';
+import { LayoutDashboard, ShieldAlert, Network, Server, FileText, Settings, X, LogOut, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import authApi from '@/api/auth';
 import './Sidebar.scss';

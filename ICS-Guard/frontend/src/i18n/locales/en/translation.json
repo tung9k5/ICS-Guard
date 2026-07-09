@@ -10,8 +10,8 @@
       "fail": "Login failed. Please check your information.",
       "welcome": "Welcome",
       "enter_info": "Enter your information to login",
-      "username_email": "Username or Email",
-      "enter_username_email": "Enter username or email",
+      "username_email": "Email",
+      "enter_username_email": "Enter email",
       "password": "Password",
       "enter_password": "Enter password",
       "remember_me": "Remember me",
@@ -147,5 +147,16 @@
     "go_home": "Go to Home",
     "title_under_construction": "Feature under development",
     "under_construction": "This feature is not yet complete and is currently under development. Please come back later."
+  },
+  "profile": {
+    "title": "Your Profile",
+    "upload_image": "Upload Image",
+    "full_name": "Full Name",
+    "enter_full_name": "Enter your full name...",
+    "email_readonly": "Email (Cannot be changed)",
+    "cancel": "Cancel",
+    "save": "Save Profile",
+    "saving": "Saving...",
+    "loading": "Loading profile..."
   }
 }

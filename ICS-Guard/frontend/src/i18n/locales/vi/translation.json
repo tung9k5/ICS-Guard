@@ -10,8 +10,8 @@
       "fail": "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.",
       "welcome": "Chào mừng",
       "enter_info": "Điền thông tin để đăng nhập tài khoản",
-      "username_email": "Tên đăng nhập hoặc Email",
-      "enter_username_email": "Nhập tên đăng nhập hoặc email",
+      "username_email": "Email",
+      "enter_username_email": "Nhập email",
       "password": "Mật khẩu",
       "enter_password": "Nhập mật khẩu",
       "remember_me": "Ghi nhớ tài khoản",
@@ -147,5 +147,16 @@
     "go_home": "Về trang chủ",
     "title_under_construction": "Tính năng đang phát triển",
     "under_construction": "Tính năng này hiện chưa hoàn thiện và đang trong quá trình phát triển. Vui lòng quay lại sau."
+  },
+  "profile": {
+    "title": "Hồ sơ của bạn",
+    "upload_image": "Tải ảnh lên",
+    "full_name": "Họ và tên",
+    "enter_full_name": "Nhập họ và tên...",
+    "email_readonly": "Email (Không thể thay đổi)",
+    "cancel": "Hủy",
+    "save": "Lưu thay đổi",
+    "saving": "Đang lưu...",
+    "loading": "Đang tải dữ liệu..."
   }
 }

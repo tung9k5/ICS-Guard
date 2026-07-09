@@ -42,7 +42,8 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 
 // Parse JSON request bodies
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Express trust proxy setup (so req.ip parses header correctly behind proxies)
 app.set('trust proxy', true);

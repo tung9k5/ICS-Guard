@@ -7,7 +7,7 @@ import http from '@/http/clients/api';
 import Sidebar from '@/components/common/Layout/Sidebar';
 import Header from '@/components/common/Layout/Header';
 import GlobalLoading from '@/components/common/GlobalLoading';
-
+import ProfileModal from '@/Dialog/ProfileModal';
 import DraggableChatbot from '@/components/common/DraggableChatbot';
 
 const MainLayout = () => {
@@ -17,6 +17,7 @@ const MainLayout = () => {
   const [emergencyAlert, setEmergencyAlert] = useState(null);
   const [quarantineLoading, setQuarantineLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [user, setUser] = useState(() => {
     const cached = sessionStorage.getItem('cached_user');
     return cached ? JSON.parse(cached) : null;
@@ -69,11 +70,16 @@ const MainLayout = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const handleUpdateUser = (updatedUser) => {
+    setUser(updatedUser);
+    sessionStorage.setItem('cached_user', JSON.stringify(updatedUser));
+  };
+
   return (
     <div className="main-layout">
       <Sidebar isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
       <div className="main-content-wrapper relative">
-        <Header toggleSidebar={toggleSidebar} user={user} />
+        <Header toggleSidebar={toggleSidebar} user={user} onUpdateUser={handleUpdateUser} onOpenProfile={() => setIsProfileOpen(true)} />
         <main className="main-content">
           <div className="page-container">
             <Outlet />
@@ -82,6 +88,13 @@ const MainLayout = () => {
       </div>
       <GlobalLoading />
       <DraggableChatbot />
+      {isProfileOpen && (
+        <ProfileModal 
+          user={user} 
+          onClose={() => setIsProfileOpen(false)} 
+          onUpdate={handleUpdateUser}
+        />
+      )}
     </div>
   );
 };
