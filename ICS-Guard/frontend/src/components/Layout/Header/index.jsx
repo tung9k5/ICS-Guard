@@ -1,7 +1,7 @@
 import React from 'react';
 import { Bell, ChevronDown, User, Menu } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import LanguageSwitcher from '@/components/common/LanguageSwitcher';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 import './Header.scss';
 
 const Header = ({ toggleSidebar, user, onUpdateUser, onOpenProfile }) => {

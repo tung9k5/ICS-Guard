@@ -148,6 +148,15 @@
     "title_under_construction": "Feature under development",
     "under_construction": "This feature is not yet complete and is currently under development. Please come back later."
   },
+  "common": {
+    "processing_data": "Processing data...",
+    "idle_timeout": {
+      "title": "Are you still there?",
+      "description_1": "Your session will automatically log out in ",
+      "description_2": " seconds due to inactivity.",
+      "continue": "Continue using"
+    }
+  },
   "profile": {
     "title": "Your Profile",
     "upload_image": "Upload Image",

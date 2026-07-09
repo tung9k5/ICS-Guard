@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Shield, Server, Activity } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { loadingEvent } from '@/utils/loadingEvent';
+import { GLOBAL_LOADING_MIN_DURATION_MS, GLOBAL_LOADING_ICON_INTERVAL_MS } from '@/constants/uiConstants';
 import './GlobalLoading.scss';
 
 const GlobalLoading = () => {
@@ -24,7 +25,7 @@ const GlobalLoading = () => {
 
     const handleHide = () => {
       const elapsedTime = Date.now() - startTimeRef.current;
-      const minDuration = 1200; // Ít nhất 2 giây
+      const minDuration = GLOBAL_LOADING_MIN_DURATION_MS;
 
       if (elapsedTime < minDuration) {
         const remainingTime = minDuration - elapsedTime;
@@ -53,7 +54,7 @@ const GlobalLoading = () => {
     if (isLoading) {
       interval = setInterval(() => {
         setIconIndex((prev) => (prev + 1) % 3);
-      }, 600); // Đổi icon mỗi 600ms
+      }, GLOBAL_LOADING_ICON_INTERVAL_MS);
     } else {
       setIconIndex(0);
     }

@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Home, ArrowLeft } from 'lucide-react';
-import VButton from '@/components/common/VButton/VButton';
+import VButton from '@/components/VButton';
 
 const UnderConstruction = () => {
   const navigate = useNavigate();

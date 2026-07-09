@@ -1,13 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, ChevronDown, Maximize2, X, Menu, Mic, Send, Minimize2 } from 'lucide-react';
+import { CHATBOT_MOCK_REPLY_DELAY_MS, CHATBOT_MAX_INPUT_LENGTH, MOCK_REPLIES } from '@/constants/chatbotConstants';
 import './ChatWindow.scss';
-
-const MOCK_REPLIES = [
-  "Chào bạn, tôi là trợ lý ảo ICS-Guard. Tôi có thể giúp gì cho bạn hôm nay?",
-  "Hệ thống đang hoạt động ổn định. Mọi chỉ số đều trong ngưỡng an toàn.",
-  "Tôi đã ghi nhận yêu cầu của bạn. Đang tiến hành phân tích hệ thống...",
-  "Vui lòng cung cấp thêm thông tin để tôi có thể hỗ trợ tốt nhất."
-];
 
 const ChatWindow = ({ onClose }) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -39,7 +33,7 @@ const ChatWindow = ({ onClose }) => {
       const reply = MOCK_REPLIES[Math.floor(Math.random() * MOCK_REPLIES.length)];
       setMessages(prev => [...prev, { id: Date.now(), text: reply, sender: 'bot' }]);
       setIsTyping(false);
-    }, 1500);
+    }, CHATBOT_MOCK_REPLY_DELAY_MS);
   };
 
   const handleKeyPress = (e) => {
@@ -107,7 +101,7 @@ const ChatWindow = ({ onClose }) => {
             type="text" 
             placeholder="Hãy hỏi tôi bất cứ điều gì..." 
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value.substring(0, 500))}
+            onChange={(e) => setInputValue(e.target.value.substring(0, CHATBOT_MAX_INPUT_LENGTH))}
             onKeyPress={handleKeyPress}
           />
           {inputValue.trim() ? (
