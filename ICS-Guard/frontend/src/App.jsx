@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import AppRoutes from '@/routes/AppRoutes';
 
-import IdleTimeout from '@/components/common/IdleTimeout/IdleTimeout';
+import IdleTimeout from '@/components/IdleTimeout/IdleTimeout';
 
 function App() {
   return (

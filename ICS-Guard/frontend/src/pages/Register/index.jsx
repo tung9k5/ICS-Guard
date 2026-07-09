@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import authApi from '@/api/auth';
 import { Lock, User, Mail } from 'lucide-react';
-import VInput from '@/components/common/VInput/VInput';
-import VButton from '@/components/common/VButton/VButton';
+import VInput from '@/components/VInput';
+import VButton from '@/components/VButton';
 import { toast } from '@/utils/toast';
 
 import { useTranslation } from 'react-i18next';

@@ -2,7 +2,7 @@ import './AuthLayout.scss';
 import React from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import LanguageSwitcher from '@/components/common/LanguageSwitcher';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 const AuthLayout = () => {
   const location = useLocation();
