@@ -1,0 +1,67 @@
+.draggable-chatbot {
+  position: fixed;
+  z-index: 9999;
+  user-select: none;
+  width: 56px;
+  height: 56px;
+
+  .chatbot-menu {
+    position: absolute;
+    bottom: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+
+    .chatbot-sub-fab {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background-color: #ffffff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: transform 0.2s, background-color 0.2s;
+      color: #2563eb;
+
+      &:hover {
+        transform: scale(1.1);
+        background-color: #f8fafc;
+      }
+    }
+  }
+
+  .chatbot-fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: var(--primary-color, #2563eb);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: grab;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: transform 0.2s, background-color 0.2s;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    &:hover {
+      background-color: var(--primary-color-hover, #1d4ed8);
+    }
+
+    &.dragging {
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+  }
+}

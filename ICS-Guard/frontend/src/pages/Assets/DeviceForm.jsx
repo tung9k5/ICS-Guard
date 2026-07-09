@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { X, Save } from 'lucide-react';
 import VButton from '@/components/common/VButton/VButton';
 import VInput from '@/components/common/VInput/VInput';
-import deviceService from '@/services/deviceService';
+import ApiDevice from '@/api/device';
 import { DEVICE_TYPES } from '@/constants/deviceConstants';
 import { toast } from '@/utils/toast';
+import { useTranslation } from 'react-i18next';
 
 const DeviceForm = ({ device, onClose, onSuccess }) => {
+  const { t } = useTranslation();
   const isEdit = !!device;
   const [loading, setLoading] = useState(false);
   
@@ -27,35 +29,35 @@ const DeviceForm = ({ device, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name || !formData.ipAddress || !formData.macAddress) {
-      toast.error('Vui lòng nhập đầy đủ Tên, IP và địa chỉ MAC');
+      toast.error(t('assets.form.error_required'));
       return;
     }
 
     const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
     if (!ipRegex.test(formData.ipAddress.trim())) {
-      toast.error('Địa chỉ IP không hợp lệ. Vui lòng nhập đúng định dạng IPv4 (VD: 192.168.1.100)');
+      toast.error(t('assets.form.error_ip'));
       return;
     }
 
     const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
     if (!macRegex.test(formData.macAddress.trim())) {
-      toast.error('Địa chỉ MAC không hợp lệ. Vui lòng nhập đúng định dạng (VD: 00:1A:2B:3C:4D:5E hoặc 00-1A-2B-3C-4D-5E)');
+      toast.error(t('assets.form.error_mac'));
       return;
     }
 
     try {
       setLoading(true);
       if (isEdit) {
-        await deviceService.update(device.id || device._id, formData);
-        toast.success('Cập nhật thiết bị thành công');
+        await ApiDevice.update(device.id || device._id, formData);
+        toast.success(t('assets.form.update_success'));
       } else {
-        await deviceService.create(formData);
-        toast.success('Thêm mới thiết bị thành công');
+        await ApiDevice.create(formData);
+        toast.success(t('assets.form.add_success'));
       }
       onSuccess();
     } catch (err) {
       console.error('Lỗi khi lưu thiết bị:', err);
-      toast.error('Có lỗi xảy ra khi lưu thiết bị. Kiểm tra lại thông tin.');
+      toast.error(t('assets.form.save_error'));
     } finally {
       setLoading(false);
     }
@@ -65,7 +67,7 @@ const DeviceForm = ({ device, onClose, onSuccess }) => {
     <div className="device-modal-overlay">
       <div className="device-modal">
         <div className="modal-header">
-          <h3>{isEdit ? 'Cập nhật thiết bị' : 'Thêm thiết bị mới'}</h3>
+          <h3>{isEdit ? t('assets.form.title_edit') : t('assets.form.title_add')}</h3>
           <button className="close-btn" onClick={onClose}>
             <X size={20} />
           </button>
@@ -74,34 +76,34 @@ const DeviceForm = ({ device, onClose, onSuccess }) => {
         <form onSubmit={handleSubmit} className="modal-body">
           
           <VInput 
-            label="Tên thiết bị *"
+            label={t('assets.form.label_name')}
             name="name"
             value={formData.name}
             onChange={handleChange}
-            placeholder="Ví dụ: PLC-01"
+            placeholder={t('assets.form.placeholder_name')}
             className="mb-4"
           />
           
           <VInput 
-            label="Địa chỉ IP *"
+            label={t('assets.form.label_ip')}
             name="ipAddress"
             value={formData.ipAddress}
             onChange={handleChange}
-            placeholder="Ví dụ: 192.168.1.100"
+            placeholder={t('assets.form.placeholder_ip')}
             className="mb-4"
           />
 
           <VInput 
-            label="Địa chỉ MAC *"
+            label={t('assets.form.label_mac')}
             name="macAddress"
             value={formData.macAddress}
             onChange={handleChange}
-            placeholder="Ví dụ: 00:1A:2B:3C:4D:5E"
+            placeholder={t('assets.form.placeholder_mac')}
             className="mb-4"
           />
 
           <div className="form-group mb-4">
-            <label className="v-input-label d-block mb-2">Loại thiết bị</label>
+            <label className="v-input-label d-block mb-2">{t('assets.form.label_type')}</label>
             <select 
               name="type" 
               value={formData.type} 
@@ -109,7 +111,7 @@ const DeviceForm = ({ device, onClose, onSuccess }) => {
               className="v-input"
               style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
             >
-              <option value="">Chọn loại thiết bị</option>
+              <option value="">{t('assets.form.select_type')}</option>
               {DEVICE_TYPES.map(t => (
                 <option key={t.value} value={t.value}>{t.label} - {t.description}</option>
               ))}
@@ -117,7 +119,7 @@ const DeviceForm = ({ device, onClose, onSuccess }) => {
           </div>
 
           <div className="form-group mb-4">
-            <label className="v-input-label d-block mb-2">Trạng thái</label>
+            <label className="v-input-label d-block mb-2">{t('assets.form.label_status')}</label>
             <select 
               name="status" 
               value={formData.status} 
@@ -125,27 +127,27 @@ const DeviceForm = ({ device, onClose, onSuccess }) => {
               className="v-input"
               style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
             >
-              <option value="active">Hoạt động</option>
-              <option value="inactive">Vô hiệu hóa</option>
+              <option value="active">{t('assets.filter_status_active')}</option>
+              <option value="inactive">{t('assets.filter_status_inactive')}</option>
             </select>
           </div>
 
           <VInput 
-            label="Mô tả"
+            label={t('assets.form.label_desc')}
             name="description"
             value={formData.description}
             onChange={handleChange}
-            placeholder="Nhập mô tả..."
+            placeholder={t('assets.form.placeholder_desc')}
             className="mb-4"
           />
 
           <div className="modal-footer">
             <VButton type="button" variant="secondary" onClick={onClose}>
-              Hủy
+              {t('assets.form.btn_cancel')}
             </VButton>
             <VButton type="submit" variant="primary" loading={loading}>
               <Save size={18} />
-              {isEdit ? 'Cập nhật' : 'Thêm mới'}
+              {isEdit ? t('assets.form.btn_update') : t('assets.form.btn_save')}
             </VButton>
           </div>
         </form>

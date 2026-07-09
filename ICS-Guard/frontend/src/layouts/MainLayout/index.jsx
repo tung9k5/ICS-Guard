@@ -6,8 +6,9 @@ import authApi from '@/api/auth';
 import http from '@/http/clients/api';
 import Sidebar from '@/components/common/Layout/Sidebar';
 import Header from '@/components/common/Layout/Header';
-import GlobalLoading from '@/components/common/UI/GlobalLoading';
+import GlobalLoading from '@/components/common/GlobalLoading';
 
+import DraggableChatbot from '@/components/common/DraggableChatbot';
 
 const MainLayout = () => {
   const token = localStorage.getItem('access_token');
@@ -80,6 +81,7 @@ const MainLayout = () => {
         </main>
       </div>
       <GlobalLoading />
+      <DraggableChatbot />
     </div>
   );
 };

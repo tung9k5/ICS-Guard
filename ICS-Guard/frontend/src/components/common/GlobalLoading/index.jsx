@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Shield, Server, Activity } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { loadingEvent } from '@/utils/loadingEvent';
 import './GlobalLoading.scss';
 
 const GlobalLoading = () => {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [iconIndex, setIconIndex] = useState(0);
   const startTimeRef = useRef(0);
@@ -61,18 +63,20 @@ const GlobalLoading = () => {
   if (!isLoading) return null;
 
   const icons = [
-    <Shield size={48} className="loading-icon" />,
-    <Server size={48} className="loading-icon" />,
-    <Activity size={48} className="loading-icon" />
+    <Shield size={48} color="var(--primary-color)" />,
+    <Server size={48} color="var(--primary-color)" />,
+    <Activity size={48} color="var(--primary-color)" />
   ];
 
   return (
     <div className="global-loading-overlay">
       <div className="loading-content">
         <div className="icon-container">
-          {icons[iconIndex]}
+          <div className="loading-icon-wrapper" key={iconIndex}>
+            {icons[iconIndex]}
+          </div>
         </div>
-        <p>Đang xử lý dữ liệu...</p>
+        <p>{t('common.processing_data', 'Đang xử lý dữ liệu...')}</p>
       </div>
     </div>
   );

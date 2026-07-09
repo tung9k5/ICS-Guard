@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
 import { Edit2, Trash2, Server, Activity, ChevronDown, ChevronUp } from 'lucide-react';
-import ActionMenu from '@/components/common/UI/ActionMenu';
-import VNoData from '@/components/common/UI/VNoData';
+import ActionMenu from '@/components/common/ActionMenu';
+import VNoData from '@/components/common/VNoData';
 import { getDeviceTypeLabel, getDeviceTypeStyle } from '@/constants/deviceConstants';
+import { useTranslation } from 'react-i18next';
 
 const DeviceList = ({ devices, loading, onEdit, onDelete, onView }) => {
+  const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState(null);
 
   const toggleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id);
   };
   if (loading) {
-    return <div className="device-loading">Đang tải dữ liệu...</div>;
+    return <div className="device-loading">{t('assets.list.loading')}</div>;
   }
 
   if (!devices || devices.length === 0) {
-    return <VNoData message="Chưa có thiết bị nào trong hệ thống." />;
+    return <VNoData message={t('assets.list.no_data')} />;
   }
 
   return (
@@ -25,21 +27,21 @@ const DeviceList = ({ devices, loading, onEdit, onDelete, onView }) => {
         <table className="device-table">
           <thead>
             <tr>
-              <th>ID</th>
-              <th>Tên thiết bị</th>
-              <th>Loại (Type)</th>
-              <th>IP Address</th>
-              <th>MAC Address</th>
-              <th>Trạng thái</th>
-              <th>Mô tả</th>
-              <th className="actions-col">Thao tác</th>
+              <th>{t('assets.list.table_id')}</th>
+              <th>{t('assets.list.table_name')}</th>
+              <th>{t('assets.list.table_type')}</th>
+              <th>{t('assets.list.table_ip')}</th>
+              <th>{t('assets.list.table_mac')}</th>
+              <th>{t('assets.list.table_status')}</th>
+              <th>{t('assets.list.table_desc')}</th>
+              <th className="actions-col">{t('assets.list.table_actions')}</th>
             </tr>
           </thead>
           <tbody>
             {devices.map((device, index) => {
               const actions = [
-                { label: 'Chỉnh sửa', icon: Edit2, onClick: () => onEdit(device) },
-                { label: 'Xóa thiết bị', icon: Trash2, danger: true, onClick: () => onDelete(device.id || device._id) }
+                { label: t('assets.list.btn_edit'), icon: Edit2, onClick: () => onEdit(device) },
+                { label: t('assets.list.btn_delete'), icon: Trash2, danger: true, onClick: () => onDelete(device.id || device._id) }
               ];
 
               return (
@@ -63,7 +65,7 @@ const DeviceList = ({ devices, loading, onEdit, onDelete, onView }) => {
                       className={`badge ${device.status === 'active' ? 'badge-success' : 'badge-danger'}`}
                       style={{ backgroundColor: device.status === 'active' ? '#E7FAD1' : '#FEECCA', color: device.status === 'active' ? '#1b5e20' : '#b71c1c' }}
                     >
-                      {device.status === 'active' ? 'Hoạt động' : 'Vô hiệu hóa'}
+                      {device.status === 'active' ? t('assets.filter_status_active') : t('assets.filter_status_inactive')}
                     </span>
                   </td>
                   <td className="text-muted">
@@ -85,8 +87,8 @@ const DeviceList = ({ devices, loading, onEdit, onDelete, onView }) => {
       {/* --- MOBILE LIST VIEW --- */}
       <div className="mobile-device-list">
         <div className="mobile-list-header">
-          <div className="col-id">Mã</div>
-          <div className="col-title">Tên thiết bị</div>
+          <div className="col-id">{t('assets.list.mobile_id')}</div>
+          <div className="col-title">{t('assets.list.mobile_name')}</div>
           <div className="col-action"></div>
         </div>
         
@@ -94,8 +96,8 @@ const DeviceList = ({ devices, loading, onEdit, onDelete, onView }) => {
           const id = device.id || device._id;
           const isExpanded = expandedId === id;
           const actions = [
-            { label: 'Chỉnh sửa', icon: Edit2, onClick: () => onEdit(device) },
-            { label: 'Xóa thiết bị', icon: Trash2, danger: true, onClick: () => onDelete(id) }
+            { label: t('assets.list.btn_edit'), icon: Edit2, onClick: () => onEdit(device) },
+            { label: t('assets.list.btn_delete'), icon: Trash2, danger: true, onClick: () => onDelete(id) }
           ];
 
           return (
@@ -113,7 +115,7 @@ const DeviceList = ({ devices, loading, onEdit, onDelete, onView }) => {
               {isExpanded && (
                 <div className="mobile-card-body">
                   <div className="detail-row">
-                    <span className="detail-label">Loại thiết bị</span>
+                    <span className="detail-label">{t('assets.form.label_type')}</span>
                     <span className="detail-value">
                       <span className="badge badge-outline" style={getDeviceTypeStyle(device.type)}>
                         {getDeviceTypeLabel(device.type) || 'N/A'}
@@ -124,26 +126,26 @@ const DeviceList = ({ devices, loading, onEdit, onDelete, onView }) => {
                     </div>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">IP Address</span>
+                    <span className="detail-label">{t('assets.list.table_ip')}</span>
                     <span className="detail-value">{device.ip_address || device.ipAddress || 'N/A'}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">MAC Address</span>
+                    <span className="detail-label">{t('assets.list.table_mac')}</span>
                     <span className="detail-value">{device.mac_address || device.macAddress || 'N/A'}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Trạng thái</span>
+                    <span className="detail-label">{t('assets.list.table_status')}</span>
                     <span className="detail-value">
                       <span 
                         className={`badge ${device.status === 'active' ? 'badge-success' : 'badge-danger'}`}
                         style={{ backgroundColor: device.status === 'active' ? '#E7FAD1' : '#FEECCA', color: device.status === 'active' ? '#1b5e20' : '#b71c1c' }}
                       >
-                        {device.status === 'active' ? 'Hoạt động' : 'Vô hiệu hóa'}
+                        {device.status === 'active' ? t('assets.filter_status_active') : t('assets.filter_status_inactive')}
                       </span>
                     </span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Mô tả</span>
+                    <span className="detail-label">{t('assets.list.table_desc')}</span>
                     <span className="detail-value text-muted">{device.description || '-'}</span>
                   </div>
                 </div>
