@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Save } from 'lucide-react';
-import VButton from '@/components/common/VButton/VButton';
-import VInput from '@/components/common/VInput/VInput';
+import VButton from '@/components/VButton';
+import VInput from '@/components/VInput';
 import ApiDevice from '@/api/device';
 import { DEVICE_TYPES } from '@/constants/deviceConstants';
 import { toast } from '@/utils/toast';

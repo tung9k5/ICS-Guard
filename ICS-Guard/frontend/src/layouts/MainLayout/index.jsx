@@ -4,11 +4,11 @@ import { Outlet, Navigate, useNavigate, useLocation, Link } from 'react-router-d
 import { AlertOctagon } from 'lucide-react';
 import authApi from '@/api/auth';
 import http from '@/http/clients/api';
-import Sidebar from '@/components/common/Layout/Sidebar';
-import Header from '@/components/common/Layout/Header';
-import GlobalLoading from '@/components/common/GlobalLoading';
+import Sidebar from '@/components/Layout/Sidebar';
+import Header from '@/components/Layout/Header';
+import GlobalLoading from '@/components/GlobalLoading';
 import ProfileModal from '@/Dialog/ProfileModal';
-import DraggableChatbot from '@/components/common/DraggableChatbot';
+import DraggableChatbot from '@/components/DraggableChatbot';
 
 const MainLayout = () => {
   const token = localStorage.getItem('access_token');

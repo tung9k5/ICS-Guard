@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Edit2, Trash2, Server, Activity, ChevronDown, ChevronUp } from 'lucide-react';
-import ActionMenu from '@/components/common/ActionMenu';
-import VNoData from '@/components/common/VNoData';
+import ActionMenu from '@/components/ActionMenu';
+import VNoData from '@/components/VNoData';
 import { getDeviceTypeLabel, getDeviceTypeStyle } from '@/constants/deviceConstants';
 import { useTranslation } from 'react-i18next';
 

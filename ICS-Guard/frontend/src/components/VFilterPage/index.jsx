@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search } from 'lucide-react';
-import VInput from '@/components/common/VInput/VInput';
+import VInput from '@/components/VInput';
 import './VFilterPage.scss';
 
 const VFilterPage = ({ searchPlaceholder = "Tìm kiếm...", searchValue, onSearchChange, children }) => {

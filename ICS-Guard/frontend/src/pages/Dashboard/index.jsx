@@ -1,8 +1,8 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Activity, ShieldAlert, HeartPulse, Shield, ArrowRight } from 'lucide-react';
-import { NetworkTrafficChart, ThreatActivityChart, SystemHealthChart } from '../../components/common/Charts';
-import VButton from '@/components/common/VButton/VButton';
+import { NetworkTrafficChart, ThreatActivityChart, SystemHealthChart } from '../../components/Charts';
+import VButton from '@/components/VButton';
 import './Dashboard.scss';
 
 const Dashboard = () => {

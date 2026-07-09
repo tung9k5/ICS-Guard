@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import authApi from '@/api/auth';
-import VButton from '@/components/common/VButton/VButton';
+import VButton from '@/components/VButton';
+import { useTranslation } from 'react-i18next';
+import { IDLE_TIMEOUT_MS, COUNTDOWN_SECONDS } from '@/constants/idleTimeoutConstants';
 import './IdleTimeout.scss';
 
-const IDLE_TIMEOUT_MS = 180000; // 3 minutes
-const COUNTDOWN_SECONDS = 30;
-
 const IdleTimeout = () => {
+  const { t } = useTranslation();
   const [showDialog, setShowDialog] = useState(false);
   const showDialogRef = useRef(false);
   const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
@@ -151,10 +151,10 @@ const IdleTimeout = () => {
   return (
     <div className="idle-timeout-overlay">
       <div className="idle-timeout-dialog">
-        <h3>Bạn còn ở đó không?</h3>
-        <p>Phiên đăng nhập sẽ tự động đăng xuất sau <strong>{countdown}</strong> giây nữa do không có hoạt động.</p>
+        <h3>{t('common.idle_timeout.title', 'Bạn còn ở đó không?')}</h3>
+        <p>{t('common.idle_timeout.description_1', 'Phiên đăng nhập sẽ tự động đăng xuất sau ')}<strong>{countdown}</strong>{t('common.idle_timeout.description_2', ' giây nữa do không có hoạt động.')}</p>
         <div className="idle-timeout-actions">
-          <VButton variant="primary" onClick={handleContinue}>Tiếp tục sử dụng</VButton>
+          <VButton variant="primary" onClick={handleContinue}>{t('common.idle_timeout.continue', 'Tiếp tục sử dụng')}</VButton>
         </div>
       </div>
     </div>

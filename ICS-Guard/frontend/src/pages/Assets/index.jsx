@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Search, Server, Filter, X } from 'lucide-react';
-import VButton from '@/components/common/VButton/VButton';
-import VInput from '@/components/common/VInput/VInput';
+import VButton from '@/components/VButton';
+import VInput from '@/components/VInput';
 import ApiDevice from '@/api/device';
 import DeviceList from './DeviceList';
 import DeviceForm from './DeviceForm';
-import VPagination from '@/components/common/VPagination';
-import VHeaderPage from '@/components/common/VHeaderPage';
-import VFilterPage from '@/components/common/VFilterPage';
+import VPagination from '@/components/VPagination';
+import VHeaderPage from '@/components/VHeaderPage';
+import VFilterPage from '@/components/VFilterPage';
 import { DEVICE_TYPES } from '@/constants/deviceConstants';
 import { toast } from '@/utils/toast';
 import { useTranslation } from 'react-i18next';
+import { SEARCH_DEBOUNCE_MS, DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
 import './Assets.scss';
 
 const Assets = () => {
@@ -24,7 +25,7 @@ const Assets = () => {
   const [type, setType] = useState('');
   const [order, setOrder] = useState('desc');
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(10);
+  const [perPage, setPerPage] = useState(DEFAULT_PAGE_SIZE);
   const [total, setTotal] = useState(0);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -71,7 +72,7 @@ const Assets = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchDevices();
-    }, 500);
+    }, SEARCH_DEBOUNCE_MS);
     return () => clearTimeout(timer);
   }, [fetchDevices]);
 

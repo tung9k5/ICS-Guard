@@ -148,6 +148,15 @@
     "title_under_construction": "Tính năng đang phát triển",
     "under_construction": "Tính năng này hiện chưa hoàn thiện và đang trong quá trình phát triển. Vui lòng quay lại sau."
   },
+  "common": {
+    "processing_data": "Đang xử lý dữ liệu...",
+    "idle_timeout": {
+      "title": "Bạn còn ở đó không?",
+      "description_1": "Phiên đăng nhập sẽ tự động đăng xuất sau ",
+      "description_2": " giây nữa do không có hoạt động.",
+      "continue": "Tiếp tục sử dụng"
+    }
+  },
   "profile": {
     "title": "Hồ sơ của bạn",
     "upload_image": "Tải ảnh lên",
