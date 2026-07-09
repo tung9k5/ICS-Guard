@@ -1,7 +1,8 @@
 .sidebar {
   width: 260px;
-  background-color: var(--bg-secondary);
-  border-right: 1px solid var(--border-light);
+  background: linear-gradient(180deg, #1e3a8a 0%, #0f172a 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -28,7 +29,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 20px;
-    border-bottom: 1px solid var(--border-light);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     height: 70px;
     width: 100%;
 
@@ -36,17 +37,20 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      perspective: 500px;
 
       .logo-icon {
         font-size: 24px;
         min-width: 24px;
         text-align: center;
+        animation: logoSpin 6s linear infinite;
+        transform-style: preserve-3d;
       }
 
       .logo-text {
         font-size: 20px;
         font-weight: bold;
-        color: var(--text-primary);
+        color: #f8fafc;
         white-space: nowrap;
       }
     }
@@ -77,19 +81,20 @@
       gap: 12px;
       padding: 12px;
       border-radius: 8px;
-      color: var(--text-secondary);
+      color: #94a3b8;
       text-decoration: none;
       transition: all 0.2s ease;
       white-space: nowrap;
 
       &:hover {
-        background-color: var(--bg-glass);
-        color: var(--text-primary);
+        background-color: rgba(255, 255, 255, 0.05);
+        color: #f8fafc;
       }
 
       &.active {
-        background-color: var(--primary-color);
+        background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
         color: white;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
       }
     }
   }
@@ -105,7 +110,7 @@
       gap: 12px;
       padding: 12px;
       border-radius: 8px;
-      color: var(--text-secondary);
+      color: #94a3b8;
       background: none;
       border: none;
       cursor: pointer;
@@ -161,4 +166,9 @@
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 90;
+}
+
+@keyframes logoSpin {
+  0% { transform: rotateY(0deg); }
+  100% { transform: rotateY(360deg); }
 }

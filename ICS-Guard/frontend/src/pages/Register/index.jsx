@@ -7,7 +7,10 @@ import VInput from '@/components/common/VInput/VInput';
 import VButton from '@/components/common/VButton/VButton';
 import { toast } from '@/utils/toast';
 
+import { useTranslation } from 'react-i18next';
+
 const Register = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ 
     username: '', 
@@ -21,7 +24,7 @@ const Register = () => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Mật khẩu không khớp');
+      toast.error(t('auth.register.password_mismatch'));
       return;
     }
 
@@ -35,10 +38,10 @@ const Register = () => {
       };
       
       await authApi.register(payload);
-      toast.success('Đăng ký thành công! Vui lòng đăng nhập.');
+      toast.success(t('auth.register.success'));
       navigate('/login');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.');
+      toast.error(err.response?.data?.message || t('auth.register.fail'));
     } finally {
       setLoading(false);
     }
@@ -47,15 +50,15 @@ const Register = () => {
   return (
     <div className="auth-form-card">
       <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px' }}>Chào mừng</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Điền thông tin để đăng ký tài khoản</p>
+        <h2 style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px' }}>{t('auth.register.welcome')}</h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>{t('auth.register.enter_info')}</p>
       </div>
 
       <form onSubmit={handleSubmit}>
         <VInput
           id="username"
           name="username"
-          label="Tên đăng nhập"
+          label={t('auth.register.username')}
           placeholder="admin123"
           icon={User}
           value={formData.username}
@@ -67,7 +70,7 @@ const Register = () => {
           id="email"
           name="email"
           type="email"
-          label="Địa chỉ Email"
+          label={t('auth.register.email')}
           placeholder="admin@example.com"
           icon={Mail}
           value={formData.email}
@@ -79,7 +82,7 @@ const Register = () => {
           id="password"
           name="password"
           type="password"
-          label="Mật khẩu"
+          label={t('auth.register.password')}
           placeholder="••••••••"
           icon={Lock}
           value={formData.password}
@@ -91,12 +94,12 @@ const Register = () => {
           id="confirmPassword"
           name="confirmPassword"
           type="password"
-          label="Xác nhận mật khẩu"
+          label={t('auth.register.confirm_password')}
           placeholder="••••••••"
           icon={Lock}
           value={formData.confirmPassword}
           onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-          error={formData.confirmPassword && formData.password !== formData.confirmPassword ? "Mật khẩu không khớp" : ""}
+          error={formData.confirmPassword && formData.password !== formData.confirmPassword ? t('auth.register.password_mismatch') : ""}
           required
         />
 
@@ -107,15 +110,15 @@ const Register = () => {
             fullWidth 
             loading={loading}
           >
-            Đăng Ký
+            {t('auth.register.submit')}
           </VButton>
         </div>
       </form>
 
       <div className="auth-form-footer">
-        Đã có tài khoản?{' '}
+        {t('auth.register.have_account')}
         <Link to="/login" className="auth-link">
-          Đăng Nhập
+          {t('auth.register.login_now')}
         </Link>
       </div>
     </div>

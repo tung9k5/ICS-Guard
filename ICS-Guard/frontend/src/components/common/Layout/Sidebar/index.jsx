@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, ShieldAlert, Network, Server, FileText, Settings, X, LogOut } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import authApi from '@/api/auth';
 import './Sidebar.scss';
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+  const [isFullscreenLogo, setIsFullscreenLogo] = useState(false);
 
   const handleClose = () => {
     if (window.innerWidth <= 768) {
@@ -33,20 +36,25 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
     <>
       {/* Overlay cho mobile khi mở sidebar */}
       {isSidebarOpen && window.innerWidth <= 768 && (
-        <div 
+        <div
           className="sidebar-overlay"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
-      
+
       <aside className={`sidebar ${isSidebarOpen ? 'mobile-open' : 'collapsed'}`}>
         <div className="sidebar-logo flex-logo-container">
           <div className="logo-wrapper">
-            <div className="logo-icon">🛡️</div>
+            <img
+              className="logo-icon"
+              src="/image-logo.png"
+              style={{ width: '40px', height: '40px', cursor: 'pointer', objectFit: 'cover' }}
+              onClick={() => setIsFullscreenLogo(true)}
+            />
             <span className="logo-text">ICS-Guard</span>
           </div>
           {/* Nút đóng trên mobile */}
-          <button 
+          <button
             className="close-sidebar-btn"
             onClick={() => setIsSidebarOpen(false)}
           >
@@ -54,39 +62,69 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
           </button>
         </div>
         <nav className="sidebar-nav">
-          <NavLink to="/" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} end onClick={handleClose}>
+          <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} end onClick={handleClose}>
             <LayoutDashboard size={20} />
-            <span>Tổng quan</span>
+            <span>{t('layout.sidebar.overview')}</span>
           </NavLink>
-          <NavLink to="/topology" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
+          <NavLink to="/coming-soon" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
             <Network size={20} />
-            <span>Sơ đồ mạng</span>
+            <span>{t('layout.sidebar.topology')}</span>
           </NavLink>
-          <NavLink to="/alerts" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
+          <NavLink to="/coming-soon" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
             <ShieldAlert size={20} />
-            <span>Cảnh báo an ninh</span>
+            <span>{t('layout.sidebar.alerts')}</span>
           </NavLink>
-          <NavLink to="/assets" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
+          <NavLink to="/assets" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
             <Server size={20} />
-            <span>Quản lý thiết bị</span>
+            <span>{t('layout.sidebar.assets')}</span>
           </NavLink>
-          <NavLink to="/reports" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
+          <NavLink to="/coming-soon" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
             <FileText size={20} />
-            <span>Báo cáo</span>
+            <span>{t('layout.sidebar.reports')}</span>
           </NavLink>
-          <NavLink to="/settings" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
+          <NavLink to="/coming-soon" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
             <Settings size={20} />
-            <span>Cài đặt</span>
+            <span>{t('layout.sidebar.settings')}</span>
           </NavLink>
         </nav>
-        
+
         <div className="sidebar-footer">
           <button className="nav-item logout-btn" onClick={handleLogout}>
             <LogOut size={20} />
-            <span>Đăng xuất</span>
+            <span>{t('layout.sidebar.logout')}</span>
           </button>
         </div>
       </aside>
+
+      {/* Fullscreen Logo Modal */}
+      {isFullscreenLogo && (
+        <div 
+          className="fullscreen-logo-overlay"
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            zIndex: 9999,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
+          onClick={() => setIsFullscreenLogo(false)}
+        >
+          <button 
+            style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}
+            onClick={(e) => { e.stopPropagation(); setIsFullscreenLogo(false); }}
+          >
+            <X size={32} />
+          </button>
+          <img 
+            src="/image-logo.png" 
+            alt="Logo Fullscreen"
+            style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain' }}
+            onClick={(e) => e.stopPropagation()} 
+          />
+        </div>
+      )}
     </>
   );
 };

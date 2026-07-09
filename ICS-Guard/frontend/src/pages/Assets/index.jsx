@@ -2,17 +2,19 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Search, Server, Filter, X } from 'lucide-react';
 import VButton from '@/components/common/VButton/VButton';
 import VInput from '@/components/common/VInput/VInput';
-import deviceService from '@/services/deviceService';
+import ApiDevice from '@/api/device';
 import DeviceList from './DeviceList';
 import DeviceForm from './DeviceForm';
-import VPagination from '@/components/common/UI/VPagination';
+import VPagination from '@/components/common/VPagination';
 import VHeaderPage from '@/components/common/VHeaderPage';
 import VFilterPage from '@/components/common/VFilterPage';
 import { DEVICE_TYPES } from '@/constants/deviceConstants';
 import { toast } from '@/utils/toast';
+import { useTranslation } from 'react-i18next';
 import './Assets.scss';
 
 const Assets = () => {
+  const { t } = useTranslation();
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(false);
   
@@ -41,7 +43,7 @@ const Assets = () => {
         per_page: perPage
       };
 
-      const res = await deviceService.getAll(params);
+      const res = await ApiDevice.getAll(params);
       
       // Handle both Laravel-style pagination and flat array gracefully
       if (res && res.pagination) {
@@ -59,7 +61,7 @@ const Assets = () => {
       }
     } catch (err) {
       console.error('Error fetching devices:', err);
-      toast.error('Không thể tải danh sách thiết bị. Vui lòng thử lại sau.');
+      toast.error(t('assets.fetch_error'));
     } finally {
       setLoading(false);
     }
@@ -84,20 +86,20 @@ const Assets = () => {
   };
 
   const handleDeleteDevice = async (id) => {
-    if (window.confirm('Bạn có chắc chắn muốn xoá thiết bị này?')) {
+    if (window.confirm(t('assets.delete_confirm'))) {
       try {
-        await deviceService.delete(id);
-        toast.success('Xoá thiết bị thành công');
+        await ApiDevice.delete(id);
+        toast.success(t('assets.delete_success'));
         fetchDevices();
       } catch (err) {
         console.error('Error deleting device:', err);
-        toast.error('Có lỗi xảy ra khi xoá thiết bị');
+        toast.error(t('assets.delete_error'));
       }
     }
   };
 
   const handleViewDevice = (device) => {
-    toast.info(`Xem chi tiết thiết bị: ${device.name}\nIP: ${device.ip_address}`);
+    toast.info(t('assets.view_details', { name: device.name, ip: device.ip_address }));
   };
 
   const handleFormSuccess = () => {
@@ -108,18 +110,18 @@ const Assets = () => {
   return (
     <div className="assets-page">
       <VHeaderPage 
-        title="Quản lý thiết bị"
+        title={t('assets.page_title')}
         action={
           <VButton onClick={handleAddDevice}>
             <Plus size={18} />
-            Thêm mới
+            {t('assets.btn_add')}
           </VButton>
         }
       />
 
       <div className="assets-content">
         <VFilterPage 
-          searchPlaceholder="Tìm kiếm (Tên, Loại, IP)..."
+          searchPlaceholder={t('assets.filter_search_placeholder')}
           searchValue={search}
           onSearchChange={(e) => {
             setSearch(e.target.value);
@@ -136,7 +138,7 @@ const Assets = () => {
               }}
               style={{ paddingRight: type ? '28px' : undefined }}
             >
-              <option value="">Tất cả thiết bị</option>
+              <option value="">{t('assets.filter_type_all')}</option>
               {DEVICE_TYPES.map(t => (
                 <option key={t.value} value={t.value}>{t.label}</option>
               ))}
@@ -160,9 +162,9 @@ const Assets = () => {
               }}
               style={{ paddingRight: status ? '28px' : undefined }}
             >
-              <option value="">Tất cả trạng thái</option>
-              <option value="active">Hoạt động</option>
-              <option value="inactive">Vô hiệu hóa</option>
+              <option value="">{t('assets.filter_status_all')}</option>
+              <option value="active">{t('assets.filter_status_active')}</option>
+              <option value="inactive">{t('assets.filter_status_inactive')}</option>
             </select>
             {status && (
               <X 
@@ -181,8 +183,8 @@ const Assets = () => {
               setPage(1);
             }}
           >
-            <option value="desc">Mới nhất</option>
-            <option value="asc">Cũ nhất</option>
+            <option value="desc">{t('assets.filter_order_desc')}</option>
+            <option value="asc">{t('assets.filter_order_asc')}</option>
           </select>
         </VFilterPage>
 
@@ -200,7 +202,7 @@ const Assets = () => {
             perPage={perPage}
             total={total}
             dataLength={devices.length}
-            itemName="Thiết bị"
+            itemName={t('assets.item_name')}
             onPageChange={(newPage) => setPage(newPage)}
             onPerPageChange={(newPerPage) => {
               setPerPage(newPerPage);

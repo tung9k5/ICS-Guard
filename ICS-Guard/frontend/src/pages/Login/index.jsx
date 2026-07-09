@@ -7,7 +7,10 @@ import VInput from '@/components/common/VInput/VInput';
 import VButton from '@/components/common/VButton/VButton';
 import { toast } from '@/utils/toast';
 
+import { useTranslation } from 'react-i18next';
+
 const Login = ({ isAttacker = false }) => {
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ username_or_email: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -45,7 +48,7 @@ const Login = ({ isAttacker = false }) => {
             const width = container.offsetWidth || 384;
             window.google.accounts.id.renderButton(
               container,
-              { theme: 'outline', size: 'large', width: width, logo_alignment: 'center' }
+              { theme: 'outline', size: 'large', width: width, logo_alignment: 'center', locale: i18n.language }
             );
           }
         }
@@ -66,7 +69,7 @@ const Login = ({ isAttacker = false }) => {
       };
       loadGsiScript();
     }
-  }, [isAttacker]);
+  }, [isAttacker, i18n.language]);
 
   const handleGoogleCallback = async (response) => {
     try {
@@ -75,11 +78,11 @@ const Login = ({ isAttacker = false }) => {
       if (res && res.access_token) {
         localStorage.setItem('access_token', res.access_token);
         localStorage.setItem('refresh_token', res.refresh_token);
-        toast.success('Đăng nhập thành công');
+        toast.success(t('auth.login.success'));
         navigate('/', { replace: true });
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Đăng nhập Google thất bại');
+      toast.error(err.response?.data?.message || t('auth.login.google_fail'));
     } finally {
       setLoading(false);
     }
@@ -102,7 +105,7 @@ const Login = ({ isAttacker = false }) => {
           localStorage.removeItem('remembered_account');
         }
 
-        toast.success('Đăng nhập thành công');
+        toast.success(t('auth.login.success'));
         if (isAttacker) {
           localStorage.setItem('attacker_access_token', response.access_token);
           localStorage.setItem('attacker_refresh_token', response.refresh_token);
@@ -114,7 +117,7 @@ const Login = ({ isAttacker = false }) => {
         }
       }
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
+      toast.error(err.response?.data?.message || t('auth.login.fail'));
     } finally {
       setLoading(false);
     }
@@ -123,16 +126,16 @@ const Login = ({ isAttacker = false }) => {
   return (
     <div className="auth-form-card">
       <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px' }}>Chào mừng</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Điền thông tin để đăng nhập tài khoản</p>
+        <h2 style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px' }}>{t('auth.login.welcome')}</h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>{t('auth.login.enter_info')}</p>
       </div>
 
       <form onSubmit={handleSubmit}>
         <VInput
           id="username"
           name="username_or_email"
-          label="Tên đăng nhập hoặc Email"
-          placeholder="Nhập tên đăng nhập hoặc email"
+          label={t('auth.login.username_email')}
+          placeholder={t('auth.login.enter_username_email')}
           icon={User}
           value={formData.username_or_email}
           onChange={(e) => setFormData({...formData, username_or_email: e.target.value})}
@@ -143,8 +146,8 @@ const Login = ({ isAttacker = false }) => {
           id="password"
           name="password"
           type="password"
-          label="Mật khẩu"
-          placeholder="Nhập mật khẩu"
+          label={t('auth.login.password')}
+          placeholder={t('auth.login.enter_password')}
           icon={Lock}
           value={formData.password}
           onChange={(e) => setFormData({...formData, password: e.target.value})}
@@ -158,7 +161,7 @@ const Login = ({ isAttacker = false }) => {
               checked={rememberMe}
               onChange={(e) => setRememberMe(e.target.checked)}
             />
-            <span>Ghi nhớ tài khoản</span>
+            <span>{t('auth.login.remember_me')}</span>
           </label>
         </div>
 
@@ -169,7 +172,7 @@ const Login = ({ isAttacker = false }) => {
             fullWidth 
             loading={loading}
           >
-            Đăng Nhập
+            {t('auth.login.submit')}
           </VButton>
         </div>
       </form>
@@ -178,23 +181,23 @@ const Login = ({ isAttacker = false }) => {
         <>
           <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0' }}>
             <hr style={{ flex: 1, borderTop: '1px solid #e0e0e0' }} />
-            <span style={{ padding: '0 10px', color: '#888', fontSize: '14px' }}>Hoặc</span>
+            <span style={{ padding: '0 10px', color: '#888', fontSize: '14px' }}>{t('auth.login.or')}</span>
             <hr style={{ flex: 1, borderTop: '1px solid #e0e0e0' }} />
           </div>
           {!!import.meta.env.VITE_GOOGLE_CLIENT_ID && !!import.meta.env.VITE_GOOGLE_GSI_CLIENT_URL ? (
-            <div id="googleSignInDiv" style={{ width: '100%', marginBottom: '20px' }}></div>
+            <div key={i18n.language} id="googleSignInDiv" style={{ width: '100%', marginBottom: '20px' }}></div>
           ) : (
             <div style={{ marginBottom: '20px' }}>
               <VButton 
                 type="button" 
                 variant="outline" 
                 fullWidth 
-                onClick={() => toast.info('Vui lòng thêm VITE_GOOGLE_CLIENT_ID và VITE_GOOGLE_GSI_CLIENT_URL vào file .env')}
+                onClick={() => toast.info(t('auth.login.missing_env'))}
                 style={{ 
                   backgroundColor: 'white', 
                   color: '#3c4043', 
                   border: '1px solid #dadce0',
-                  fontWeight: '500',
+                  fontWeight: '700',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -202,14 +205,14 @@ const Login = ({ isAttacker = false }) => {
                 }}
               >
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style={{ width: '18px', height: '18px' }} />
-                Đăng nhập bằng Google
+                {t('auth.login.login_google')}
               </VButton>
             </div>
           )}
           <div className="auth-form-footer">
-            Chưa có tài khoản?{' '}
+            {t('auth.login.no_account')}
             <Link to="/register" className="auth-link">
-              Đăng ký ngay
+              {t('auth.login.register_now')}
             </Link>
           </div>
         </>

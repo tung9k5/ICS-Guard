@@ -1,7 +1,9 @@
 .header {
   height: 70px;
-  background-color: var(--bg-primary);
-  border-bottom: 1px solid var(--border-light);
+  background: rgba(30, 58, 138, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -18,7 +20,7 @@
     .toggle-sidebar-btn {
       background: none;
       border: none;
-      color: var(--text-secondary);
+      color: #94a3b8;
       cursor: pointer;
       padding: 8px;
       display: flex;
@@ -28,8 +30,8 @@
       transition: all 0.2s;
 
       &:hover {
-        background-color: var(--bg-glass);
-        color: var(--text-primary);
+        background-color: rgba(255, 255, 255, 0.05);
+        color: #f8fafc;
       }
     }
 
@@ -40,13 +42,13 @@
       h2 {
         font-size: 18px;
         font-weight: 600;
-        color: var(--text-primary);
+        color: #f8fafc;
         margin: 0;
       }
 
       p {
         font-size: 13px;
-        color: var(--text-muted);
+        color: #94a3b8;
         margin: 0;
       }
     }
@@ -61,7 +63,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      color: var(--text-secondary);
+      color: #94a3b8;
       font-size: 14px;
       cursor: pointer;
     }
@@ -69,7 +71,7 @@
     .notification-btn {
       background: none;
       border: none;
-      color: var(--text-secondary);
+      color: #94a3b8;
       position: relative;
       cursor: pointer;
       padding: 8px;
@@ -79,8 +81,8 @@
       justify-content: center;
 
       &:hover {
-        background-color: var(--bg-glass);
-        color: var(--text-primary);
+        background-color: rgba(255, 255, 255, 0.05);
+        color: #f8fafc;
       }
 
       .notification-dot {
@@ -98,25 +100,27 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      color: var(--text-secondary);
+      color: #94a3b8;
       cursor: pointer;
-      padding: 6px 12px;
+      padding: 12px;
       border-radius: 8px;
       transition: background-color 0.2s;
+      border: 2px solid rgba(255, 255, 255, 0.05);
+      border-radius: 50%;
 
       &:hover {
-        background-color: var(--bg-glass);
+        background-color: rgba(255, 255, 255, 0.05);
       }
 
       .avatar {
         width: 32px;
         height: 32px;
-        background-color: var(--bg-secondary);
+        background-color: rgba(255, 255, 255, 0.1);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--text-primary);
+        color: #f8fafc;
       }
       
       .user-info {
@@ -127,14 +131,14 @@
         .user-name {
           font-size: 14px;
           font-weight: 500;
-          color: var(--text-primary);
+          color: #f8fafc;
           line-height: 1.2;
         }
 
         .user-role {
           font-size: 11px;
           font-weight: 400;
-          color: var(--text-muted);
+          color: #94a3b8;
           text-transform: capitalize;
         }
       }
@@ -145,18 +149,18 @@
     padding: 0 16px;
     
     .header-left {
-      .header-titles p {
+      .header-titles {
         display: none;
       }
     }
     
     .header-right {
-      .language-selector, .user-profile span, .user-profile svg {
+      .language-selector, .user-profile span {
         display: none;
       }
       
       .user-profile {
-        padding: 0;
+        padding: 8px;
       }
     }
   }

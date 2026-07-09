@@ -1,8 +1,12 @@
 import React from 'react';
 import { Bell, ChevronDown, User, Menu } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '@/components/common/LanguageSwitcher';
 import './Header.scss';
 
 const Header = ({ toggleSidebar, user }) => {
+  const { t } = useTranslation();
+
   return (
     <header className="header">
       <div className="header-left">
@@ -10,20 +14,18 @@ const Header = ({ toggleSidebar, user }) => {
           <Menu size={20} />
         </button>
         <div className="header-titles">
-          <h2>Xin chào, {user?.full_name || user?.username || '...'} !</h2>
-          <p>Hệ thống giám sát và bảo vệ hạ tầng điều khiển công nghiệp (ICS-Guard)</p>
+          <h2>{t('layout.header.hello', { name: user?.full_name || user?.username || '...' })}</h2>
+          <p>{t('layout.header.subtitle')}</p>
         </div>
       </div>
       <div className="header-right">
+        <LanguageSwitcher />
         <button className="notification-btn">
           <Bell size={20} />
           <span className="notification-dot"></span>
         </button>
         <div className="user-profile">
-          <div className="avatar">
             <User size={16} />
-          </div>
-          <ChevronDown size={16} />
         </div>
       </div>
     </header>
