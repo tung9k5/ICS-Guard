@@ -1,26 +1,56 @@
 import http from '@/http/clients/api';
 
-const deviceService = {
-
-  getAll(params) {
-    return http.get('/devices', { params });
+export default {
+  getAll(params = {}, options = {}) {
+    return http({
+      url: '/devices',
+      method: 'GET',
+      params,
+      ...options
+    });
   },
 
-  getById(id) {
-    return http.get(`/devices/${id}`);
+  getById(id, options = {}) {
+    return http({
+      url: `/devices/${id}`,
+      method: 'GET',
+      ...options
+    });
   },
 
-  create(data) {
-    return http.post('/devices', data);
+  create(data, options = {}) {
+    return http({
+      url: '/devices',
+      method: 'POST',
+      data,
+      ...options
+    });
   },
 
-  update(id, data) {
-    return http.put(`/devices/${id}`, data);
+  update(id, data, options = {}) {
+    return http({
+      url: `/devices/${id}`,
+      method: 'PUT',
+      data,
+      ...options
+    });
   },
 
-  delete(id) {
-    return http.delete(`/devices/${id}`);
+  delete(id, options = {}) {
+    return http({
+      url: `/devices/${id}`,
+      method: 'DELETE',
+      ...options
+    });
+  },
+
+  deleteMultiple(ids, options = {}) {
+    return http({
+      url: '/devices/bulk-delete',
+      method: 'POST',
+      data: { ids },
+      ...options
+    });
   }
 };
 
-export default deviceService;

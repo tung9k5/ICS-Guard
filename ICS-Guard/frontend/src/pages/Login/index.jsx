@@ -1,28 +1,27 @@
 import './Login.scss';
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import authApi from '@/api/auth';
+import { Link } from 'react-router-dom';
 import { Lock, User } from 'lucide-react';
 import VInput from '@/components/VInput';
 import VButton from '@/components/VButton';
 import { toast } from '@/utils/toast';
+import { useAuth } from '@/hooks/useAuth';
 
 import { useTranslation } from 'react-i18next';
 
 const Login = ({ isAttacker = false }) => {
   const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({ username_or_email: '', password: '' });
-  const [loading, setLoading] = useState(false);
+  const { login, loginGoogle, loading } = useAuth();
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [rememberMe, setRememberMe] = useState(false);
 
   useEffect(() => {
     const savedData = localStorage.getItem('remembered_account');
     if (savedData) {
       try {
-        const { username, expires } = JSON.parse(savedData);
+        const { email, expires } = JSON.parse(savedData);
         if (Date.now() < expires) {
-          setFormData(prev => ({ ...prev, username_or_email: username }));
+          setFormData(prev => ({ ...prev, email: email }));
           setRememberMe(true);
         } else {
           localStorage.removeItem('remembered_account');
@@ -72,55 +71,12 @@ const Login = ({ isAttacker = false }) => {
   }, [isAttacker, i18n.language]);
 
   const handleGoogleCallback = async (response) => {
-    try {
-      setLoading(true);
-      const res = await authApi.loginGoogle({ idToken: response.credential });
-      if (res && res.access_token) {
-        localStorage.setItem('access_token', res.access_token);
-        localStorage.setItem('refresh_token', res.refresh_token);
-        toast.success(t('auth.login.success'));
-        navigate('/', { replace: true });
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || t('auth.login.google_fail'));
-    } finally {
-      setLoading(false);
-    }
+    await loginGoogle(response.credential);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-
-    try {
-      const response = await authApi.login(formData);
-      if (response && response.access_token) {
-        if (rememberMe) {
-          const expires = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days in ms
-          localStorage.setItem('remembered_account', JSON.stringify({
-            username: formData.username_or_email,
-            expires
-          }));
-        } else {
-          localStorage.removeItem('remembered_account');
-        }
-
-        toast.success(t('auth.login.success'));
-        if (isAttacker) {
-          localStorage.setItem('attacker_access_token', response.access_token);
-          localStorage.setItem('attacker_refresh_token', response.refresh_token);
-          navigate('/attacker', { replace: true });
-        } else {
-          localStorage.setItem('access_token', response.access_token);
-          localStorage.setItem('refresh_token', response.refresh_token);
-          navigate('/', { replace: true });
-        }
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || t('auth.login.fail'));
-    } finally {
-      setLoading(false);
-    }
+    await login(formData, rememberMe, isAttacker);
   };
 
   return (
@@ -132,13 +88,13 @@ const Login = ({ isAttacker = false }) => {
 
       <form onSubmit={handleSubmit}>
         <VInput
-          id="username"
-          name="username_or_email"
-          label={t('auth.login.username_email')}
-          placeholder={t('auth.login.enter_username_email')}
+          id="email"
+          name="email"
+          label="Email"
+          placeholder="admin@example.com"
           icon={User}
-          value={formData.username_or_email}
-          onChange={(e) => setFormData({...formData, username_or_email: e.target.value})}
+          value={formData.email}
+          onChange={(e) => setFormData({...formData, email: e.target.value})}
           required
         />
 
@@ -180,9 +136,9 @@ const Login = ({ isAttacker = false }) => {
       {!isAttacker && (
         <>
           <div style={{ display: 'flex', alignItems: 'center', margin: '20px 0' }}>
-            <hr style={{ flex: 1, borderTop: '1px solid #e0e0e0' }} />
-            <span style={{ padding: '0 10px', color: '#888', fontSize: '14px' }}>{t('auth.login.or')}</span>
-            <hr style={{ flex: 1, borderTop: '1px solid #e0e0e0' }} />
+            <hr style={{ flex: 1, borderTop: '1px solid var(--gray-light-2)' }} />
+            <span style={{ padding: '0 10px', color: 'var(--gray-dark)', fontSize: '14px' }}>{t('auth.login.or')}</span>
+            <hr style={{ flex: 1, borderTop: '1px solid var(--gray-light-2)' }} />
           </div>
           {!!import.meta.env.VITE_GOOGLE_CLIENT_ID && !!import.meta.env.VITE_GOOGLE_GSI_CLIENT_URL ? (
             <div key={i18n.language} id="googleSignInDiv" style={{ width: '100%', marginBottom: '20px' }}></div>
@@ -195,8 +151,8 @@ const Login = ({ isAttacker = false }) => {
                 onClick={() => toast.info(t('auth.login.missing_env'))}
                 style={{ 
                   backgroundColor: 'white', 
-                  color: '#3c4043', 
-                  border: '1px solid #dadce0',
+                  color: 'var(--gray-dark-2)', 
+                  border: '1px solid var(--gray-light-3)',
                   fontWeight: '700',
                   display: 'flex',
                   alignItems: 'center',

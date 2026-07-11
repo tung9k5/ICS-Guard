@@ -7,7 +7,7 @@
     .page-title {
       font-size: 20px;
       font-weight: 600; /* Slightly less bold to match the image */
-      color: #0f172a; /* Slate 900 for dark crisp text */
+      color: var(--slate-900); /* Slate 900 for dark crisp text */
       display: flex;
       gap: 8px; /* Tighter gap between chevron and text */
       margin-bottom: 4px;
@@ -18,7 +18,7 @@
         justify-content: center;
         background: none;
         border: none;
-        color: #0f172a; /* Match the title text color */
+        color: var(--slate-900); /* Match the title text color */
         cursor: pointer;
         padding: 0; /* Remove padding to make it flow like text */
         transition: all 0.2s ease;
@@ -36,7 +36,7 @@
     }
 
     .page-subtitle {
-      color: #64748b; /* Slate 500 */
+      color: var(--slate-500); /* Slate 500 */
       font-size: 14px;
       margin-left: 36px; /* Align with title text (28px icon + 8px gap) */
     }

@@ -42,7 +42,9 @@ export const getAllDevices = async (req, res) => {
     
     // Ràng buộc bảo mật: User nào chỉ được thấy device của user đó
     if (req.user && req.user.id) {
-      query.userId = req.user.id;
+      if (req.user.role !== 'admin' && req.user.role !== 'Admin') {
+        query.userId = req.user.id;
+      }
     }
     if (search) {
       const searchRegex = new RegExp(search, 'i');
@@ -254,6 +256,22 @@ export const deleteDevice = async (req, res) => {
   }
 };
 
+export const deleteMultipleDevices = async (req, res) => {
+  const { ids } = req.body;
+
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return errorResponse(res, 'Danh sách ID thiết bị không hợp lệ', null, 400);
+  }
+
+  try {
+    const result = await Device.deleteMany({ _id: { $in: ids } });
+    return successResponse(res, { deletedCount: result.deletedCount }, `Xóa thành công ${result.deletedCount} thiết bị`);
+  } catch (error) {
+    console.error('DeleteMultipleDevices error:', error);
+    return errorResponse(res, 'Lỗi khi xóa danh sách thiết bị', error.message);
+  }
+};
+
 export const isolateDeviceEndpoint = async (req, res) => {
   const { id } = req.params;
   const rawIp = req.ip || req.connection.remoteAddress;
@@ -386,6 +404,7 @@ export default {
   createDevice,
   updateDevice,
   deleteDevice,
+  deleteMultipleDevices,
   isolateDeviceEndpoint,
   unisolateDeviceEndpoint,
   rollbackDeviceEndpoint,

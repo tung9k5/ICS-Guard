@@ -1,20 +1,22 @@
+@import 'assets/base_color';
+
 :root {
-  --bg-primary: #1a3677;
-  --bg-secondary: #1e293b;
-  --bg-content: #e5e5e5;
+  --bg-primary: var(--primary-blue); /* or a specific blue if needed */
+  --bg-secondary: var(--slate-800);
+  --bg-content: var(--gray-200);
   --bg-glass: rgba(15, 20, 35, 0.35);
   
-  --text-primary: #ffffff;
-  --text-secondary: #cbd5e1; 
-  --text-muted: #94a3b8;
-  --text-content: #0f172a;
+  --text-primary: var(--white);
+  --text-secondary: var(--slate-300); 
+  --text-muted: var(--slate-400);
+  --text-content: var(--slate-900);
   
-  --primary-color: #3b82f6;
-  --primary-hover: #2563eb;
-  --danger-color: #ef4444;
+  --primary-color: var(--blue-500);
+  --primary-hover: var(--blue-600);
+  --danger-color: var(--red-500);
   
-  --accent-gradient: linear-gradient(to right, #60a5fa, #a78bfa);
-  --accent-gradient-light: linear-gradient(to right, #7dd3fc, #c084fc);
+  --accent-gradient: linear-gradient(to right, var(--blue-400), var(--purple-500));
+  --accent-gradient-light: linear-gradient(to right, var(--blue-300), var(--purple-400));
   
   --border-subtle: rgba(255, 255, 255, 0.05);
   --border-light: rgba(255, 255, 255, 0.15);
@@ -38,13 +40,53 @@ body {
   min-height: 100vh;
   text-rendering: optimizeSpeed;
   line-height: 1.5;
-  background-color: #0f172a; /* matches auth layout */
-  color: #f8fafc;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--slate-900); 
+  color: var(--slate-50);
+  font-family: 'Metropolis', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Base reset for buttons and inputs */
 input, button, textarea, select {
   font: inherit;
 }
+
+.Toastify__toast-container {
+  z-index: 99999 !important;
+}
+
+// Global truncate utility
+.truncate-text {
+  display: inline-block;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+// Global table cell word-break fix for long unbroken strings (IDs, emails, IPs)
+.v-table td {
+  overflow-wrap: break-word;
+  word-break: break-word; // graceful break at word boundaries first
+}
+
+// Custom scrollbar for table containers
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--slate-300) transparent;
+
+  &::-webkit-scrollbar {
+    height: 4px;
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--slate-300);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
