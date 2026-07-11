@@ -8,7 +8,7 @@
     display: block;
     font-size: 0.875rem;
     font-weight: 500;
-    color: var(--text-secondary);
+    color: var(--slate-800);
     margin-bottom: 0.5rem;
   }
 
@@ -30,40 +30,38 @@
       .icon-svg {
         width: 1.25rem;
         height: 1.25rem;
-        color: #64748b; /* slate-500 */
+        color: var(--slate-400); 
       }
     }
 
     .v-input-field {
       width: 100%;
-      background-color: rgba(15, 23, 42, 0.5); /* Semi-transparent cho kính */
-      border: 1px solid var(--border-light);
+      background-color: var(--white);
+      border: 1px solid var(--slate-300);
       border-radius: 0.75rem;
       padding: 0.75rem 1rem;
-      color: var(--text-primary);
+      color: var(--slate-900);
       font-size: 1rem;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
       outline: none;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
       &:hover {
-        border-color: rgba(255, 255, 255, 0.2);
-        box-shadow: var(--shadow-md);
+        border-color: var(--slate-400);
       }
 
       &:focus {
-        border-color: var(--primary-color);
-        box-shadow: 0 0 0 3px var(--border-focus), var(--shadow-lg);
-        background-color: rgba(15, 23, 42, 0.8);
+        border-color: var(--blue-500);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
       }
 
       &::placeholder {
-        color: rgba(255, 255, 255, 0.2);
+        color: var(--slate-400);
       }
 
       &:disabled {
-        background-color: #1e293b; /* slate-800 */
-        color: #94a3b8; /* slate-400 */
+        background-color: var(--slate-50); 
+        color: var(--slate-400);
         cursor: not-allowed;
       }
 
@@ -95,14 +93,14 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #64748b; /* Changed from rgba(255, 255, 255, 0.4) for better visibility */
+      color: var(--slate-400); 
       background: transparent;
       border: none;
       cursor: pointer;
       transition: color 0.2s ease;
 
       &:hover, &:focus {
-        color: var(--text-primary);
+        color: var(--slate-800);
         outline: none;
       }
 

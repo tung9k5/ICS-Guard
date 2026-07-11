@@ -27,21 +27,21 @@ const generateRefreshToken = (user) => {
 
 export const login = async (req, res) => {
   console.log('[Login Request Body]', req.body);
-  const usernameInput = req.body.username || req.body.username_or_email;
+  const emailInput = req.body.email;
   const { password } = req.body;
   const rawIp = req.ip || req.connection.remoteAddress;
   const ipAddress = rawIp.replace(/^::ffff:/, '');
 
-  if (!usernameInput || !password) {
-    return res.status(400).json({ error: 'Bad Request', message: 'Username and password are required.' });
+  if (!emailInput || !password) {
+    return res.status(400).json({ error: 'Bad Request', message: 'Email and password are required.' });
   }
 
   try {
-    // Support logging in by either username or email
+    // Support logging in by either email or username
     const user = await User.findOne({
       $or: [
-        { username: usernameInput },
-        { email: usernameInput }
+        { email: emailInput },
+        { username: emailInput }
       ]
     });
 

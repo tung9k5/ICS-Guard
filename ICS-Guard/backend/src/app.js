@@ -183,7 +183,7 @@ const seedDatabase = async () => {
       if (usersData && usersData.length > 0) {
         for (let user of usersData) {
           let plainPassword = 'User@123';
-          if (user.username === 'admin_soc') plainPassword = 'Admin@123';
+          if (user.username === 'admin_soc') plainPassword = 'password';
           else if (user.username === 'l1_analyst') plainPassword = 'L1@123';
           else if (user.username === 'l2_responder') plainPassword = 'L2@123';
           else if (user.username === 'l3_manager') plainPassword = 'L3@123';

@@ -1,7 +1,7 @@
 {
   "auth": {
     "attacker_portal": "Cổng Mô Phỏng Tấn Công",
-    "welcome_ics_guard": "Chào mừng đến với ICS-Guard",
+    "welcome_ics_guard": "Chào mừng đến với ICS Guard",
     "attacker_desc": "Công cụ thử nghiệm độ ổn định và mô phỏng các kịch bản xâm nhập hạ tầng công nghiệp.",
     "ics_guard_desc": "Nền tảng giám sát an ninh mạng thế hệ mới dành cho hệ thống điều khiển công nghiệp.",
     "login": {
@@ -43,13 +43,16 @@
       "topology": "Sơ đồ mạng",
       "alerts": "Cảnh báo an ninh",
       "assets": "Quản lý thiết bị",
+      "users": "Quản lý người dùng",
+      "audit": "Nhật ký hệ thống",
+      "attack": "Mô phỏng tấn công",
       "reports": "Báo cáo",
       "settings": "Cài đặt",
       "logout": "Đăng xuất"
     },
     "header": {
       "hello": "Xin chào, {{name}}!",
-      "subtitle": "Hệ thống giám sát và bảo vệ hạ tầng điều khiển công nghiệp (ICS-Guard)"
+      "subtitle": "Hệ thống giám sát và bảo vệ hạ tầng điều khiển công nghiệp (ICS Guard)"
     }
   },
   "assets": {
@@ -57,6 +60,14 @@
     "delete_confirm": "Bạn có chắc chắn muốn xoá thiết bị này?",
     "delete_success": "Xoá thiết bị thành công",
     "delete_error": "Có lỗi xảy ra khi xoá thiết bị",
+    "delete_modal": {
+      "title": "Xác nhận xóa",
+      "msg_multiple": "Bạn có chắc chắn muốn xóa <1>{{count}}</1> thiết bị đã chọn không?",
+      "msg_single": "Bạn có chắc chắn muốn xóa thiết bị <1>{{name}}</1> không?",
+      "warning": "Hành động này không thể hoàn tác.",
+      "btn_cancel": "HỦY BỎ",
+      "btn_confirm": "XÁC NHẬN XÓA"
+    },
     "view_details": "Xem chi tiết thiết bị: {{name}}\nIP: {{ip}}",
     "page_title": "Quản lý thiết bị",
     "btn_add": "Thêm mới",
@@ -85,7 +96,7 @@
       "mobile_name": "Tên thiết bị"
     },
     "form": {
-      "error_required": "Vui lòng nhập đầy đủ Tên, IP và địa chỉ MAC",
+      "error_required": "Vui lòng nhập đầy đủ các trường bắt buộc (Tên, IP, Loại thiết bị, Trạng thái)",
       "error_ip": "Địa chỉ IP không hợp lệ. Vui lòng nhập đúng định dạng IPv4 (VD: 192.168.1.100)",
       "error_mac": "Địa chỉ MAC không hợp lệ. Vui lòng nhập đúng định dạng (VD: 00:1A:2B:3C:4D:5E hoặc 00-1A-2B-3C-4D-5E)",
       "update_success": "Cập nhật thiết bị thành công",
@@ -93,11 +104,11 @@
       "save_error": "Có lỗi xảy ra khi lưu thiết bị. Kiểm tra lại thông tin.",
       "title_edit": "Cập nhật thiết bị",
       "title_add": "Thêm thiết bị mới",
-      "label_name": "Tên thiết bị *",
+      "label_name": "Tên thiết bị",
       "placeholder_name": "Ví dụ: PLC-01",
-      "label_ip": "Địa chỉ IP *",
+      "label_ip": "Địa chỉ IP",
       "placeholder_ip": "Ví dụ: 192.168.1.100",
-      "label_mac": "Địa chỉ MAC *",
+      "label_mac": "Địa chỉ MAC",
       "placeholder_mac": "Ví dụ: 00:1A:2B:3C:4D:5E",
       "label_type": "Loại thiết bị",
       "select_type": "Chọn loại thiết bị",
@@ -107,6 +118,58 @@
       "btn_cancel": "Hủy",
       "btn_update": "Cập nhật",
       "btn_save": "Thêm mới"
+    }
+  },
+  "audit": {
+    "page_title": "Quản lý Audit Logs",
+    "tab_logs": "Audit Logs",
+    "tab_blocked": "Blocked IPs",
+    "fetch_error": "Lỗi khi lấy dữ liệu",
+    "unblock_success": "Đã bỏ chặn IP thành công",
+    "unblock_error": "Lỗi khi bỏ chặn IP",
+    "btn_unblock": "Bỏ chặn",
+    "search_placeholder": "Tìm kiếm...",
+    "filter_action": "Tất cả hành động",
+    "logs": {
+      "table_time": "Thời gian",
+      "table_user": "Người dùng",
+      "table_action": "Hành động",
+      "table_resource": "Tài nguyên",
+      "table_ip": "IP",
+      "table_status": "Trạng thái",
+      "table_details": "Chi tiết"
+    },
+    "blocked": {
+      "table_ip": "Địa chỉ IP",
+      "table_reason": "Lý do chặn",
+      "table_blocked_at": "Thời gian chặn",
+      "table_expires_at": "Hết hạn lúc",
+      "table_actions": "Thao tác"
+    }
+  },
+  "attack": {
+    "page_title": "Mô phỏng tấn công",
+    "fetch_error": "Lỗi khi lấy danh sách thiết bị",
+    "launch_success": "Đã khởi chạy kịch bản tấn công: {{type}}",
+    "launch_error": "Lỗi khi khởi chạy tấn công",
+    "btn_attack": "Tấn công",
+    "search_placeholder": "Tìm kiếm...",
+    "list": {
+      "table_device": "Thiết bị",
+      "table_type": "Loại",
+      "table_ip": "IP",
+      "table_status": "Trạng thái",
+      "table_actions": "Thao tác"
+    },
+    "modal": {
+      "title": "Cấu hình Tấn công",
+      "target": "Mục tiêu",
+      "select_type": "Chọn kịch bản tấn công",
+      "dos_desc": "Gửi hàng loạt truy vấn liên tục (Modbus/TCP) để làm cạn kiệt tài nguyên của thiết bị.",
+      "mitm_desc": "Chặn và thay đổi gói tin giữa hệ thống điều khiển và thiết bị.",
+      "fuzzing_desc": "Gửi các gói tin Modbus/TCP bất hợp lệ để kiểm tra lỗi hoặc gây crash.",
+      "btn_cancel": "Hủy",
+      "btn_launch": "Khởi chạy"
     }
   },
   "dashboard": {
@@ -135,7 +198,7 @@
       "outgoing": "Đầu ra (Outgoing)"
     },
     "banner": {
-      "title": "Bảo vệ hệ thống ICS-Guard!",
+      "title": "Bảo vệ hệ thống ICS Guard!",
       "subtitle": "Giám sát liên tục 24/7, phát hiện sớm mọi rủi ro và ngăn chặn tấn công vào hạ tầng công nghiệp của bạn.",
       "btn_upgrade": "KÍCH HOẠT BẢO VỆ NÂNG CAO",
       "btn_report": "KẾT NỐI HỆ THỐNG MỚI"

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Home, ArrowLeft } from 'lucide-react';
 import VButton from '@/components/VButton';
+import Viewlogo from '@/components/Viewlogo';
 
 const NotFound = () => {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ const NotFound = () => {
 
   return (
     <>
-      <img src="/image-logo.png" alt="Not Found" className="status-image" />
+      <Viewlogo size={390} />
       <h1>404</h1>
       <p>{t('status.not_found', 'Trang này không tồn tại hoặc đã bị gỡ bỏ.')}</p>
       <div className="status-actions">

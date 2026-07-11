@@ -1,0 +1,72 @@
+.v-textarea-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+  width: 100%;
+
+  .v-textarea-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--slate-800);
+    margin-bottom: 0.5rem;
+  }
+
+  .v-textarea-container {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+
+    .v-textarea-field {
+      width: 100%;
+      background-color: var(--white);
+      border: 1px solid var(--slate-300);
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      color: var(--slate-900);
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      outline: none;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      resize: vertical;
+      min-height: 100px;
+      font-family: inherit;
+
+      &:hover {
+        border-color: var(--slate-400);
+      }
+
+      &:focus {
+        border-color: var(--blue-500);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+      }
+
+      &::placeholder {
+        color: var(--slate-400);
+      }
+
+      &:disabled {
+        background-color: var(--slate-50);
+        color: var(--slate-400);
+        cursor: not-allowed;
+      }
+
+      &.has-error {
+        border-color: var(--danger-color);
+        &:hover {
+          box-shadow: var(--shadow-md);
+        }
+        &:focus {
+          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2), var(--shadow-lg);
+        }
+      }
+    }
+  }
+
+  .v-textarea-error-msg {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--danger-color);
+  }
+}

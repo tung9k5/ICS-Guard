@@ -1,10 +1,20 @@
 import http from '@/http/clients/api';
 
 export default {
-  getAllUsers(options = {}) {
+  getAllUsers(params = {}, options = {}) {
     return http({
       url: '/users',
       method: 'GET',
+      params,
+      ...options
+    });
+  },
+
+  createUser(data, options = {}) {
+    return http({
+      url: '/users',
+      method: 'POST',
+      data,
       ...options
     });
   },
@@ -39,6 +49,15 @@ export default {
     return http({
       url: `/users/${id}`,
       method: 'DELETE',
+      ...options
+    });
+  },
+  
+  deleteMultipleUsers(ids, options = {}) {
+    return http({
+      url: '/users/bulk-delete',
+      method: 'POST',
+      data: { ids },
       ...options
     });
   }

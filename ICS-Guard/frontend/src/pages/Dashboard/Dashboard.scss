@@ -11,7 +11,7 @@
     overflow: hidden;
     margin-bottom: 32px;
     box-shadow: 0 10px 15px -3px rgba(30, 58, 138, 0.3), 0 4px 6px -2px rgba(30, 58, 138, 0.15);
-    color: #ffffff;
+    color: var(--white);
     min-height: 220px;
     z-index: 0;
 
@@ -36,14 +36,14 @@
           font-size: 28px;
           font-weight: 700;
           margin: 0 0 12px 0;
-          color: #f8fafc;
+          color: var(--slate-50);
           letter-spacing: -0.02em;
           word-wrap: break-word;
         }
 
         p {
           font-size: 16px;
-          color: #94a3b8;
+          color: var(--slate-400);
           line-height: 1.5;
           margin: 0 0 24px 0;
           word-wrap: break-word;
@@ -81,19 +81,19 @@
           }
 
           &.btn-primary {
-            background-color: #3b82f6;
-            color: #ffffff;
+            background-color: var(--blue-500);
+            color: var(--white);
             box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
 
             &:hover {
-              background-color: #2563eb;
+              background-color: var(--blue-600);
               transform: translateY(-1px);
             }
           }
 
           &.btn-secondary {
             background-color: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
+            color: var(--white);
             border: 1px solid rgba(255, 255, 255, 0.2);
 
             &:hover {
@@ -127,7 +127,7 @@
         position: absolute;
         width: 150px;
         height: 150px;
-        background-color: #3b82f6;
+        background-color: var(--blue-500);
         border-radius: 50%;
         filter: blur(60px);
         opacity: 0.5;
@@ -144,7 +144,6 @@
         /* Fit nicely inside the banner height */
         max-height: 200px;
         object-fit: contain;
-        animation: hologramSpin 8s linear infinite;
       }
     }
 
@@ -159,7 +158,7 @@
       background: conic-gradient(
         transparent,
         rgba(59, 130, 246, 0.1),
-        #3b82f6,
+        var(--blue-500),
         transparent 30%
       );
       animation: rotateBorder 4s linear infinite;
@@ -170,7 +169,7 @@
       content: '';
       position: absolute;
       inset: 2px;
-      background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+      background: linear-gradient(135deg, var(--blue-900) 0%, var(--slate-900) 100%);
       border-radius: 14px;
       z-index: -1;
     }
@@ -196,23 +195,7 @@
     }
   }
 
-  @keyframes hologramSpin {
-    0% {
-      transform: translateY(0) rotateX(10deg) rotateY(0deg);
-    }
-    25% {
-      transform: translateY(-10px) rotateX(5deg) rotateY(90deg);
-    }
-    50% {
-      transform: translateY(0) rotateX(10deg) rotateY(180deg);
-    }
-    75% {
-      transform: translateY(-10px) rotateX(15deg) rotateY(270deg);
-    }
-    100% {
-      transform: translateY(0) rotateX(10deg) rotateY(360deg);
-    }
-  }
+
 
   .dashboard-grid {
     display: grid;
@@ -242,7 +225,7 @@
       h3 {
         font-size: 20px;
         font-weight: 600;
-        color: #374151;
+        color: var(--gray-700);
         margin: 0;
         margin-left: 12px;
       }
@@ -254,8 +237,8 @@
         width: 40px;
         height: 40px;
         border-radius: 8px;
-        background-color: #eff6ff;
-        color: #3b82f6;
+        background-color: var(--blue-50);
+        color: var(--blue-500);
       }
     }
 
@@ -291,7 +274,7 @@
         content: '';
         position: absolute;
         inset: 1px;
-        background: #ffffff;
+        background: var(--white);
         border-radius: 11px;
         z-index: -1;
       }
@@ -310,34 +293,34 @@
 
 // Dark mode support if needed
 :global(.dark-mode) .dashboard-container {
-  background-color: #111827;
+  background-color: var(--gray-900);
 
   .dashboard-header {
     h1 {
-      color: #f9fafb;
+      color: var(--gray-50);
     }
 
     p {
-      color: #9ca3af;
+      color: var(--gray-400);
     }
   }
 
   .dashboard-item {
     .item-header {
       h3 {
-        color: #d1d5db;
+        color: var(--gray-300);
       }
 
       .icon-wrapper {
-        background-color: #374151;
-        color: #60a5fa;
+        background-color: var(--gray-700);
+        color: var(--blue-400);
       }
     }
 
     .dashboard-card {
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
       &::after {
-        background: #1f2937;
+        background: var(--gray-800);
       }
     }
   }

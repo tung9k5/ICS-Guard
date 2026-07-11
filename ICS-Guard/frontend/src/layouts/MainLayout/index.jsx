@@ -4,10 +4,10 @@ import { Outlet, Navigate, useNavigate, useLocation, Link } from 'react-router-d
 import { AlertOctagon } from 'lucide-react';
 import authApi from '@/api/auth';
 import http from '@/http/clients/api';
-import Sidebar from '@/components/Layout/Sidebar';
-import Header from '@/components/Layout/Header';
+import Sidebar from '@/sections/Layout/Sidebar';
+import Header from '@/sections/Layout/Header';
 import GlobalLoading from '@/components/GlobalLoading';
-import ProfileModal from '@/Dialog/ProfileModal';
+import Profile from '@/sections/Profile';
 import DraggableChatbot from '@/components/DraggableChatbot';
 
 const MainLayout = () => {
@@ -89,7 +89,7 @@ const MainLayout = () => {
       <GlobalLoading />
       <DraggableChatbot />
       {isProfileOpen && (
-        <ProfileModal 
+        <Profile
           user={user} 
           onClose={() => setIsProfileOpen(false)} 
           onUpdate={handleUpdateUser}

@@ -16,6 +16,7 @@ services:
     environment:
       - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
       - VITE_GOOGLE_GSI_CLIENT_URL=${VITE_GOOGLE_GSI_CLIENT_URL}
+      - VITE_API_URL=${VITE_API_URL}
     depends_on:
       - backend
     restart: always
