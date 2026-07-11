@@ -1,15 +1,21 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Navigate, useNavigate, useLocation, Link } from 'react-router-dom';
-import { LogOut, Shield, ShieldAlert } from 'lucide-react';
+import { LogOut, Shield, ShieldAlert, AlertOctagon } from 'lucide-react';
 import authApi from '@/api/auth';
 import http from '@/http/clients/api';
 import { io } from 'socket.io-client';
 import './MainLayout.scss';
 
 const MainLayout = () => {
+  const [emergencyAlert, setEmergencyAlert] = useState(null);
+  const [quarantineLoading, setQuarantineLoading] = useState(false);
   const token = localStorage.getItem('access_token');
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    // We can add socket.io logic here later if needed to update emergencyAlert
+  }, []);
 
   if (!token) {
     return <Navigate to="/login" replace />;

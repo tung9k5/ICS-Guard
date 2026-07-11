@@ -3,6 +3,7 @@ import { isolateDevice } from '../services/securityService.js';
 import { sendEmailAlert } from '../services/emailService.js';
 import { sendTelegramAlert } from '../services/telegramService.js';
 import { publishMqtt } from '../services/mqttService.js';
+import { validateDevice } from '../../../shared/schemas/deviceSchema.js';
 
 const injectVulnerabilityInfo = (deviceDoc) => {
   const device = deviceDoc.toObject ? deviceDoc.toObject() : deviceDoc;
@@ -63,9 +64,24 @@ export const createDevice = async (req, res) => {
     return res.status(400).json({ error: 'Bad Request', message: 'Name, ipAddress, and macAddress are required.' });
   }
 
-  try {
-    const customId = req.body._id || req.body.id || macAddress.replace(/:/g, '').toLowerCase();
+  const customId = req.body._id || req.body.id || macAddress.replace(/:/g, '').toLowerCase();
+  
+  // Use shared validation layer
+  const validationResult = validateDevice({
+    _id: customId,
+    name,
+    type,
+    ipAddress,
+    macAddress,
+    node_type: req.body.node_type,
+    status: req.body.status
+  });
 
+  if (!validationResult.isValid) {
+    return res.status(400).json({ error: 'Bad Request', message: 'Validation failed.', details: validationResult.errors });
+  }
+
+  try {
     const newDevice = await Device.create({
       _id: customId,
       name,

@@ -1,4 +1,5 @@
 import mqtt from 'mqtt';
+import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -15,6 +16,17 @@ const __dirname = path.dirname(__filename);
 let MQTT_URL = process.env.MQTT_URL || 'mqtt://mosquitto:1883';
 
 let mqttClient = null;
+
+// AES-256-CBC Config for E2E Encryption
+const AES_SECRET_KEY = process.env.AES_SECRET_KEY || "0123456789abcdef0123456789abcdef";
+const AES_IV = process.env.AES_IV || "abcdef9876543210";
+
+function decryptPayload(encryptedBase64) {
+    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(AES_SECRET_KEY), Buffer.from(AES_IV));
+    let decrypted = decipher.update(encryptedBase64, 'base64', 'utf8');
+    decrypted += decipher.final('utf8');
+    return JSON.parse(decrypted);
+}
 
 export const connectMqtt = () => {
   const options = {};
@@ -53,7 +65,12 @@ export const connectMqtt = () => {
 
   client.on('message', async (topic, message) => {
     try {
-      const payload = JSON.parse(message.toString());
+      let payload = JSON.parse(message.toString());
+      
+      // Decrypt E2E Payload if encrypted
+      if (payload.encrypted_data) {
+        payload = decryptPayload(payload.encrypted_data);
+      }
       
       // 1. Write to InfluxDB
       await writeTelemetry(payload);
@@ -75,8 +92,17 @@ export const connectMqtt = () => {
 
 export const publishMqtt = (topic, payload) => {
   if (mqttClient && mqttClient.connected) {
-    mqttClient.publish(topic, typeof payload === 'string' ? payload : JSON.stringify(payload), { qos: 1 });
-    console.log(`[MqttService] Published to ${topic}:`, payload);
+    const dataStr = typeof payload === 'string' ? payload : JSON.stringify(payload);
+    
+    // Encrypt E2E Payload
+    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(AES_SECRET_KEY), Buffer.from(AES_IV));
+    let encrypted = cipher.update(dataStr, 'utf8', 'base64');
+    encrypted += cipher.final('base64');
+    
+    const securePayload = JSON.stringify({ encrypted_data: encrypted });
+    
+    mqttClient.publish(topic, securePayload, { qos: 1 });
+    console.log(`[MqttService] Published securely to ${topic}`);
     return true;
   }
   console.error('[MqttService] MQTT Client not connected, publish failed.');

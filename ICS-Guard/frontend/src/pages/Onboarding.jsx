@@ -363,27 +363,60 @@ const Onboarding = () => {
           )}
 
           {/* Nút lưu kích hoạt */}
-          <button 
-            type="submit"
-            disabled={isSubmitting}
-            style={{
-              background: '#39ff14',
-              color: '#000',
-              border: 'none',
-              padding: '14px',
-              borderRadius: '6px',
-              fontWeight: 700,
-              fontSize: '14px',
-              cursor: isSubmitting ? 'not-allowed' : 'pointer',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              boxShadow: '0 0 15px rgba(57, 255, 20, 0.2)',
-              transition: 'all 0.2s',
-              marginTop: '1rem'
-            }}
-          >
-            {isSubmitting ? 'Đang kích hoạt...' : 'Kích hoạt tài khoản & Vào Dashboard'}
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '1rem' }}>
+            <button 
+              type="submit"
+              disabled={isSubmitting}
+              style={{
+                background: '#39ff14',
+                color: '#000',
+                border: 'none',
+                padding: '14px',
+                borderRadius: '6px',
+                fontWeight: 700,
+                fontSize: '14px',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                boxShadow: '0 0 15px rgba(57, 255, 20, 0.2)',
+                transition: 'all 0.2s'
+              }}
+            >
+              {isSubmitting ? 'Đang kích hoạt...' : 'Kích hoạt tài khoản & Vào Dashboard'}
+            </button>
+            <button 
+              type="button"
+              onClick={async () => {
+                try {
+                  const refreshToken = localStorage.getItem('refresh_token');
+                  if (refreshToken) {
+                    await authApi.logout({ refresh_token: refreshToken });
+                  }
+                } catch (e) {
+                  console.error(e);
+                } finally {
+                  localStorage.removeItem('access_token');
+                  localStorage.removeItem('refresh_token');
+                  navigate('/login');
+                }
+              }}
+              style={{
+                background: 'transparent',
+                color: '#8b949e',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                padding: '12px',
+                borderRadius: '6px',
+                fontWeight: 600,
+                fontSize: '13px',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseOver={(e) => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)'; }}
+              onMouseOut={(e) => { e.currentTarget.style.color = '#8b949e'; e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)'; }}
+            >
+              Quay lại (Đăng xuất)
+            </button>
+          </div>
         </form>
       </div>
     </div>
