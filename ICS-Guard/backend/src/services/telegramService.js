@@ -40,7 +40,7 @@ export const initTelegramBot = () => {
     console.log('[TelegramService] Initializing real Telegram Bot in polling mode...');
     try {
       bot = new TelegramBot(botToken, { polling: true });
-      
+
       // Set up inline button click callback listener
       bot.on('callback_query', async (callbackQuery) => {
         const { id, data, message } = callbackQuery;
@@ -49,7 +49,7 @@ export const initTelegramBot = () => {
 
         try {
           console.log(`[TelegramService] Received callback query from Telegram: "${data}"`);
-          
+
           let alertResponseText = '';
           const [action, ...args] = data.split(':');
           const param = args.join(':'); // handles IP address colons if any (though IPv4 has no colons)
@@ -80,7 +80,7 @@ export const initTelegramBot = () => {
           } else if (action === 'block_ip') {
             const ipAddress = param;
             const existingBlock = await BlockedIp.findOne({ where: { ipAddress } });
-            
+
             if (existingBlock && new Date(existingBlock.expiresAt) > new Date()) {
               alertResponseText = `⚠️ IP ${ipAddress} is already blocked.`;
             } else {
@@ -115,7 +115,7 @@ export const initTelegramBot = () => {
           // Update the original message text to show the action taken
           const originalText = message.text;
           const updatedMessageText = `${originalText}\n\n[ADMIN UPDATE]\n${alertResponseText}`;
-          
+
           await bot.editMessageText(updatedMessageText, {
             chat_id: queryChatId,
             message_id: messageId,
@@ -123,7 +123,7 @@ export const initTelegramBot = () => {
 
         } catch (error) {
           console.error('[TelegramService] Error handling callback query:', error);
-          bot.answerCallbackQuery(id, { text: '❌ Error executing action.' }).catch(() => {});
+          bot.answerCallbackQuery(id, { text: '❌ Error executing action.' }).catch(() => { });
         }
       });
 
@@ -227,14 +227,14 @@ export const sendTelegramAlert = async (text, inlineButtons = [], customChatId =
 // Help helper to trigger a simulated telegram action (e.g. for testing)
 export const simulateTelegramCallback = async (callbackData, messageText = 'Alert') => {
   console.log(`[TelegramService Simulation] Simulating click on: "${callbackData}"`);
-  
+
   // Create a dummy message
   const dummyMessage = {
     chat: { id: 123456 },
     message_id: 8888,
     text: messageText,
   };
-  
+
   // Call internal callback handler logic if it's mockBot or real bot
   // We can simulate it by recreating the callback_query event
   let alertResponseText = '';
