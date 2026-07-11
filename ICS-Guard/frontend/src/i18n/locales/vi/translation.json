@@ -1,0 +1,171 @@
+{
+  "auth": {
+    "attacker_portal": "Cổng Mô Phỏng Tấn Công",
+    "welcome_ics_guard": "Chào mừng đến với ICS-Guard",
+    "attacker_desc": "Công cụ thử nghiệm độ ổn định và mô phỏng các kịch bản xâm nhập hạ tầng công nghiệp.",
+    "ics_guard_desc": "Nền tảng giám sát an ninh mạng thế hệ mới dành cho hệ thống điều khiển công nghiệp.",
+    "login": {
+      "success": "Đăng nhập thành công",
+      "google_fail": "Đăng nhập Google thất bại",
+      "fail": "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.",
+      "welcome": "Chào mừng",
+      "enter_info": "Điền thông tin để đăng nhập tài khoản",
+      "username_email": "Email",
+      "enter_username_email": "Nhập email",
+      "password": "Mật khẩu",
+      "enter_password": "Nhập mật khẩu",
+      "remember_me": "Ghi nhớ tài khoản",
+      "submit": "Đăng Nhập",
+      "or": "Hoặc",
+      "missing_env": "Vui lòng thêm VITE_GOOGLE_CLIENT_ID và VITE_GOOGLE_GSI_CLIENT_URL vào file .env",
+      "login_google": "Đăng nhập bằng Google",
+      "no_account": "Chưa có tài khoản? ",
+      "register_now": "Đăng ký ngay"
+    },
+    "register": {
+      "password_mismatch": "Mật khẩu không khớp",
+      "success": "Đăng ký thành công! Vui lòng đăng nhập.",
+      "fail": "Đăng ký thất bại. Vui lòng thử lại.",
+      "welcome": "Chào mừng",
+      "enter_info": "Điền thông tin để đăng ký tài khoản",
+      "username": "Tên đăng nhập",
+      "email": "Địa chỉ Email",
+      "password": "Mật khẩu",
+      "confirm_password": "Xác nhận mật khẩu",
+      "submit": "Đăng Ký",
+      "have_account": "Đã có tài khoản? ",
+      "login_now": "Đăng Nhập"
+    }
+  },
+  "layout": {
+    "sidebar": {
+      "overview": "Tổng quan",
+      "topology": "Sơ đồ mạng",
+      "alerts": "Cảnh báo an ninh",
+      "assets": "Quản lý thiết bị",
+      "reports": "Báo cáo",
+      "settings": "Cài đặt",
+      "logout": "Đăng xuất"
+    },
+    "header": {
+      "hello": "Xin chào, {{name}}!",
+      "subtitle": "Hệ thống giám sát và bảo vệ hạ tầng điều khiển công nghiệp (ICS-Guard)"
+    }
+  },
+  "assets": {
+    "fetch_error": "Không thể tải danh sách thiết bị. Vui lòng thử lại sau.",
+    "delete_confirm": "Bạn có chắc chắn muốn xoá thiết bị này?",
+    "delete_success": "Xoá thiết bị thành công",
+    "delete_error": "Có lỗi xảy ra khi xoá thiết bị",
+    "view_details": "Xem chi tiết thiết bị: {{name}}\nIP: {{ip}}",
+    "page_title": "Quản lý thiết bị",
+    "btn_add": "Thêm mới",
+    "filter_search_placeholder": "Tìm kiếm (Tên, Loại, IP)...",
+    "filter_type_all": "Tất cả thiết bị",
+    "filter_status_all": "Tất cả trạng thái",
+    "filter_status_active": "Hoạt động",
+    "filter_status_inactive": "Vô hiệu hóa",
+    "filter_order_desc": "Mới nhất",
+    "filter_order_asc": "Cũ nhất",
+    "item_name": "Thiết bị",
+    "list": {
+      "loading": "Đang tải dữ liệu...",
+      "no_data": "Chưa có thiết bị nào trong hệ thống.",
+      "table_id": "ID",
+      "table_name": "Tên thiết bị",
+      "table_type": "Loại (Type)",
+      "table_ip": "IP Address",
+      "table_mac": "MAC Address",
+      "table_status": "Trạng thái",
+      "table_desc": "Mô tả",
+      "table_actions": "Thao tác",
+      "btn_edit": "Chỉnh sửa",
+      "btn_delete": "Xóa thiết bị",
+      "mobile_id": "Mã",
+      "mobile_name": "Tên thiết bị"
+    },
+    "form": {
+      "error_required": "Vui lòng nhập đầy đủ Tên, IP và địa chỉ MAC",
+      "error_ip": "Địa chỉ IP không hợp lệ. Vui lòng nhập đúng định dạng IPv4 (VD: 192.168.1.100)",
+      "error_mac": "Địa chỉ MAC không hợp lệ. Vui lòng nhập đúng định dạng (VD: 00:1A:2B:3C:4D:5E hoặc 00-1A-2B-3C-4D-5E)",
+      "update_success": "Cập nhật thiết bị thành công",
+      "add_success": "Thêm mới thiết bị thành công",
+      "save_error": "Có lỗi xảy ra khi lưu thiết bị. Kiểm tra lại thông tin.",
+      "title_edit": "Cập nhật thiết bị",
+      "title_add": "Thêm thiết bị mới",
+      "label_name": "Tên thiết bị *",
+      "placeholder_name": "Ví dụ: PLC-01",
+      "label_ip": "Địa chỉ IP *",
+      "placeholder_ip": "Ví dụ: 192.168.1.100",
+      "label_mac": "Địa chỉ MAC *",
+      "placeholder_mac": "Ví dụ: 00:1A:2B:3C:4D:5E",
+      "label_type": "Loại thiết bị",
+      "select_type": "Chọn loại thiết bị",
+      "label_status": "Trạng thái",
+      "label_desc": "Mô tả",
+      "placeholder_desc": "Nhập mô tả...",
+      "btn_cancel": "Hủy",
+      "btn_update": "Cập nhật",
+      "btn_save": "Thêm mới"
+    }
+  },
+  "dashboard": {
+    "title": "Bảng điều khiển ICS Guard",
+    "subtitle": "Giám sát thời gian thực và thông tin tình báo mối đe dọa",
+    "statistics_title": "Thống kê tổng quan",
+    "network_traffic": "Lưu lượng mạng",
+    "threat_activity": "Mức độ cảnh báo an ninh",
+    "system_health": "Trạng thái hệ thống",
+    "days": {
+      "mon": "T2",
+      "tue": "T3",
+      "wed": "T4",
+      "thu": "T5",
+      "fri": "T6",
+      "sat": "T7",
+      "sun": "CN"
+    },
+    "health": {
+      "healthy": "Bình thường",
+      "warning": "Cảnh báo",
+      "critical": "Nghiêm trọng"
+    },
+    "traffic": {
+      "incoming": "Đầu vào (Incoming)",
+      "outgoing": "Đầu ra (Outgoing)"
+    },
+    "banner": {
+      "title": "Bảo vệ hệ thống ICS-Guard!",
+      "subtitle": "Giám sát liên tục 24/7, phát hiện sớm mọi rủi ro và ngăn chặn tấn công vào hạ tầng công nghiệp của bạn.",
+      "btn_upgrade": "KÍCH HOẠT BẢO VỆ NÂNG CAO",
+      "btn_report": "KẾT NỐI HỆ THỐNG MỚI"
+    }
+  },
+  "status": {
+    "not_found": "Trang này không tồn tại hoặc đã bị gỡ bỏ.",
+    "go_back": "Quay lại",
+    "go_home": "Về trang chủ",
+    "title_under_construction": "Tính năng đang phát triển",
+    "under_construction": "Tính năng này hiện chưa hoàn thiện và đang trong quá trình phát triển. Vui lòng quay lại sau."
+  },
+  "common": {
+    "processing_data": "Đang xử lý dữ liệu...",
+    "idle_timeout": {
+      "title": "Bạn còn ở đó không?",
+      "description_1": "Phiên đăng nhập sẽ tự động đăng xuất sau ",
+      "description_2": " giây nữa do không có hoạt động.",
+      "continue": "Tiếp tục sử dụng"
+    }
+  },
+  "profile": {
+    "title": "Hồ sơ của bạn",
+    "upload_image": "Tải ảnh lên",
+    "full_name": "Họ và tên",
+    "enter_full_name": "Nhập họ và tên...",
+    "email_readonly": "Email (Không thể thay đổi)",
+    "cancel": "Hủy",
+    "save": "Lưu thay đổi",
+    "saving": "Đang lưu...",
+    "loading": "Đang tải dữ liệu..."
+  }
+}

@@ -71,7 +71,7 @@ export const createUser = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   const { id } = req.params;
-  const { role, is_active, password, full_name, email } = req.body;
+  const { role, is_active, password, full_name, email, avatar } = req.body;
 
   try {
     const user = await User.findById(id);
@@ -95,6 +95,7 @@ export const updateUser = async (req, res) => {
 
     if (full_name !== undefined) user.full_name = full_name;
     if (email !== undefined) user.email = email;
+    if (avatar !== undefined) user.avatar = avatar;
 
     if (password) {
       user.password_hash = await bcrypt.hash(password, 10);
@@ -132,10 +133,39 @@ export const deleteUser = async (req, res) => {
   }
 };
 
+export const updateProfile = async (req, res) => {
+  const { id } = req.user; // Assuming req.user is set by authMiddleware
+  const { full_name, email, password, avatar } = req.body;
+
+  try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ error: 'Not Found', message: 'User not found.' });
+    }
+
+    if (full_name !== undefined) user.full_name = full_name;
+    if (email !== undefined) user.email = email;
+    if (avatar !== undefined) user.avatar = avatar;
+
+    if (password) {
+      user.password_hash = await bcrypt.hash(password, 10);
+    }
+
+    await user.save();
+
+    const updatedUser = await User.findById(id, '-password_hash');
+    return res.status(200).json({ message: 'Profile updated successfully.', user: updatedUser });
+  } catch (error) {
+    console.error('UpdateProfile error:', error);
+    return res.status(500).json({ error: 'Internal Server Error', message: 'Failed to update profile.' });
+  }
+};
+
 export default {
   getAllUsers,
   getUserById,
   createUser,
   updateUser,
   deleteUser,
+  updateProfile,
 };

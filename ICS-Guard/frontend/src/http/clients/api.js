@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { showGlobalLoading, hideGlobalLoading } from '@/utils/loadingEvent';
 
 const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
@@ -21,6 +22,7 @@ const getAuthKeys = () => {
 
 http.interceptors.request.use(
   (config) => {
+    showGlobalLoading();
     const { accessTokenKey } = getAuthKeys();
     const token = localStorage.getItem(accessTokenKey);
     if (token) {
@@ -29,6 +31,7 @@ http.interceptors.request.use(
     return config;
   },
   (error) => {
+    hideGlobalLoading();
     return Promise.reject(error);
   }
 );
@@ -49,9 +52,11 @@ const processQueue = (error, token = null) => {
 
 http.interceptors.response.use(
   (response) => {
+    hideGlobalLoading();
     return response.data;
   },
   async (error) => {
+    hideGlobalLoading();
     const originalRequest = error.config;
     const { accessTokenKey, refreshTokenKey, loginUrl } = getAuthKeys();
     
@@ -85,8 +90,8 @@ http.interceptors.response.use(
           throw new Error('No refresh token available');
         }
 
-        const { data } = await axios.post(`${baseURL}/v1/auth/refresh`, {
-          refresh_token: refreshToken
+        const { data } = await axios.post(`${baseURL}/auth/refresh`, {
+          refreshToken: refreshToken
         });
         
         if (data && data.access_token) {

@@ -43,7 +43,8 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 
 // Parse JSON request bodies
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Express trust proxy setup (so req.ip parses header correctly behind proxies)
 app.set('trust proxy', 1);
@@ -175,23 +176,25 @@ const seedDatabase = async () => {
     };
 
     // Seed Users (Force refresh to apply the new enterprise roles schema)
-    console.log('[Bootstrap] Wiping and re-seeding Users collection to apply new enterprise roles...');
-    await User.deleteMany({});
-    const usersData = parseSeedFile('users.json');
-    if (usersData && usersData.length > 0) {
-      for (let user of usersData) {
-        let plainPassword = 'User@123';
-        if (user.username === 'admin_soc') plainPassword = 'Admin@123';
-        else if (user.username === 'l1_analyst') plainPassword = 'L1@123';
-        else if (user.username === 'l2_responder') plainPassword = 'L2@123';
-        else if (user.username === 'l3_manager') plainPassword = 'L3@123';
-        else if (user.username === 'ot_operator') plainPassword = 'OT@123';
-        
-        user.password_hash = await bcrypt.hash(plainPassword, 10);
-        console.log(`[Bootstrap] Seeding user "${user.username}" with password "${plainPassword}"`);
+    console.log('[Bootstrap] Checking if users seeding is needed...');
+    const userCount = await User.countDocuments();
+    if (userCount === 0) {
+      const usersData = parseSeedFile('users.json');
+      if (usersData && usersData.length > 0) {
+        for (let user of usersData) {
+          let plainPassword = 'User@123';
+          if (user.username === 'admin_soc') plainPassword = 'Admin@123';
+          else if (user.username === 'l1_analyst') plainPassword = 'L1@123';
+          else if (user.username === 'l2_responder') plainPassword = 'L2@123';
+          else if (user.username === 'l3_manager') plainPassword = 'L3@123';
+          else if (user.username === 'ot_operator') plainPassword = 'OT@123';
+          
+          user.password_hash = await bcrypt.hash(plainPassword, 10);
+          console.log(`[Bootstrap] Seeding user "${user.username}" with password "${plainPassword}"`);
+        }
+        await User.insertMany(usersData);
+        console.log(`[Bootstrap] Seeded ${usersData.length} users into MongoDB.`);
       }
-      await User.insertMany(usersData);
-      console.log(`[Bootstrap] Seeded ${usersData.length} users into MongoDB.`);
     }
 
     // Seed Devices (Force refresh to apply the new hierarchical schema)

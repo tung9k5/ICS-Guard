@@ -1,0 +1,50 @@
+.v-header-page {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .header-left {
+    .page-title {
+      font-size: 20px;
+      font-weight: 600; /* Slightly less bold to match the image */
+      color: #0f172a; /* Slate 900 for dark crisp text */
+      display: flex;
+      gap: 8px; /* Tighter gap between chevron and text */
+      margin-bottom: 4px;
+
+      .back-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        color: #0f172a; /* Match the title text color */
+        cursor: pointer;
+        padding: 0; /* Remove padding to make it flow like text */
+        transition: all 0.2s ease;
+
+        &:hover {
+          color: var(--primary-color);
+          transform: translateX(-3px);
+        }
+
+        .icon {
+          color: inherit;
+          stroke-width: 2.5px; /* Make the chevron slightly bolder */
+        }
+      }
+    }
+
+    .page-subtitle {
+      color: #64748b; /* Slate 500 */
+      font-size: 14px;
+      margin-left: 36px; /* Align with title text (28px icon + 8px gap) */
+    }
+  }
+
+  .header-action {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+}

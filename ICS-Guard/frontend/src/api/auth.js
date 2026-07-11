@@ -3,7 +3,16 @@ import http from '@/http/clients/api';
 export default {
   login(data, options = {}) {
     return http({
-      url: '/v1/auth/login',
+      url: '/auth/login',
+      method: 'POST',
+      data,
+      ...options
+    });
+  },
+
+  loginGoogle(data, options = {}) {
+    return http({
+      url: '/auth/google-login',
       method: 'POST',
       data,
       ...options
@@ -12,7 +21,7 @@ export default {
 
   refreshToken(data, options = {}) {
     return http({
-      url: '/v1/auth/refresh',
+      url: '/auth/refresh',
       method: 'POST',
       data,
       ...options
@@ -21,7 +30,7 @@ export default {
 
   register(data, options = {}) {
     return http({
-      url: '/v1/auth/register',
+      url: '/auth/register',
       method: 'POST',
       data,
       ...options
@@ -30,7 +39,7 @@ export default {
 
   logout(data, options = {}) {
     return http({
-      url: '/v1/auth/logout',
+      url: '/auth/logout',
       method: 'POST',
       data,
       ...options
@@ -39,7 +48,7 @@ export default {
 
   setupOnboarding(data, options = {}) {
     return http({
-      url: '/v1/auth/setup-onboarding',
+      url: '/auth/setup-onboarding',
       method: 'POST',
       data,
       ...options
@@ -47,12 +56,10 @@ export default {
   },
 
   getProfile(options = {}) {
-    return Promise.resolve({ 
-      data: { 
-        username: 'admin_soc', 
-        full_name: 'SOC Administrator',
-        role: 'admin' 
-      } 
+    return http({
+      url: '/auth/me',
+      method: 'GET',
+      ...options
     });
   },
 };

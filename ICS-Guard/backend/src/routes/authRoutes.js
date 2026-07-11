@@ -1,5 +1,5 @@
 import express from 'express';
-import { login, refresh, logout, setupOnboarding } from '../controllers/authController.js';
+import { login, refresh, logout, setupOnboarding, register, me, googleLogin } from '../controllers/authController.js';
 import auditLogger from '../middlewares/auditMiddleware.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 
@@ -114,5 +114,77 @@ router.post('/logout', auditLogger('USER_LOGOUT'), logout);
 
 // Setup onboarding (Thiết lập đăng nhập lần đầu)
 router.post('/setup-onboarding', authMiddleware, auditLogger('USER_SETUP_ONBOARDING'), setupOnboarding);
+
+/**
+ * @openapi
+ * /api/auth/me:
+ *   get:
+ *     summary: Get current user profile
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user info
+ */
+router.get('/me', authMiddleware, me);
+
+/**
+ * @openapi
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - email
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               full_name:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Registration successful
+ */
+router.post('/register', auditLogger('USER_REGISTER'), register);
+
+/**
+ * @openapi
+ * /api/auth/google-login:
+ *   post:
+ *     summary: Log in to the system using Google Sign-In
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - idToken
+ *             properties:
+ *               idToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       400:
+ *         description: Bad Request
+ *       401:
+ *         description: Unauthorized
+ */
+router.post('/google-login', auditLogger('USER_GOOGLE_LOGIN_ATTEMPT'), googleLogin);
 
 export default router;

@@ -1,0 +1,4 @@
+export const SEARCH_DEBOUNCE_MS = 500;
+export const DEFAULT_PAGE_SIZE = 10;
+export const GLOBAL_LOADING_MIN_DURATION_MS = 1200;
+export const GLOBAL_LOADING_ICON_INTERVAL_MS = 600;

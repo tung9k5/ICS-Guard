@@ -13,6 +13,9 @@ services:
       - ./frontend:/app
       # Giữ lại node_modules trong container
       - /app/node_modules
+    environment:
+      - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+      - VITE_GOOGLE_GSI_CLIENT_URL=${VITE_GOOGLE_GSI_CLIENT_URL}
     depends_on:
       - backend
     restart: always
@@ -25,6 +28,7 @@ services:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
       - ./backend:/app
+      - /app/node_modules
     environment:
       - PORT=8000
       - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-123456}@mongodb:27017/${MONGO_DB}?authSource=admin

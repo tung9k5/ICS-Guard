@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-// baseURL trỏ tới FastAPI backend (đọc từ .env)
 const api = axios.create({
     baseURL: import.meta.env.VITE_API_URL,
     timeout: 10000,
@@ -9,7 +8,7 @@ const api = axios.create({
     }
 });
 
-// Cấu hình interceptor để tự động lấy data từ response
+
 api.interceptors.response.use(
     response => response.data,
     error => {

@@ -8,6 +8,7 @@ Thumbs.db
 .venv
 venv/
 ENV/
+run.txt
 
 # Node
 node_modules/

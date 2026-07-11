@@ -1,0 +1,128 @@
+import './Register.scss';
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import authApi from '@/api/auth';
+import { Lock, User, Mail } from 'lucide-react';
+import VInput from '@/components/VInput';
+import VButton from '@/components/VButton';
+import { toast } from '@/utils/toast';
+
+import { useTranslation } from 'react-i18next';
+
+const Register = () => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [formData, setFormData] = useState({ 
+    username: '', 
+    email: '', 
+    password: '',
+    confirmPassword: ''
+  });
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error(t('auth.register.password_mismatch'));
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const payload = {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password
+      };
+      
+      await authApi.register(payload);
+      toast.success(t('auth.register.success'));
+      navigate('/login');
+    } catch (err) {
+      toast.error(err.response?.data?.message || t('auth.register.fail'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="auth-form-card">
+      <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px' }}>{t('auth.register.welcome')}</h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>{t('auth.register.enter_info')}</p>
+      </div>
+
+      <form onSubmit={handleSubmit}>
+        <VInput
+          id="username"
+          name="username"
+          label={t('auth.register.username')}
+          placeholder="admin123"
+          icon={User}
+          value={formData.username}
+          onChange={(e) => setFormData({...formData, username: e.target.value})}
+          required
+        />
+
+        <VInput
+          id="email"
+          name="email"
+          type="email"
+          label={t('auth.register.email')}
+          placeholder="admin@example.com"
+          icon={Mail}
+          value={formData.email}
+          onChange={(e) => setFormData({...formData, email: e.target.value})}
+          required
+        />
+
+        <VInput
+          id="password"
+          name="password"
+          type="password"
+          label={t('auth.register.password')}
+          placeholder="••••••••"
+          icon={Lock}
+          value={formData.password}
+          onChange={(e) => setFormData({...formData, password: e.target.value})}
+          required
+        />
+
+        <VInput
+          id="confirmPassword"
+          name="confirmPassword"
+          type="password"
+          label={t('auth.register.confirm_password')}
+          placeholder="••••••••"
+          icon={Lock}
+          value={formData.confirmPassword}
+          onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+          error={formData.confirmPassword && formData.password !== formData.confirmPassword ? t('auth.register.password_mismatch') : ""}
+          required
+        />
+
+        <div className="auth-form-actions">
+          <VButton 
+            type="submit" 
+            variant="primary" 
+            fullWidth 
+            loading={loading}
+          >
+            {t('auth.register.submit')}
+          </VButton>
+        </div>
+      </form>
+
+      <div className="auth-form-footer">
+        {t('auth.register.have_account')}
+        <Link to="/login" className="auth-link">
+          {t('auth.register.login_now')}
+        </Link>
+      </div>
+    </div>
+  );
+};
+
+export default Register;
