@@ -121,7 +121,8 @@ services:
   # 9. IoT Device Simulator (Python Asyncio)
   simulator:
     build:
-      context: ./iot/simulator
+      context: ./iot
+      dockerfile: simulator/Dockerfile
     environment:
       - MQTT_HOST=mosquitto
       - MQTT_PORT=8883

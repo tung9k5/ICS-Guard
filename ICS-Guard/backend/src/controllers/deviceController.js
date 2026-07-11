@@ -3,18 +3,19 @@ import { isolateDevice } from '../services/securityService.js';
 import { sendEmailAlert } from '../services/emailService.js';
 import { sendTelegramAlert } from '../services/telegramService.js';
 import { publishMqtt } from '../services/mqttService.js';
+import { validateDevice } from '../../../shared/schemas/deviceSchema.js';
 import { formatPagination } from '../utils/pagination.js';
 import { successResponse, errorResponse, paginatedResponse } from '../utils/response.js';
 
 const injectVulnerabilityInfo = (deviceDoc) => {
   const device = deviceDoc.toObject ? deviceDoc.toObject() : deviceDoc;
   const nodeType = device.node_type || device.nodeType || 'sensor';
-  
+
   // Gán thông tin phiên bản firmware theo loại thiết bị
   device.firmware_version = nodeType === 'gateway' ? 'v1.4.2-stable' :
-                            nodeType === 'controller' ? 'v2.1.0-lts' :
-                            'v1.0.5-patch3';
-                            
+    nodeType === 'controller' ? 'v2.1.0-lts' :
+      'v1.0.5-patch3';
+
   // Ánh xạ lỗi bảo mật CVE thực tế (Asset & CVE Correlation)
   if (nodeType === 'gateway') {
     device.cves = [
@@ -29,7 +30,7 @@ const injectVulnerabilityInfo = (deviceDoc) => {
       { cve: 'CVE-2024-1020', severity: 'MEDIUM', score: 5.3, desc: 'Kênh ADC dễ bị can thiệp tín hiệu điện áp' }
     ];
   }
-  
+
   return device;
 };
 
@@ -39,7 +40,7 @@ export const getAllDevices = async (req, res) => {
 
     // Xây dựng query filter
     let query = {};
-    
+
     // Ràng buộc bảo mật: User nào chỉ được thấy device của user đó
     if (req.user && req.user.id) {
       query.userId = req.user.id;
@@ -111,7 +112,7 @@ export const createDevice = async (req, res) => {
   const { name, type, ipAddress, ip_address, macAddress, description, status } = req.body;
 
   const actualIp = ipAddress || ip_address;
-  
+
   if (!name || !actualIp) {
     return errorResponse(res, 'Name and ip_address are required', null, 400);
   }
@@ -126,20 +127,43 @@ export const createDevice = async (req, res) => {
     return errorResponse(res, 'Invalid MAC Address format', null, 400);
   }
 
-  try {
-    const defaultMac = macAddress || `00:00:00:${Math.floor(Math.random()*100)}:${Math.floor(Math.random()*100)}:${Math.floor(Math.random()*100)}`;
-    let customId = req.body._id || req.body.id;
-    if (!customId) {
-      const lastDevice = await Device.findOne({ _id: /^D-\d{3,}$/ }).sort({ _id: -1 });
-      if (lastDevice && lastDevice._id) {
-        const lastNumber = parseInt(lastDevice._id.split('-')[1], 10);
-        const nextNumber = lastNumber + 1;
-        customId = `D-${nextNumber.toString().padStart(3, '0')}`;
-      } else {
-        customId = 'D-001';
+  const defaultMac = macAddress || `00:00:00:${Math.floor(Math.random() * 100)}:${Math.floor(Math.random() * 100)}:${Math.floor(Math.random() * 100)}`;
+  let customId = req.body._id || req.body.id;
+  if (!customId) {
+    if (macAddress) {
+      customId = macAddress.replace(/:/g, '').toLowerCase();
+    } else {
+      try {
+        const lastDevice = await Device.findOne({ _id: /^D-\d{3,}$/ }).sort({ _id: -1 });
+        if (lastDevice && lastDevice._id) {
+          const lastNumber = parseInt(lastDevice._id.split('-')[1], 10);
+          const nextNumber = lastNumber + 1;
+          customId = `D-${nextNumber.toString().padStart(3, '0')}`;
+        } else {
+          customId = 'D-001';
+        }
+      } catch (err) {
+        customId = `D-${Math.floor(Math.random() * 1000)}`;
       }
     }
+  }
 
+  // Use shared validation layer
+  const validationResult = validateDevice({
+    _id: customId,
+    name,
+    type,
+    ipAddress: actualIp,
+    macAddress: defaultMac,
+    node_type: req.body.node_type,
+    status: req.body.status
+  });
+
+  if (!validationResult.isValid) {
+    return res.status(400).json({ error: 'Bad Request', message: 'Validation failed.', details: validationResult.errors });
+  }
+
+  try {
     const newDevice = await Device.create({
       _id: customId,
       userId: req.user ? req.user.id : null,
@@ -184,10 +208,10 @@ export const updateDevice = async (req, res) => {
     if (name !== undefined) device.name = name;
     if (type !== undefined) device.type = type;
     if (description !== undefined) device.description = description;
-    
+
     const actualIp = ipAddress || ip_address;
     const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-    
+
     if (actualIp !== undefined) {
       if (!ipRegex.test(actualIp.trim())) {
         return errorResponse(res, 'Invalid IP Address format', null, 400);
@@ -195,7 +219,7 @@ export const updateDevice = async (req, res) => {
       device.ipAddress = actualIp.trim();
       device.ip_address = actualIp.trim();
     }
-    
+
     if (macAddress !== undefined) {
       const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
       if (!macRegex.test(macAddress.trim())) {
@@ -204,7 +228,7 @@ export const updateDevice = async (req, res) => {
       device.macAddress = macAddress.trim();
       device.mac_address = macAddress.trim();
     }
-    
+
     if (status !== undefined) {
       const validStatuses = ['active', 'inactive', 'isolated', 'online', 'offline', 'quarantined'];
       if (!validStatuses.includes(status)) {
@@ -214,7 +238,7 @@ export const updateDevice = async (req, res) => {
     }
 
     await device.save();
-    
+
     const cleanDevice = {
       _id: device._id,
       name: device.name,
@@ -313,7 +337,7 @@ export const unisolateDeviceEndpoint = async (req, res) => {
     // Alert
     const subject = `DEVICE RECONNECTED: ${device.name}`;
     const text = `Security Notice: Device "${device.name}" (IP: ${device.ipAddress}) has been reconnected (un-isolated) by ${actor}.`;
-    
+
     await sendEmailAlert({
       subject,
       text,
@@ -362,7 +386,7 @@ export const rollbackDeviceEndpoint = async (req, res) => {
     // Alert
     const subject = `DEVICE LOGIC ROLLBACK: ${device.name}`;
     const text = `Security Notice: PLC device "${device.name}" logic has been rolled back to a clean safe state by ${actor}.`;
-    
+
     await sendEmailAlert({
       subject,
       text,
