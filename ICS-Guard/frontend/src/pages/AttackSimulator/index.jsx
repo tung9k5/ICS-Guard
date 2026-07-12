@@ -133,7 +133,7 @@ const AttackSimulator = () => {
             {selectedIds.length > 0 && (
               <VButton variant="danger" onClick={() => confirmDelete('bulk')} style={{ flex: '1 1 auto', whiteSpace: 'nowrap' }}>
                 <Trash2 size={18} />
-                {t('assets.delete_selected', `Xóa đã chọn (${selectedIds.length})`)}
+                {t('incidents.btn_delete_selected', { count: selectedIds.length })}
               </VButton>
             )}
             <VButton variant="primary" onClick={() => setIsModalOpen(true)} style={{ flex: '1 1 auto', whiteSpace: 'nowrap' }}>

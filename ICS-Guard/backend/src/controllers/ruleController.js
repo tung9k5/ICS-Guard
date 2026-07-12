@@ -35,9 +35,9 @@ export const getAllRules = async (req, res) => {
       .limit(limit);
 
     const total = await Rule.countDocuments(query);
-    const pagination = formatPagination(total, page, per_page);
+    const paginated = formatPagination(rules, total, parseInt(page), parseInt(per_page));
 
-    return paginatedResponse(res, rules, pagination, 'Rules retrieved successfully');
+    return paginatedResponse(res, paginated.data, paginated.pagination, 'Rules retrieved successfully');
   } catch (error) {
     console.error('getAllRules error:', error);
     return errorResponse(res, 'Failed to fetch rules', error.message);
