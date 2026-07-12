@@ -53,19 +53,6 @@ const MainLayout = () => {
     return <Navigate to="/login" replace />;
   }
 
-  const getIsFirstLogin = () => {
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.isFirstLogin === true;
-    } catch (e) {
-      return false;
-    }
-  };
-
-  if (getIsFirstLogin()) {
-    return <Navigate to="/onboarding" replace />;
-  }
-
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };

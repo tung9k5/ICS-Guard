@@ -45,7 +45,7 @@ const AlertManagement = () => {
       });
       if (res.status === 'success') {
         setAlerts(res.data);
-        setTotal(res.pagination?.total_items || 0);
+        setTotal(res.pagination?.total || 0);
       }
     } catch (error) {
       toast.error(t('error_general', 'Có lỗi xảy ra'));
@@ -129,7 +129,7 @@ const AlertManagement = () => {
             {selectedIds.length > 0 && (
               <VButton variant="danger" onClick={handleBulkDeleteClick} style={{ flex: '1 1 auto', whiteSpace: 'nowrap' }}>
                 <Trash2 size={18} />
-                {t('users.btn_delete_selected', `Xóa đã chọn (${selectedIds.length})`)}
+                {t('incidents.btn_delete_selected', { count: selectedIds.length })}
               </VButton>
             )}
           </div>

@@ -50,7 +50,7 @@ const RuleManagement = () => {
       });
       if (res.status === 'success') {
         setRules(res.data);
-        setTotal(res.pagination?.total_items || 0);
+        setTotal(res.pagination?.total || 0);
       }
     } catch (error) {
       toast.error(t('error_general', 'Có lỗi xảy ra'));

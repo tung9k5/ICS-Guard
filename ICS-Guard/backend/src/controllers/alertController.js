@@ -39,9 +39,9 @@ export const getAllAlerts = async (req, res) => {
       .limit(limit);
 
     const total = await Alert.countDocuments(query);
-    const pagination = formatPagination(total, page, per_page);
+    const paginated = formatPagination(alerts, total, parseInt(page), parseInt(per_page));
 
-    return paginatedResponse(res, alerts, pagination, 'Alerts retrieved successfully');
+    return paginatedResponse(res, paginated.data, paginated.pagination, 'Alerts retrieved successfully');
   } catch (error) {
     console.error('getAllAlerts error:', error);
     return errorResponse(res, 'Failed to fetch alerts', error.message);
