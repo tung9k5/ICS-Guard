@@ -68,7 +68,36 @@ export const getAttackDevices = async (req, res) => {
   }
 };
 
+export const deleteAttackDevice = async (req, res) => {
+  try {
+    const device = await Device.findByIdAndDelete(req.params.id);
+    if (!device) {
+      return errorResponse(res, 'Device not found', null, 404);
+    }
+    return successResponse(res, null, 'Device deleted successfully');
+  } catch (error) {
+    console.error('deleteAttackDevice error:', error);
+    return errorResponse(res, 'Failed to delete device', error.message);
+  }
+};
+
+export const deleteMultipleAttackDevices = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return errorResponse(res, 'Please provide an array of device IDs', null, 400);
+    }
+    const result = await Device.deleteMany({ _id: { $in: ids } });
+    return successResponse(res, { deletedCount: result.deletedCount }, 'Devices deleted successfully');
+  } catch (error) {
+    console.error('deleteMultipleAttackDevices error:', error);
+    return errorResponse(res, 'Failed to delete devices', error.message);
+  }
+};
+
 export default {
   launchAttack,
   getAttackDevices,
+  deleteAttackDevice,
+  deleteMultipleAttackDevices,
 };

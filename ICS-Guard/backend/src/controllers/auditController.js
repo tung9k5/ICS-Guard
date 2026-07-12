@@ -1,10 +1,10 @@
-import { AuditLog, BlockedIp } from '../models/index.js';
+import { AuditLog, BlockedIp, User } from '../models/index.js';
 import { formatPagination } from '../utils/pagination.js';
 import { successResponse, errorResponse, paginatedResponse } from '../utils/response.js';
 
 export const getAuditLogs = async (req, res) => {
   try {
-    const { search, order, action, page = 1, per_page = 10 } = req.query;
+    const { search, order, action, role, page = 1, per_page = 10 } = req.query;
     
     let query = {};
 
@@ -13,14 +13,35 @@ export const getAuditLogs = async (req, res) => {
       query.action = action;
     }
 
+    if (role && role !== 'all') {
+      const users = await User.find({ role }).select('_id email');
+      const userIds = users.map(u => u._id);
+      const userEmails = users.map(u => u.email).filter(e => e);
+      query.$or = [
+        { userId: { $in: userIds } },
+        { 'details.body.email': { $in: userEmails } }
+      ];
+    }
+
     // Full-text search across username, action, ipAddress
     if (search) {
       const searchRegex = new RegExp(search, 'i');
-      query.$or = [
-        { username: searchRegex },
-        { action: searchRegex },
-        { ipAddress: searchRegex },
-      ];
+      if (query.$or) {
+        query.$and = [{ $or: query.$or }, {
+          $or: [
+            { username: searchRegex },
+            { action: searchRegex },
+            { ipAddress: searchRegex },
+          ]
+        }];
+        delete query.$or;
+      } else {
+        query.$or = [
+          { username: searchRegex },
+          { action: searchRegex },
+          { ipAddress: searchRegex },
+        ];
+      }
     }
 
     // Default: newest first (desc), support asc
@@ -32,20 +53,52 @@ export const getAuditLogs = async (req, res) => {
 
     const total = await AuditLog.countDocuments(query);
     const logs = await AuditLog.find(query)
+      .populate('userId', 'email role username')
       .sort(sortOption)
       .skip(skip)
-      .limit(limitNumber);
+      .limit(limitNumber)
+      .lean();
     
-    const formattedLogs = logs.map(log => ({
-      id: log._id,
-      userId: log.userId,
-      username: log.username,
-      action: log.action,
-      ipAddress: log.ipAddress,
-      userAgent: log.userAgent,
-      details: log.details,
-      createdAt: log.createdAt,
-    }));
+    // Pre-fetch anonymous users by email in body
+    const emailsToFetch = logs
+      .filter(log => !log.userId && log.details?.body?.email)
+      .map(log => log.details.body.email);
+    
+    let anonymousUsersMap = {};
+    if (emailsToFetch.length > 0) {
+      const anonUsers = await User.find({ email: { $in: emailsToFetch } }).select('email role username _id').lean();
+      anonymousUsersMap = anonUsers.reduce((acc, user) => {
+        acc[user.email] = user;
+        return acc;
+      }, {});
+    }
+
+    const formattedLogs = logs.map(log => {
+      let user = log.userId;
+      
+      if (!user && log.details?.body?.email) {
+        user = anonymousUsersMap[log.details.body.email];
+      }
+
+      const flatDetails = { ...log.details };
+      if (flatDetails.body) {
+        Object.assign(flatDetails, flatDetails.body);
+        delete flatDetails.body;
+      }
+
+      return {
+        id: log._id,
+        userId: user ? user._id : log.userId,
+        username: user ? user.username : log.username,
+        email: user ? user.email : (log.details?.body?.email || ''),
+        role: user ? user.role : 'System',
+        action: log.action,
+        ipAddress: log.ipAddress,
+        userAgent: log.userAgent,
+        details: flatDetails,
+        createdAt: log.createdAt,
+      };
+    });
 
     const baseUrl = `${req.protocol}://${req.get('host')}${req.baseUrl || '/api/audits'}/logs`;
     const paginated = formatPagination(formattedLogs, total, pageNumber, limitNumber, baseUrl);
@@ -129,8 +182,37 @@ export const unblockIp = async (req, res) => {
   }
 };
 
+export const deleteAuditLog = async (req, res) => {
+  try {
+    const log = await AuditLog.findByIdAndDelete(req.params.id);
+    if (!log) {
+      return errorResponse(res, 'Audit log not found', null, 404);
+    }
+    return successResponse(res, null, 'Audit log deleted successfully');
+  } catch (error) {
+    console.error('deleteAuditLog error:', error);
+    return errorResponse(res, 'Failed to delete audit log', error.message);
+  }
+};
+
+export const deleteMultipleAuditLogs = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return errorResponse(res, 'Please provide an array of audit log IDs', null, 400);
+    }
+    const result = await AuditLog.deleteMany({ _id: { $in: ids } });
+    return successResponse(res, { deletedCount: result.deletedCount }, 'Audit logs deleted successfully');
+  } catch (error) {
+    console.error('deleteMultipleAuditLogs error:', error);
+    return errorResponse(res, 'Failed to delete audit logs', error.message);
+  }
+};
+
 export default {
   getAuditLogs,
   getBlockedIps,
   unblockIp,
+  deleteAuditLog,
+  deleteMultipleAuditLogs,
 };

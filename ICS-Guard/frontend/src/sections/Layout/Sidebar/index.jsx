@@ -1,10 +1,47 @@
 import React, { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, ShieldAlert, Network, Server, FileText, Settings, X, LogOut, User, Activity, Crosshair } from 'lucide-react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { LayoutDashboard, ShieldAlert, Server, FileText, Settings, X, LogOut, User, Activity, Crosshair, Bell, ClipboardList, ChevronDown, ChevronUp, Shield } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import authApi from '@/api/auth';
 import Viewlogo from '@/components/Viewlogo';
 import './Sidebar.scss';
+
+const NavGroup = ({ title, icon: Icon, children, collapsed, pathPrefixes }) => {
+  const location = useLocation();
+  const isActiveGroup = pathPrefixes.some(prefix => location.pathname.startsWith(prefix));
+  const [isOpen, setIsOpen] = React.useState(isActiveGroup);
+
+  React.useEffect(() => {
+    if (isActiveGroup && !collapsed) {
+      setIsOpen(true);
+    }
+  }, [isActiveGroup, collapsed]);
+
+  return (
+    <div className={'nav-group ' + (isOpen ? 'open' : '') + (isActiveGroup ? ' active-group' : '')}>
+      <button
+        className={'nav-item nav-group-header ' + (isActiveGroup && collapsed ? 'active' : '')}
+      onClick={() => setIsOpen(!isOpen)}
+      style={{ justifyContent: 'space-between', width: '100%', background: 'transparent', border: 'none' }}
+      >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <Icon size={20} />
+        {!collapsed && <span>{title}</span>}
+      </div>
+      {!collapsed && (
+        isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />
+      )}
+    </button>
+      {
+    (!collapsed && isOpen) && (
+      <div className="nav-group-content" style={{ paddingLeft: '32px' }}>
+        {children}
+      </div>
+    )
+  }
+    </div >
+  );
+};
 
 const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, collapsed, setCollapsed }) => {
   const { t } = useTranslation();
@@ -28,20 +65,19 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, collapsed, setCollapsed }) =
     } finally {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
-      sessionStorage.removeItem('cached_user'); // Xoá cache user khi đăng xuất
+      sessionStorage.removeItem('cached_user');
       navigate('/login', { replace: true });
     }
   };
 
   return (
     <>
-      {/* Overlay cho mobile khi mở sidebar */}
       <div
-        className={`sidebar-overlay ${isSidebarOpen ? 'visible' : ''}`}
+        className={'sidebar-overlay ' + (isSidebarOpen ? 'visible' : '')}
         onClick={() => setIsSidebarOpen(false)}
       />
 
-      <aside className={`sidebar ${isSidebarOpen ? 'mobile-open' : 'collapsed'}`}>
+      <aside className={'sidebar ' + (isSidebarOpen ? 'mobile-open' : 'collapsed')}>
         <div className="sidebar-logo flex-logo-container">
           <div className="logo-wrapper">
             <Viewlogo
@@ -52,7 +88,6 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, collapsed, setCollapsed }) =
             />
             <span className="logo-text">ICS Guard</span>
           </div>
-          {/* Nút đóng trên mobile */}
           <button
             className="close-sidebar-btn"
             onClick={() => setIsSidebarOpen(false)}
@@ -60,43 +95,59 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, collapsed, setCollapsed }) =
             <X size={20} />
           </button>
         </div>
+
         <nav className="sidebar-nav">
-          <NavLink to="/" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} end onClick={handleClose}>
+          <NavLink to="/" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} end onClick={handleClose}>
             <LayoutDashboard size={20} />
             <span>{t('layout.sidebar.overview')}</span>
           </NavLink>
-          <NavLink to="/coming-soon" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
-            <Network size={20} />
-            <span>{t('layout.sidebar.topology')}</span>
-          </NavLink>
-          <NavLink to="/incident-management" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
-            <ShieldAlert size={20} />
-            <span>{t('layout.sidebar.alerts')}</span>
-          </NavLink>
-          <NavLink to="/device-management" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
-            <Server size={20} />
-            <span>{t('layout.sidebar.assets')}</span>
-          </NavLink>
-          <NavLink to="/user-management" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
-            <User size={20} />
-            <span>{t('layout.sidebar.users')}</span>
-          </NavLink>
-          <NavLink to="/audit-management" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
-            <Activity size={20} />
-            <span>{t('layout.sidebar.audit')}</span>
-          </NavLink>
-          <NavLink to="/attack-simulator" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
-            <Crosshair size={20} />
-            <span>{t('layout.sidebar.attack')}</span>
-          </NavLink>
-          <NavLink to="/coming-soon" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
-            <FileText size={20} />
-            <span>{t('layout.sidebar.reports')}</span>
-          </NavLink>
-          <NavLink to="/coming-soon" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
-            <Settings size={20} />
-            <span>{t('layout.sidebar.settings')}</span>
-          </NavLink>
+
+          <NavGroup title={t('sidebar.security_group', 'An ninh & Sự cố')} icon={Shield} collapsed={!isSidebarOpen} pathPrefixes={['/incident-management', '/alert-management', '/rule-management']}>
+            <NavLink to="/incident-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '8px 12px', minHeight: '40px' }}>
+              <ShieldAlert size={18} />
+              <span style={{ fontSize: '13px' }}>{t('layout.sidebar.alerts', 'Sự cố')}</span>
+            </NavLink>
+            <NavLink to="/alert-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '8px 12px', minHeight: '40px' }}>
+              <Bell size={18} />
+              <span style={{ fontSize: '13px' }}>{t('sidebar.alert_management', 'Cảnh báo thô')}</span>
+            </NavLink>
+            <NavLink to="/rule-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '8px 12px', minHeight: '40px' }}>
+              <ClipboardList size={18} />
+              <span style={{ fontSize: '13px' }}>{t('sidebar.rule_management', 'Quy tắc')}</span>
+            </NavLink>
+          </NavGroup>
+
+          <NavGroup title={t('sidebar.system_group', 'Hệ thống & Thiết bị')} icon={Server} collapsed={!isSidebarOpen} pathPrefixes={['/device-management', '/audit-management', '/attack-simulator']}>
+            <NavLink to="/device-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '8px 12px', minHeight: '40px' }}>
+              <Server size={18} />
+              <span style={{ fontSize: '13px' }}>{t('layout.sidebar.assets')}</span>
+            </NavLink>
+            <NavLink to="/audit-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '8px 12px', minHeight: '40px' }}>
+              <Activity size={18} />
+              <span style={{ fontSize: '13px' }}>{t('layout.sidebar.audit')}</span>
+            </NavLink>
+            <NavLink to="/attack-simulator" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '8px 12px', minHeight: '40px' }}>
+              <Crosshair size={18} />
+              <span style={{ fontSize: '13px' }}>{t('layout.sidebar.attack')}</span>
+            </NavLink>
+          </NavGroup>
+
+          <NavGroup title={t('sidebar.admin_group', 'Quản trị hệ thống')} icon={Settings} collapsed={!isSidebarOpen} pathPrefixes={['/user-management', '/coming-soon']}>
+            <NavLink to="/user-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '8px 12px', minHeight: '40px' }}>
+              <User size={18} />
+              <span style={{ fontSize: '13px' }}>{t('layout.sidebar.users')}</span>
+            </NavLink>
+            <NavLink to="/coming-soon" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '8px 12px', minHeight: '40px' }}>
+              <FileText size={18} />
+              <span style={{ fontSize: '13px', flex: 1 }}>{t('layout.sidebar.reports')}</span>
+              <span style={{ fontSize: '10px', padding: '2px 6px', background: 'rgba(59, 130, 246, 0.2)', color: 'var(--blue-400)', borderRadius: '10px', whiteSpace: 'nowrap' }}>{t('layout.sidebar.coming_soon', 'Sắp ra mắt')}</span>
+            </NavLink>
+            <NavLink to="/coming-soon?settings" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '8px 12px', minHeight: '40px' }}>
+              <Settings size={18} />
+              <span style={{ fontSize: '13px', flex: 1 }}>{t('layout.sidebar.settings')}</span>
+              <span style={{ fontSize: '10px', padding: '2px 6px', background: 'rgba(59, 130, 246, 0.2)', color: 'var(--blue-400)', borderRadius: '10px', whiteSpace: 'nowrap' }}>{t('layout.sidebar.coming_soon', 'Sắp ra mắt')}</span>
+            </NavLink>
+          </NavGroup>
         </nav>
 
         <div className="sidebar-footer">
@@ -107,9 +158,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, collapsed, setCollapsed }) =
         </div>
       </aside>
 
-      {/* Fullscreen Logo Modal */}
       {isFullscreenLogo && (
-        <div 
+        <div
           className="fullscreen-logo-overlay"
           style={{
             position: 'fixed',
@@ -122,17 +172,17 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, collapsed, setCollapsed }) =
           }}
           onClick={() => setIsFullscreenLogo(false)}
         >
-          <button 
+          <button
             style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}
             onClick={(e) => { e.stopPropagation(); setIsFullscreenLogo(false); }}
           >
             <X size={32} />
           </button>
-          <Viewlogo 
+          <Viewlogo
             animate={false}
             alt="Logo Fullscreen"
             style={{ maxWidth: '90vw', maxHeight: '90vh' }}
-            onClick={(e) => e.stopPropagation()} 
+            onClick={(e) => e.stopPropagation()}
           />
         </div>
       )}

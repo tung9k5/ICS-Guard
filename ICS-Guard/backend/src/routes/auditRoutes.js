@@ -1,5 +1,5 @@
 import express from 'express';
-import { getAuditLogs, getBlockedIps, unblockIp } from '../controllers/auditController.js';
+import { getAuditLogs, getBlockedIps, unblockIp, deleteAuditLog, deleteMultipleAuditLogs } from '../controllers/auditController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 import { authorize } from '../middlewares/rbacMiddleware.js';
 import auditLogger from '../middlewares/auditMiddleware.js';
@@ -113,5 +113,50 @@ router.get('/blocked-ips', authorize(['Admin', 'Analyst']), getBlockedIps);
  */
 // POST /api/audits/unblock-ip - Admin, L3 SOC Manager (Audited)
 router.post('/unblock-ip', authorize(['admin', 'l3_manager']), auditLogger('IP_MANUAL_UNBLOCK'), unblockIp);
+
+/**
+ * @openapi
+ * /api/audits/logs/bulk-delete:
+ *   post:
+ *     summary: Delete multiple audit logs (Requires roles - Admin)
+ *     tags: [Audit]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               ids:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *     responses:
+ *       200:
+ *         description: Logs deleted successfully
+ */
+router.post('/logs/bulk-delete', authorize(['Admin']), deleteMultipleAuditLogs);
+
+/**
+ * @openapi
+ * /api/audits/logs/{id}:
+ *   delete:
+ *     summary: Delete an audit log (Requires roles - Admin)
+ *     tags: [Audit]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Log deleted successfully
+ */
+router.delete('/logs/:id', authorize(['Admin']), deleteAuditLog);
 
 export default router;

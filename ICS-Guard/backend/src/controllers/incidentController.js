@@ -218,6 +218,38 @@ const runBackgroundAiAnalysis = async (incidentId, incidentData, alertsData) => 
   }
 };
 
+export const createIncident = async (req, res) => {
+  const { title, description, severity, status, alert_ids } = req.body;
+
+  if (!title || !description) {
+    return errorResponse(res, 'Title and description are required', null, 400);
+  }
+
+  try {
+    const incident = await Incident.create({
+      title,
+      description,
+      severity: severity || 'MEDIUM',
+      status: status || 'open',
+      alert_ids: alert_ids || [],
+      assigned_to: req.user ? req.user._id : null
+    });
+
+    // Create an initial timeline entry
+    await IncidentTimeline.create({
+      incident_id: incident._id,
+      actor: req.user ? req.user.username : 'system',
+      action_type: 'manual_note',
+      description: `Sự cố được tạo thủ công bởi ${req.user ? req.user.username : 'system'}.`
+    });
+
+    return successResponse(res, incident, 'Sự cố được tạo thành công', 201);
+  } catch (error) {
+    console.error('CreateIncident error:', error);
+    return errorResponse(res, 'Failed to create incident', error.message);
+  }
+};
+
 export const updateIncident = async (req, res) => {
   const { id } = req.params;
   const { status, severity, title, description } = req.body;
@@ -282,6 +314,7 @@ export default {
   getAllIncidents,
   getIncidentById,
   triggerAiAnalysis,
+  createIncident,
   updateIncident,
   deleteIncident,
   deleteMultipleIncidents,

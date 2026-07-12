@@ -1,20 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Edit2, Trash2, Server, Activity, ChevronDown, ChevronUp } from 'lucide-react';
+import React, { useState } from 'react';
+import { Edit2, Trash2, Activity, ChevronDown, ChevronUp } from 'lucide-react';
 import ActionMenu from '@/components/ActionMenu';
 import VNoData from '@/components/VNoData';
 import VStatus from '@/components/VStatus';
+import VCheckbox from '@/components/VCheckbox';
 import { getDeviceTypeLabel, getDeviceTypeStyle } from '@/constants/deviceConstants';
 import { useTranslation } from 'react-i18next';
-
-const IndeterminateCheckbox = ({ indeterminate, ...rest }) => {
-  const ref = useRef(null);
-  useEffect(() => {
-    if (ref.current) {
-      ref.current.indeterminate = typeof indeterminate === 'boolean' ? indeterminate : false;
-    }
-  }, [indeterminate]);
-  return <input type="checkbox" ref={ref} {...rest} />;
-};
 
 const DeviceList = ({ 
   devices, 
@@ -51,9 +42,9 @@ const DeviceList = ({
           <thead>
             <tr>
               <th style={{ width: '40px', textAlign: 'center' }}>
-                <IndeterminateCheckbox 
-                  checked={allSelected} 
+                <VCheckbox 
                   indeterminate={selectedIds.length > 0 && selectedIds.length < devices.length}
+                  checked={allSelected} 
                   onChange={(e) => onSelectAll(e.target.checked)} 
                   style={{ cursor: 'pointer' }}
                 />
@@ -79,8 +70,7 @@ const DeviceList = ({
               return (
                 <tr key={id} className={isSelected ? 'selected-row' : ''}>
                   <td style={{ textAlign: 'center' }}>
-                    <input 
-                      type="checkbox" 
+                    <VCheckbox 
                       checked={isSelected}
                       onChange={(e) => onSelect(id, e.target.checked)}
                       style={{ cursor: 'pointer' }}
@@ -128,9 +118,9 @@ const DeviceList = ({
       <div className="mobile-device-list">
         <div className="mobile-list-header" style={{ display: 'flex', alignItems: 'center' }}>
           <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <IndeterminateCheckbox 
-              checked={allSelected} 
+            <VCheckbox 
               indeterminate={selectedIds.length > 0 && selectedIds.length < devices.length}
+              checked={allSelected} 
               onChange={(e) => onSelectAll(e.target.checked)} 
               style={{ cursor: 'pointer' }}
             />
@@ -154,8 +144,7 @@ const DeviceList = ({
               {/* Card Header (Always visible) */}
               <div className="mobile-card-header" style={{ display: 'flex', alignItems: 'center' }}>
                 <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <input 
-                    type="checkbox" 
+                  <VCheckbox 
                     checked={isSelected}
                     onChange={(e) => onSelect(id, e.target.checked)}
                     style={{ cursor: 'pointer' }}

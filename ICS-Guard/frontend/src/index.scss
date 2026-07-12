@@ -1,4 +1,4 @@
-@import 'assets/base_color';
+﻿@import 'assets/base_color';
 
 :root {
   --bg-primary: var(--primary-blue); /* or a specific blue if needed */
@@ -84,9 +84,7 @@ input, button, textarea, select {
     background: var(--slate-300);
     border-radius: 4px;
   }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
 }
 
+.v-table td.actions-col, .device-table td.actions-col { overflow: visible !important; }
+.v-table, .device-table { table-layout: fixed; }

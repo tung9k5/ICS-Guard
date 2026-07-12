@@ -91,29 +91,28 @@
     }
   }
 
-  .device-list-container {
+.device-list-container {
+  .device-table-wrapper {
+    display: block;
+    overflow-x: auto;
     flex: 1;
-    display: flex;
-    flex-direction: column;
+  }
 
+  .mobile-device-list {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
     .device-table-wrapper {
-      display: block;
-      overflow-x: auto;
-      flex: 1;
+      display: none;
     }
 
     .mobile-device-list {
-      display: none;
-      padding: 0 16px 16px;
+      display: block;
     }
 
-    @media (max-width: 768px) {
-      .device-table-wrapper {
-        display: none;
-      }
-
       .mobile-device-list {
-        display: block;
+        display: block !important;
 
         .mobile-list-header {
           display: flex;

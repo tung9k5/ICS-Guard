@@ -1,18 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Edit2, Trash2, ShieldAlert, ChevronDown, ChevronUp, Bot } from 'lucide-react';
 import ActionMenu from '@/components/ActionMenu';
 import VNoData from '@/components/VNoData';
 import VStatus from '@/components/VStatus';
-
-const IndeterminateCheckbox = ({ indeterminate, ...rest }) => {
-  const ref = useRef(null);
-  useEffect(() => {
-    if (ref.current) {
-      ref.current.indeterminate = typeof indeterminate === 'boolean' ? indeterminate : false;
-    }
-  }, [indeterminate]);
-  return <input type="checkbox" ref={ref} {...rest} />;
-};
+import VCheckbox from '@/components/VCheckbox';
+import { useTranslation } from 'react-i18next';
 
 const getSeverityStyle = (severity) => {
   switch (severity) {
@@ -21,16 +13,6 @@ const getSeverityStyle = (severity) => {
     case 'MEDIUM': return { backgroundColor: 'var(--amber-100)', color: 'var(--amber-700)', borderColor: 'var(--amber-300)' };
     case 'LOW': return { backgroundColor: 'var(--green-100)', color: 'var(--green-700)', borderColor: 'var(--green-300)' };
     default: return {};
-  }
-};
-
-const getStatusLabel = (status) => {
-  switch (status) {
-    case 'open': return 'Mở';
-    case 'investigating': return 'Đang điều tra';
-    case 'remediated': return 'Đã khắc phục';
-    case 'closed': return 'Đã đóng';
-    default: return status;
   }
 };
 
@@ -44,18 +26,29 @@ const IncidentList = ({
   onSelect,
   onSelectAll
 }) => {
+  const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState(null);
 
   const toggleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id);
   };
+
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'open': return t('incidents.list.status_open');
+      case 'investigating': return t('incidents.list.status_investigating');
+      case 'remediated': return t('incidents.list.status_remediated');
+      case 'closed': return t('incidents.list.status_closed');
+      default: return status;
+    }
+  };
   
   if (loading) {
-    return <div className="incident-loading">Đang tải dữ liệu...</div>;
+    return <div className="incident-loading">{t('incidents.list.loading')}</div>;
   }
 
   if (!incidents || incidents.length === 0) {
-    return <VNoData message="Không có dữ liệu sự cố" />;
+    return <VNoData message={t('incidents.list.no_data')} />;
   }
 
   const allSelected = incidents.length > 0 && selectedIds.length === incidents.length;
@@ -68,18 +61,18 @@ const IncidentList = ({
           <thead>
             <tr>
               <th style={{ width: '40px', textAlign: 'center' }}>
-                <IndeterminateCheckbox 
-                  checked={allSelected} 
+                <VCheckbox 
                   indeterminate={selectedIds.length > 0 && selectedIds.length < incidents.length}
-                  onChange={(e) => onSelectAll(e.target.checked)} 
+                  checked={allSelected}
+                  onChange={(e) => onSelectAll(e.target.checked)}
                   style={{ cursor: 'pointer' }}
                 />
               </th>
-              <th>Tên sự cố</th>
-              <th>Mức độ</th>
-              <th>Trạng thái</th>
-              <th>Mô tả</th>
-              <th className="actions-col">Hành động</th>
+              <th>{t('incidents.list.table_name')}</th>
+              <th>{t('incidents.list.table_severity')}</th>
+              <th>{t('incidents.list.table_status')}</th>
+              <th>{t('incidents.list.table_desc')}</th>
+              <th className="actions-col">{t('incidents.list.table_actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -87,16 +80,15 @@ const IncidentList = ({
               const id = incident.id || incident._id;
               const isSelected = selectedIds.includes(id);
               const actions = [
-                { label: 'Phân tích AI', icon: Bot, onClick: () => onAiAnalyze(id) },
-                { label: 'Sửa', icon: Edit2, onClick: () => onEdit(incident) },
-                { label: 'Xóa', icon: Trash2, danger: true, onClick: () => onDelete(id) }
+                { label: t('incidents.list.btn_ai_analyze'), icon: Bot, onClick: () => onAiAnalyze(id) },
+                { label: t('incidents.list.btn_edit'), icon: Edit2, onClick: () => onEdit(incident) },
+                { label: t('incidents.list.btn_delete'), icon: Trash2, danger: true, onClick: () => onDelete(id) }
               ];
 
               return (
                 <tr key={id} className={isSelected ? 'selected-row' : ''}>
                   <td style={{ textAlign: 'center' }}>
-                    <input 
-                      type="checkbox" 
+                    <VCheckbox 
                       checked={isSelected}
                       onChange={(e) => onSelect(id, e.target.checked)}
                       style={{ cursor: 'pointer' }}
@@ -122,7 +114,7 @@ const IncidentList = ({
                     />
                   </td>
                   <td className="text-muted">
-                    <span className="truncate-text" title={incident.description}>{incident.description || 'Không có mô tả'}</span>
+                    <span className="truncate-text" title={incident.description}>{incident.description || '-'}</span>
                   </td>
                   <td className="actions-col">
                     <ActionMenu 
@@ -141,14 +133,14 @@ const IncidentList = ({
       <div className="mobile-incident-list">
         <div className="mobile-list-header" style={{ display: 'flex', alignItems: 'center' }}>
           <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <IndeterminateCheckbox 
+            <VCheckbox 
               checked={allSelected} 
               indeterminate={selectedIds.length > 0 && selectedIds.length < incidents.length}
               onChange={(e) => onSelectAll(e.target.checked)} 
               style={{ cursor: 'pointer' }}
             />
           </div>
-          <div className="col-id">Tên sự cố</div>
+          <div className="col-title">{t('incidents.list.mobile_name')}</div>
           <div className="col-action"></div>
         </div>
         
@@ -157,9 +149,9 @@ const IncidentList = ({
           const isExpanded = expandedId === id;
           const isSelected = selectedIds.includes(id);
           const actions = [
-            { label: 'Phân tích AI', icon: Bot, onClick: () => onAiAnalyze(id) },
-            { label: 'Sửa', icon: Edit2, onClick: () => onEdit(incident) },
-            { label: 'Xóa', icon: Trash2, danger: true, onClick: () => onDelete(id) }
+            { label: t('incidents.list.btn_ai_analyze'), icon: Bot, onClick: () => onAiAnalyze(id) },
+            { label: t('incidents.list.btn_edit'), icon: Edit2, onClick: () => onEdit(incident) },
+            { label: t('incidents.list.btn_delete'), icon: Trash2, danger: true, onClick: () => onDelete(id) }
           ];
 
           return (
@@ -167,8 +159,7 @@ const IncidentList = ({
               {/* Card Header */}
               <div className="mobile-card-header" style={{ display: 'flex', alignItems: 'center' }}>
                 <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <input 
-                    type="checkbox" 
+                  <VCheckbox 
                     checked={isSelected}
                     onChange={(e) => onSelect(id, e.target.checked)}
                     style={{ cursor: 'pointer' }}
@@ -184,7 +175,7 @@ const IncidentList = ({
               {isExpanded && (
                 <div className="mobile-card-body">
                   <div className="detail-row">
-                    <span className="detail-label">Mức độ</span>
+                    <span className="detail-label">{t('incidents.list.table_severity')}</span>
                     <span className="detail-value">
                       <VStatus 
                         label={incident.severity || 'N/A'}
@@ -197,7 +188,7 @@ const IncidentList = ({
                     </div>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Trạng thái</span>
+                    <span className="detail-label">{t('incidents.list.table_status')}</span>
                     <span className="detail-value">
                       <VStatus 
                         status={incident.status === 'open' ? 'inactive' : incident.status === 'closed' ? 'active' : 'default'} 
@@ -206,8 +197,8 @@ const IncidentList = ({
                     </span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Mô tả</span>
-                    <span className="detail-value">{incident.description || 'Không có mô tả'}</span>
+                    <span className="detail-label">{t('incidents.list.table_desc')}</span>
+                    <span className="detail-value">{incident.description || '-'}</span>
                   </div>
                 </div>
               )}

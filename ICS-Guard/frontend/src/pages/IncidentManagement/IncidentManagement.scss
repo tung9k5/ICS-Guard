@@ -128,7 +128,6 @@
           font-size: 13px;
           text-transform: uppercase;
 
-          .col-id { width: 90px; }
           .col-title { flex: 1; }
           .col-action { width: 32px; text-align: right; }
         }
@@ -159,18 +158,21 @@
               background: var(--slate-100);
             }
 
-            .col-id { width: 90px; color: var(--slate-500); font-size: 14px; }
             .col-title { 
               flex: 1; 
               font-weight: 500; 
               color: var(--slate-900);
               padding-right: 12px;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
             }
             .col-action {
               width: 32px;
               display: flex;
               justify-content: flex-end;
               color: var(--slate-400);
+              flex-shrink: 0;
             }
           }
 
@@ -207,6 +209,7 @@
                 text-align: right;
                 flex: 1;
                 word-break: break-word;
+                overflow-wrap: break-word;
               }
 
               .card-action-menu {

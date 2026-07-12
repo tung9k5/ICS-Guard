@@ -26,5 +26,22 @@ export default {
       data: { ipAddress },
       ...options
     });
+  },
+
+  deleteLog(id, options = {}) {
+    return http({
+      url: `/audits/logs/${id}`,
+      method: 'DELETE',
+      ...options
+    });
+  },
+
+  bulkDeleteLogs(ids, options = {}) {
+    return http({
+      url: '/audits/logs/bulk-delete',
+      method: 'POST',
+      data: { ids },
+      ...options
+    });
   }
 };

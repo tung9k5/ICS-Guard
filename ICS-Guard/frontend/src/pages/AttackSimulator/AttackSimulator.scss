@@ -204,6 +204,7 @@
     }
   }
 
+  // Mobile-first responsive — same pattern as DeviceManagement
   .list-container {
     flex: 1;
     display: flex;
@@ -241,6 +242,7 @@
           font-size: 13px;
           text-transform: uppercase;
 
+          .col-checkbox { width: 40px; display: flex; align-items: center; justify-content: center; }
           .col-id { flex: 1; }
           .col-action { width: 32px; text-align: right; }
         }
@@ -271,17 +273,21 @@
               background: var(--slate-100);
             }
 
-            .col-id { 
-              flex: 1; 
-              font-weight: 500; 
+            .col-id {
+              flex: 1;
+              font-weight: 500;
               color: var(--slate-900);
               padding-right: 12px;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
             }
             .col-action {
               width: 32px;
               display: flex;
               justify-content: flex-end;
               color: var(--slate-400);
+              flex-shrink: 0;
             }
           }
 
@@ -301,7 +307,7 @@
               align-items: center;
               padding: 10px 0;
               position: relative;
-              
+
               &:not(:last-child) {
                 border-bottom: 1px dashed var(--slate-200);
               }
@@ -318,6 +324,11 @@
                 text-align: right;
                 flex: 1;
                 word-break: break-word;
+                overflow-wrap: break-word;
+              }
+
+              .card-action-menu {
+                margin-left: 12px;
               }
             }
           }
@@ -326,6 +337,7 @@
     }
   }
 }
+
 
 .attack-modal-content {
   display: flex;

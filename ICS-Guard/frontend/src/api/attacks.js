@@ -20,5 +20,22 @@ export default {
       },
       ...options
     });
+  },
+
+  deleteDevice(id, options = {}) {
+    return http({
+      url: `/attacks/devices/${id}`,
+      method: 'DELETE',
+      ...options
+    });
+  },
+
+  bulkDeleteDevices(ids, options = {}) {
+    return http({
+      url: '/attacks/devices/bulk-delete',
+      method: 'POST',
+      data: { ids },
+      ...options
+    });
   }
 };

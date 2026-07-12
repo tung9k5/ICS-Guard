@@ -9,10 +9,12 @@ import VPagination from '@/components/VPagination';
 import VHeaderPage from '@/components/VHeaderPage';
 import VFilterPage from '@/components/VFilterPage';
 import { toast } from '@/utils/toast';
+import { useTranslation } from 'react-i18next';
 import { SEARCH_DEBOUNCE_MS, DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
 import './UserManagement.scss';
 
 const UserManagement = () => {
+  const { t } = useTranslation();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   
@@ -67,11 +69,11 @@ const UserManagement = () => {
       setSelectedIds([]); 
     } catch (err) {
       console.error('Error fetching users:', err);
-      toast.error('Lỗi khi lấy danh sách người dùng');
+      toast.error(t('users.fetch_error'));
     } finally {
       setLoading(false);
     }
-  }, [search, status, role, order, page, perPage]);
+  }, [search, status, role, order, page, perPage, t]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -136,17 +138,17 @@ const UserManagement = () => {
       if (items.length === 1) {
         const id = items[0].id || items[0]._id;
         await ApiUser.deleteUser(id);
-        toast.success('Xóa người dùng thành công');
+        toast.success(t('users.delete_success'));
       } else {
         const ids = items.map(i => i.id || i._id);
         await ApiUser.deleteMultipleUsers(ids);
-        toast.success(`Đã xóa thành công ${ids.length} người dùng`);
+        toast.success(t('users.bulk_delete_success', { count: ids.length }));
         setSelectedIds([]);
       }
       fetchUsers();
     } catch (err) {
       console.error('Delete error:', err);
-      toast.error('Có lỗi xảy ra khi xóa người dùng');
+      toast.error(t('users.delete_error'));
     } finally {
       setDeleteModalState(prev => ({ ...prev, isOpen: false, loading: false }));
     }
@@ -160,18 +162,18 @@ const UserManagement = () => {
   return (
     <div className="users-page">
       <VHeaderPage 
-        title="Quản lý người dùng"
+        title={t('users.page_title')}
         action={
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {selectedIds.length > 0 && (
               <VButton variant="danger" onClick={handleBulkDelete} style={{ flex: '1 1 auto', whiteSpace: 'nowrap' }}>
                 <Trash2 size={18} />
-                Xóa đã chọn ({selectedIds.length})
+                {t('users.btn_delete_selected', { count: selectedIds.length })}
               </VButton>
             )}
             <VButton onClick={handleAddUser} style={{ flex: '1 1 auto', whiteSpace: 'nowrap' }}>
               <Plus size={18} />
-              Thêm mới
+              {t('users.btn_add')}
             </VButton>
           </div>
         }
@@ -179,7 +181,7 @@ const UserManagement = () => {
 
       <div className="users-content">
         <VFilterPage 
-          searchPlaceholder="Tìm kiếm tên, email..."
+          searchPlaceholder={t('users.search_placeholder')}
           searchValue={search}
           onSearchChange={(e) => {
             setSearch(e.target.value);
@@ -196,9 +198,9 @@ const UserManagement = () => {
               }}
               style={{ paddingRight: status ? '28px' : undefined }}
             >
-              <option value="">Tất cả trạng thái</option>
-              <option value="active">Hoạt động</option>
-              <option value="inactive">Không hoạt động</option>
+              <option value="">{t('users.filter_status_all')}</option>
+              <option value="active">{t('users.filter_status_active')}</option>
+              <option value="inactive">{t('users.filter_status_inactive')}</option>
             </select>
             {status && (
               <X 
@@ -219,12 +221,12 @@ const UserManagement = () => {
               }}
               style={{ paddingRight: role ? '28px' : undefined }}
             >
-              <option value="">Tất cả vai trò</option>
-              <option value="admin">Quản trị viên</option>
-              <option value="l1_analyst">Nhà phân tích (L1)</option>
-              <option value="l2_responder">Phản ứng viên (L2)</option>
-              <option value="l3_manager">Quản lý (L3)</option>
-              <option value="ot_operator">Vận hành viên (OT)</option>
+              <option value="">{t('users.filter_role_all')}</option>
+              <option value="admin">{t('users.filter_role_admin')}</option>
+              <option value="l1_analyst">{t('users.filter_role_l1')}</option>
+              <option value="l2_responder">{t('users.filter_role_l2')}</option>
+              <option value="l3_manager">{t('users.filter_role_l3')}</option>
+              <option value="ot_operator">{t('users.filter_role_ot')}</option>
             </select>
             {role && (
               <X 
@@ -243,8 +245,8 @@ const UserManagement = () => {
               setPage(1);
             }}
           >
-            <option value="desc">Mới nhất</option>
-            <option value="asc">Cũ nhất</option>
+            <option value="desc">{t('users.filter_order_desc')}</option>
+            <option value="asc">{t('users.filter_order_asc')}</option>
           </select>
         </VFilterPage>
 
@@ -264,7 +266,7 @@ const UserManagement = () => {
             perPage={perPage}
             total={total}
             dataLength={users.length}
-            itemName="người dùng"
+            itemName={t('users.item_name')}
             onPageChange={(newPage) => setPage(newPage)}
             onPerPageChange={(newPerPage) => {
               setPerPage(newPerPage);
