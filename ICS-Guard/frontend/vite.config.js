@@ -19,6 +19,14 @@ export default defineConfig(({ mode }) => {
       watch: {
         usePolling: true,
       }
+    },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          api: 'modern-compiler',
+          silenceDeprecations: ['legacy-js-api', 'color-functions', 'global-builtin']
+        }
+      }
     }
   }
 })
