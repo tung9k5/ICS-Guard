@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { Crosshair, Monitor, Cpu, Network, ChevronDown, ChevronUp } from 'lucide-react';
+import { Crosshair, Monitor, Cpu, Network, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import VPagination from '@/components/VPagination';
 import VNoData from '@/components/VNoData';
+import VCheckbox from '@/components/VCheckbox';
 import VButton from '@/components/VButton';
+import ActionMenu from '@/components/ActionMenu';
 
-const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChange, onPerPageChange, onLaunch }) => {
+const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChange, onPerPageChange, onLaunch, selectedIds = [], onSelect, onSelectAll, onDelete }) => {
   const { t } = useTranslation();
 
   const [expandedId, setExpandedId] = useState(null);
@@ -37,16 +39,34 @@ const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChang
             <table className="v-table">
               <thead>
                 <tr>
+                  <th style={{ width: '40px', textAlign: 'center' }}>
+                    <VCheckbox 
+                      checked={devices.length > 0 && selectedIds.length === devices.length}
+                      indeterminate={selectedIds.length > 0 && selectedIds.length < devices.length}
+                      onChange={(e) => onSelectAll(e.target.checked)}
+                      style={{ cursor: 'pointer' }}
+                    />
+                  </th>
                   <th>{t('attack.list.table_device')}</th>
-                  <th style={{ width: '90px' }}>{t('attack.list.table_type')}</th>
-                  <th style={{ width: '130px', whiteSpace: 'nowrap' }}>{t('attack.list.table_ip')}</th>
-                  <th style={{ width: '100px' }}>{t('attack.list.table_status')}</th>
-                  <th style={{ width: '130px' }}>{t('attack.list.table_actions')}</th>
+                  <th>{t('attack.list.table_type')}</th>
+                  <th style={{ whiteSpace: 'nowrap' }}>{t('attack.list.table_ip')}</th>
+                  <th>{t('attack.list.table_status')}</th>
+                  <th className="actions-col">{t('attack.list.table_actions')}</th>
                 </tr>
               </thead>
               <tbody>
-                {devices.map(device => (
-                  <tr key={device.id || device._id}>
+                {devices.map((device, index) => {
+                  const id = device.id || device._id;
+                  const isSelected = selectedIds.includes(id);
+                  return (
+                  <tr key={id} className={isSelected ? 'selected-row' : ''}>
+                    <td style={{ textAlign: 'center' }}>
+                      <VCheckbox 
+                        checked={isSelected}
+                        onChange={(e) => onSelect(id, e.target.checked)}
+                        style={{ cursor: 'pointer' }}
+                      />
+                    </td>
                     <td>
                       <div className="device-info">
                         <div className="icon-wrapper">
@@ -66,17 +86,17 @@ const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChang
                         {device.status === 'active' ? t('assets.filter_status_active') : t('assets.filter_status_inactive')}
                       </span>
                     </td>
-                    <td>
-                      <VButton 
-                        variant="danger" 
-                        onClick={() => onLaunch(device)}
-                      >
-                        <Crosshair size={16} />
-                        {t('attack.btn_attack')}
-                      </VButton>
+                    <td className="actions-col">
+                      <ActionMenu 
+                        actions={[
+                          { label: t('attack.btn_attack'), icon: Crosshair, onClick: () => onLaunch(device) },
+                          { label: 'Xóa', icon: Trash2, danger: true, onClick: () => onDelete(id) }
+                        ]}
+                        direction={index >= devices.length - 2 && devices.length > 2 ? 'up' : 'down'}
+                      />
                     </td>
                   </tr>
-                ))}
+                )})}
               </tbody>
             </table>
           )}
@@ -85,17 +105,33 @@ const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChang
         {!loading && devices.length > 0 && (
           <div className="mobile-list">
             <div className="mobile-list-header">
-              <div className="col-id">Thiết bị</div>
+              <div className="col-checkbox" onClick={(e) => e.stopPropagation()}>
+                <VCheckbox 
+                  checked={devices.length > 0 && selectedIds.length === devices.length}
+                  indeterminate={selectedIds.length > 0 && selectedIds.length < devices.length}
+                  onChange={(e) => onSelectAll(e.target.checked)}
+                  style={{ cursor: 'pointer' }}
+                />
+              </div>
+              <div className="col-id">{t('attack.mobile_header_device')}</div>
               <div className="col-action"></div>
             </div>
             
             {devices.map(device => {
               const id = device.id || device._id;
               const isExpanded = expandedId === id;
+              const isSelected = selectedIds.includes(id);
               
               return (
-                <div className={`mobile-card ${isExpanded ? 'expanded' : ''}`} key={id}>
+                <div className={`mobile-card ${isExpanded ? 'expanded' : ''} ${isSelected ? 'selected' : ''}`} key={id}>
                   <div className="mobile-card-header" onClick={() => toggleExpand(id)}>
+                    <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
+                      <VCheckbox 
+                        checked={isSelected}
+                        onChange={(e) => onSelect(id, e.target.checked)}
+                        style={{ cursor: 'pointer' }}
+                      />
+                    </div>
                     <div className="col-id">
                       <div className="device-info" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div className="icon-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '6px', background: 'var(--slate-100)', color: 'var(--slate-600)' }}>
@@ -132,14 +168,21 @@ const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChang
                           </span>
                         </span>
                       </div>
-                      <div className="detail-row" style={{ borderBottom: 'none', paddingBottom: 0, paddingTop: '16px', display: 'flex', justifyContent: 'center' }}>
+                      <div className="detail-row" style={{ borderBottom: 'none', paddingBottom: 0, paddingTop: '16px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
                         <VButton 
                           variant="danger" 
                           onClick={() => onLaunch(device)}
-                          style={{ width: '100%' }}
+                          style={{ flex: 1 }}
                         >
                           <Crosshair size={16} />
                           {t('attack.btn_attack')}
+                        </VButton>
+                        <VButton 
+                          variant="outline" 
+                          onClick={() => onDelete(id)}
+                          style={{ color: 'var(--red-600)', borderColor: 'var(--red-200)', background: 'var(--red-50)' }}
+                        >
+                          <Trash2 size={16} />
                         </VButton>
                       </div>
                     </div>

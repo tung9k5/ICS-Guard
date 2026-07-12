@@ -1,62 +1,54 @@
 import http from '@/http/clients/api';
 
 export default {
-  getAll(params = {}, options = {}) {
+  getAllRules(params = {}, options = {}) {
     return http({
-      url: '/incidents',
+      url: '/rules',
       method: 'GET',
       params,
       ...options
     });
   },
 
-  getById(id, options = {}) {
+  getRuleById(id, options = {}) {
     return http({
-      url: `/incidents/${id}`,
+      url: `/rules/${id}`,
       method: 'GET',
       ...options
     });
   },
 
-  createIncident(data, options = {}) {
+  createRule(data, options = {}) {
     return http({
-      url: '/incidents',
+      url: '/rules',
       method: 'POST',
       data,
       ...options
     });
   },
 
-  update(id, data, options = {}) {
+  updateRule(id, data, options = {}) {
     return http({
-      url: `/incidents/${id}`,
+      url: `/rules/${id}`,
       method: 'PUT',
       data,
       ...options
     });
   },
 
-  delete(id, options = {}) {
+  deleteRule(id, options = {}) {
     return http({
-      url: `/incidents/${id}`,
+      url: `/rules/${id}`,
       method: 'DELETE',
       ...options
     });
   },
 
-  deleteMultiple(ids, options = {}) {
+  deleteMultipleRules(ids, options = {}) {
     return http({
-      url: '/incidents/bulk-delete',
+      url: '/rules/bulk-delete',
       method: 'POST',
       data: { ids },
-      ...options
-    });
-  },
-
-  triggerAiAnalysis(id, options = {}) {
-    return http({
-      url: `/incidents/${id}/ai-analyze`,
-      method: 'POST',
       ...options
     });
   }

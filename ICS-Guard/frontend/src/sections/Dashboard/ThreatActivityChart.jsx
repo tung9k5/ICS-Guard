@@ -2,23 +2,18 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
-const rawData = [
-  { key: 'mon', high: 4, medium: 12, low: 24 },
-  { key: 'tue', high: 3, medium: 8, low: 30 },
-  { key: 'wed', high: 7, medium: 15, low: 18 },
-  { key: 'thu', high: 2, medium: 10, low: 35 },
-  { key: 'fri', high: 5, medium: 20, low: 22 },
-  { key: 'sat', high: 1, medium: 5, low: 12 },
-  { key: 'sun', high: 2, medium: 7, low: 15 },
-];
-
-const ThreatActivityChart = () => {
+const ThreatActivityChart = ({ rawData = [] }) => {
   const { t } = useTranslation();
 
   const data = rawData.map(item => ({
     ...item,
     name: t(`dashboard.days.${item.key}`, item.key)
   }));
+
+  const maxVal = data.reduce((max, item) => Math.max(max, (item.low || 0) + (item.medium || 0) + (item.high || 0)), 0);
+
+  const roundedMax = Math.max(Math.ceil(maxVal / 500) * 500, 1000);
+  const tickCount = 6;
 
   return (
     <div style={{ width: '100%', height: '100%', minHeight: '300px' }}>
@@ -29,7 +24,13 @@ const ThreatActivityChart = () => {
         >
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--gray-700)" />
           <XAxis dataKey="name" stroke="var(--gray-400)" tickLine={false} />
-          <YAxis stroke="var(--gray-400)" tickLine={false} axisLine={false} />
+          <YAxis 
+            stroke="var(--gray-400)" 
+            tickLine={false} 
+            axisLine={false} 
+            domain={[0, roundedMax]}
+            tickCount={tickCount}
+          />
           <Tooltip 
             cursor={{ fill: 'var(--gray-700)', opacity: 0.4 }}
             contentStyle={{ backgroundColor: 'var(--gray-800)', border: 'none', borderRadius: '8px', color: 'var(--white-short)' }}

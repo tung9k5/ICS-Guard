@@ -1,44 +1,43 @@
 import http from '@/http/clients/api';
 
 export default {
-  getLogs(params = {}, options = {}) {
+  getAllAlerts(params = {}, options = {}) {
     return http({
-      url: '/audits/logs',
+      url: '/alerts',
       method: 'GET',
       params,
       ...options
     });
   },
 
-  getBlockedIps(params = {}, options = {}) {
+  getAlertById(id, options = {}) {
     return http({
-      url: '/audits/blocked-ips',
+      url: `/alerts/${id}`,
       method: 'GET',
-      params,
       ...options
     });
   },
 
-  unblockIp(ipAddress, options = {}) {
+  updateAlertStatus(id, status, options = {}) {
     return http({
-      url: '/audits/unblock-ip',
-      method: 'POST',
-      data: { ipAddress },
+      url: `/alerts/${id}/status`,
+      method: 'PATCH',
+      data: { status },
       ...options
     });
   },
 
-  deleteLog(id, options = {}) {
+  deleteAlert(id, options = {}) {
     return http({
-      url: `/audits/logs/${id}`,
+      url: `/alerts/${id}`,
       method: 'DELETE',
       ...options
     });
   },
 
-  bulkDeleteLogs(ids, options = {}) {
+  deleteMultipleAlerts(ids, options = {}) {
     return http({
-      url: '/audits/logs/bulk-delete',
+      url: '/alerts/bulk-delete',
       method: 'POST',
       data: { ids },
       ...options
