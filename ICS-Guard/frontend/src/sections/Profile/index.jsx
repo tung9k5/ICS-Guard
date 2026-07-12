@@ -117,7 +117,6 @@ const ProfileModal = ({ user, onClose, onUpdate }) => {
               value={formData.full_name} 
               onChange={(e) => setFormData({...formData, full_name: e.target.value})}
               placeholder={t('profile.enter_full_name')}
-              className="mb-4"
             />
             
             <VInput 
@@ -125,10 +124,9 @@ const ProfileModal = ({ user, onClose, onUpdate }) => {
               name="email"
               value={formData.email} 
               disabled
-              className="mb-4"
             />
 
-            <div style={{ marginTop: 'auto', paddingTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <div style={{ marginTop: 'auto', paddingTop: '8px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
               <VButton type="button" variant="outline" onClick={onClose}>
                 {t('profile.cancel')}
               </VButton>

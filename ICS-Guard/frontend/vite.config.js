@@ -2,7 +2,6 @@ import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
 
-// https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '../', '')
 
@@ -20,13 +19,19 @@ export default defineConfig(({ mode }) => {
       host: true,
       port: parseInt(env.FRONTEND_PORT) || 3000,
 
-      // Cho phép tất cả subdomain của ngrok
       allowedHosts: [
         '.ngrok-free.app',
         '.ngrok.app',
         'localhost',
         '127.0.0.1',
       ],
+
+      proxy: {
+        '/api': {
+          target: 'http://backend:8000',
+          changeOrigin: true,
+        },
+      },
 
       watch: {
         usePolling: true,

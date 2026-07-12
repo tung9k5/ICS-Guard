@@ -44,11 +44,11 @@ export default {
     });
   },
 
-  deleteMultipleRules(ids, options = {}) {
+  bulkDeleteRules(data, options = {}) {
     return http({
       url: '/rules/bulk-delete',
       method: 'POST',
-      data: { ids },
+      data,
       ...options
     });
   }

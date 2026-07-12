@@ -9,13 +9,12 @@
   display: flex;
   flex-direction: row;
   padding: 12px 0;
-  gap: 32px;
+  gap: 24px;
 
   @media (max-width: 600px) {
     flex-direction: column;
-    align-items: center;
-    padding: 24px 16px;
-    gap: 24px;
+    align-items: stretch;
+    padding-top: 0;
   }
 
   .avatar-side {
@@ -84,6 +83,6 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      width: 100%;
     }
 }

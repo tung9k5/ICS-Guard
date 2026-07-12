@@ -16,7 +16,7 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, items = [], loading = 
       header={t('assets.delete_modal.title')}
       style={{ maxWidth: '400px' }}
     >
-      <div style={{ textAlign: 'center', padding: '10px 0 24px 0' }}>
+      <div style={{ textAlign: 'center', padding: '0' }}>
         <p style={{ margin: 0, color: 'var(--slate-700)', fontSize: '15px', lineHeight: '1.5' }}>
           {isMultiple ? (
             <Trans
@@ -38,7 +38,7 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, items = [], loading = 
         </p>
       </div>
 
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', paddingTop: '12px' }}>
         <VButton variant="outline" onClick={onClose} disabled={loading} style={{ flex: '1 1 calc(50% - 6px)', minWidth: '140px', textTransform: 'uppercase' }}>
           {t('assets.delete_modal.btn_cancel')}
         </VButton>
