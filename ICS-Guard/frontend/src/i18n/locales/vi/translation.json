@@ -48,7 +48,8 @@
       "attack": "Mô phỏng tấn công",
       "reports": "Báo cáo",
       "settings": "Cài đặt",
-      "logout": "Đăng xuất"
+      "logout": "Đăng xuất",
+      "coming_soon": "Sắp diễn ra"
     },
     "header": {
       "hello": "Xin chào, {{name}}!",

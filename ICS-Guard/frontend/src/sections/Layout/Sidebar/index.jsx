@@ -12,10 +12,10 @@ const NavGroup = ({ title, icon: Icon, children, collapsed, pathPrefixes }) => {
   const [isOpen, setIsOpen] = React.useState(isActiveGroup);
 
   React.useEffect(() => {
-    if (isActiveGroup) {
+    if (isActiveGroup && !collapsed) {
       setIsOpen(true);
     }
-  }, [isActiveGroup]);
+  }, [isActiveGroup, collapsed]);
 
   return (
     <div className={'nav-group ' + (isOpen ? 'open' : '') + (isActiveGroup ? ' active-group' : '')}>
@@ -139,11 +139,13 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, collapsed, setCollapsed }) =
             </NavLink>
             <NavLink to="/coming-soon" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '8px 12px', minHeight: '40px' }}>
               <FileText size={18} />
-              <span style={{ fontSize: '13px' }}>{t('layout.sidebar.reports')}</span>
+              <span style={{ fontSize: '13px', flex: 1 }}>{t('layout.sidebar.reports')}</span>
+              <span style={{ fontSize: '10px', padding: '2px 6px', background: 'rgba(59, 130, 246, 0.2)', color: 'var(--blue-400)', borderRadius: '10px', whiteSpace: 'nowrap' }}>{t('layout.sidebar.coming_soon', 'Sắp ra mắt')}</span>
             </NavLink>
             <NavLink to="/coming-soon?settings" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '8px 12px', minHeight: '40px' }}>
               <Settings size={18} />
-              <span style={{ fontSize: '13px' }}>{t('layout.sidebar.settings')}</span>
+              <span style={{ fontSize: '13px', flex: 1 }}>{t('layout.sidebar.settings')}</span>
+              <span style={{ fontSize: '10px', padding: '2px 6px', background: 'rgba(59, 130, 246, 0.2)', color: 'var(--blue-400)', borderRadius: '10px', whiteSpace: 'nowrap' }}>{t('layout.sidebar.coming_soon', 'Sắp ra mắt')}</span>
             </NavLink>
           </NavGroup>
         </nav>
