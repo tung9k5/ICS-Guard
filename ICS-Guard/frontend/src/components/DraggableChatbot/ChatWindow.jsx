@@ -3,6 +3,8 @@ import { Bot, ChevronDown, Maximize2, X, Menu, Mic, Send, Minimize2 } from 'luci
 import { CHATBOT_MOCK_REPLY_DELAY_MS, CHATBOT_MAX_INPUT_LENGTH, MOCK_REPLIES } from '@/constants/chatbotConstants';
 import './ChatWindow.scss';
 
+import { GoogleGenAI } from "@google/genai";
+
 const ChatWindow = ({ onClose }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState([
@@ -20,20 +22,64 @@ const ChatWindow = ({ onClose }) => {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputValue.trim()) return;
 
-    const newUserMsg = { id: Date.now(), text: inputValue.trim(), sender: 'user' };
+    const userText = inputValue.trim();
+    const newUserMsg = { id: Date.now(), text: userText, sender: 'user' };
     setMessages(prev => [...prev, newUserMsg]);
     setInputValue('');
     setIsTyping(true);
 
-    // Mock bot reply
-    setTimeout(() => {
-      const reply = MOCK_REPLIES[Math.floor(Math.random() * MOCK_REPLIES.length)];
-      setMessages(prev => [...prev, { id: Date.now(), text: reply, sender: 'bot' }]);
+    try {
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
+        setMessages(prev => [...prev, { id: Date.now(), text: 'Thiếu cấu hình VITE_GEMINI_API_KEY trong file .env', sender: 'bot' }]);
+        setIsTyping(false);
+        return;
+      }
+
+      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-goog-api-key': apiKey
+        },
+        body: JSON.stringify({
+          systemInstruction: {
+            parts: [
+              {
+                text: "Bạn là chuyên gia an ninh mạng công nghiệp (OT/ICS Security Expert) và là trợ lý ảo của hệ thống ICS-Guard. Nhiệm vụ của bạn là hỗ trợ phân tích cảnh báo (Alerts), sự cố (Incidents), giám sát thiết bị (Devices) và giải đáp các vấn đề về hệ thống SCADA/ICS. Hãy trả lời ngắn gọn, chuyên nghiệp, chính xác và luôn dùng tiếng Việt. Nếu người dùng hỏi vấn đề không liên quan, hãy từ chối lịch sự và hướng họ về chủ đề an ninh mạng. TUYỆT ĐỐI KHÔNG sử dụng bất kỳ định dạng Markdown nào (không dùng dấu sao *, in đậm, in nghiêng, gạch đầu dòng). Chỉ trả lời bằng văn bản thuần túy (plain text)."
+              }
+            ]
+          },
+          contents: [
+            {
+              parts: [
+                {
+                  text: userText
+                }
+              ]
+            }
+          ]
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.error) {
+         throw new Error(data.error.message || 'Lỗi từ Gemini API');
+      }
+
+      const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Xin lỗi, tôi không thể trả lời lúc này.';
+      
+      setMessages(prev => [...prev, { id: Date.now(), text: replyText, sender: 'bot' }]);
+    } catch (error) {
+      console.error('Gemini API Error:', error);
+      setMessages(prev => [...prev, { id: Date.now(), text: `Đã xảy ra lỗi khi kết nối với AI: ${error.message}`, sender: 'bot' }]);
+    } finally {
       setIsTyping(false);
-    }, CHATBOT_MOCK_REPLY_DELAY_MS);
+    }
   };
 
   const handleKeyPress = (e) => {
