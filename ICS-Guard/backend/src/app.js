@@ -31,6 +31,9 @@ import auditRoutes from './routes/auditRoutes.js';
 import incidentRoutes from './routes/incidentRoutes.js';
 import telemetryRoutes from './routes/telemetryRoutes.js';
 import attackRoutes from './routes/attackRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
+import ruleRoutes from './routes/ruleRoutes.js';
+import alertRoutes from './routes/alertRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -132,6 +135,9 @@ app.use('/api/audits', auditRoutes);
 app.use('/api/incidents', incidentRoutes);
 app.use('/api/telemetry', telemetryRoutes);
 app.use('/api/attacks', attackRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/rules', ruleRoutes);
+app.use('/api/alerts', alertRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

@@ -6,6 +6,9 @@ import AttackModal from '@/sections/AttackSimulator/AttackModal';
 import VHeaderPage from '@/components/VHeaderPage';
 import VFilterPage from '@/components/VFilterPage';
 import VSelectFilter from '@/components/VSelectFilter';
+import VButton from '@/components/VButton';
+import DeleteConfirmModal from '@/Dialog/DeleteConfirmModal';
+import { Trash2, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 import './AttackSimulator.scss';
 
@@ -25,6 +28,10 @@ const AttackSimulator = () => {
   const [total, setTotal] = useState(0);
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deviceToDelete, setDeviceToDelete] = useState(null);
 
   const fetchDevices = async () => {
     try {
@@ -79,10 +86,62 @@ const AttackSimulator = () => {
     }
   };
 
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedIds(devices.map(d => d.id || d._id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelect = (id, checked) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, id]);
+    } else {
+      setSelectedIds(prev => prev.filter(item => item !== id));
+    }
+  };
+
+  const confirmDelete = (id) => {
+    setDeviceToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDelete = async () => {
+    try {
+      if (deviceToDelete === 'bulk') {
+        await ApiAttacks.bulkDeleteDevices(selectedIds);
+        toast.success(t('assets.delete_success', 'Xóa thành công'));
+        setSelectedIds([]);
+      } else {
+        await ApiAttacks.deleteDevice(deviceToDelete);
+        toast.success(t('assets.delete_success', 'Xóa thành công'));
+      }
+      setIsDeleteModalOpen(false);
+      fetchDevices();
+    } catch (error) {
+      toast.error(t('assets.delete_error', 'Xóa thất bại'));
+    }
+  };
+
   return (
     <div className="assets-page">
       <VHeaderPage 
         title={t('attack.page_title')}
+        action={
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            {selectedIds.length > 0 && (
+              <VButton variant="danger" onClick={() => confirmDelete('bulk')} style={{ flex: '1 1 auto', whiteSpace: 'nowrap' }}>
+                <Trash2 size={18} />
+                {t('assets.delete_selected', `Xóa đã chọn (${selectedIds.length})`)}
+              </VButton>
+            )}
+            <VButton variant="primary" onClick={() => setIsModalOpen(true)} style={{ flex: '1 1 auto', whiteSpace: 'nowrap' }}>
+              <Plus size={18} />
+              {t('attack.add_devices')}
+            </VButton>
+          </div>
+        }
       />
 
       <div className="assets-content">
@@ -124,6 +183,10 @@ const AttackSimulator = () => {
           onPageChange={setPage}
           onPerPageChange={setPerPage}
           onLaunch={handleLaunchClick}
+          selectedIds={selectedIds}
+          onSelect={handleSelect}
+          onSelectAll={handleSelectAll}
+          onDelete={confirmDelete}
         />
       </div>
 
@@ -135,6 +198,16 @@ const AttackSimulator = () => {
           loading={attackLoading}
         />
       )}
+
+      <DeleteConfirmModal 
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDelete}
+        title={t('assets.confirm_delete', 'Xóa thiết bị')}
+        message={deviceToDelete === 'bulk' 
+          ? t('assets.confirm_bulk_delete_msg', 'Bạn có chắc chắn muốn xóa các thiết bị đã chọn?') 
+          : t('assets.confirm_delete_msg', 'Bạn có chắc chắn muốn xóa thiết bị này không?')}
+      />
     </div>
   );
 };

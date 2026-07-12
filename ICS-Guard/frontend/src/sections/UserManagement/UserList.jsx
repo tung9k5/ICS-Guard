@@ -1,29 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Edit2, Trash2, User, ChevronDown, ChevronUp } from 'lucide-react';
 import ActionMenu from '@/components/ActionMenu';
 import VNoData from '@/components/VNoData';
 import VStatus from '@/components/VStatus';
-
-const IndeterminateCheckbox = ({ indeterminate, ...rest }) => {
-  const ref = useRef(null);
-  useEffect(() => {
-    if (ref.current) {
-      ref.current.indeterminate = typeof indeterminate === 'boolean' ? indeterminate : false;
-    }
-  }, [indeterminate]);
-  return <input type="checkbox" ref={ref} {...rest} />;
-};
-
-const getRoleLabel = (role) => {
-  switch (role) {
-    case 'admin': return 'Quản trị viên';
-    case 'l1_analyst': return 'Nhà phân tích (L1)';
-    case 'l2_responder': return 'Phản ứng viên (L2)';
-    case 'l3_manager': return 'Quản lý (L3)';
-    case 'ot_operator': return 'Vận hành viên (OT)';
-    default: return role;
-  }
-};
+import VCheckbox from '@/components/VCheckbox';
+import { useTranslation } from 'react-i18next';
 
 const UserList = ({ 
   users, 
@@ -34,18 +15,30 @@ const UserList = ({
   onSelect,
   onSelectAll
 }) => {
+  const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState(null);
 
   const toggleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id);
   };
+
+  const getRoleLabel = (role) => {
+    switch (role) {
+      case 'admin': return t('users.list.role_admin');
+      case 'l1_analyst': return t('users.list.role_l1');
+      case 'l2_responder': return t('users.list.role_l2');
+      case 'l3_manager': return t('users.list.role_l3');
+      case 'ot_operator': return t('users.list.role_ot');
+      default: return role;
+    }
+  };
   
   if (loading) {
-    return <div className="user-loading">Đang tải dữ liệu...</div>;
+    return <div className="user-loading">{t('users.list.loading')}</div>;
   }
 
   if (!users || users.length === 0) {
-    return <VNoData message="Không có dữ liệu người dùng" />;
+    return <VNoData message={t('users.list.no_data')} />;
   }
 
   const allSelected = users.length > 0 && selectedIds.length === users.length;
@@ -58,19 +51,19 @@ const UserList = ({
           <thead>
             <tr>
               <th style={{ width: '40px', textAlign: 'center' }}>
-                <IndeterminateCheckbox 
+                <VCheckbox 
                   checked={allSelected} 
                   indeterminate={selectedIds.length > 0 && selectedIds.length < users.length}
                   onChange={(e) => onSelectAll(e.target.checked)} 
                   style={{ cursor: 'pointer' }}
                 />
               </th>
-              <th>Tên đăng nhập</th>
-              <th>Họ và tên</th>
-              <th>Email</th>
-              <th>Vai trò</th>
-              <th>Trạng thái</th>
-              <th className="actions-col">Hành động</th>
+              <th>{t('users.list.table_username')}</th>
+              <th>{t('users.list.table_fullname')}</th>
+              <th>{t('users.list.table_email')}</th>
+              <th>{t('users.list.table_role')}</th>
+              <th>{t('users.list.table_status')}</th>
+              <th className="actions-col">{t('users.list.table_actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -78,15 +71,14 @@ const UserList = ({
               const id = user.id || user._id;
               const isSelected = selectedIds.includes(id);
               const actions = [
-                { label: 'Sửa', icon: Edit2, onClick: () => onEdit(user) },
-                { label: 'Xóa', icon: Trash2, danger: true, onClick: () => onDelete(id) }
+                { label: t('users.list.btn_edit'), icon: Edit2, onClick: () => onEdit(user) },
+                { label: t('users.list.btn_delete'), icon: Trash2, danger: true, onClick: () => onDelete(id) }
               ];
 
               return (
                 <tr key={id} className={isSelected ? 'selected-row' : ''}>
                   <td style={{ textAlign: 'center' }}>
-                    <input 
-                      type="checkbox" 
+                    <VCheckbox 
                       checked={isSelected}
                       onChange={(e) => onSelect(id, e.target.checked)}
                       style={{ cursor: 'pointer' }}
@@ -113,7 +105,7 @@ const UserList = ({
                   <td>
                     <VStatus 
                       status={user.is_active ? 'active' : 'inactive'} 
-                      label={user.is_active ? 'Hoạt động' : 'Không hoạt động'} 
+                      label={user.is_active ? t('users.list.status_active') : t('users.list.status_inactive')} 
                     />
                   </td>
                   <td className="actions-col">
@@ -133,15 +125,15 @@ const UserList = ({
       <div className="mobile-user-list">
         <div className="mobile-list-header" style={{ display: 'flex', alignItems: 'center' }}>
           <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <IndeterminateCheckbox 
+            <VCheckbox 
               checked={allSelected} 
               indeterminate={selectedIds.length > 0 && selectedIds.length < users.length}
               onChange={(e) => onSelectAll(e.target.checked)} 
               style={{ cursor: 'pointer' }}
             />
           </div>
-          <div className="col-id">Tên ĐN</div>
-          <div className="col-title">Họ và tên</div>
+          <div className="col-id">{t('users.list.mobile_username')}</div>
+          <div className="col-title">{t('users.list.mobile_fullname')}</div>
           <div className="col-action"></div>
         </div>
         
@@ -150,8 +142,8 @@ const UserList = ({
           const isExpanded = expandedId === id;
           const isSelected = selectedIds.includes(id);
           const actions = [
-            { label: 'Sửa', icon: Edit2, onClick: () => onEdit(user) },
-            { label: 'Xóa', icon: Trash2, danger: true, onClick: () => onDelete(id) }
+            { label: t('users.list.btn_edit'), icon: Edit2, onClick: () => onEdit(user) },
+            { label: t('users.list.btn_delete'), icon: Trash2, danger: true, onClick: () => onDelete(id) }
           ];
 
           return (
@@ -159,8 +151,7 @@ const UserList = ({
               {/* Card Header */}
               <div className="mobile-card-header" style={{ display: 'flex', alignItems: 'center' }}>
                 <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <input 
-                    type="checkbox" 
+                  <VCheckbox 
                     checked={isSelected}
                     onChange={(e) => onSelect(id, e.target.checked)}
                     style={{ cursor: 'pointer' }}
@@ -177,7 +168,7 @@ const UserList = ({
               {isExpanded && (
                 <div className="mobile-card-body">
                   <div className="detail-row">
-                    <span className="detail-label">Vai trò</span>
+                    <span className="detail-label">{t('users.list.table_role')}</span>
                     <span className="detail-value">
                       <VStatus 
                         label={getRoleLabel(user.role)}
@@ -189,15 +180,15 @@ const UserList = ({
                     </div>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Email</span>
+                    <span className="detail-label">{t('users.list.table_email')}</span>
                     <span className="detail-value">{user.email || 'N/A'}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">Trạng thái</span>
+                    <span className="detail-label">{t('users.list.table_status')}</span>
                     <span className="detail-value">
                       <VStatus 
                         status={user.is_active ? 'active' : 'inactive'} 
-                        label={user.is_active ? 'Hoạt động' : 'Không hoạt động'} 
+                        label={user.is_active ? t('users.list.status_active') : t('users.list.status_inactive')} 
                       />
                     </span>
                   </div>

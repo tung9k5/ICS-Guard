@@ -8,6 +8,9 @@ export const getAllUsers = async (req, res) => {
     const { search, status, order, role, page = 1, per_page = 10 } = req.query;
 
     let query = {};
+    if (req.user && req.user.id) {
+      query._id = { $ne: req.user.id };
+    }
     if (search) {
       const searchRegex = new RegExp(search, 'i');
       query.$or = [

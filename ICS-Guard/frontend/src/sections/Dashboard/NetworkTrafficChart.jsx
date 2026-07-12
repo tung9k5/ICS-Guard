@@ -2,18 +2,13 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const data = [
-  { time: '00:00', incoming: 4000, outgoing: 2400 },
-  { time: '04:00', incoming: 3000, outgoing: 1398 },
-  { time: '08:00', incoming: 2000, outgoing: 9800 },
-  { time: '12:00', incoming: 2780, outgoing: 3908 },
-  { time: '16:00', incoming: 1890, outgoing: 4800 },
-  { time: '20:00', incoming: 2390, outgoing: 3800 },
-  { time: '24:00', incoming: 3490, outgoing: 4300 },
-];
-
-const NetworkTrafficChart = () => {
+const NetworkTrafficChart = ({ data = [] }) => {
   const { t } = useTranslation();
+
+  const maxVal = data.reduce((max, item) => Math.max(max, item.incoming || 0, item.outgoing || 0), 0);
+  const interval = maxVal >= 10000 ? 2000 : 1000;
+  const roundedMax = Math.max(Math.ceil(maxVal / interval) * interval, interval);
+  const tickCount = (roundedMax / interval) + 1;
 
   return (
     <div style={{ width: '100%', height: '100%', minHeight: '300px' }}>
@@ -34,7 +29,13 @@ const NetworkTrafficChart = () => {
           </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--gray-700)" />
           <XAxis dataKey="time" stroke="var(--gray-400)" tickLine={false} />
-          <YAxis stroke="var(--gray-400)" tickLine={false} axisLine={false} />
+          <YAxis 
+            stroke="var(--gray-400)" 
+            tickLine={false} 
+            axisLine={false} 
+            domain={[0, roundedMax]}
+            tickCount={tickCount}
+          />
           <Tooltip 
             contentStyle={{ backgroundColor: 'var(--gray-800)', border: 'none', borderRadius: '8px', color: 'var(--white-short)' }}
             itemStyle={{ color: 'var(--white-short)' }}

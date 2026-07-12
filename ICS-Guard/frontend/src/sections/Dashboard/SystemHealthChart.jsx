@@ -2,15 +2,9 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
-const rawData = [
-  { key: 'healthy', value: 85 },
-  { key: 'warning', value: 10 },
-  { key: 'critical', value: 5 },
-];
-
 const COLORS = ['var(--green-500)', 'var(--amber-500)', 'var(--red-500)'];
 
-const SystemHealthChart = () => {
+const SystemHealthChart = ({ rawData = [] }) => {
   const { t } = useTranslation();
 
   const data = rawData.map(item => ({

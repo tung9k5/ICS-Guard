@@ -26,7 +26,7 @@ const LanguageSwitcher = () => {
       </div>
       
       {isOpen && (
-        <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', backgroundColor: 'var(--bg-primary, var(--white-short))', border: '1px solid var(--border-light, var(--gray-light))', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '120px' }}>
+        <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', backgroundColor: 'var(--bg-primary, var(--white-short))', border: '1px solid var(--border-light, var(--gray-light))', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '125px' }}>
           <div 
             onClick={() => changeLanguage('vi')}
             style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', cursor: 'pointer', backgroundColor: currentLang.code === 'vi' ? 'var(--bg-secondary, var(--apple-gray-1))' : 'transparent' }}

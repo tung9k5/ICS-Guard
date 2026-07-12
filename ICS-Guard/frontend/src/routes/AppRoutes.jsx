@@ -11,6 +11,8 @@ import UserManagement from '@/pages/UserManagement';
 import IncidentManagement from '@/pages/IncidentManagement';
 import AuditManagement from '@/pages/AuditManagement';
 import AttackSimulator from '@/pages/AttackSimulator';
+import RuleManagement from '@/pages/RuleManagement';
+import AlertManagement from '@/pages/AlertManagement';
 import NotFound from '@/pages/NotFound';
 import UnderConstruction from '@/pages/UnderConstruction';
 
@@ -31,6 +33,8 @@ const AppRoutes = () => {
         <Route path="/device-management" element={<DeviceManagement />} />
         <Route path="/user-management" element={<UserManagement />} />
         <Route path="/incident-management" element={<IncidentManagement />} />
+        <Route path="/rule-management" element={<RuleManagement />} />
+        <Route path="/alert-management" element={<AlertManagement />} />
         <Route path="/audit-management" element={<AuditManagement />} />
         <Route path="/attack-simulator" element={<AttackSimulator />} />
       </Route>

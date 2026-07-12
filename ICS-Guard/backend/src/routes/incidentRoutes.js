@@ -1,7 +1,8 @@
 import express from 'express';
-import { getAllIncidents, getIncidentById, triggerAiAnalysis, updateIncident, deleteIncident, deleteMultipleIncidents } from '../controllers/incidentController.js';
+import { getAllIncidents, getIncidentById, createIncident, triggerAiAnalysis, updateIncident, deleteIncident, deleteMultipleIncidents } from '../controllers/incidentController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 import { authorize } from '../middlewares/rbacMiddleware.js';
+import auditLogger from '../middlewares/auditMiddleware.js';
 
 const router = express.Router();
 
@@ -70,6 +71,33 @@ router.get('/:id', authorize(['admin', 'analyst', 'viewer']), getIncidentById);
 
 /**
  * @openapi
+ * /api/incidents:
+ *   post:
+ *     summary: Create a new security incident (Requires roles - admin, analyst)
+ *     tags: [Incidents]
+ *     security:
+ *       - BearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               severity:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Incident created successfully
+ */
+router.post('/', authorize(['admin', 'analyst']), auditLogger('INCIDENT_CREATE'), createIncident);
+
+/**
+ * @openapi
  * /api/incidents/{id}/ai-analyze:
  *   post:
  *     summary: Trigger asynchronous AI-Engine analysis on a security incident (Requires roles - admin, analyst)
@@ -86,7 +114,7 @@ router.get('/:id', authorize(['admin', 'analyst', 'viewer']), getIncidentById);
  *       200:
  *         description: AI Analysis triggered successfully
  */
-router.post('/:id/ai-analyze', authorize(['admin', 'analyst']), triggerAiAnalysis);
+router.post('/:id/ai-analyze', authorize(['admin', 'analyst']), auditLogger('INCIDENT_AI_ANALYZE'), triggerAiAnalysis);
 
 /**
  * @openapi
@@ -121,7 +149,7 @@ router.post('/:id/ai-analyze', authorize(['admin', 'analyst']), triggerAiAnalysi
  *       200:
  *         description: Incident updated successfully
  */
-router.put('/:id', authorize(['admin', 'analyst']), updateIncident);
+router.put('/:id', authorize(['admin', 'analyst']), auditLogger('INCIDENT_UPDATE'), updateIncident);
 
 /**
  * @openapi
@@ -141,7 +169,7 @@ router.put('/:id', authorize(['admin', 'analyst']), updateIncident);
  *       200:
  *         description: Incident deleted successfully
  */
-router.delete('/:id', authorize(['admin']), deleteIncident);
+router.delete('/:id', authorize(['admin']), auditLogger('INCIDENT_DELETE'), deleteIncident);
 
 /**
  * @openapi
@@ -166,6 +194,6 @@ router.delete('/:id', authorize(['admin']), deleteIncident);
  *       200:
  *         description: Incidents deleted successfully
  */
-router.post('/bulk-delete', authorize(['admin']), deleteMultipleIncidents);
+router.post('/bulk-delete', authorize(['admin']), auditLogger('INCIDENT_BULK_DELETE'), deleteMultipleIncidents);
 
 export default router;

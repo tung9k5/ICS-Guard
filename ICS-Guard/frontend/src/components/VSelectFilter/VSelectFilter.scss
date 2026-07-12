@@ -65,3 +65,15 @@
     }
   }
 }
+
+// Full-width inside VFilterPage on mobile
+@media (max-width: 768px) {
+  .v-filter-page .filter-actions > .v-select-filter-wrap {
+    width: 100%;
+    display: flex;
+
+    .v-select-filter {
+      width: 100%;
+    }
+  }
+}

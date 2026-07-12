@@ -18,6 +18,15 @@ export default {
     });
   },
 
+  createIncident(data, options = {}) {
+    return http({
+      url: '/incidents',
+      method: 'POST',
+      data,
+      ...options
+    });
+  },
+
   update(id, data, options = {}) {
     return http({
       url: `/incidents/${id}`,
