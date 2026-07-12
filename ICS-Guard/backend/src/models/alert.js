@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { Severity } from '../../../shared/constants/severity.js';
 
 const alertSchema = new mongoose.Schema({
   rule_name: {
@@ -21,8 +22,8 @@ const alertSchema = new mongoose.Schema({
   },
   severity: {
     type: String,
-    enum: ['INFO', 'MEDIUM', 'HIGH', 'CRITICAL'],
-    default: 'MEDIUM',
+    enum: [Severity.LOW, Severity.MEDIUM, Severity.HIGH, Severity.CRITICAL, 'INFO'],
+    default: Severity.MEDIUM,
     index: true,
   },
   status: {

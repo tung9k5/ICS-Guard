@@ -25,12 +25,13 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             required:
- *               - username
+ *               - email
  *               - password
  *             properties:
- *               username:
+ *               email:
  *                 type: string
- *                 example: admin_soc
+ *                 format: email
+ *                 example: admin@example.com
  *               password:
  *                 type: string
  *                 example: Admin@123

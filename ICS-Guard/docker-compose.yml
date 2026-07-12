@@ -16,6 +16,7 @@ services:
     environment:
       - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
       - VITE_GOOGLE_GSI_CLIENT_URL=${VITE_GOOGLE_GSI_CLIENT_URL}
+      - VITE_API_URL=${VITE_API_URL}
     depends_on:
       - backend
     restart: always
@@ -121,7 +122,8 @@ services:
   # 9. IoT Device Simulator (Python Asyncio)
   simulator:
     build:
-      context: ./iot/simulator
+      context: ./iot
+      dockerfile: simulator/Dockerfile
     environment:
       - MQTT_HOST=mosquitto
       - MQTT_PORT=8883

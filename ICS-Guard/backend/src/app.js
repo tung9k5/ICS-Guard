@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import rateLimit from 'express-rate-limit';
 import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
@@ -46,10 +47,30 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Express trust proxy setup (so req.ip parses header correctly behind proxies)
-app.set('trust proxy', true);
+app.set('trust proxy', 1);
 
 // 1. Apply global IP block middleware BEFORE any other route
 app.use(ipBlockMiddleware);
+
+// 1.5 Rate Limiting (Memory-based)
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // Limit each IP to 200 requests per windowMs
+  message: { error: 'TooManyRequests', message: 'Quá nhiều truy vấn từ IP của bạn, vui lòng thử lại sau 15 phút.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 login requests per windowMs (chống Brute-force)
+  message: { error: 'TooManyRequests', message: 'Tần suất đăng nhập quá cao, IP tạm khóa 15 phút để bảo vệ.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Apply global limiter to all routes
+app.use(globalLimiter);
 
 // 2. Configure Swagger UI
 const swaggerOptions = {
@@ -101,10 +122,10 @@ app.get('/', (req, res) => {
 });
 
 // Mount Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/v1/auth', authRoutes);
-app.use('/v1/auth', authRoutes);
-app.use('/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/v1/auth', authLimiter, authRoutes);
+app.use('/v1/auth', authLimiter, authRoutes);
+app.use('/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/devices', deviceRoutes);
 app.use('/api/audits', auditRoutes);
@@ -162,7 +183,7 @@ const seedDatabase = async () => {
       if (usersData && usersData.length > 0) {
         for (let user of usersData) {
           let plainPassword = 'User@123';
-          if (user.username === 'admin_soc') plainPassword = 'Admin@123';
+          if (user.username === 'admin_soc') plainPassword = 'password';
           else if (user.username === 'l1_analyst') plainPassword = 'L1@123';
           else if (user.username === 'l2_responder') plainPassword = 'L2@123';
           else if (user.username === 'l3_manager') plainPassword = 'L3@123';

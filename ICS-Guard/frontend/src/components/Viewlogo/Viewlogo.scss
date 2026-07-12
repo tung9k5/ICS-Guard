@@ -1,0 +1,36 @@
+.view-logo {
+  object-fit: contain;
+
+  &.animate-float {
+    width: 100%;
+    height: auto;
+    margin: 0 auto 24px auto;
+    display: block;
+    animation: floatImage 3s ease-in-out infinite;
+    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+  }
+
+  &.animate-spin {
+    animation: hologramSpin 8s linear infinite;
+  }
+}
+
+@keyframes hologramSpin {
+  0% { transform: translateY(0) rotateX(10deg) rotateY(0deg); }
+  25% { transform: translateY(-10px) rotateX(5deg) rotateY(90deg); }
+  50% { transform: translateY(0) rotateX(10deg) rotateY(180deg); }
+  75% { transform: translateY(-10px) rotateX(15deg) rotateY(270deg); }
+  100% { transform: translateY(0) rotateX(10deg) rotateY(360deg); }
+}
+
+@keyframes floatImage {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}

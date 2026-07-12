@@ -7,9 +7,17 @@
         "is_active": true,
         "password_hash": "",
         "isFirstLogin": false,
-        "login_failures": { "count": 0, "last_failed_at": null, "lockout_until": null },
-        "created_at": { "$date": "2026-06-21T00:00:00Z" },
-        "updated_at": { "$date": "2026-06-21T00:00:00Z" }
+        "login_failures": {
+            "count": 0,
+            "last_failed_at": null,
+            "lockout_until": null
+        },
+        "created_at": {
+            "$date": "2026-06-21T00:00:00Z"
+        },
+        "updated_at": {
+            "$date": "2026-06-21T00:00:00Z"
+        }
     },
     {
         "username": "l1_analyst",
@@ -18,9 +26,17 @@
         "role": "l1_analyst",
         "is_active": true,
         "password_hash": "",
-        "login_failures": { "count": 0, "last_failed_at": null, "lockout_until": null },
-        "created_at": { "$date": "2026-06-21T00:00:00Z" },
-        "updated_at": { "$date": "2026-06-21T00:00:00Z" }
+        "login_failures": {
+            "count": 0,
+            "last_failed_at": null,
+            "lockout_until": null
+        },
+        "created_at": {
+            "$date": "2026-06-21T00:00:00Z"
+        },
+        "updated_at": {
+            "$date": "2026-06-21T00:00:00Z"
+        }
     },
     {
         "username": "l2_responder",
@@ -29,9 +45,17 @@
         "role": "l2_responder",
         "is_active": true,
         "password_hash": "",
-        "login_failures": { "count": 0, "last_failed_at": null, "lockout_until": null },
-        "created_at": { "$date": "2026-06-21T00:00:00Z" },
-        "updated_at": { "$date": "2026-06-21T00:00:00Z" }
+        "login_failures": {
+            "count": 0,
+            "last_failed_at": null,
+            "lockout_until": null
+        },
+        "created_at": {
+            "$date": "2026-06-21T00:00:00Z"
+        },
+        "updated_at": {
+            "$date": "2026-06-21T00:00:00Z"
+        }
     },
     {
         "username": "l3_manager",
@@ -40,9 +64,17 @@
         "role": "l3_manager",
         "is_active": true,
         "password_hash": "",
-        "login_failures": { "count": 0, "last_failed_at": null, "lockout_until": null },
-        "created_at": { "$date": "2026-06-21T00:00:00Z" },
-        "updated_at": { "$date": "2026-06-21T00:00:00Z" }
+        "login_failures": {
+            "count": 0,
+            "last_failed_at": null,
+            "lockout_until": null
+        },
+        "created_at": {
+            "$date": "2026-06-21T00:00:00Z"
+        },
+        "updated_at": {
+            "$date": "2026-06-21T00:00:00Z"
+        }
     },
     {
         "username": "ot_operator",
@@ -51,8 +83,16 @@
         "role": "ot_operator",
         "is_active": true,
         "password_hash": "",
-        "login_failures": { "count": 0, "last_failed_at": null, "lockout_until": null },
-        "created_at": { "$date": "2026-06-21T00:00:00Z" },
-        "updated_at": { "$date": "2026-06-21T00:00:00Z" }
+        "login_failures": {
+            "count": 0,
+            "last_failed_at": null,
+            "lockout_until": null
+        },
+        "created_at": {
+            "$date": "2026-06-21T00:00:00Z"
+        },
+        "updated_at": {
+            "$date": "2026-06-21T00:00:00Z"
+        }
     }
 ]

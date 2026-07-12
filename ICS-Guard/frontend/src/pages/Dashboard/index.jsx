@@ -1,8 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Activity, ShieldAlert, HeartPulse, Shield, ArrowRight } from 'lucide-react';
-import { NetworkTrafficChart, ThreatActivityChart, SystemHealthChart } from '../../components/Charts';
+import { NetworkTrafficChart, ThreatActivityChart, SystemHealthChart } from '@/sections/Dashboard';
 import VButton from '@/components/VButton';
+import Viewlogo from '@/components/Viewlogo';
 import './Dashboard.scss';
 
 const Dashboard = () => {
@@ -29,7 +30,7 @@ const Dashboard = () => {
 
         <div className="promo-illustration">
           <div className="glow-effect"></div>
-          <img src="/image-logo.png" alt="Logo" className="shield-icon" style={{ width: 'auto', maxHeight: '100%', objectFit: 'contain' }} />
+          <Viewlogo animate="spin" className="shield-icon" style={{ width: 'auto', maxHeight: '100%' }} />
         </div>
       </div>
 
@@ -50,7 +51,7 @@ const Dashboard = () => {
 
         <div className="dashboard-item">
           <div className="item-header">
-            <div className="icon-wrapper" style={{ backgroundColor: '#fef2f2', color: '#ef4444' }}>
+            <div className="icon-wrapper" style={{ backgroundColor: 'var(--red-50)', color: 'var(--red-500)' }}>
               <ShieldAlert size={20} />
             </div>
             <h3>{t('dashboard.threat_activity', 'Threat Activity Level')}</h3>
@@ -64,7 +65,7 @@ const Dashboard = () => {
 
         <div className="dashboard-item">
           <div className="item-header">
-            <div className="icon-wrapper" style={{ backgroundColor: '#ecfdf5', color: '#10b981' }}>
+            <div className="icon-wrapper" style={{ backgroundColor: 'var(--green-50)', color: 'var(--green-500)' }}>
               <HeartPulse size={20} />
             </div>
             <h3>{t('dashboard.system_health', 'System Health Status')}</h3>
