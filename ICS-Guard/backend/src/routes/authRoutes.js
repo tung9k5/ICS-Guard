@@ -1,5 +1,5 @@
 import express from 'express';
-import { login, refresh, logout, setupOnboarding, register, me, googleLogin } from '../controllers/authController.js';
+import { login, refresh, logout, setupOnboarding, register, me, googleLogin, sendTelegramOtp, verifyTelegramOtp } from '../controllers/authController.js';
 import auditLogger from '../middlewares/auditMiddleware.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 
@@ -114,6 +114,10 @@ router.post('/logout', auditLogger('USER_LOGOUT'), logout);
 
 // Setup onboarding (Thiết lập đăng nhập lần đầu)
 router.post('/setup-onboarding', authMiddleware, auditLogger('USER_SETUP_ONBOARDING'), setupOnboarding);
+
+// OTP Telegram: Gửi mã và xác minh mã (bảo vệ bởi token xác thực)
+router.post('/send-telegram-otp', authMiddleware, sendTelegramOtp);
+router.post('/verify-telegram-otp', authMiddleware, verifyTelegramOtp);
 
 /**
  * @openapi

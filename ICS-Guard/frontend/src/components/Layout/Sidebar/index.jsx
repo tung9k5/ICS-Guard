@@ -10,6 +10,15 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const navigate = useNavigate();
   const [isFullscreenLogo, setIsFullscreenLogo] = useState(false);
 
+  const cached = sessionStorage.getItem('cached_user');
+  const currentUser = cached ? JSON.parse(cached) : null;
+  const role = currentUser?.role;
+
+  const canSeeTopology = ['admin', 'device_manager', 'analyst'].includes(role);
+  const canSeeDevices = ['admin', 'device_manager'].includes(role);
+  const canSeeUsers = ['admin', 'hr_manager'].includes(role);
+  const canSeeReports = ['admin', 'hr_manager', 'device_manager', 'analyst'].includes(role);
+
   const handleClose = () => {
     if (window.innerWidth <= 768) {
       setIsSidebarOpen(false);
@@ -66,26 +75,32 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
             <LayoutDashboard size={20} />
             <span>{t('layout.sidebar.overview')}</span>
           </NavLink>
-          <NavLink to="/coming-soon" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
-            <Network size={20} />
-            <span>{t('layout.sidebar.topology')}</span>
-          </NavLink>
+          
+          {canSeeTopology && (
+            <NavLink to="/topology" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
+              <Network size={20} />
+              <span>Thiết bị & Sơ đồ</span>
+            </NavLink>
+          )}
+
           <NavLink to="/coming-soon" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
             <ShieldAlert size={20} />
             <span>{t('layout.sidebar.alerts')}</span>
           </NavLink>
-          <NavLink to="/assets" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
-            <Server size={20} />
-            <span>{t('layout.sidebar.assets')}</span>
-          </NavLink>
-          <NavLink to="/coming-soon" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
-            <FileText size={20} />
-            <span>{t('layout.sidebar.reports')}</span>
-          </NavLink>
-          <NavLink to="/coming-soon" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
-            <Settings size={20} />
-            <span>{t('layout.sidebar.settings')}</span>
-          </NavLink>
+
+          {canSeeUsers && (
+            <NavLink to="/users" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
+              <User size={20} />
+              <span>Thành viên</span>
+            </NavLink>
+          )}
+
+          {canSeeReports && (
+            <NavLink to="/reports" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
+              <FileText size={20} />
+              <span>Nhật ký</span>
+            </NavLink>
+          )}
         </nav>
 
         <div className="sidebar-footer">

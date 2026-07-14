@@ -3,6 +3,23 @@ import jwt from 'jsonwebtoken';
 import axios from 'axios';
 import { User, RefreshToken } from '../models/index.js';
 import { handleFailedLogin, handleSuccessfulLogin, registerFailedIpAttempt } from '../services/securityService.js';
+import { sendTelegramAlert } from '../services/telegramService.js';
+
+// -----------------------------------------------
+// In-memory OTP store (không cần Redis)
+// Format: { chatId: { code, expiresAt, attempts } }
+// -----------------------------------------------
+const telegramOtpStore = new Map();
+const OTP_TTL_MS = 5 * 60 * 1000;    // 5 phút
+const OTP_MAX_ATTEMPTS = 5;           // Tối đa 5 lần nhập sai
+
+// Dọn OTP hết hạn mỗi 10 phút
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, val] of telegramOtpStore.entries()) {
+    if (now > val.expiresAt) telegramOtpStore.delete(key);
+  }
+}, 10 * 60 * 1000);
 
 const generateAccessToken = (user) => {
   return jwt.sign(
@@ -10,7 +27,8 @@ const generateAccessToken = (user) => {
       id: user._id, 
       username: user.username, 
       role: user.role, 
-      isFirstLogin: user.isFirstLogin === undefined ? true : user.isFirstLogin 
+      isFirstLogin: user.isFirstLogin === undefined ? true : user.isFirstLogin,
+      telegramChatId: user.contactInfo ? user.contactInfo.telegramChatId : null
     },
     process.env.JWT_SECRET || 'ics_guard_access_secret_key_2026_@_secure',
     { expiresIn: process.env.JWT_ACCESS_EXPIRY || '30d' }
@@ -27,7 +45,8 @@ const generateRefreshToken = (user) => {
 
 export const login = async (req, res) => {
   console.log('[Login Request Body]', req.body);
-  const usernameInput = req.body.username || req.body.username_or_email;
+  const rawUsername = req.body.username || req.body.username_or_email;
+  const usernameInput = typeof rawUsername === 'string' ? rawUsername.trim() : rawUsername;
   const { password } = req.body;
   const rawIp = req.ip || req.connection.remoteAddress;
   const ipAddress = rawIp.replace(/^::ffff:/, '');
@@ -414,12 +433,100 @@ export const googleLogin = async (req, res) => {
   }
 };
 
+// ------------------------------------
+// Gửi mã OTP xác thực Telegram
+// ------------------------------------
+export const sendTelegramOtp = async (req, res) => {
+  const { telegramChatId } = req.body;
+
+  if (!telegramChatId) {
+    return res.status(400).json({ error: 'Bad Request', message: 'telegramChatId là bắt buộc.' });
+  }
+
+  // Kiểm tra gửi quá nhanh (còn OTP cũ chưa hết hạn và mới gửi < 30s)
+  const existing = telegramOtpStore.get(String(telegramChatId));
+  if (existing && Date.now() < existing.expiresAt && Date.now() < existing.sentAt + 30_000) {
+    const waitSec = Math.ceil((existing.sentAt + 30_000 - Date.now()) / 1000);
+    return res.status(429).json({ error: 'Too Many Requests', message: `Vui lòng đợi ${waitSec} giây trước khi gửi lại.` });
+  }
+
+  // Tạo mã OTP 6 số
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const expiresAt = Date.now() + OTP_TTL_MS;
+  const sentAt = Date.now();
+
+  telegramOtpStore.set(String(telegramChatId), { code, expiresAt, sentAt, attempts: 0 });
+
+  try {
+    console.log(`[AuthController] Gửi OTP ${code} đến Chat ID: ${telegramChatId}`);
+
+    const sent = await sendTelegramAlert(
+      `🔐 *ICS\-GUARD XÁC THỰC*\n\nMã xác nhận liên kết tài khoản của bạn là:\n\n*${code}*\n\n⏰ Mã này có hiệu lực trong *5 phút*\. Không chia sẻ mã này với bất kỳ ai\.`,
+      [],
+      telegramChatId
+    );
+
+    if (!sent) {
+      telegramOtpStore.delete(String(telegramChatId));
+      return res.status(500).json({
+        error: 'Telegram Error',
+        message: 'Không thể gửi tin nhắn. Hãy đảm bảo bạn đã chat \'/start\' với Bot trước.'
+      });
+    }
+
+    return res.status(200).json({ status: 'success', message: 'Mã xác nhận đã được gửi tới Telegram của bạn.' });
+  } catch (error) {
+    console.error('[AuthController] Lỗi gửi OTP Telegram:', error);
+    telegramOtpStore.delete(String(telegramChatId));
+    return res.status(500).json({ error: 'Internal Server Error', message: 'Gặp lỗi khi gửi mã xác nhận.' });
+  }
+};
+
+// ------------------------------------
+// Xác minh mã OTP Telegram
+// ------------------------------------
+export const verifyTelegramOtp = async (req, res) => {
+  const { telegramChatId, code } = req.body;
+
+  if (!telegramChatId || !code) {
+    return res.status(400).json({ error: 'Bad Request', message: 'telegramChatId và code là bắt buộc.' });
+  }
+
+  const record = telegramOtpStore.get(String(telegramChatId));
+
+  if (!record) {
+    return res.status(400).json({ error: 'Bad Request', message: 'Mã xác nhận không tồn tại hoặc đã hết hạn. Vui lòng gửi lại.' });
+  }
+
+  if (Date.now() > record.expiresAt) {
+    telegramOtpStore.delete(String(telegramChatId));
+    return res.status(400).json({ error: 'OTP Expired', message: 'Mã xác nhận đã hết hạn (5 phút). Vui lòng gửi lại.' });
+  }
+
+  record.attempts += 1;
+  if (record.attempts > OTP_MAX_ATTEMPTS) {
+    telegramOtpStore.delete(String(telegramChatId));
+    return res.status(429).json({ error: 'Too Many Attempts', message: 'Quá nhiều lần nhập sai. Vui lòng yêu cầu mã mới.' });
+  }
+
+  if (record.code !== String(code).trim()) {
+    const left = OTP_MAX_ATTEMPTS - record.attempts;
+    return res.status(400).json({ error: 'Invalid OTP', message: `Mã không đúng. Còn ${left} lần thử.` });
+  }
+
+  // Xác thực thành công — xóa OTP khỏi store
+  telegramOtpStore.delete(String(telegramChatId));
+  return res.status(200).json({ status: 'success', message: 'Xác thực Telegram thành công!' });
+};
+
 export default {
   login,
   refresh,
   logout,
   me,
   setupOnboarding,
+  sendTelegramOtp,
+  verifyTelegramOtp,
   register,
   googleLogin,
 };

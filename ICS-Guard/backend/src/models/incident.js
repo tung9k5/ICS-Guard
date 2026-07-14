@@ -33,6 +33,9 @@ const incidentSchema = new mongoose.Schema({
   timestamps: true,
 });
 
+// Add TTL Index to automatically delete incidents older than 90 days (7776000 seconds)
+incidentSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 });
+
 const Incident = mongoose.model('Incident', incidentSchema);
 
 export default Incident;

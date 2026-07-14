@@ -9,6 +9,8 @@ import { fileURLToPath } from 'url';
 import http from 'http';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
+import RedisStore from 'rate-limit-redis';
+import redisClient from './config/redis.js';
 
 // Database context and models
 import { connectDB, User, Device, Rule } from './models/index.js';
@@ -35,6 +37,17 @@ import attackRoutes from './routes/attackRoutes.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// Security Fail-Fast Validation
+if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'default_secret' || process.env.JWT_SECRET.length < 32) {
+  console.error('[CRITICAL] JWT_SECRET is missing, default, or too weak. Must be at least 32 characters long. Halting application.');
+  process.exit(1);
+}
+
+if (!process.env.AES_SECRET_KEY || process.env.AES_SECRET_KEY === '0123456789abcdef0123456789abcdef' || process.env.AES_SECRET_KEY.length !== 32) {
+  console.error('[CRITICAL] AES_SECRET_KEY is missing, default, or invalid. Must be exactly 32 bytes. Halting application.');
+  process.exit(1);
+}
+
 const app = express();
 const server = http.createServer(app);
 const PORT = process.env.PORT || 5000;
@@ -52,21 +65,27 @@ app.set('trust proxy', 1);
 // 1. Apply global IP block middleware BEFORE any other route
 app.use(ipBlockMiddleware);
 
-// 1.5 Rate Limiting (Memory-based)
+// 1.5 Rate Limiting (Redis-based)
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 200, // Limit each IP to 200 requests per windowMs
   message: { error: 'TooManyRequests', message: 'Quá nhiều truy vấn từ IP của bạn, vui lòng thử lại sau 15 phút.' },
   standardHeaders: true,
   legacyHeaders: false,
+  // store: new RedisStore({
+  //   sendCommand: (...args) => redisClient.sendCommand(args),
+  // }),
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 login requests per windowMs (chống Brute-force)
+  max: 5000, // Temporarily increased to 5000 requests per 15 mins to disable block
   message: { error: 'TooManyRequests', message: 'Tần suất đăng nhập quá cao, IP tạm khóa 15 phút để bảo vệ.' },
   standardHeaders: true,
   legacyHeaders: false,
+  // store: new RedisStore({
+  //   sendCommand: (...args) => redisClient.sendCommand(args),
+  // }),
 });
 
 // Apply global limiter to all routes
@@ -142,92 +161,10 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Database Seeding Logic (Phương án A)
-const seedDatabase = async () => {
-  try {
-    // 1. Connect to MongoDB
-    await connectDB();
-
-    const seedDir = path.resolve(__dirname, '../../scripts/seed');
-    console.log(`[Bootstrap] Checking seed directory: ${seedDir}`);
-
-    // Helper to read and clean seed files (parsing standard Dates)
-    const parseSeedFile = (filename) => {
-      const filePath = path.join(seedDir, filename);
-      if (!fs.existsSync(filePath)) {
-        console.warn(`[Bootstrap] Seed file not found: ${filePath}`);
-        return null;
-      }
-      const content = fs.readFileSync(filePath, 'utf8');
-      const data = JSON.parse(content);
-      return data.map(item => {
-        const cleaned = { ...item };
-        // Map EJSON dates
-        if (cleaned.created_at && cleaned.created_at.$date) {
-          cleaned.createdAt = new Date(cleaned.created_at.$date);
-          delete cleaned.created_at;
-        }
-        if (cleaned.updated_at && cleaned.updated_at.$date) {
-          cleaned.updatedAt = new Date(cleaned.updated_at.$date);
-          delete cleaned.updated_at;
-        }
-        return cleaned;
-      });
-    };
-
-    // Seed Users (Force refresh to apply the new enterprise roles schema)
-    console.log('[Bootstrap] Checking if users seeding is needed...');
-    const userCount = await User.countDocuments();
-    if (userCount === 0) {
-      const usersData = parseSeedFile('users.json');
-      if (usersData && usersData.length > 0) {
-        for (let user of usersData) {
-          let plainPassword = 'User@123';
-          if (user.username === 'admin_soc') plainPassword = 'Admin@123';
-          else if (user.username === 'l1_analyst') plainPassword = 'L1@123';
-          else if (user.username === 'l2_responder') plainPassword = 'L2@123';
-          else if (user.username === 'l3_manager') plainPassword = 'L3@123';
-          else if (user.username === 'ot_operator') plainPassword = 'OT@123';
-          
-          user.password_hash = await bcrypt.hash(plainPassword, 10);
-          console.log(`[Bootstrap] Seeding user "${user.username}" with password "${plainPassword}"`);
-        }
-        await User.insertMany(usersData);
-        console.log(`[Bootstrap] Seeded ${usersData.length} users into MongoDB.`);
-      }
-    }
-
-    // Seed Devices (Force refresh to apply the new hierarchical schema)
-    const devicesData = parseSeedFile('devices.json');
-    if (devicesData && devicesData.length > 0) {
-      console.log('[Bootstrap] Wiping and re-seeding Devices collection to apply new schema...');
-      await Device.deleteMany({});
-      await Device.insertMany(devicesData);
-      console.log(`[Bootstrap] Seeded ${devicesData.length} devices into MongoDB.`);
-    }
-
-    // Seed Rules
-    const ruleCount = await Rule.countDocuments();
-    if (ruleCount === 0) {
-      const rulesData = parseSeedFile('rules.json');
-      if (rulesData && rulesData.length > 0) {
-        await Rule.insertMany(rulesData);
-        console.log(`[Bootstrap] Seeded ${rulesData.length} rules into MongoDB.`);
-      }
-    } else {
-      console.log(`[Bootstrap] Rules collection already has ${ruleCount} records. Skipping seeding.`);
-    }
-
-  } catch (error) {
-    console.error('[Bootstrap] Failed to sync and seed database:', error);
-    process.exit(1);
-  }
-};
-
 // Start Server
 const startServer = async () => {
-  // Sync databases & seed default assets
-  await seedDatabase();
+  // Connect to MongoDB
+  await connectDB();
 
   // Initialize InfluxDB database
   await initInflux();

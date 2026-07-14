@@ -1,38 +1,13 @@
 import { Device, AuditLog } from '../models/index.js';
+import { v4 as uuidv4 } from 'uuid';
 import { isolateDevice } from '../services/securityService.js';
 import { sendEmailAlert } from '../services/emailService.js';
 import { sendTelegramAlert } from '../services/telegramService.js';
 import { publishMqtt } from '../services/mqttService.js';
+import socketService from '../services/socketService.js';
 import { validateDevice } from '../../../shared/schemas/deviceSchema.js';
 import { formatPagination } from '../utils/pagination.js';
 import { successResponse, errorResponse, paginatedResponse } from '../utils/response.js';
-
-const injectVulnerabilityInfo = (deviceDoc) => {
-  const device = deviceDoc.toObject ? deviceDoc.toObject() : deviceDoc;
-  const nodeType = device.node_type || device.nodeType || 'sensor';
-
-  // Gán thông tin phiên bản firmware theo loại thiết bị
-  device.firmware_version = nodeType === 'gateway' ? 'v1.4.2-stable' :
-    nodeType === 'controller' ? 'v2.1.0-lts' :
-      'v1.0.5-patch3';
-
-  // Ánh xạ lỗi bảo mật CVE thực tế (Asset & CVE Correlation)
-  if (nodeType === 'gateway') {
-    device.cves = [
-      { cve: 'CVE-2023-31813', severity: 'HIGH', score: 8.8, desc: 'Lỗ hổng tràn bộ đệm TLS trên gateway' }
-    ];
-  } else if (nodeType === 'controller') {
-    device.cves = [
-      { cve: 'CVE-2022-31800', severity: 'CRITICAL', score: 9.8, desc: 'Lập trình logic OB1 không xác thực chữ ký' }
-    ];
-  } else {
-    device.cves = [
-      { cve: 'CVE-2024-1020', severity: 'MEDIUM', score: 5.3, desc: 'Kênh ADC dễ bị can thiệp tín hiệu điện áp' }
-    ];
-  }
-
-  return device;
-};
 
 export const getAllDevices = async (req, res) => {
   try {
@@ -41,10 +16,6 @@ export const getAllDevices = async (req, res) => {
     // Xây dựng query filter
     let query = {};
 
-    // Ràng buộc bảo mật: User nào chỉ được thấy device của user đó
-    if (req.user && req.user.id) {
-      query.userId = req.user.id;
-    }
     if (search) {
       const searchRegex = new RegExp(search, 'i');
       query.$or = [
@@ -79,7 +50,7 @@ export const getAllDevices = async (req, res) => {
     // Truy vấn CSDL
     const total = await Device.countDocuments(query);
     const devices = await Device.find(query)
-      .select('_id name type zone ipAddress ip_address macAddress mac_address description status createdAt updatedAt')
+      .select('_id name type node_type zone ipAddress ip_address macAddress mac_address parent_id hardware_model firmware_version icon_path description status lastSeen createdAt updatedAt')
       .sort(sortOption)
       .skip(skip)
       .limit(limitNumber);
@@ -91,6 +62,23 @@ export const getAllDevices = async (req, res) => {
   } catch (error) {
     console.error('GetAllDevices error:', error);
     return errorResponse(res, 'Failed to retrieve devices', error.message);
+  }
+};
+
+// -------------------------------------------------------
+// GET /public/list-all — Tr\u1ea3 th\u1eb3ng array (kh\u00f4ng ph\u00e2n trang)
+// D\u00f9ng cho Python IoT Simulator, AI Engine, etc.
+// -------------------------------------------------------
+export const getAllDevicesRaw = async (req, res) => {
+  try {
+    const devices = await Device.find({})
+      .select('_id name type node_type zone ipAddress ip_address macAddress mac_address parent_id hardware_model firmware_version icon_path description status lastSeen createdAt updatedAt')
+      .sort({ createdAt: -1 })
+      .lean();
+    return res.status(200).json(devices);
+  } catch (error) {
+    console.error('GetAllDevicesRaw error:', error);
+    return res.status(500).json({ error: 'Internal Server Error', message: error.message });
   }
 };
 
@@ -109,7 +97,7 @@ export const getDeviceById = async (req, res) => {
 };
 
 export const createDevice = async (req, res) => {
-  const { name, type, ipAddress, ip_address, macAddress, description, status } = req.body;
+  const { name, type, ipAddress, ip_address, macAddress, description, status, zone, parent_id, node_type, icon_path, hardware_model, firmware_version } = req.body;
 
   const actualIp = ipAddress || ip_address;
 
@@ -133,18 +121,8 @@ export const createDevice = async (req, res) => {
     if (macAddress) {
       customId = macAddress.replace(/:/g, '').toLowerCase();
     } else {
-      try {
-        const lastDevice = await Device.findOne({ _id: /^D-\d{3,}$/ }).sort({ _id: -1 });
-        if (lastDevice && lastDevice._id) {
-          const lastNumber = parseInt(lastDevice._id.split('-')[1], 10);
-          const nextNumber = lastNumber + 1;
-          customId = `D-${nextNumber.toString().padStart(3, '0')}`;
-        } else {
-          customId = 'D-001';
-        }
-      } catch (err) {
-        customId = `D-${Math.floor(Math.random() * 1000)}`;
-      }
+      // Use UUIDv4 to prevent race conditions during concurrent device creations
+      customId = `D-${uuidv4().substring(0, 8)}`;
     }
   }
 
@@ -152,11 +130,11 @@ export const createDevice = async (req, res) => {
   const validationResult = validateDevice({
     _id: customId,
     name,
-    type,
+    type: type || 'IoT Device',
     ipAddress: actualIp,
     macAddress: defaultMac,
-    node_type: req.body.node_type,
-    status: req.body.status
+    node_type: node_type || type || 'sensor',
+    status: status || 'active'
   });
 
   if (!validationResult.isValid) {
@@ -169,19 +147,40 @@ export const createDevice = async (req, res) => {
       userId: req.user ? req.user.id : null,
       name,
       type: type || 'IoT Device',
+      node_type: node_type || type || 'sensor',
+      zone: zone || 'Zone-A',
       ipAddress: actualIp,
       macAddress: defaultMac,
+      parent_id: parent_id || null,
+      icon_path: icon_path || 'Cpu',
+      hardware_model: hardware_model || '',
+      firmware_version: firmware_version || '',
       description: description || '',
       status: status || 'active',
       lastSeen: new Date(),
     });
 
+    // Emit WebSocket sync
+    const io = socketService.getIo();
+    if (io) {
+      io.emit('DEVICE_SYNC', { action: 'create', device: newDevice });
+    }
+
+    // Publish MQTT Birth event
+    publishMqtt('ics/device/sync', { action: 'create', device: newDevice });
+
     const cleanDevice = {
       _id: newDevice._id,
       name: newDevice.name,
       type: newDevice.type,
+      node_type: newDevice.node_type,
+      zone: newDevice.zone,
       ip_address: newDevice.ipAddress,
       mac_address: newDevice.macAddress,
+      parent_id: newDevice.parent_id,
+      icon_path: newDevice.icon_path,
+      hardware_model: newDevice.hardware_model,
+      firmware_version: newDevice.firmware_version,
       description: newDevice.description,
       status: newDevice.status,
       createdAt: newDevice.createdAt,
@@ -197,7 +196,7 @@ export const createDevice = async (req, res) => {
 
 export const updateDevice = async (req, res) => {
   const { id } = req.params;
-  const { name, type, ipAddress, ip_address, macAddress, description, status } = req.body;
+  const { name, type, ipAddress, ip_address, macAddress, description, status, zone, parent_id, node_type, icon_path, hardware_model, firmware_version } = req.body;
 
   try {
     const device = await Device.findById(id);
@@ -208,32 +207,41 @@ export const updateDevice = async (req, res) => {
     if (name !== undefined) device.name = name;
     if (type !== undefined) device.type = type;
     if (description !== undefined) device.description = description;
+    
+    // Support visual variables update
+    if (zone !== undefined) device.zone = zone;
+    if (parent_id !== undefined) device.parent_id = parent_id;
+    if (node_type !== undefined) device.node_type = node_type;
+    if (icon_path !== undefined) device.icon_path = icon_path;
+    if (hardware_model !== undefined) device.hardware_model = hardware_model;
+    if (firmware_version !== undefined) device.firmware_version = firmware_version;
 
     const actualIp = ipAddress || ip_address;
-    const ipRegex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+
+    // Merge existing device data with incoming updates for validation
+    const mergedData = {
+      _id: device._id.toString(),
+      name: name !== undefined ? name : device.name,
+      ipAddress: actualIp !== undefined ? actualIp.trim() : device.ipAddress,
+      macAddress: macAddress !== undefined ? macAddress.trim() : device.macAddress,
+      node_type: node_type !== undefined ? node_type : device.node_type,
+      status: status !== undefined ? status : device.status
+    };
+
+    const validationResult = validateDevice(mergedData);
+    if (!validationResult.isValid) {
+      return res.status(400).json({ error: 'Bad Request', message: 'Validation failed.', details: validationResult.errors });
+    }
 
     if (actualIp !== undefined) {
-      if (!ipRegex.test(actualIp.trim())) {
-        return errorResponse(res, 'Invalid IP Address format', null, 400);
-      }
       device.ipAddress = actualIp.trim();
       device.ip_address = actualIp.trim();
     }
-
     if (macAddress !== undefined) {
-      const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
-      if (!macRegex.test(macAddress.trim())) {
-        return errorResponse(res, 'Invalid MAC Address format', null, 400);
-      }
       device.macAddress = macAddress.trim();
       device.mac_address = macAddress.trim();
     }
-
     if (status !== undefined) {
-      const validStatuses = ['active', 'inactive', 'isolated', 'online', 'offline', 'quarantined'];
-      if (!validStatuses.includes(status)) {
-        return errorResponse(res, `Status must be one of: ${validStatuses.join(', ')}`, null, 400);
-      }
       device.status = status;
     }
 
@@ -243,8 +251,14 @@ export const updateDevice = async (req, res) => {
       _id: device._id,
       name: device.name,
       type: device.type,
+      node_type: device.node_type,
+      zone: device.zone,
       ip_address: device.ipAddress,
       mac_address: device.macAddress,
+      parent_id: device.parent_id,
+      icon_path: device.icon_path,
+      hardware_model: device.hardware_model,
+      firmware_version: device.firmware_version,
       description: device.description,
       status: device.status,
       createdAt: device.createdAt,
@@ -253,6 +267,10 @@ export const updateDevice = async (req, res) => {
 
     if (typeof socketService !== 'undefined') {
       socketService.emitDeviceStatusChanged(device);
+      const io = socketService.getIo();
+      if (io) {
+        io.emit('DEVICE_SYNC', { action: 'update', device });
+      }
     }
     return successResponse(res, cleanDevice, 'Cập nhật thiết bị thành công');
   } catch (error) {
@@ -271,6 +289,16 @@ export const deleteDevice = async (req, res) => {
     }
 
     await device.deleteOne();
+
+    // Emit WebSocket sync
+    const io = socketService.getIo();
+    if (io) {
+      io.emit('DEVICE_SYNC', { action: 'delete', device_id: id });
+    }
+
+    // Publish MQTT Death event
+    publishMqtt('ics/device/sync', { action: 'delete', device_id: id });
+
     return successResponse(res, null, 'Xóa thiết bị thành công');
   } catch (error) {
     console.error('DeleteDevice error:', error);
@@ -404,6 +432,166 @@ export const rollbackDeviceEndpoint = async (req, res) => {
   }
 };
 
+export const provisionDeviceEndpoint = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const device = await Device.findById(id);
+    if (!device) return errorResponse(res, 'Device not found', null, 404);
+    if (device.status !== 'unprovisioned') {
+      return errorResponse(res, 'Device is not in unprovisioned state', null, 400);
+    }
+    
+    device.status = 'active';
+    await device.save();
+
+    const io = socketService.getIo();
+    if (io) io.emit('DEVICE_SYNC', { action: 'update', device });
+    
+    // Publish MQTT to let Simulator start the simulation thread
+    publishMqtt('ics/device/sync', { action: 'create', device });
+
+    return successResponse(res, device, 'Cấp phép thiết bị thành công');
+  } catch (error) {
+    console.error('Provision error:', error);
+    return errorResponse(res, 'Failed to provision device', error.message);
+  }
+};
+
+export const decommissionDeviceEndpoint = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const device = await Device.findById(id);
+    if (!device) return errorResponse(res, 'Device not found', null, 404);
+    if (device.status !== 'offline') {
+      return errorResponse(res, 'Only offline devices can be decommissioned', null, 400);
+    }
+
+    await device.deleteOne();
+
+    const io = socketService.getIo();
+    if (io) io.emit('DEVICE_SYNC', { action: 'delete', device_id: id });
+    
+    return successResponse(res, null, 'Hủy cấp phép thiết bị thành công');
+  } catch (error) {
+    console.error('Decommission error:', error);
+    return errorResponse(res, 'Failed to decommission device', error.message);
+  }
+};
+
+export const handleSimulatorHardwareCrud = async (req, res) => {
+  const { action } = req.body;
+
+  if (action === 'create') {
+    const { device } = req.body;
+    if (!device || !device.name || !device.ipAddress || !device.macAddress) {
+      return res.status(400).json({ error: 'Bad Request', message: 'Tên, IP và MAC là bắt buộc.' });
+    }
+
+    try {
+      let customId = device._id || device.id;
+      if (!customId) {
+        const nodeType = device.node_type || 'sensor';
+        const count = await Device.countDocuments({ node_type: nodeType });
+        customId = `${nodeType}-${String(count + 1).padStart(2, '0')}`;
+      }
+
+      // Check duplicate _id
+      const existing = await Device.findById(customId);
+      if (existing) {
+        return res.status(400).json({ error: 'Conflict', message: `Mã thiết bị ${customId} đã tồn tại.` });
+      }
+
+      const newDevice = await Device.create({
+        _id: customId,
+        name: device.name,
+        type: device.type || 'IoT Device',
+        node_type: device.node_type || 'sensor',
+        zone: device.zone || 'Zone-A',
+        ipAddress: device.ipAddress,
+        macAddress: device.macAddress,
+        parent_id: device.parent_id || null,
+        hardware_model: device.hardware_model || '',
+        firmware_version: device.firmware_version || '',
+        icon_path: device.icon_path || 'Cpu',
+        status: 'unprovisioned', // Hardware simulator drop = physical plug-in = unprovisioned
+        lastSeen: new Date()
+      });
+
+      // Emit WebSocket sync
+      const io = socketService.getIo();
+      if (io) {
+        io.emit('DEVICE_SYNC', { action: 'create', device: newDevice });
+      }
+
+      // Do NOT publish MQTT create event yet, wait for provision
+
+      return successResponse(res, { device: newDevice }, 'Cắm nóng thiết bị thành công', 201);
+    } catch (err) {
+      console.error('Simulator create error:', err);
+      return errorResponse(res, 'Failed to commission device', err.message);
+    }
+  } else if (action === 'delete') {
+    const { id } = req.body;
+    if (!id) {
+      return res.status(400).json({ error: 'Bad Request', message: 'ID thiết bị là bắt buộc.' });
+    }
+
+    try {
+      const device = await Device.findById(id);
+      if (!device) {
+        return res.status(404).json({ error: 'Not Found', message: 'Thiết bị không tồn tại.' });
+      }
+
+      // Instead of deleting, mark as offline
+      device.status = 'offline';
+      await device.save();
+
+      // Emit WebSocket sync (as update, not delete, so UI knows it's offline)
+      const io = socketService.getIo();
+      if (io) {
+        io.emit('DEVICE_SYNC', { action: 'update', device });
+      }
+
+      // Publish MQTT Death event (Simulator should kill its thread)
+      publishMqtt('ics/device/sync', { action: 'delete', device_id: id });
+
+      return successResponse(res, null, 'Rút dây mạng thiết bị thành công');
+    } catch (err) {
+      console.error('Simulator delete error:', err);
+      return errorResponse(res, 'Failed to decommission device', err.message);
+    }
+  } else if (action === 'update') {
+    const { id, device } = req.body;
+    if (!id || !device) {
+      return res.status(400).json({ error: 'Bad Request', message: 'ID và dữ liệu cập nhật là bắt buộc.' });
+    }
+
+    try {
+      const existing = await Device.findById(id);
+      if (!existing) {
+        return res.status(404).json({ error: 'Not Found', message: 'Thiết bị không tồn tại.' });
+      }
+
+      const allowedFields = ['name', 'hardware_model', 'firmware_version', 'icon_path'];
+      const updateData = {};
+      allowedFields.forEach(f => { if (device[f] !== undefined) updateData[f] = device[f]; });
+
+      const updated = await Device.findByIdAndUpdate(id, { $set: updateData }, { new: true });
+
+      const io = socketService.getIo();
+      if (io) io.emit('DEVICE_SYNC', { action: 'update', device: updated });
+      publishMqtt('ics/device/sync', { action: 'update', device: updated });
+
+      return successResponse(res, { device: updated }, 'Cập nhật cấu hình thiết bị thành công');
+    } catch (err) {
+      console.error('Simulator update error:', err);
+      return errorResponse(res, 'Failed to update device', err.message);
+    }
+  } else {
+    return res.status(400).json({ error: 'Bad Request', message: 'Hành động không hợp lệ.' });
+  }
+};
+
 export default {
   getAllDevices,
   getDeviceById,
@@ -413,4 +601,7 @@ export default {
   isolateDeviceEndpoint,
   unisolateDeviceEndpoint,
   rollbackDeviceEndpoint,
+  provisionDeviceEndpoint,
+  decommissionDeviceEndpoint,
+  handleSimulatorHardwareCrud,
 };

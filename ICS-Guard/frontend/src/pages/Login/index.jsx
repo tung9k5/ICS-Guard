@@ -92,6 +92,18 @@ const Login = ({ isAttacker = false }) => {
     e.preventDefault();
     setLoading(true);
 
+    if (isAttacker) {
+      if (formData.username_or_email === 'adminattack' && formData.password === 'Admin@123') {
+        localStorage.setItem('attacker_authenticated', 'true');
+        toast.success(t('auth.login.success'));
+        navigate('/attacker', { replace: true });
+      } else {
+        toast.error('Tên đăng nhập hoặc mật khẩu tấn công không chính xác!');
+      }
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await authApi.login(formData);
       if (response && response.access_token) {
@@ -106,15 +118,9 @@ const Login = ({ isAttacker = false }) => {
         }
 
         toast.success(t('auth.login.success'));
-        if (isAttacker) {
-          localStorage.setItem('attacker_access_token', response.access_token);
-          localStorage.setItem('attacker_refresh_token', response.refresh_token);
-          navigate('/attacker', { replace: true });
-        } else {
-          localStorage.setItem('access_token', response.access_token);
-          localStorage.setItem('refresh_token', response.refresh_token);
-          navigate('/', { replace: true });
-        }
+        localStorage.setItem('access_token', response.access_token);
+        localStorage.setItem('refresh_token', response.refresh_token);
+        navigate('/', { replace: true });
       }
     } catch (err) {
       toast.error(err.response?.data?.message || t('auth.login.fail'));

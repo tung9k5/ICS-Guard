@@ -35,6 +35,15 @@ export default {
     });
   },
   
+  createUser(data, options = {}) {
+    return http({
+      url: '/users',
+      method: 'POST',
+      data,
+      ...options
+    });
+  },
+
   deleteUser(id, options = {}) {
     return http({
       url: `/users/${id}`,

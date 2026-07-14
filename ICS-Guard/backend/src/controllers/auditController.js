@@ -14,6 +14,7 @@ export const getAuditLogs = async (req, res) => {
         ipAddress: log.ipAddress,
         userAgent: log.userAgent,
         details: log.details,
+        status: log.status,
         createdAt: log.createdAt,
       };
     });

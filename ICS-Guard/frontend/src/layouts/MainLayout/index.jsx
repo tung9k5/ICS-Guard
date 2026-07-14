@@ -53,16 +53,20 @@ const MainLayout = () => {
     return <Navigate to="/login" replace />;
   }
 
-  const getIsFirstLogin = () => {
+  const getShouldOnboard = () => {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      return payload.isFirstLogin === true;
+      const isFirst = payload.isFirstLogin === true;
+      const isCriticalRole = ['admin', 'l3_manager'].includes(payload.role);
+      const isTelegramMissing = !payload.telegramChatId;
+      
+      return isFirst || (isCriticalRole && isTelegramMissing);
     } catch (e) {
       return false;
     }
   };
 
-  if (getIsFirstLogin()) {
+  if (getShouldOnboard()) {
     return <Navigate to="/onboarding" replace />;
   }
 

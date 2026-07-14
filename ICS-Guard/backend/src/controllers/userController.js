@@ -1,5 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { User } from '../models/index.js';
+import socketService from '../services/socketService.js';
+import { sendTelegramAlert, backupDeletedUser } from '../services/telegramService.js';
 
 export const getAllUsers = async (req, res) => {
   try {
@@ -26,7 +28,7 @@ export const getUserById = async (req, res) => {
 };
 
 export const createUser = async (req, res) => {
-  const { username, password, role, email, full_name } = req.body;
+  const { username, password, role, email, full_name, contactInfo, isAlertEnabled } = req.body;
 
   if (!username || !password || !role || !email) {
     return res.status(400).json({ error: 'Bad Request', message: 'Username, password, email and role are required.' });
@@ -38,8 +40,8 @@ export const createUser = async (req, res) => {
       return res.status(409).json({ error: 'Conflict', message: 'Username already exists.' });
     }
 
-    if (!['admin', 'l1_analyst', 'l2_responder', 'l3_manager', 'ot_operator'].includes(role)) {
-      return res.status(400).json({ error: 'Bad Request', message: 'Invalid role. Must be admin, l1_analyst, l2_responder, l3_manager, or ot_operator.' });
+    if (!['admin', 'hr_manager', 'device_manager', 'analyst'].includes(role)) {
+      return res.status(400).json({ error: 'Bad Request', message: 'Invalid role. Must be admin, hr_manager, device_manager, or analyst.' });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
@@ -50,7 +52,15 @@ export const createUser = async (req, res) => {
       full_name: full_name || '',
       role,
       is_active: true,
+      contactInfo: contactInfo || { telegramChatId: null, telegramUsername: null, phoneNumber: null },
+      isAlertEnabled: isAlertEnabled !== undefined ? isAlertEnabled : true
     });
+
+    // Emit USER_SYNC event
+    const io = socketService.getIo();
+    if (io) {
+      io.emit('USER_SYNC', { action: 'create', user: newUser });
+    }
 
     const userResponse = {
       id: newUser._id,
@@ -59,6 +69,8 @@ export const createUser = async (req, res) => {
       full_name: newUser.full_name,
       role: newUser.role,
       is_active: newUser.is_active,
+      contactInfo: newUser.contactInfo,
+      isAlertEnabled: newUser.isAlertEnabled,
       createdAt: newUser.createdAt,
     };
 
@@ -80,7 +92,7 @@ export const updateUser = async (req, res) => {
     }
 
     if (role !== undefined) {
-      if (!['admin', 'l1_analyst', 'l2_responder', 'l3_manager', 'ot_operator'].includes(role)) {
+      if (!['admin', 'hr_manager', 'device_manager', 'analyst'].includes(role)) {
         return res.status(400).json({ error: 'Bad Request', message: 'Invalid role.' });
       }
       user.role = role;
@@ -96,6 +108,8 @@ export const updateUser = async (req, res) => {
     if (full_name !== undefined) user.full_name = full_name;
     if (email !== undefined) user.email = email;
     if (avatar !== undefined) user.avatar = avatar;
+    if (req.body.contactInfo !== undefined) user.contactInfo = req.body.contactInfo;
+    if (req.body.isAlertEnabled !== undefined) user.isAlertEnabled = req.body.isAlertEnabled;
 
     if (password) {
       user.password_hash = await bcrypt.hash(password, 10);
@@ -104,6 +118,13 @@ export const updateUser = async (req, res) => {
     await user.save();
 
     const updatedUser = await User.findById(id, '-password_hash');
+
+    // Emit USER_SYNC event
+    const io = socketService.getIo();
+    if (io) {
+      io.emit('USER_SYNC', { action: 'update', user: updatedUser });
+    }
+
     return res.status(200).json({ message: 'User updated successfully.', user: updatedUser });
   } catch (error) {
     console.error('UpdateUser error:', error);
@@ -125,7 +146,30 @@ export const deleteUser = async (req, res) => {
       return res.status(400).json({ error: 'Bad Request', message: 'You cannot delete your own account.' });
     }
 
+    // Backup to cache before deletion
+    backupDeletedUser(user._id.toString(), user.toObject());
+
+    // Delete from DB
     await user.deleteOne();
+
+    // Emit WebSocket sync event
+    const io = socketService.getIo();
+    if (io) {
+      io.emit('USER_SYNC', { action: 'delete', userId: id });
+    }
+
+    // Fetch HR manager Chat ID to send notification
+    const operator = await User.findById(req.user.id);
+    const hrChatId = operator?.contactInfo?.telegramChatId || process.env.TELEGRAM_CHAT_ID;
+
+    if (hrChatId) {
+      const alertMsg = `⚠️ *THÔNG BÁO QUẢN TRỊ NHÂN SỰ*\n\nTài khoản của nhân viên *${user.username}* (${user.full_name || 'N/A'}) đã bị xóa bởi HR Manager *${req.user ? req.user.username : 'Hệ thống'}*.\n\nNhấn nút dưới đây để HOÀN TÁC (Khôi phục) trong vòng 5 phút.`;
+      const inlineButtons = [
+        { text: '🔄 Hoàn tác / Khôi phục tài khoản', callback_data: `undo_delete:${user._id.toString()}` }
+      ];
+      await sendTelegramAlert(alertMsg, inlineButtons, hrChatId);
+    }
+
     return res.status(200).json({ message: 'User deleted successfully.' });
   } catch (error) {
     console.error('DeleteUser error:', error);

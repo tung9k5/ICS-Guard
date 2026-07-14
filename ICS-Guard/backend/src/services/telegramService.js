@@ -1,5 +1,15 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Device, BlockedIp, AuditLog, User } from '../models/index.js';
+import socketService from './socketService.js';
+
+const userCache = new Map();
+
+export const backupDeletedUser = (userId, userData) => {
+  userCache.set(userId, userData);
+  setTimeout(() => {
+    userCache.delete(userId);
+  }, 5 * 60 * 1000); // 5 minutes
+};
 
 let bot = null;
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
@@ -104,6 +114,35 @@ export const initTelegramBot = () => {
               });
 
               alertResponseText = `✅ IP Address ${ipAddress} has been BLOCKED for 24 hours by Admin via Telegram.`;
+            }
+          } else if (action === 'undo_delete') {
+            const userId = param;
+            const userData = userCache.get(userId);
+
+            if (!userData) {
+              alertResponseText = '❌ Đã quá thời hạn 5 phút hoặc tài khoản không thể khôi phục.';
+            } else {
+              // Restore user
+              await User.create(userData);
+              userCache.delete(userId);
+
+              // Emit WebSocket sync
+              const io = socketService.getIo();
+              if (io) {
+                io.emit('USER_SYNC', { action: 'create', user: userData });
+              }
+
+              // Audit Log
+              await AuditLog.create({
+                userId: null,
+                username: 'TelegramBot (HR Action)',
+                action: `Restore User: ${userData.username}`,
+                ipAddress: 'Telegram_Bot_API',
+                userAgent: 'Telegram Bot',
+                details: JSON.stringify({ userId, username: userData.username, role: userData.role }),
+              });
+
+              alertResponseText = `✅ Đã khôi phục thành công tài khoản của "${userData.username}"!`;
             }
           } else {
             alertResponseText = '❌ Unknown action requested.';

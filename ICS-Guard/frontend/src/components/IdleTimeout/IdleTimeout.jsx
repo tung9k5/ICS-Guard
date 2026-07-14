@@ -16,9 +16,13 @@ const IdleTimeout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+  const isExemptPage = location.pathname === '/login' || 
+                       location.pathname === '/register' || 
+                       location.pathname.startsWith('/attacker') || 
+                       location.pathname.startsWith('/simulator');
+  
   // Fast check if user is logged in
-  const isLoggedIn = !!localStorage.getItem('access_token') || !!localStorage.getItem('attacker_access_token');
+  const isLoggedIn = !!localStorage.getItem('access_token');
 
   const updateShowDialog = (value) => {
     setShowDialog(value);
@@ -29,7 +33,7 @@ const IdleTimeout = () => {
     if (showDialogRef.current) return; // Don't reset if dialog is already open
     
     clearTimeout(timerRef.current);
-    if (!isAuthPage && isLoggedIn) {
+    if (!isExemptPage && isLoggedIn) {
       timerRef.current = setTimeout(() => {
         updateShowDialog(true);
         setCountdown(COUNTDOWN_SECONDS);
@@ -46,8 +50,8 @@ const IdleTimeout = () => {
   }, [location.pathname]);
 
   useEffect(() => {
-    // Only track activity if logged in and not on auth pages
-    if (isAuthPage || !isLoggedIn) {
+    // Only track activity if logged in and not on exempt pages
+    if (isExemptPage || !isLoggedIn) {
       clearTimeout(timerRef.current);
       clearInterval(countdownIntervalRef.current);
       updateShowDialog(false);
@@ -98,7 +102,7 @@ const IdleTimeout = () => {
       clearTimeout(timerRef.current);
       clearInterval(countdownIntervalRef.current);
     };
-  }, [isAuthPage, isLoggedIn, showDialog]);
+  }, [isExemptPage, isLoggedIn, showDialog]);
 
   useEffect(() => {
     if (showDialog) {

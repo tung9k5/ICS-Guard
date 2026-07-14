@@ -57,6 +57,9 @@ auditLogSchema.pre('save', function (next) {
   next();
 });
 
+// Add TTL Index to automatically delete logs older than 90 days (7776000 seconds)
+auditLogSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 });
+
 const AuditLog = mongoose.model('AuditLog', auditLogSchema);
 
 export default AuditLog;

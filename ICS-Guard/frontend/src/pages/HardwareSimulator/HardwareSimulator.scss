@@ -1,0 +1,1508 @@
+// =====================================================
+// HARDWARE SIMULATOR — Cisco ICS Dark Theme
+// Layout: IoT Tree | Zone Canvas | Config Panel
+// =====================================================
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+@keyframes status-blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cable-flow {
+  from {
+    stroke-dashoffset: 20;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+// ---- Root Variables ----
+.sim-root {
+  --sim-bg: #0b0f1a;
+  --sim-panel: #0e1425;
+  --sim-border: rgba(59, 130, 246, 0.12);
+  --sim-border-bright: rgba(59, 130, 246, 0.3);
+  --sim-text: #e2e8f0;
+  --sim-muted: #64748b;
+  --sim-accent: #3b82f6;
+  --sim-green: #10b981;
+  --sim-yellow: #f59e0b;
+  --sim-red: #ef4444;
+  --sim-purple: #8b5cf6;
+  --sim-teal: #14b8a6;
+
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+  background: var(--sim-bg);
+  color: var(--sim-text);
+  font-family: 'Inter', 'Consolas', system-ui, sans-serif;
+  overflow: hidden;
+}
+
+// =====================================================
+// HEADER
+// =====================================================
+.sim-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background: var(--sim-panel);
+  border-bottom: 1px solid var(--sim-border);
+  flex-shrink: 0;
+  height: 52px;
+
+  .sim-header-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .brand-icon {
+      color: var(--sim-accent);
+      display: flex;
+    }
+
+    h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin: 0;
+      letter-spacing: -0.01em;
+    }
+
+    .mode-pill {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      color: var(--sim-accent);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+  }
+
+  .sim-header-status {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    font-size: 12px;
+    color: var(--sim-muted);
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 5px;
+
+      &.online {
+        background: var(--sim-green);
+        box-shadow: 0 0 6px var(--sim-green);
+      }
+
+      &.warning {
+        background: var(--sim-yellow);
+      }
+    }
+
+    .node-count {
+      font-weight: 600;
+      color: var(--sim-text);
+    }
+
+    .icon-btn {
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid var(--sim-border);
+      border-radius: 6px;
+      padding: 5px 8px;
+      cursor: pointer;
+      color: var(--sim-muted);
+      display: flex;
+      align-items: center;
+      transition: all 0.2s;
+
+      &:hover {
+        color: var(--sim-accent);
+        border-color: var(--sim-border-bright);
+        background: rgba(59, 130, 246, 0.12);
+      }
+    }
+  }
+}
+
+// =====================================================
+// MAIN 3-COLUMN LAYOUT
+// =====================================================
+.sim-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+// =====================================================
+// LEFT: IoT TREE PANEL
+// =====================================================
+.sim-tree-panel {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--sim-panel);
+  border-right: 1px solid var(--sim-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .tree-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--sim-border);
+    flex-shrink: 0;
+
+    h2 {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--sim-muted);
+      margin: 0;
+    }
+
+    .btn-add-root {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      border-radius: 5px;
+      color: var(--sim-accent);
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        background: rgba(59, 130, 246, 0.2);
+      }
+    }
+  }
+
+  .tree-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 0;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+    }
+  }
+}
+
+// ---- Tree Node ----
+.tree-zone-group {
+  margin-bottom: 4px;
+
+  .tree-zone-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--sim-muted);
+    cursor: pointer;
+    user-select: none;
+
+    .zone-chevron {
+      transition: transform 0.2s;
+
+      &.open {
+        transform: rotate(90deg);
+      }
+    }
+  }
+}
+
+.tree-node {
+  position: relative;
+  animation: fade-in-up 0.15s ease-out;
+
+  &.tree-depth-0 {
+    padding-left: 14px;
+  }
+
+  &.tree-depth-1 {
+    padding-left: 28px;
+  }
+
+  &.tree-depth-2 {
+    padding-left: 42px;
+  }
+
+  &.tree-depth-3 {
+    padding-left: 56px;
+  }
+
+  .tree-connector {
+    position: absolute;
+    left: calc(var(--depth-left, 14px) - 8px);
+    top: 50%;
+    width: 8px;
+    height: 1px;
+    background: rgba(59, 130, 246, 0.2);
+  }
+}
+
+.tree-node-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 10px 5px 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin: 1px 6px;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.04);
+
+    .tree-node-actions {
+      opacity: 1;
+    }
+  }
+
+  &.selected {
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+  }
+
+  .tree-expand-btn {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: var(--sim-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: transform 0.2s;
+
+    &.expanded {
+      transform: rotate(90deg);
+    }
+  }
+
+  .tree-node-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 11px;
+  }
+
+  .tree-node-info {
+    flex: 1;
+    min-width: 0;
+
+    .tree-node-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--sim-text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tree-node-ip {
+      font-size: 10px;
+      color: var(--sim-muted);
+      font-family: 'Consolas', monospace;
+    }
+  }
+
+  .tree-node-status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+
+    &.active {
+      background: var(--sim-green);
+    }
+
+    &.isolated {
+      background: var(--sim-yellow);
+      animation: status-blink 1.5s infinite;
+    }
+
+    &.quarantined {
+      background: var(--sim-red);
+      animation: status-blink 0.8s infinite;
+    }
+  }
+
+  .tree-node-actions {
+    opacity: 0;
+    display: flex;
+    gap: 2px;
+    transition: opacity 0.15s;
+
+    button {
+      width: 18px;
+      height: 18px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--sim-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 3px;
+      padding: 0;
+
+      &:hover {
+        &.btn-add-child {
+          color: var(--sim-green);
+          background: rgba(16, 185, 129, 0.1);
+        }
+
+        &.btn-remove {
+          color: var(--sim-red);
+          background: rgba(239, 68, 68, 0.1);
+        }
+      }
+    }
+  }
+}
+
+// =====================================================
+// CENTER: TOPOLOGY CANVAS
+// =====================================================
+.sim-canvas-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background: var(--sim-bg);
+}
+
+.sim-canvas-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--sim-border);
+  flex-shrink: 0;
+  background: rgba(14, 20, 37, 0.9);
+  min-height: 42px;
+  overflow: hidden;
+
+  .toolbar-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--sim-muted);
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  // ---- Scrollable chip area ----
+  .toolbar-chips-scroll {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+
+    &::-webkit-scrollbar {
+      height: 3px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+    }
+  }
+
+  .toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .toolbar-divider {
+    width: 1px;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 0 6px;
+    flex-shrink: 0;
+  }
+
+  .toolbar-group-label {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: rgba(100, 116, 139, 0.7);
+    white-space: nowrap;
+    margin-right: 2px;
+    flex-shrink: 0;
+  }
+
+  .template-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    font-size: 10px;
+    color: var(--sim-muted);
+    cursor: grab;
+    transition: all 0.18s;
+    user-select: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &:hover {
+      border-color: var(--chip-color, var(--sim-accent));
+      color: var(--chip-color, var(--sim-accent));
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    .chip-label {
+      font-size: 10px;
+      max-width: 80px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  // ---- Zoom controls (pushed to right) ----
+  .zoom-controls {
+    margin-left: 4px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 8px;
+    padding: 3px 6px;
+  }
+
+  .zoom-btn {
+    background: none;
+    border: none;
+    color: var(--sim-muted);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 2px 5px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    line-height: 1;
+
+    &:hover {
+      color: var(--sim-text);
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    &.layout-btn {
+      color: #60a5fa;
+
+      &:hover {
+        color: #93c5fd;
+        background: rgba(59, 130, 246, 0.12);
+      }
+    }
+  }
+
+  .zoom-pct {
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Consolas', monospace;
+    color: var(--sim-text);
+    min-width: 34px;
+    text-align: center;
+    cursor: pointer;
+    border-radius: 3px;
+    padding: 1px 2px;
+
+    &:hover {
+      color: var(--sim-accent);
+    }
+  }
+}
+
+.sim-canvas-scroll {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.07);
+    border-radius: 3px;
+  }
+}
+
+.sim-canvas {
+  position: relative;
+  min-width: 900px;
+  min-height: 520px;
+  user-select: none;
+  // transform and width set inline via React style prop
+  will-change: transform;
+}
+
+// ---- Zone Rows ----
+.zone-row {
+  position: relative;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  margin: 12px 14px;
+  min-height: 160px;
+  transition: border-color 0.2s;
+
+  &.zone-a {
+    border-color: rgba(59, 130, 246, 0.2);
+    background: rgba(59, 130, 246, 0.025);
+  }
+
+  &.zone-b {
+    border-color: rgba(16, 185, 129, 0.2);
+    background: rgba(16, 185, 129, 0.025);
+  }
+
+  &.zone-c {
+    border-color: rgba(139, 92, 246, 0.2);
+    background: rgba(139, 92, 246, 0.025);
+  }
+
+  &.drag-over {
+    border-style: dashed;
+    border-width: 2px;
+
+    &.zone-a {
+      border-color: rgba(59, 130, 246, 0.6);
+      background: rgba(59, 130, 246, 0.07);
+    }
+
+    &.zone-b {
+      border-color: rgba(16, 185, 129, 0.6);
+      background: rgba(16, 185, 129, 0.07);
+    }
+
+    &.zone-c {
+      border-color: rgba(139, 92, 246, 0.6);
+      background: rgba(139, 92, 246, 0.07);
+    }
+  }
+
+  .zone-label {
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    z-index: 1;
+
+    .zone-a & {
+      color: rgba(59, 130, 246, 0.8);
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .zone-b & {
+      color: rgba(16, 185, 129, 0.8);
+      background: rgba(16, 185, 129, 0.08);
+    }
+
+    .zone-c & {
+      color: rgba(139, 92, 246, 0.8);
+      background: rgba(139, 92, 246, 0.08);
+    }
+  }
+
+  .zone-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: rgba(100, 116, 139, 0.5);
+    pointer-events: none;
+  }
+
+  // SVG cables overlay
+  .zone-svg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: visible;
+    z-index: 1;
+  }
+}
+
+// ---- Canvas Node Card ----
+.canvas-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &.selected .canvas-node-body {
+    box-shadow: 0 0 0 2px var(--sim-accent), 0 6px 20px rgba(0, 0, 0, 0.5);
+  }
+
+  .canvas-node-body {
+    background: #111827;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 90px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    position: relative;
+
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  .node-icon-wrap {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    position: relative;
+  }
+
+  .node-name {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--sim-text);
+    text-align: center;
+    word-break: break-word;
+    line-height: 1.3;
+  }
+
+  .node-ip-badge {
+    font-size: 9px;
+    color: var(--sim-muted);
+    font-family: 'Consolas', monospace;
+  }
+
+  .node-status-ring {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 2px solid #111827;
+
+    &.active {
+      background: var(--sim-green);
+    }
+
+    &.isolated {
+      background: var(--sim-yellow);
+    }
+
+    &.quarantined {
+      background: var(--sim-red);
+    }
+  }
+
+  &.status-quarantined .canvas-node-body {
+    border-color: rgba(239, 68, 68, 0.4);
+  }
+
+  &.status-unprovisioned .canvas-node-body {
+    opacity: 0.6;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+    filter: grayscale(100%);
+
+    .node-icon-wrap {
+      background: rgba(0, 0, 0, 0.3) !important;
+      border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .node-status-ring {
+      border-color: #6b7280;
+      border-style: dashed;
+    }
+  }
+
+  &.status-offline .canvas-node-body {
+    opacity: 0.4;
+    filter: grayscale(100%);
+
+    .node-status-ring {
+      border-color: #4b5563;
+    }
+  }
+
+  .attack-pulse {
+    position: absolute;
+    inset: -6px;
+    border-radius: 14px;
+    border: 2px solid var(--sim-red);
+    opacity: 0;
+    animation: pulse-ring 1.5s infinite;
+  }
+}
+
+// =====================================================
+// RIGHT: CONFIG PANEL
+// =====================================================
+.sim-config-panel {
+  width: 256px;
+  flex-shrink: 0;
+  background: var(--sim-panel);
+  border-left: 1px solid var(--sim-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .config-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--sim-border);
+    flex-shrink: 0;
+
+    h2 {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--sim-muted);
+      margin: 0;
+    }
+
+    .btn-close-config {
+      background: none;
+      border: none;
+      color: var(--sim-muted);
+      cursor: pointer;
+      padding: 2px;
+      display: flex;
+      align-items: center;
+
+      &:hover {
+        color: var(--sim-text);
+      }
+    }
+  }
+
+  .config-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+    }
+  }
+
+  .config-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--sim-muted);
+    font-size: 12px;
+    text-align: center;
+    padding: 20px;
+
+    svg {
+      opacity: 0.3;
+    }
+  }
+}
+
+// ---- Device detail in config panel ----
+.config-device-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--sim-border);
+
+  .config-device-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+  }
+
+  .config-device-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--sim-text);
+  }
+
+  .config-device-type {
+    font-size: 11px;
+    color: var(--sim-muted);
+    text-transform: capitalize;
+  }
+}
+
+.config-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.config-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sim-muted);
+  }
+
+  input,
+  select {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 12px;
+    color: var(--sim-text);
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+
+    &:focus {
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    option {
+      background: #1e293b;
+    }
+  }
+
+  .field-value {
+    font-size: 12px;
+    color: var(--sim-text);
+    font-family: 'Consolas', monospace;
+    padding: 5px 0;
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+
+    &.active {
+      color: var(--sim-green);
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    &.isolated {
+      color: var(--sim-yellow);
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    &.quarantined {
+      color: var(--sim-red);
+      background: rgba(239, 68, 68, 0.1);
+    }
+  }
+}
+
+.config-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--sim-border);
+
+  .btn-save-config {
+    width: 100%;
+    padding: 8px;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 7px;
+    color: #93c5fd;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgba(59, 130, 246, 0.25);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  .btn-delete-device {
+    width: 100%;
+    padding: 8px;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    border-radius: 7px;
+    color: #fca5a5;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.16);
+      border-color: rgba(239, 68, 68, 0.4);
+    }
+  }
+}
+
+// =====================================================
+// BOTTOM: TERMINAL LOG
+// =====================================================
+.sim-terminal {
+  height: 160px;
+  flex-shrink: 0;
+  border-top: 1px solid var(--sim-border);
+  display: flex;
+  flex-direction: column;
+
+  .terminal-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 14px;
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid var(--sim-border);
+    flex-shrink: 0;
+
+    .dots {
+      display: flex;
+      gap: 5px;
+
+      span {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+
+        &:nth-child(1) {
+          background: #ef4444;
+        }
+
+        &:nth-child(2) {
+          background: #f59e0b;
+        }
+
+        &:nth-child(3) {
+          background: #10b981;
+        }
+      }
+    }
+
+    .terminal-title-text {
+      font-size: 11px;
+      font-family: 'Consolas', monospace;
+      color: var(--sim-muted);
+    }
+
+    .btn-clear-log {
+      background: none;
+      border: none;
+      color: var(--sim-muted);
+      cursor: pointer;
+      font-size: 10px;
+      padding: 0;
+
+      &:hover {
+        color: var(--sim-text);
+      }
+    }
+  }
+
+  .terminal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 14px;
+    font-family: 'Consolas', 'Fira Code', monospace;
+    font-size: 11px;
+    line-height: 1.7;
+    background: rgba(0, 0, 0, 0.25);
+
+    &::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 2px;
+    }
+  }
+}
+
+.log-line {
+  display: flex;
+  gap: 8px;
+
+  .log-ts {
+    color: #475569;
+    flex-shrink: 0;
+  }
+
+  &.type-system .log-msg {
+    color: #60a5fa;
+  }
+
+  &.type-success .log-msg {
+    color: #34d399;
+  }
+
+  &.type-error .log-msg {
+    color: #f87171;
+  }
+
+  &.type-unplug .log-msg {
+    color: #fb923c;
+  }
+
+  &.type-telemetry .log-msg {
+    color: #94a3b8;
+  }
+
+  &.type-warn .log-msg {
+    color: #fbbf24;
+  }
+
+  &.type-info .log-msg {
+    color: #a78bfa;
+  }
+}
+
+// =====================================================
+// MODAL — Add Device
+// =====================================================
+.sim-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fade-in-up 0.15s ease-out;
+}
+
+.sim-modal {
+  background: #0f1629;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 14px;
+  width: 480px;
+  max-width: 95vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+
+  .modal-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.12);
+
+    h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin: 0;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--sim-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+
+      &:hover {
+        color: var(--sim-text);
+      }
+    }
+  }
+
+  .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .modal-foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid rgba(59, 130, 246, 0.12);
+
+    .btn-cancel-modal {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 7px;
+      color: var(--sim-muted);
+      font-size: 13px;
+      cursor: pointer;
+
+      &:hover {
+        color: var(--sim-text);
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+    }
+
+    .btn-submit-modal {
+      padding: 8px 18px;
+      background: #3b82f6;
+      border: none;
+      border-radius: 7px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s;
+
+      &:hover {
+        background: #2563eb;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+
+  label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sim-muted);
+  }
+
+  input,
+  select {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 7px;
+    padding: 9px 12px;
+    font-size: 13px;
+    color: var(--sim-text);
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+
+    &:focus {
+      border-color: rgba(59, 130, 246, 0.4);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+    }
+
+    option {
+      background: #1e293b;
+    }
+  }
+
+  .modal-field-hint {
+    font-size: 10px;
+    color: var(--sim-muted);
+  }
+
+  .modal-field-warning {
+    font-size: 11px;
+    color: var(--sim-yellow);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .modal-field-row {
+    display: flex;
+    gap: 8px;
+
+    input {
+      flex: 1;
+    }
+
+    button {
+      padding: 9px 12px;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 7px;
+      color: #93c5fd;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+
+      &:hover {
+        background: rgba(59, 130, 246, 0.2);
+      }
+    }
+  }
+}
+
+// ---- Delete Confirm Modal ----
+.confirm-modal {
+  background: #0f1629;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 12px;
+  padding: 24px;
+  width: 360px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+
+  h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #f87171;
+    margin: 0 0 10px;
+  }
+
+  p {
+    font-size: 13px;
+    color: var(--sim-muted);
+    margin: 0 0 6px;
+  }
+
+  .cascade-warning {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: var(--sim-yellow);
+    margin: 12px 0;
+    text-align: left;
+  }
+
+  .confirm-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 16px;
+
+    button {
+      padding: 8px 20px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+
+      &.btn-confirm-delete {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        color: #fca5a5;
+
+        &:hover {
+          background: rgba(239, 68, 68, 0.25);
+        }
+      }
+
+      &.btn-confirm-cancel {
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--sim-muted);
+
+        &:hover {
+          color: var(--sim-text);
+        }
+      }
+    }
+  }
+}
+
+// ---- Loading state ----
+.sim-loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--sim-muted);
+  font-size: 13px;
+
+  .loading-spinner {
+    width: 28px;
+    height: 28px;
+    border: 2px solid rgba(59, 130, 246, 0.15);
+    border-top-color: var(--sim-accent);
+    border-radius: 50%;
+    animation: status-blink 0.8s linear infinite;
+  }
+}

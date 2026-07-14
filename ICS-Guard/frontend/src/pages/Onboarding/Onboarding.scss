@@ -1,0 +1,498 @@
+// ================================================
+// ONBOARDING PAGE — Cyberpunk Mesh Gradient Style
+// ================================================
+
+@keyframes mesh-pulse-green {
+  0%, 100% { opacity: 0.07; transform: scale(1); }
+  50% { opacity: 0.12; transform: scale(1.05); }
+}
+
+@keyframes mesh-pulse-purple {
+  0%, 100% { opacity: 0.06; transform: scale(1); }
+  50% { opacity: 0.10; transform: scale(1.08); }
+}
+
+@keyframes spin-loader {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes fade-slide-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.onboarding-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #070b19;
+  padding: 24px;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+
+  // Mesh gradient orbs
+  &::before {
+    content: '';
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(57, 255, 20, 0.10) 0%, transparent 70%);
+    top: -15%;
+    left: -10%;
+    filter: blur(70px);
+    pointer-events: none;
+    animation: mesh-pulse-green 8s ease-in-out infinite;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    background: radial-gradient(circle, rgba(147, 51, 234, 0.09) 0%, transparent 75%);
+    bottom: -20%;
+    right: -12%;
+    filter: blur(80px);
+    pointer-events: none;
+    animation: mesh-pulse-purple 10s ease-in-out infinite;
+  }
+}
+
+.onboarding-card {
+  width: 100%;
+  max-width: 580px;
+  background: rgba(12, 18, 36, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.75),
+    0 0 60px rgba(57, 255, 20, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  position: relative;
+  z-index: 10;
+
+  @media (max-width: 640px) {
+    padding: 28px 20px;
+  }
+}
+
+// ---- Header ----
+.onboarding-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 24px;
+
+  .onboarding-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: rgba(57, 255, 20, 0.08);
+    border: 1px solid rgba(57, 255, 20, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #39ff14;
+    margin-bottom: 14px;
+    box-shadow: 0 0 18px rgba(57, 255, 20, 0.12);
+  }
+
+  h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin: 0 0 8px;
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    color: #94a3b8;
+    font-size: 0.875rem;
+    margin: 0;
+    line-height: 1.6;
+
+    strong { color: #e2e8f0; }
+  }
+}
+
+// ---- Stepper ----
+.onboarding-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(17, 25, 51, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 12px 20px;
+  margin-bottom: 28px;
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+
+    &--password { color: #39ff14; }
+    &--telegram { color: #a78bfa; }
+  }
+
+  .step-divider {
+    width: 32px;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+// ---- Form ----
+.onboarding-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #cbd5e1;
+  }
+}
+
+.input-wrapper {
+  position: relative;
+
+  .input-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+  }
+
+  .input-toggle {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+
+    &:hover { color: #e2e8f0; }
+  }
+
+  input {
+    width: 100%;
+    padding: 12px 40px;
+    background: rgba(14, 22, 47, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    color: #f1f5f9;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s;
+    box-sizing: border-box;
+
+    &::placeholder { color: #475569; }
+
+    &:focus {
+      border-color: rgba(57, 255, 20, 0.5);
+      box-shadow: 0 0 0 3px rgba(57, 255, 20, 0.08), 0 0 14px rgba(57, 255, 20, 0.08);
+    }
+  }
+}
+
+// ---- Telegram group ----
+.telegram-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+
+  label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #cbd5e1;
+    flex: 1;
+  }
+
+  .guide-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: #39ff14;
+    font-size: 12px;
+    font-weight: 600;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &:hover { color: #60ff40; }
+  }
+}
+
+// ---- Terminal accordion ----
+.terminal-guide {
+  background: #05070e;
+  border: 1px solid rgba(57, 255, 20, 0.12);
+  border-radius: 10px;
+  padding: 16px;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  animation: fade-slide-in 0.2s ease-out;
+
+  .terminal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(57, 255, 20, 0.08);
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+
+    .terminal-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #39ff14;
+      letter-spacing: 0.05em;
+    }
+
+    .terminal-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: rgba(239, 68, 68, 0.8);
+    }
+  }
+
+  .terminal-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .terminal-line {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.5;
+
+    .prompt { color: #39ff14; }
+    .highlight { color: #f8fafc; font-weight: 600; }
+    .value { color: #fbbf24; }
+
+    a {
+      color: #39ff14;
+      text-decoration: none;
+      font-weight: 700;
+
+      &:hover { text-decoration: underline; }
+    }
+  }
+}
+
+// ---- Telegram input row ----
+.telegram-input-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.test-btn {
+  padding: 0 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(18, 26, 53, 0.9);
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.25s;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+
+  &:hover:not(:disabled) {
+    border-color: #39ff14;
+    color: #39ff14;
+  }
+
+  &--connected {
+    background: #39ff14;
+    border-color: #39ff14;
+    color: #000;
+    box-shadow: 0 0 14px rgba(57, 255, 20, 0.35);
+
+    &:hover:not(:disabled) {
+      background: #32e612;
+      color: #000;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .btn-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin-loader 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+}
+
+// ---- Status messages ----
+.status-ok {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #39ff14;
+  font-size: 12px;
+  margin-top: 4px;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.status-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.status-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #f87171;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+// ---- OTP Input ----
+.otp-input-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  animation: fade-slide-in 0.2s ease-out;
+
+  .otp-hint {
+    font-size: 12px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+}
+
+// Trạng thái nút Gửi lại (đã gửi, chờ resend)
+.test-btn--sent {
+  border-color: rgba(57, 255, 20, 0.3);
+  color: #39ff14;
+}
+
+.submit-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  font-size: 13px;
+}
+
+// ---- Action buttons ----
+.action-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.btn-activate {
+  width: 100%;
+  padding: 14px;
+  background: #39ff14;
+  border: none;
+  border-radius: 10px;
+  color: #000;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 18px rgba(57, 255, 20, 0.25);
+  transition: all 0.25s;
+
+  &:hover:not(:disabled) {
+    background: #32e612;
+    box-shadow: 0 0 28px rgba(57, 255, 20, 0.45);
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+  }
+}
+
+.btn-cancel {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    color: #e2e8f0;
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+}

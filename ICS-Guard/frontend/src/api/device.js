@@ -20,6 +20,18 @@ const deviceService = {
 
   delete(id) {
     return http.delete(`/devices/${id}`);
+  },
+
+  isolate(id) {
+    return http.post(`/devices/${id}/isolate`);
+  },
+
+  unisolate(id) {
+    return http.post(`/devices/${id}/unisolate`);
+  },
+
+  rollback(id) {
+    return http.post(`/devices/${id}/rollback`);
   }
 };
 

@@ -10,23 +10,23 @@ const router = express.Router();
 // Apply authMiddleware globally to all user routes
 router.use(authMiddleware);
 
-// GET /api/users - Admin, Analyst, Viewer
-router.get('/', authorize(['Admin', 'Analyst', 'Viewer']), getAllUsers);
+// GET /api/users - admin, hr_manager, device_manager, analyst
+router.get('/', authorize(['admin', 'hr_manager', 'device_manager', 'analyst']), getAllUsers);
 
-// GET /api/users/:id - Admin, Analyst, Viewer
-router.get('/:id', authorize(['Admin', 'Analyst', 'Viewer']), getUserById);
+// GET /api/users/:id - admin, hr_manager, device_manager, analyst
+router.get('/:id', authorize(['admin', 'hr_manager', 'device_manager', 'analyst']), getUserById);
 
 // PUT /api/users/profile - Update own profile (Audited)
 router.put('/profile', auditLogger('PROFILE_UPDATE'), updateProfile);
 
-// POST /api/users - Admin only (Audited)
-router.post('/', authorize('Admin'), auditLogger('USER_CREATE'), createUser);
+// POST /api/users - admin, hr_manager (Audited)
+router.post('/', authorize(['admin', 'hr_manager']), auditLogger('USER_CREATE'), createUser);
 
-// PUT /api/users/:id - Admin only (Audited)
-router.put('/:id', authorize('Admin'), auditLogger('USER_UPDATE'), updateUser);
+// PUT /api/users/:id - admin, hr_manager (Audited)
+router.put('/:id', authorize(['admin', 'hr_manager']), auditLogger('USER_UPDATE'), updateUser);
 
-// DELETE /api/users/:id - Admin only (Audited)
-router.delete('/:id', authorize('Admin'), auditLogger('USER_DELETE'), deleteUser);
+// DELETE /api/users/:id - admin, hr_manager (Audited)
+router.delete('/:id', authorize(['admin', 'hr_manager']), auditLogger('USER_DELETE'), deleteUser);
 
 // POST /api/users/heartbeat - Registered heartbeat for Admin users
 router.post('/heartbeat', (req, res) => {

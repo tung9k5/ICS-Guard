@@ -1,7 +1,5 @@
-import axios from 'axios';
-import { Incident, Alert, IncidentTimeline } from '../models/index.js';
-
-const AI_ENGINE_URL = process.env.AI_ENGINE_URL || 'http://ai-engine:5000';
+import { Incident, Alert, IncidentTimeline, Device } from '../models/index.js';
+import aiService from '../services/aiService.js';
 
 export const getAllIncidents = async (req, res) => {
   try {
@@ -103,49 +101,36 @@ export const triggerAiAnalysis = async (req, res) => {
 
 const runBackgroundAiAnalysis = async (incidentId, incidentData, alertsData) => {
   try {
-    const analyzeUrl = `${AI_ENGINE_URL}/api/v1/analyze`;
-    console.log(`[IncidentController] Calling AI Engine at: ${analyzeUrl}`);
+    // Update Incident status to 'investigated'
+    const incident = await Incident.findById(incidentId).populate('alert_ids');
+    if (!incident) return;
 
-    const response = await axios.post(analyzeUrl, {
-      incident: incidentData,
-      alerts: alertsData
-    }, {
-      timeout: 120000 // 2 minutes timeout for LLM
-    });
+    let deviceId = null;
+    if (incident.alert_ids && incident.alert_ids.length > 0) {
+      deviceId = incident.alert_ids[0].device_id;
+    }
+    
+    let device = { name: 'Unknown', ipAddress: 'Unknown' };
+    if (deviceId) {
+      const dev = await Device.findById(deviceId).lean();
+      if (dev) device = dev;
+    }
 
-    const aiReport = response.data;
+    // Call the AI Service
+    const aiReportText = await aiService.analyzeIncident(incident, device, alertsData);
+
     console.log(`[IncidentController] AI Analysis completed successfully for incident ${incidentId}`);
 
-    // Update Incident status to 'investigated'
-    const incident = await Incident.findById(incidentId);
-    if (incident) {
-      incident.status = 'investigated';
-      await incident.save();
-    }
-
-    // Formulate a beautiful markdown-styled timeline description
-    let mitreMappingsStr = '';
-    if (aiReport.mitre_attack_mappings && aiReport.mitre_attack_mappings.length > 0) {
-      mitreMappingsStr = '\n\n*Ánh xạ MITRE ATT&CK:*\n' + 
-        aiReport.mitre_attack_mappings.map(m => `- ${m.tactic}: ${m.technique_name} (${m.technique_id})`).join('\n');
-    }
-
-    const timelineDescription = 
-      `🤖 **Báo cáo Phân tích Sự cố từ AI Security Assistant**\n\n` +
-      `*Mô hình sử dụng:* \`${aiReport.model_used}\`\n\n` +
-      `*Tóm tắt sự kiện:* ${aiReport.log_summary}\n\n` +
-      `*Phân tích chuỗi tấn công:* ${aiReport.attack_reasoning}` +
-      `${mitreMappingsStr}\n\n` +
-      `*Khuyến nghị khắc phục:* \n` +
-      aiReport.remediation_advice.map((r, i) => `${i + 1}. **${r.step}** (Độ ưu tiên: *${r.priority}*)`).join('\n');
+    incident.status = 'investigated';
+    await incident.save();
 
     // Create Incident Timeline entry
     await IncidentTimeline.create({
       incident_id: incidentId,
       actor: 'AI Security Assistant',
       action_type: 'ai_analysis',
-      description: timelineDescription,
-      metadata: aiReport
+      description: aiReportText,
+      metadata: { ai: true }
     });
 
   } catch (error) {

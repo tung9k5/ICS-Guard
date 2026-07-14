@@ -32,4 +32,4 @@ async def api_analyze_incident(incident: Incident, alerts: List[Alert]):
 
 # Nếu bạn muốn chạy file này trực tiếp
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=5000, reload=True)

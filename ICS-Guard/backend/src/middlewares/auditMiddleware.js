@@ -22,6 +22,11 @@ export const auditLogger = (customActionName = null) => {
     // Hook into response finish event to write the log once response is sent
     res.on('finish', async () => {
       try {
+        // Filter out unauthenticated external scanners or failed brute-force probes (400, 401, 403, 404)
+        if (!req.user && [400, 401, 403, 404].includes(res.statusCode)) {
+          return;
+        }
+
         const userId = req.user ? req.user._id : null;
         const username = req.user ? req.user.username : (req.body && req.body.username ? req.body.username : 'Anonymous');
         const action = customActionName || `${req.method} ${req.originalUrl}`;

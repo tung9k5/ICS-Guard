@@ -39,10 +39,14 @@ const DeviceList = ({ devices, loading, onEdit, onDelete, onView }) => {
           </thead>
           <tbody>
             {devices.map((device, index) => {
-              const actions = [
-                { label: t('assets.list.btn_edit'), icon: Edit2, onClick: () => onEdit(device) },
-                { label: t('assets.list.btn_delete'), icon: Trash2, danger: true, onClick: () => onDelete(device.id || device._id) }
-              ];
+              const cached = sessionStorage.getItem('cached_user');
+              const currentUser = cached ? JSON.parse(cached) : null;
+              const canEdit = currentUser?.role === 'admin' || currentUser?.role === 'device_manager';
+
+              const actions = [];
+              if (canEdit) {
+                actions.push({ label: t('assets.list.btn_edit'), icon: Edit2, onClick: () => onEdit(device) });
+              }
 
               return (
                 <tr key={device.id || device._id}>
@@ -95,10 +99,14 @@ const DeviceList = ({ devices, loading, onEdit, onDelete, onView }) => {
         {devices.map((device, index) => {
           const id = device.id || device._id;
           const isExpanded = expandedId === id;
-          const actions = [
-            { label: t('assets.list.btn_edit'), icon: Edit2, onClick: () => onEdit(device) },
-            { label: t('assets.list.btn_delete'), icon: Trash2, danger: true, onClick: () => onDelete(id) }
-          ];
+          const cached = sessionStorage.getItem('cached_user');
+          const currentUser = cached ? JSON.parse(cached) : null;
+          const canEdit = currentUser?.role === 'admin' || currentUser?.role === 'device_manager';
+
+          const actions = [];
+          if (canEdit) {
+            actions.push({ label: t('assets.list.btn_edit'), icon: Edit2, onClick: () => onEdit(device) });
+          }
 
           return (
             <div className={`mobile-card ${isExpanded ? 'expanded' : ''}`} key={id}>

@@ -1,7 +1,6 @@
 import { Alert, Incident, IncidentTimeline, Device, BlockedIp } from '../models/index.js';
 import { registerFailedIpAttempt } from '../services/securityService.js';
 import { sendEmailAlert } from '../services/emailService.js';
-import { sendTelegramAlert } from '../services/telegramService.js';
 import { publishMqtt } from '../services/mqttService.js';
 
 export const getBlockedIpsPublic = async (req, res) => {
@@ -204,30 +203,4 @@ export const controlAttackEndpoint = async (req, res) => {
   }
 };
 
-export const testTelegramConnectionEndpoint = async (req, res) => {
-  const { telegramChatId } = req.body;
-  
-  if (!telegramChatId) {
-    return res.status(400).json({ error: 'Bad Request', message: 'telegramChatId is required.' });
-  }
 
-  try {
-    console.log(`[TelemetryController] Sending connection test message to chat ID: ${telegramChatId}`);
-    
-    // Gửi tin nhắn thử thông qua Telegram Bot đến chat ID được cấu hình
-    const message = await sendTelegramAlert(
-      `🔔 *ICS-GUARD SECURITY LINK*\n\nKết nối thành công! Tài khoản của bạn đã liên kết thành công với hệ thống để nhận tin nhắn cảnh báo an ninh mạng.`,
-      [],
-      telegramChatId
-    );
-
-    if (message) {
-      return res.status(200).json({ status: 'success', message: 'Đã gửi tin nhắn kiểm tra thành công.' });
-    } else {
-      return res.status(500).json({ error: 'Internal Server Error', message: 'Không thể gửi tin nhắn qua Telegram Bot (vui lòng đảm bảo bạn đã chat /start với Bot trước).' });
-    }
-  } catch (error) {
-    console.error('[TelemetryController] Test telegram connection error:', error);
-    return res.status(500).json({ error: 'Internal Server Error', message: 'Gặp lỗi trong quá trình gửi tin nhắn thử.' });
-  }
-};
