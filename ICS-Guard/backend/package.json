@@ -5,11 +5,14 @@
   "main": "src/app.js",
   "type": "module",
   "scripts": {
+    "prestart": "npm run swagger",
     "start": "node src/app.js",
+    "predev": "npm run swagger",
     "dev": "node --watch src/app.js",
     "test:unit": "node --import ./tests/helpers/preload.js --test tests/**/*.test.js",
     "test:integration": "node test-api.js",
-    "test": "npm run test:unit && npm run test:integration"
+    "test": "npm run test:unit && npm run test:integration",
+    "swagger": "node swagger.js"
   },
   "dependencies": {
     "amqplib": "^0.10.3",
@@ -25,6 +28,7 @@
     "node-telegram-bot-api": "^0.66.0",
     "nodemailer": "^6.9.13",
     "socket.io": "^4.7.5",
+    "swagger-autogen": "^2.23.7",
     "swagger-jsdoc": "^6.3.0",
     "swagger-ui-express": "^5.0.0"
   }

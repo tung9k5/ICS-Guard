@@ -1,18 +1,21 @@
 import express from 'express';
-import { ingestTelemetryLog, controlAttackEndpoint, getBlockedIpsPublic, testTelegramConnectionEndpoint } from '../controllers/telemetryController.js';
+import { ingestLog, controlAttack, testTelegramConnection } from '../controllers/telemetryController.js';
+import authMiddleware from '../middlewares/authMiddleware.js';
+import authorize from '../middlewares/rbacMiddleware.js';
+import auditLogger from '../middlewares/auditMiddleware.js';
+import {
+  validateIngestLog,
+  validateControlAttack
+} from '../validators/telemetryValidator.js';
 
 const router = express.Router();
 
-// Route kiểm tra kết nối Telegram Bot (Onboarding test connection)
-router.post('/test-telegram-connection', testTelegramConnectionEndpoint);
+router.post('/ingest', validateIngestLog, ingestLog);
 
-// Route lấy danh sách IP bị chặn để đồng bộ tường lửa (Public cho Gateway/Simulator)
-router.get('/blocked-ips', getBlockedIpsPublic);
+router.use(authMiddleware);
+router.use(authorize(['admin', 'l3_manager', 'l2_responder']));
 
-// Public ingestion route for device simulators and log agents
-router.post('/ingest', ingestTelemetryLog);
-
-// Route for Attacker Console to trigger/stop attacks on devices
-router.post('/control-attack', controlAttackEndpoint);
+router.post('/control-attack', validateControlAttack, auditLogger('CONTROL_ATTACK'), controlAttack);
+router.post('/test-telegram', auditLogger('TEST_TELEGRAM'), testTelegramConnection);
 
 export default router;

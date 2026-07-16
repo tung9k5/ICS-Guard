@@ -106,7 +106,7 @@ const RuleManagement = () => {
     if (!ruleToDelete) return;
     try {
       await rulesApi.deleteRule(ruleToDelete._id);
-      toast.success(t('rules.delete_success', 'Xóa thành công'));
+      toast.success(t('common.delete_success', 'Xóa thành công'));
       setIsDeleteModalOpen(false);
       setSelectedRuleIds(selectedRuleIds.filter(id => id !== ruleToDelete._id));
       fetchRules();
@@ -119,7 +119,7 @@ const RuleManagement = () => {
     if (selectedRuleIds.length === 0) return;
     try {
       await rulesApi.bulkDeleteRules({ ids: selectedRuleIds });
-      toast.success(t('rules.delete_success', 'Xóa thành công'));
+      toast.success(t('common.delete_success', 'Xóa thành công'));
       setSelectedRuleIds([]);
       setIsBulkDeleteModalOpen(false);
       fetchRules();

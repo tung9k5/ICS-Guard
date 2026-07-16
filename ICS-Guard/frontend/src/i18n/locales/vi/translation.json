@@ -240,7 +240,10 @@
     "health": {
       "healthy": "Bình thường",
       "warning": "Cảnh báo",
-      "critical": "Nghiêm trọng"
+      "critical": "Nghiêm trọng",
+      "active": "Hoạt động",
+      "isolated": "Ngắt kết nối",
+      "offline": "Ngoại tuyến"
     },
     "traffic": {
       "incoming": "Đầu vào (Incoming)",
@@ -251,6 +254,11 @@
       "subtitle": "Giám sát liên tục 24/7, phát hiện sớm mọi rủi ro và ngăn chặn tấn công vào hạ tầng công nghiệp của bạn.",
       "btn_upgrade": "KÍCH HOẠT BẢO VỆ NÂNG CAO",
       "btn_report": "KẾT NỐI HỆ THỐNG MỚI"
+    },
+    "threat_level": {
+      "low": "Thấp",
+      "medium": "Trung bình",
+      "high": "Cao"
     }
   },
   "status": {

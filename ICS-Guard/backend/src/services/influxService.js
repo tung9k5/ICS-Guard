@@ -104,8 +104,33 @@ export const queryTelemetry = async (deviceId, limit = 50) => {
   }
 };
 
+export const writePoint = async (measurement, data) => {
+  if (!isInfluxAvailable) return;
+  const { tags = {}, fields = {}, timestamp } = data;
+  
+  const tagList = Object.entries(tags).map(([k, v]) => `${k}=${v}`).join(',');
+  const fieldList = Object.entries(fields).map(([k, v]) => {
+    if (typeof v === 'string') return `${k}="${v.replace(/"/g, '\\"')}"`;
+    return `${k}=${v}`;
+  }).join(',');
+  
+  const time = timestamp ? (new Date(timestamp).getTime() * 1000000) : '';
+  const line = `${measurement}${tagList ? ',' + tagList : ''} ${fieldList} ${time}`.trim();
+  
+  try {
+    const writeUrl = `${INFLUXDB_URL}/write?db=${DB_NAME}`;
+    await axios.post(writeUrl, line, {
+      headers: { 'Content-Type': 'text/plain' },
+      timeout: 3000
+    });
+  } catch (error) {
+    console.error(`[InfluxService] Error writing point to InfluxDB:`, error.message);
+  }
+};
+
 export default {
   initInflux,
   writeTelemetry,
-  queryTelemetry
+  queryTelemetry,
+  writePoint
 };

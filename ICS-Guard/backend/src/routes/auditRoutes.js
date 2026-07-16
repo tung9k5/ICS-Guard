@@ -1,162 +1,27 @@
 import express from 'express';
-import { getAuditLogs, getBlockedIps, unblockIp, deleteAuditLog, deleteMultipleAuditLogs } from '../controllers/auditController.js';
+import {
+  getAuditLogs,
+  getBlockedIps,
+  unblockIp,
+  deleteAuditLog,
+  bulkDeleteAuditLogs
+} from '../controllers/auditController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
-import { authorize } from '../middlewares/rbacMiddleware.js';
+import authorize from '../middlewares/rbacMiddleware.js';
 import auditLogger from '../middlewares/auditMiddleware.js';
+import { validateUnblockIp } from '../validators/auditValidator.js';
+import { validateBulkIds, validateMongoId, validatePagination } from '../validators/commonValidator.js';
 
 const router = express.Router();
 
-// Apply authMiddleware globally to all audit routes
 router.use(authMiddleware);
+router.use(authorize(['admin', 'l3_manager']));
 
-/**
- * @openapi
- * tags:
- *   name: Audit
- *   description: Audit logs and blocked IPs APIs (Roles: Admin, Analyst, L3 Manager)
- */
+router.get('/logs', validatePagination, getAuditLogs);
+router.delete('/logs/:id', validateMongoId, auditLogger('AUDIT_LOG_DELETE'), deleteAuditLog);
+router.post('/logs/bulk-delete', validateBulkIds, auditLogger('AUDIT_LOG_BULK_DELETE'), bulkDeleteAuditLogs);
 
-/**
- * @openapi
- * /api/audits/logs:
- *   get:
- *     summary: Get all audit logs (Requires roles - Admin, Analyst)
- *     tags: [Audit]
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                   userId:
- *                     type: string
- *                   username:
- *                     type: string
- *                   action:
- *                     type: string
- *                   ipAddress:
- *                     type: string
- *                   userAgent:
- *                     type: string
- *                   details:
- *                     type: object
- *                   createdAt:
- *                     type: string
- *                     format: date-time
- */
-// GET /api/audits/logs - Admin, Analyst
-router.get('/logs', authorize(['Admin', 'Analyst']), getAuditLogs);
-
-/**
- * @openapi
- * /api/audits/blocked-ips:
- *   get:
- *     summary: Get all blocked IPs (Requires roles - Admin, Analyst)
- *     tags: [Audit]
- *     security:
- *       - BearerAuth: []
- *     responses:
- *       200:
- *         description: Success
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   _id:
- *                     type: string
- *                   ipAddress:
- *                     type: string
- *                   reason:
- *                     type: string
- *                   createdAt:
- *                     type: string
- *                     format: date-time
- */
-// GET /api/audits/blocked-ips - Admin, Analyst
-router.get('/blocked-ips', authorize(['Admin', 'Analyst']), getBlockedIps);
-
-/**
- * @openapi
- * /api/audits/unblock-ip:
- *   post:
- *     summary: Unblock an IP (Requires roles - admin, l3_manager)
- *     tags: [Audit]
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - ipAddress
- *             properties:
- *               ipAddress:
- *                 type: string
- *     responses:
- *       200:
- *         description: IP unblocked successfully
- *       404:
- *         description: IP not found
- */
-// POST /api/audits/unblock-ip - Admin, L3 SOC Manager (Audited)
-router.post('/unblock-ip', authorize(['admin', 'l3_manager']), auditLogger('IP_MANUAL_UNBLOCK'), unblockIp);
-
-/**
- * @openapi
- * /api/audits/logs/bulk-delete:
- *   post:
- *     summary: Delete multiple audit logs (Requires roles - Admin)
- *     tags: [Audit]
- *     security:
- *       - BearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               ids:
- *                 type: array
- *                 items:
- *                   type: string
- *     responses:
- *       200:
- *         description: Logs deleted successfully
- */
-router.post('/logs/bulk-delete', authorize(['Admin']), deleteMultipleAuditLogs);
-
-/**
- * @openapi
- * /api/audits/logs/{id}:
- *   delete:
- *     summary: Delete an audit log (Requires roles - Admin)
- *     tags: [Audit]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Log deleted successfully
- */
-router.delete('/logs/:id', authorize(['Admin']), deleteAuditLog);
+router.get('/blocked-ips', validatePagination, getBlockedIps);
+router.post('/unblock-ip', validateUnblockIp, unblockIp);
 
 export default router;

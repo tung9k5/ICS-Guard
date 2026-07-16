@@ -146,17 +146,17 @@ const DeviceManagement = () => {
       if (items.length === 1) {
         const id = items[0].id || items[0]._id;
         await ApiDevice.delete(id);
-        toast.success(t('assets.delete_success'));
+        toast.success(t('common.delete_success', 'Xóa thành công'));
       } else {
         const ids = items.map(i => i.id || i._id);
         await ApiDevice.deleteMultiple(ids);
-        toast.success(`Đã xóa thành công ${ids.length} thiết bị`);
+        toast.success(t('common.delete_success', 'Xóa thành công'));
         setSelectedIds([]);
       }
       fetchDevices();
     } catch (err) {
       console.error('Delete error:', err);
-      toast.error('Có lỗi xảy ra khi xóa thiết bị');
+      toast.error(t('common.delete_error', 'Xóa thất bại'));
     } finally {
       setDeleteModalState(prev => ({ ...prev, isOpen: false, loading: false }));
     }
