@@ -48,7 +48,7 @@ export default {
 
   setupOnboarding(data, options = {}) {
     return http({
-      url: '/auth/setup-onboarding',
+      url: '/auth/onboarding',
       method: 'POST',
       data,
       ...options
@@ -57,7 +57,7 @@ export default {
 
   getProfile(options = {}) {
     return http({
-      url: '/auth/me',
+      url: '/auth/profile',
       method: 'GET',
       ...options
     });

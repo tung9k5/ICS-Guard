@@ -37,9 +37,10 @@ const MainLayout = () => {
 
         // Fetch current user info
         const res = await authApi.getProfile();
-        if (res && res.user) {
-          sessionStorage.setItem('cached_user', JSON.stringify(res.user));
-          setUser(res.user);
+        const userData = res.data?.user || res.data || res.user;
+        if (userData) {
+          sessionStorage.setItem('cached_user', JSON.stringify(userData));
+          setUser(userData);
         }
       } catch (err) {
         console.error('Failed to fetch user:', err);

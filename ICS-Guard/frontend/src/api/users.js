@@ -29,7 +29,7 @@ export default {
 
   updateProfile(data, options = {}) {
     return http({
-      url: '/users/profile',
+      url: '/auth/profile',
       method: 'PUT',
       data,
       ...options
