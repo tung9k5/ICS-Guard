@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Upload, User as UserIcon, Check } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import usersApi from '@/api/users';
+import authApi from '@/api/auth';
 import VInput from '@/components/VInput';
 import VButton from '@/components/VButton';
 import VDialog from '@/components/VDialog';
@@ -22,8 +23,8 @@ const ProfileModal = ({ user, onClose, onUpdate }) => {
     const fetchUser = async () => {
       try {
         setLoading(true);
-        // "get theo user id"
-        const res = await usersApi.getUserById(user.id || user._id);
+        // Lấy profile của user hiện tại
+        const res = await authApi.getProfile();
         const userData = res.data || res;
         setFormData({
           full_name: userData.full_name || '',
@@ -36,9 +37,7 @@ const ProfileModal = ({ user, onClose, onUpdate }) => {
         setLoading(false);
       }
     };
-    if (user && (user.id || user._id)) {
-      fetchUser();
-    }
+    fetchUser();
   }, [user]);
 
   const handleFileChange = (e) => {

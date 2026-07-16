@@ -8,6 +8,7 @@ import {
   register,
   googleLogin,
 } from '../controllers/authController.js';
+import { updateProfile } from '../controllers/userController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 import auditLogger from '../middlewares/auditMiddleware.js';
 import {
@@ -28,6 +29,7 @@ router.post('/logout', validateRefreshToken, auditLogger('USER_LOGOUT'), logout)
 router.post('/register', validateRegister, auditLogger('USER_REGISTER'), register);
 
 router.get('/profile', authMiddleware, getProfile);
+router.put('/profile', authMiddleware, auditLogger('PROFILE_UPDATE'), updateProfile);
 router.post('/onboarding', authMiddleware, validateOnboarding, auditLogger('USER_ONBOARDING'), setupOnboarding);
 
 export default router;
