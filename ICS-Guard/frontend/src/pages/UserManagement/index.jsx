@@ -138,17 +138,17 @@ const UserManagement = () => {
       if (items.length === 1) {
         const id = items[0].id || items[0]._id;
         await ApiUser.deleteUser(id);
-        toast.success(t('users.delete_success'));
+        toast.success(t('common.delete_success', 'Xóa thành công'));
       } else {
         const ids = items.map(i => i.id || i._id);
         await ApiUser.deleteMultipleUsers(ids);
-        toast.success(t('users.bulk_delete_success', { count: ids.length }));
+        toast.success(t('common.delete_success', 'Xóa thành công'));
         setSelectedIds([]);
       }
       fetchUsers();
     } catch (err) {
       console.error('Delete error:', err);
-      toast.error(t('users.delete_error'));
+      toast.error(t('common.delete_error', 'Xóa thất bại'));
     } finally {
       setDeleteModalState(prev => ({ ...prev, isOpen: false, loading: false }));
     }

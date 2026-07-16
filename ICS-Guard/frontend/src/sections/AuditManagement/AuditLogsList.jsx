@@ -75,16 +75,16 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
     try {
       if (logToDelete === 'bulk') {
         await ApiAudit.bulkDeleteLogs(selectedIds);
-        toast.success(t('audit.delete_success', 'Xóa thành công'));
+        toast.success(t('common.delete_success', 'Xóa thành công'));
         setSelectedIds([]);
       } else {
         await ApiAudit.deleteLog(logToDelete);
-        toast.success(t('audit.delete_success', 'Xóa thành công'));
+        toast.success(t('common.delete_success', 'Xóa thành công'));
       }
       setIsDeleteModalOpen(false);
       fetchLogs();
     } catch (error) {
-      toast.error(t('audit.delete_error', 'Xóa thất bại'));
+      toast.error(t('common.delete_error', 'Xóa thất bại'));
     }
   };
 
@@ -216,7 +216,7 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                       </div>
                     </td>
                     <td>
-                      <span className="truncate-text" style={{ maxWidth: '150px' }} title={log.email || 'N/A'}>{log.email || 'N/A'}</span>
+                      <span className="truncate-text" style={{ maxWidth: '150px' }} title={log.email || log.details?.body?.email || 'N/A'}>{log.email || log.details?.body?.email || 'N/A'}</span>
                     </td>
                     <td>
                       <span className="truncate-text" title={log.role}>{log.role || 'System'}</span>

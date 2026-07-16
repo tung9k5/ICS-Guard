@@ -239,7 +239,10 @@
     "health": {
       "healthy": "Healthy",
       "warning": "Warning",
-      "critical": "Critical"
+      "critical": "Critical",
+      "active": "Active",
+      "isolated": "Isolated",
+      "offline": "Offline"
     },
     "traffic": {
       "incoming": "Incoming",
@@ -250,6 +253,11 @@
       "subtitle": "24/7 continuous monitoring, early risk detection, and attack prevention for your industrial infrastructure.",
       "btn_upgrade": "ACTIVATE ADVANCED PROTECTION",
       "btn_report": "CONNECT NEW SYSTEM"
+    },
+    "threat_level": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High"
     }
   },
   "status": {

@@ -82,12 +82,12 @@ const AlertManagement = () => {
     try {
       if (isBulkDelete) {
         await alertsApi.deleteMultipleAlerts(selectedIds);
-        toast.success(t('alerts.bulk_delete_success', `Đã xóa ${selectedIds.length} cảnh báo`));
+        toast.success(t('common.delete_success', 'Xóa thành công'));
         setSelectedIds([]);
       } else {
         if (!alertToDelete) return;
         await alertsApi.deleteAlert(alertToDelete._id);
-        toast.success(t('alerts.delete_success', 'Xóa thành công'));
+        toast.success(t('common.delete_success', 'Xóa thành công'));
       }
       setIsDeleteModalOpen(false);
       fetchAlerts();

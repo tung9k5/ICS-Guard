@@ -36,9 +36,9 @@ const ThreatActivityChart = ({ rawData = [] }) => {
             contentStyle={{ backgroundColor: 'var(--gray-800)', border: 'none', borderRadius: '8px', color: 'var(--white-short)' }}
           />
           <Legend wrapperStyle={{ paddingTop: '20px' }} />
-          <Bar dataKey="low" name="Low" stackId="a" fill="var(--green-500)" radius={[0, 0, 4, 4]} />
-          <Bar dataKey="medium" name="Medium" stackId="a" fill="var(--amber-500)" />
-          <Bar dataKey="high" name="High" stackId="a" fill="var(--red-500)" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="low" name={t('dashboard.threat_level.low', 'Thấp')} stackId="a" fill="var(--green-500)" radius={[0, 0, 4, 4]} />
+          <Bar dataKey="medium" name={t('dashboard.threat_level.medium', 'Trung bình')} stackId="a" fill="var(--amber-500)" />
+          <Bar dataKey="high" name={t('dashboard.threat_level.high', 'Cao')} stackId="a" fill="var(--red-500)" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

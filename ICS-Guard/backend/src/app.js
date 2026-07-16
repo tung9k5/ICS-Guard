@@ -76,42 +76,9 @@ const authLimiter = rateLimit({
 app.use(globalLimiter);
 
 // 2. Configure Swagger UI
-const swaggerOptions = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'ICS-Guard API Documentation',
-      version: '1.0.0',
-      description: 'API Document for ICS-Guard System (Industrial Control Systems Security Guard)',
-    },
-    servers: [
-      {
-        url: 'http://localhost:8000',
-        description: 'Development Server',
-      },
-    ],
-    components: {
-      securitySchemes: {
-        BearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-          description: 'Enter JWT token in format: Bearer <token>',
-        },
-      },
-    },
-    security: [
-      {
-        BearerAuth: [],
-      },
-    ],
-  },
-  apis: ['./src/routes/*.js', './src/controllers/*.js'],
-};
-
-const swaggerSpec = swaggerJsdoc(swaggerOptions);
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+const swaggerDocument = JSON.parse(fs.readFileSync('./swagger-output.json', 'utf8'));
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Base route for API overview
 app.get('/', (req, res) => {
@@ -142,8 +109,9 @@ app.use('/api/alerts', alertRoutes);
 // Global Error Handler
 app.use((err, req, res, next) => {
   console.error('[Global Error]', err);
-  res.status(err.status || 500).json({
-    error: err.name || 'InternalServerError',
+  const statusCode = err.statusCode || err.status || 500;
+  res.status(statusCode).json({
+    error: err.name || (statusCode >= 500 ? 'InternalServerError' : 'BadRequest'),
     message: err.message || 'An unexpected error occurred.',
   });
 });
@@ -256,8 +224,8 @@ const startServer = async () => {
 
   server.listen(PORT, () => {
     console.log(`\n=============================================================`);
-    console.log(`🛡️  ICS-GUARD SECURITY API RUNNING ON PORT ${PORT}  🛡️`);
-    console.log(`Database (MongoDB): ${process.env.MONGO_URI || 'mongodb://localhost:27017/ics_guard'}`);
+    console.log(`ICS-GUARD SECURITY API RUNNING ON PORT ${PORT}`);
+    console.log(`Database (MongoDB): ${process.env.MONGO_URI}`);
     console.log(`Time: ${new Date().toLocaleString()}`);
     console.log(`=============================================================\n`);
   });
