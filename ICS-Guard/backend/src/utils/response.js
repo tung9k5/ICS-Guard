@@ -16,12 +16,17 @@ export const errorResponse = (res, message = 'Error', error = null, statusCode =
   return res.status(statusCode).json(response);
 };
 
-export const paginatedResponse = (res, data, pagination, message = 'Success', statusCode = 200) => {
+export const paginatedResponse = (res, data, total, page, limit, message = 'Success', statusCode = 200) => {
   const response = {
     status: 'success',
     message,
     data,
-    pagination
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit)
+    }
   };
   return res.status(statusCode).json(response);
 };

@@ -111,16 +111,16 @@ const AttackSimulator = () => {
     try {
       if (deviceToDelete === 'bulk') {
         await ApiAttacks.bulkDeleteDevices(selectedIds);
-        toast.success(t('assets.delete_success', 'Xóa thành công'));
+        toast.success(t('common.delete_success', 'Xóa thành công'));
         setSelectedIds([]);
       } else {
         await ApiAttacks.deleteDevice(deviceToDelete);
-        toast.success(t('assets.delete_success', 'Xóa thành công'));
+        toast.success(t('common.delete_success', 'Xóa thành công'));
       }
       setIsDeleteModalOpen(false);
       fetchDevices();
     } catch (error) {
-      toast.error(t('assets.delete_error', 'Xóa thất bại'));
+      toast.error(t('common.delete_error', 'Xóa thất bại'));
     }
   };
 

@@ -138,17 +138,17 @@ const IncidentManagement = () => {
       if (items.length === 1) {
         const id = items[0].id || items[0]._id;
         await ApiIncident.delete(id);
-        toast.success(t('incidents.delete_success'));
+        toast.success(t('common.delete_success', 'Xóa thành công'));
       } else {
         const ids = items.map(i => i.id || i._id);
         await ApiIncident.deleteMultiple(ids);
-        toast.success(t('incidents.bulk_delete_success', { count: ids.length }));
+        toast.success(t('common.delete_success', 'Xóa thành công'));
         setSelectedIds([]);
       }
       fetchIncidents();
     } catch (err) {
       console.error('Delete error:', err);
-      toast.error(t('incidents.delete_error'));
+      toast.error(t('common.delete_error', 'Xóa thất bại'));
     } finally {
       setDeleteModalState(prev => ({ ...prev, isOpen: false, loading: false }));
     }
