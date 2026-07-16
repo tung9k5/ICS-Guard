@@ -12,7 +12,7 @@ export default {
 
   loginGoogle(data, options = {}) {
     return http({
-      url: '/auth/google-login',
+      url: '/auth/google',
       method: 'POST',
       data,
       ...options
