@@ -1,0 +1,131 @@
+services:
+  # 1. Frontend Dashboard (ReactJS)
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      # Map chính xác cổng FRONTEND_PORT (ví dụ: 3000 -> 3000)
+      - "${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"
+    volumes:
+      # Mount code để hot-reload
+      - ./frontend:/app
+      # Giữ lại node_modules trong container
+      - /app/node_modules
+    environment:
+      - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+      - VITE_GOOGLE_GSI_CLIENT_URL=${VITE_GOOGLE_GSI_CLIENT_URL}
+      - VITE_API_URL=${VITE_API_URL}
+      - VITE_GEMINI_API_KEY=${VITE_GEMINI_API_KEY}
+    depends_on:
+      - backend
+    restart: always
+
+  # 2. Backend API (FastAPI / NestJS)
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./shared:/shared
+    environment:
+      - PORT=8000
+      - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-123456}@mongodb:27017/${MONGO_DB}?authSource=admin
+      - MONGO_DB=${MONGO_DB}
+      - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER:-guest}:${RABBITMQ_DEFAULT_PASS:-guest}@rabbitmq:5672/
+      - INFLUXDB_URL=http://influxdb:8086
+      - JWT_SECRET=${JWT_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
+    depends_on:
+      - mongodb
+      - rabbitmq
+      - influxdb
+    restart: always
+
+  # 3. MongoDB (Event DB - Lưu sự kiện, rule, incident)
+  mongodb:
+    image: mongo:6-jammy
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+    ports:
+      - "${MONGO_PORT:-27017}:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./infrastructure/mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    restart: always
+
+  # 4. InfluxDB (Time-series DB - Lưu telemetry từ thiết bị)
+  influxdb:
+    image: influxdb:1.8-alpine
+    environment:
+      - INFLUXDB_ADMIN_USER=${INFLUXDB_ADMIN_USER}
+      - INFLUXDB_ADMIN_PASSWORD=${INFLUXDB_ADMIN_PASSWORD}
+      - INFLUXDB_DB=${INFLUXDB_DB}
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+    restart: always
+
+  # 5. Mosquitto (MQTT Protocol cho IoT)
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports:
+      - "${MQTT_PORT:-1883}:1883"
+      - "${MQTT_TLS_PORT:-8883}:8883"
+    volumes:
+      - ./infrastructure/mosquitto/config:/mosquitto/config
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    restart: always
+
+  # 6. RabbitMQ (Message Queue)
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS}
+    ports:
+      - "5672:5672"
+      - "15672:15672" # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: always
+
+  # 7. Nginx (Firewall/Proxy)
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
+    restart: always
+
+  # 8. IoT Device Simulator (Python Asyncio)
+  simulator:
+    build:
+      context: ./iot
+      dockerfile: simulator/Dockerfile
+    environment:
+      - MQTT_HOST=mosquitto
+      - MQTT_PORT=8883
+      - BACKEND_URL=http://backend:8000
+    depends_on:
+      - mosquitto
+      - backend
+    restart: always
+
+
+volumes:
+  mongodb_data:
+  influxdb_data:
+  mosquitto_data:
+  mosquitto_log:
+  rabbitmq_data:
