@@ -11,7 +11,8 @@ import VSelectFilter from '@/components/VSelectFilter';
 import ActionMenu from '@/components/ActionMenu';
 import DeleteConfirmModal from '@/Dialog/DeleteConfirmModal';
 import { toast } from 'react-toastify';
-import dayjs from 'dayjs';
+import { formatDate } from '@/utils/formatDate';
+import { useLoader } from '@/hooks/useLoader';
 
 // Known audit actions from server (extend as needed)
 const AUDIT_ACTIONS = [
@@ -27,7 +28,7 @@ const AUDIT_ACTIONS = [
 const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) => {
   const { t } = useTranslation();
   const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { isLoading: loading, showLoading, hideLoading } = useLoader(false);
   const [search, setSearch] = useState('');
   const [action, setAction] = useState('all');
   const [role, setRole] = useState('all');
@@ -90,7 +91,7 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
 
   const fetchLogs = async () => {
     try {
-      setLoading(true);
+      showLoading();
       const res = await ApiAudit.getLogs({
         page,
         per_page: perPage,
@@ -113,7 +114,7 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
       console.error(err);
       toast.error(t('audit.fetch_error'));
     } finally {
-      setLoading(false);
+      hideLoading();
     }
   };
 
@@ -195,7 +196,8 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                   <th>{t('audit.logs.table_role', 'VAI TRÒ')}</th>
                   <th>{t('audit.logs.table_action')}</th>
                   <th>{t('audit.logs.table_ip')}</th>
-                  <th style={{ whiteSpace: 'nowrap' }}>{t('audit.logs.table_time')}</th>
+                  <th style={{ whiteSpace: 'nowrap' }}>{t('common.created_at', 'Ngày tạo')}</th>
+                  <th style={{ whiteSpace: 'nowrap' }}>{t('common.updated_at', 'Ngày cập nhật')}</th>
                   <th className="actions-col">{t('assets.list.table_actions')}</th>
                 </tr>
               </thead>
@@ -209,14 +211,14 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                         style={{ cursor: 'pointer' }}
                       />
                     </td>
-                    <td>
-                      <div className="user-info">
-                        <User size={16} />
-                        <span className="truncate-text" style={{ maxWidth: '120px' }} title={log.username}>{log.username || 'System'}</span>
+                    <td style={{ maxWidth: '150px' }}>
+                      <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                        <User size={16} style={{ flexShrink: 0 }} />
+                        <span className="truncate-text" style={{ flex: 1, minWidth: 0 }} title={log.username}>{log.username || 'System'}</span>
                       </div>
                     </td>
-                    <td>
-                      <span className="truncate-text" style={{ maxWidth: '150px' }} title={log.email || log.details?.body?.email || 'N/A'}>{log.email || log.details?.body?.email || 'N/A'}</span>
+                    <td style={{ maxWidth: '180px' }}>
+                      <div className="truncate-text" title={log.email || log.details?.body?.email || 'N/A'}>{log.email || log.details?.body?.email || 'N/A'}</div>
                     </td>
                     <td>
                       <span className="truncate-text" title={log.role}>{log.role || 'System'}</span>
@@ -230,7 +232,10 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                       {log.ipAddress || 'N/A'}
                     </td>
                     <td className="time-col">
-                      {dayjs(log.createdAt).format('DD/MM/YYYY HH:mm')}
+                      {formatDate(log.createdAt)}
+                    </td>
+                    <td className="time-col">
+                      {formatDate(log.updatedAt)}
                     </td>
                     <td className="actions-col">
                       <ActionMenu
@@ -282,7 +287,7 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                         <User size={16} style={{ flexShrink: 0, color: 'var(--slate-400)' }} />
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                           <strong className="truncate-text" style={{ maxWidth: '150px' }}>{log.username || 'System'}</strong>
-                          <span style={{ fontSize: '12px', color: 'var(--slate-500)' }}>{dayjs(log.createdAt).format('DD/MM/YYYY HH:mm')}</span>
+                          <span style={{ fontSize: '12px', color: 'var(--slate-500)' }}>{formatDate(log.createdAt)}</span>
                         </div>
                       </div>
                     </div>
@@ -310,6 +315,14 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                       <div className="detail-row">
                         <span className="detail-label">{t('audit.logs.table_ip')}</span>
                         <span className="detail-value">{log.ipAddress || '-'}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="detail-label">{t('common.created_at', 'Ngày tạo')}</span>
+                        <span className="detail-value">{formatDate(log.createdAt)}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="detail-label">{t('common.updated_at', 'Ngày cập nhật')}</span>
+                        <span className="detail-value">{formatDate(log.updatedAt)}</span>
                       </div>
                     </div>
                   )}

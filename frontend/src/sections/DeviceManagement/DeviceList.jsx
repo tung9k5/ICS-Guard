@@ -6,6 +6,7 @@ import VStatus from '@/components/VStatus';
 import VCheckbox from '@/components/VCheckbox';
 import { getDeviceTypeLabel, getDeviceTypeStyle } from '@/constants/deviceConstants';
 import { useTranslation } from 'react-i18next';
+import { formatDate } from '@/utils/formatDate';
 
 const DeviceList = ({ 
   devices, 
@@ -55,6 +56,8 @@ const DeviceList = ({
               <th>{t('assets.list.table_ip')}</th>
               <th>{t('assets.list.table_status')}</th>
               <th>{t('assets.list.table_desc')}</th>
+              <th>{t('common.created_at', 'Ngày tạo')}</th>
+              <th>{t('common.updated_at', 'Ngày cập nhật')}</th>
               <th className="actions-col">{t('assets.list.table_actions')}</th>
             </tr>
           </thead>
@@ -77,10 +80,10 @@ const DeviceList = ({
                     />
                   </td>
                   <td><strong>{id}</strong></td>
-                  <td>
-                    <div className="device-name" title={device.name}>
+                  <td style={{ maxWidth: '150px' }}>
+                    <div className="device-name" title={device.name} style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                       <Activity size={16} className="text-primary" style={{ flexShrink: 0 }} />
-                      <span className="truncate-text">{device.name}</span>
+                      <span className="truncate-text" style={{ flex: 1, minWidth: 0 }}>{device.name}</span>
                     </div>
                   </td>
                   <td>
@@ -98,9 +101,11 @@ const DeviceList = ({
                       label={device.status === 'active' ? t('assets.filter_status_active') : t('assets.filter_status_inactive')} 
                     />
                   </td>
-                  <td className="text-muted">
-                    <span className="truncate-text" title={device.description}>{device.description || 'không có mô tả'}</span>
+                  <td className="text-muted" style={{ maxWidth: '200px' }}>
+                    <div className="truncate-text" title={device.description}>{device.description || 'không có mô tả'}</div>
                   </td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(device.createdAt)}</td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(device.updatedAt)}</td>
                   <td className="actions-col">
                     <ActionMenu 
                       actions={actions} 
@@ -189,6 +194,14 @@ const DeviceList = ({
                   <div className="detail-row">
                     <span className="detail-label">{t('assets.list.table_desc')}</span>
                     <span className="detail-value text-muted">{device.description || '-'}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">{t('common.created_at', 'Ngày tạo')}</span>
+                    <span className="detail-value">{formatDate(device.createdAt)}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">{t('common.updated_at', 'Ngày cập nhật')}</span>
+                    <span className="detail-value">{formatDate(device.updatedAt)}</span>
                   </div>
                 </div>
               )}

@@ -8,6 +8,8 @@ import VHeaderPage from '@/components/VHeaderPage';
 import VNodata from '@/components/VNodata';
 import VButton from '@/components/VButton';
 import Viewlogo from '@/components/Viewlogo';
+import { formatDate } from '@/utils/formatDate';
+import { useLoader } from '@/hooks/useLoader';
 import '../../../pages/Dashboard/Dashboard.scss';
 
 const StatCard = ({ icon: Icon, label, value, color = 'var(--blue-400)', loading }) => (
@@ -27,7 +29,7 @@ const StatCard = ({ icon: Icon, label, value, color = 'var(--blue-400)', loading
 const CustomerDashboard = () => {
   const { t } = useTranslation();
   const [stats, setStats] = useState({ devices: 0, alerts: 0, incidents: 0, activeAlerts: 0 });
-  const [loading, setLoading] = useState(true);
+  const { isLoading: loading, hideLoading } = useLoader(true);
   const [recentAlerts, setRecentAlerts] = useState([]);
 
   useEffect(() => {
@@ -53,7 +55,7 @@ const CustomerDashboard = () => {
       } catch (e) {
         console.error(e);
       } finally {
-        setLoading(false);
+        hideLoading();
       }
     };
     fetchStats();
@@ -121,7 +123,10 @@ const CustomerDashboard = () => {
                   }} />
                   <div>
                     <p style={{ margin: 0, fontSize: '14px', color: 'var(--slate-900)', fontWeight: '500' }}>{alert.title || alert.rule_name || t('customer.alerts.default_alert', 'Alert')}</p>
-                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--slate-500)' }}>{alert.device_name || alert.source_ip || ''}</p>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--slate-500)' }}>{alert.device_name || alert.source_ip || ''}</p>
+                      {alert.createdAt && <span style={{ fontSize: '11px', color: 'var(--slate-400)' }}>{formatDate(alert.createdAt)}</span>}
+                    </div>
                   </div>
                 </div>
                 <span style={{

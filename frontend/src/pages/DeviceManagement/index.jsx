@@ -12,13 +12,15 @@ import VFilterPage from '@/components/VFilterPage';
 import { DEVICE_TYPES } from '@/constants/deviceConstants';
 import { toast } from '@/utils/toast';
 import { useTranslation } from 'react-i18next';
+import { useLoader } from '@/hooks/useLoader';
+import { useSelection } from '@/hooks/useSelection';
 import { SEARCH_DEBOUNCE_MS, DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
 import './DeviceManagement.scss';
 
 const DeviceManagement = () => {
   const { t } = useTranslation();
   const [devices, setDevices] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { isLoading: loading, showLoading, hideLoading } = useLoader(false);
   
   // Filter & Pagination States
   const [search, setSearch] = useState('');
@@ -31,7 +33,7 @@ const DeviceManagement = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingDevice, setEditingDevice] = useState(null);
-  const [selectedIds, setSelectedIds] = useState([]);
+  const { selectedIds, handleSelect, handleSelectAll, clearSelection } = useSelection(devices, 'id', '_id');
   
   // Delete Modal State
   const [deleteModalState, setDeleteModalState] = useState({
@@ -42,7 +44,7 @@ const DeviceManagement = () => {
 
   const fetchDevices = useCallback(async () => {
     try {
-      setLoading(true);
+      showLoading();
       
       const params = {
         search,
@@ -69,12 +71,12 @@ const DeviceManagement = () => {
         setDevices([]);
         setTotal(0);
       }
-      setSelectedIds([]); // Clear selection when data changes
+      clearSelection(); // Clear selection when data changes
     } catch (err) {
       console.error('Error fetching devices:', err);
       toast.error(t('assets.fetch_error'));
     } finally {
-      setLoading(false);
+      hideLoading();
     }
   }, [search, status, type, order, page, perPage]);
 
@@ -109,23 +111,6 @@ const DeviceManagement = () => {
     toast.info(t('assets.view_details', { name: device.name, ip: device.ip_address }));
   };
 
-  const handleSelectDevice = (id, isSelected) => {
-    if (isSelected) {
-      setSelectedIds(prev => [...prev, id]);
-    } else {
-      setSelectedIds(prev => prev.filter(item => item !== id));
-    }
-  };
-
-  const handleSelectAll = (isSelected) => {
-    if (isSelected) {
-      const allIds = devices.map(d => d.id || d._id);
-      setSelectedIds(allIds);
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
   const handleBulkDelete = () => {
     if (selectedIds.length === 0) return;
     const devicesToDelete = devices.filter(d => selectedIds.includes(d.id || d._id));
@@ -151,7 +136,7 @@ const DeviceManagement = () => {
         const ids = items.map(i => i.id || i._id);
         await ApiDevice.deleteMultiple(ids);
         toast.success(t('common.delete_success', 'Xóa thành công'));
-        setSelectedIds([]);
+        clearSelection();
       }
       fetchDevices();
     } catch (err) {
@@ -263,7 +248,7 @@ const DeviceManagement = () => {
           onDelete={handleDeleteDevice}
           onView={handleViewDevice}
           selectedIds={selectedIds}
-          onSelect={handleSelectDevice}
+          onSelect={handleSelect}
           onSelectAll={handleSelectAll}
         />
 

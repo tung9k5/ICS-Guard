@@ -7,6 +7,7 @@ import VNoData from '@/components/VNoData';
 import VCheckbox from '@/components/VCheckbox';
 import VButton from '@/components/VButton';
 import ActionMenu from '@/components/ActionMenu';
+import { formatDate } from '@/utils/formatDate';
 
 const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChange, onPerPageChange, onLaunch, selectedIds = [], onSelect, onSelectAll, onDelete }) => {
   const { t } = useTranslation();
@@ -51,6 +52,8 @@ const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChang
                   <th>{t('attack.list.table_type')}</th>
                   <th style={{ whiteSpace: 'nowrap' }}>{t('attack.list.table_ip')}</th>
                   <th>{t('attack.list.table_status')}</th>
+                  <th style={{ whiteSpace: 'nowrap' }}>{t('common.created_at', 'Ngày tạo')}</th>
+                  <th style={{ whiteSpace: 'nowrap' }}>{t('common.updated_at', 'Ngày cập nhật')}</th>
                   <th className="actions-col">{t('attack.list.table_actions')}</th>
                 </tr>
               </thead>
@@ -67,13 +70,13 @@ const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChang
                         style={{ cursor: 'pointer' }}
                       />
                     </td>
-                    <td>
+                    <td style={{ maxWidth: '200px' }}>
                       <div className="device-info">
                         <div className="icon-wrapper">
                           {getDeviceIcon(device.type)}
                         </div>
-                        <div className="name-details">
-                          <span className="device-name truncate-text" style={{ maxWidth: '140px' }} title={device.name}>{device.name}</span>
+                        <div className="name-details" style={{ flex: 1, minWidth: 0 }}>
+                          <span className="device-name truncate-text" title={device.name}>{device.name}</span>
                         </div>
                       </div>
                     </td>
@@ -86,6 +89,8 @@ const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChang
                         {device.status === 'active' ? t('assets.filter_status_active') : t('assets.filter_status_inactive')}
                       </span>
                     </td>
+                    <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(device.createdAt)}</td>
+                    <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(device.updatedAt)}</td>
                     <td className="actions-col">
                       <ActionMenu 
                         actions={[
@@ -167,6 +172,14 @@ const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChang
                             {device.status === 'active' ? t('assets.filter_status_active') : t('assets.filter_status_inactive')}
                           </span>
                         </span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="detail-label">{t('common.created_at', 'Ngày tạo')}</span>
+                        <span className="detail-value">{formatDate(device.createdAt)}</span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="detail-label">{t('common.updated_at', 'Ngày cập nhật')}</span>
+                        <span className="detail-value">{formatDate(device.updatedAt)}</span>
                       </div>
                       <div className="detail-row" style={{ borderBottom: 'none', paddingBottom: 0, paddingTop: '16px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
                         <VButton 

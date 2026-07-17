@@ -7,6 +7,7 @@ import VHeaderPage from '@/components/VHeaderPage';
 import VNodata from '@/components/VNodata';
 import VPagination from '@/components/VPagination';
 import VButton from '@/components/VButton';
+import { formatDate } from '@/utils/formatDate';
 
 const StatusBadge = ({ status }) => {
   const { t } = useTranslation();
@@ -68,7 +69,8 @@ const CustomerDevices = () => {
                   t('customer.devices.col_mac', 'MAC'), 
                   t('customer.devices.col_zone', 'Zone'), 
                   t('customer.devices.col_status', 'Trạng thái'), 
-                  t('customer.devices.col_risk_score', 'Risk Score')
+                  t('customer.devices.col_risk_score', 'Risk Score'),
+                  t('common.created_at', 'Ngày tạo')
                 ].map((h, index) => (
                   <th key={index} style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px', color: 'var(--slate-800)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid var(--slate-200)' }}>{h}</th>
                 ))}
@@ -94,6 +96,9 @@ const CustomerDevices = () => {
                       </div>
                       <span style={{ fontSize: '12px', color: 'var(--slate-500)' }}>{device.risk_score || 0}%</span>
                     </div>
+                  </td>
+                  <td style={{ padding: '14px 16px', fontSize: '12px', color: 'var(--slate-500)' }}>
+                    {device.createdAt ? formatDate(device.createdAt) : '—'}
                   </td>
                 </tr>
               ))}

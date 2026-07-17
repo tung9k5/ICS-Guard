@@ -7,6 +7,7 @@ import VHeaderPage from '@/components/VHeaderPage';
 import VNodata from '@/components/VNodata';
 import VPagination from '@/components/VPagination';
 import VButton from '@/components/VButton';
+import { formatDate } from '@/utils/formatDate';
 
 const severityColor = { critical: '#ef4444', high: '#f97316', medium: '#eab308', low: '#22c55e', info: '#3b82f6' };
 const statusColor = { new: '#ef4444', acknowledged: '#f97316', resolved: '#22c55e', false_positive: '#6b7280' };
@@ -96,7 +97,7 @@ const CustomerAlerts = () => {
                     <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '600', background: `${statusColor[alert.status] || '#6b7280'}22`, color: statusColor[alert.status] || '#6b7280' }}>{statusLabel[alert.status] || alert.status}</span>
                   </td>
                   <td style={{ padding: '14px 16px', fontSize: '12px', color: 'var(--slate-500)' }}>
-                    {alert.createdAt ? new Date(alert.createdAt).toLocaleString('vi-VN') : '—'}
+                    {alert.createdAt ? formatDate(alert.createdAt) : '—'}
                   </td>
                   <td style={{ padding: '14px 16px' }}>
                     <div style={{ display: 'flex', gap: '6px' }}>

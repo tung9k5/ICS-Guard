@@ -191,7 +191,7 @@ class AuthService {
       email,
       password_hash,
       full_name: full_name || '',
-      role: ROLES.ADMIN,
+      role: ROLES.CUSTOMER,
       isFirstLogin: false
     });
 

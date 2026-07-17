@@ -8,7 +8,7 @@ import VNoData from '@/components/VNoData';
 import VFilterPage from '@/components/VFilterPage';
 import VButton from '@/components/VButton';
 import { toast } from 'react-toastify';
-import dayjs from 'dayjs';
+import { formatDate } from '@/utils/formatDate';
 
 const BlockedIpsList = () => {
   const { t } = useTranslation();
@@ -97,7 +97,8 @@ const BlockedIpsList = () => {
                 <tr>
                   <th style={{ width: '140px', whiteSpace: 'nowrap' }}>{t('audit.blocked.table_ip')}</th>
                   <th>{t('audit.blocked.table_reason')}</th>
-                  <th style={{ width: '160px', whiteSpace: 'nowrap' }}>{t('audit.blocked.table_blocked_at')}</th>
+                  <th style={{ whiteSpace: 'nowrap' }}>{t('common.created_at', 'Ngày tạo')}</th>
+                  <th style={{ whiteSpace: 'nowrap' }}>{t('common.updated_at', 'Ngày cập nhật')}</th>
                   <th style={{ width: '110px' }}>{t('audit.blocked.table_actions')}</th>
                 </tr>
               </thead>
@@ -110,11 +111,14 @@ const BlockedIpsList = () => {
                         <span style={{ whiteSpace: 'nowrap' }}>{ip.ipAddress}</span>
                       </div>
                     </td>
-                    <td>
-                      <span className="reason-text truncate-text" style={{ maxWidth: '200px', display: 'inline-block' }} title={ip.reason}>{ip.reason || '-'}</span>
+                    <td style={{ maxWidth: '250px' }}>
+                      <div className="reason-text truncate-text" title={ip.reason}>{ip.reason || '-'}</div>
                     </td>
                     <td className="time-col" style={{ whiteSpace: 'nowrap' }}>
-                      {dayjs(ip.createdAt).format('DD/MM/YYYY HH:mm')}
+                      {formatDate(ip.createdAt)}
+                    </td>
+                    <td className="time-col" style={{ whiteSpace: 'nowrap' }}>
+                      {formatDate(ip.updatedAt)}
                     </td>
                     <td>
                       <VButton 
@@ -165,9 +169,15 @@ const BlockedIpsList = () => {
                         <span className="detail-value">{ip.reason || '-'}</span>
                       </div>
                       <div className="detail-row">
-                        <span className="detail-label">{t('audit.blocked.table_blocked_at')}</span>
+                        <span className="detail-label">{t('common.created_at', 'Ngày tạo')}</span>
                         <span className="detail-value time-col">
-                          {dayjs(ip.createdAt).format('DD/MM/YYYY HH:mm')}
+                          {formatDate(ip.createdAt)}
+                        </span>
+                      </div>
+                      <div className="detail-row">
+                        <span className="detail-label">{t('common.updated_at', 'Ngày cập nhật')}</span>
+                        <span className="detail-value time-col">
+                          {formatDate(ip.updatedAt)}
                         </span>
                       </div>
                       <div className="detail-row" style={{ borderBottom: 'none', paddingBottom: 0, paddingTop: '16px', display: 'flex', justifyContent: 'center' }}>

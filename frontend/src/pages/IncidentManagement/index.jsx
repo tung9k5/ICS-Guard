@@ -10,13 +10,15 @@ import VHeaderPage from '@/components/VHeaderPage';
 import VFilterPage from '@/components/VFilterPage';
 import { toast } from '@/utils/toast';
 import { useTranslation } from 'react-i18next';
+import { useLoader } from '@/hooks/useLoader';
+import { useSelection } from '@/hooks/useSelection';
 import { SEARCH_DEBOUNCE_MS, DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
 import './IncidentManagement.scss';
 
 const IncidentManagement = () => {
   const { t } = useTranslation();
   const [incidents, setIncidents] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { isLoading: loading, showLoading, hideLoading } = useLoader(false);
   
   // Filter & Pagination States
   const [search, setSearch] = useState('');
@@ -29,7 +31,7 @@ const IncidentManagement = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingIncident, setEditingIncident] = useState(null);
-  const [selectedIds, setSelectedIds] = useState([]);
+  const { selectedIds, handleSelect, handleSelectAll, clearSelection } = useSelection(incidents, 'id', '_id');
   
   // Delete Modal State
   const [deleteModalState, setDeleteModalState] = useState({
@@ -40,7 +42,7 @@ const IncidentManagement = () => {
 
   const fetchIncidents = useCallback(async () => {
     try {
-      setLoading(true);
+      showLoading();
       
       const params = {
         search,
@@ -66,12 +68,12 @@ const IncidentManagement = () => {
         setIncidents([]);
         setTotal(0);
       }
-      setSelectedIds([]); 
+      clearSelection(); 
     } catch (err) {
       console.error('Error fetching incidents:', err);
       toast.error(t('incidents.fetch_error'));
     } finally {
-      setLoading(false);
+      hideLoading();
     }
   }, [search, status, severity, order, page, perPage, t]);
 
@@ -101,23 +103,6 @@ const IncidentManagement = () => {
     });
   };
 
-  const handleSelectIncident = (id, isSelected) => {
-    if (isSelected) {
-      setSelectedIds(prev => [...prev, id]);
-    } else {
-      setSelectedIds(prev => prev.filter(item => item !== id));
-    }
-  };
-
-  const handleSelectAll = (isSelected) => {
-    if (isSelected) {
-      const allIds = incidents.map(i => i.id || i._id);
-      setSelectedIds(allIds);
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
   const handleBulkDelete = () => {
     if (selectedIds.length === 0) return;
     const incidentsToDelete = incidents.filter(i => selectedIds.includes(i.id || i._id));
@@ -143,7 +128,7 @@ const IncidentManagement = () => {
         const ids = items.map(i => i.id || i._id);
         await ApiIncident.deleteMultiple(ids);
         toast.success(t('common.delete_success', 'Xóa thành công'));
-        setSelectedIds([]);
+        clearSelection();
       }
       fetchIncidents();
     } catch (err) {
@@ -269,7 +254,7 @@ const IncidentManagement = () => {
           onDelete={handleDeleteIncident}
           onAiAnalyze={handleAiAnalyze}
           selectedIds={selectedIds}
-          onSelect={handleSelectIncident}
+          onSelect={handleSelect}
           onSelectAll={handleSelectAll}
         />
 

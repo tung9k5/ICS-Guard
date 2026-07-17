@@ -8,6 +8,8 @@ import VHeaderPage from '@/components/VHeaderPage';
 import VFilterPage from '@/components/VFilterPage';
 import { toast } from '@/utils/toast';
 import { useTranslation } from 'react-i18next';
+import { useLoader } from '@/hooks/useLoader';
+import { useSelection } from '@/hooks/useSelection';
 import { SEARCH_DEBOUNCE_MS, DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
 import { ALERT_SEVERITIES, ALERT_STATUSES } from '@/constants/alertConstants';
 import VSelectFilter from '@/components/VSelectFilter';
@@ -18,7 +20,7 @@ import './AlertManagement.scss';
 const AlertManagement = () => {
   const { t } = useTranslation();
   const [alerts, setAlerts] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { isLoading: loading, showLoading, hideLoading } = useLoader(false);
   const [search, setSearch] = useState('');
   const [severity, setSeverity] = useState('');
   const [status, setStatus] = useState('');
@@ -27,14 +29,14 @@ const AlertManagement = () => {
   const [perPage, setPerPage] = useState(DEFAULT_PAGE_SIZE);
   const [total, setTotal] = useState(0);
 
-  const [selectedIds, setSelectedIds] = useState([]);
+  const { selectedIds, handleSelect, handleSelectAll, clearSelection } = useSelection(alerts, 'id', '_id');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [alertToDelete, setAlertToDelete] = useState(null);
   const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   const fetchAlerts = useCallback(async () => {
     try {
-      setLoading(true);
+      showLoading();
       const res = await alertsApi.getAllAlerts({
         page,
         per_page: perPage,
@@ -50,7 +52,7 @@ const AlertManagement = () => {
     } catch (error) {
       toast.error(t('error_general', 'Có lỗi xảy ra'));
     } finally {
-      setLoading(false);
+      hideLoading();
     }
   }, [page, perPage, search, severity, status, order, t]);
 
@@ -83,7 +85,7 @@ const AlertManagement = () => {
       if (isBulkDelete) {
         await alertsApi.deleteMultipleAlerts(selectedIds);
         toast.success(t('common.delete_success', 'Xóa thành công'));
-        setSelectedIds([]);
+        clearSelection();
       } else {
         if (!alertToDelete) return;
         await alertsApi.deleteAlert(alertToDelete._id);
@@ -93,20 +95,6 @@ const AlertManagement = () => {
       fetchAlerts();
     } catch (error) {
       toast.error(t('error_general', 'Có lỗi xảy ra'));
-    }
-  };
-
-  const handleSelect = (id) => {
-    setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-    );
-  };
-
-  const handleSelectAll = (checked) => {
-    if (checked) {
-      setSelectedIds(alerts.map(a => a._id));
-    } else {
-      setSelectedIds([]);
     }
   };
 
