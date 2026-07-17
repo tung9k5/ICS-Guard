@@ -7,6 +7,7 @@ import VHeaderPage from '@/components/VHeaderPage';
 import VNodata from '@/components/VNodata';
 import VPagination from '@/components/VPagination';
 import VButton from '@/components/VButton';
+import { formatDate } from '@/utils/formatDate';
 
 const statusColor = { open: '#ef4444', investigating: '#f97316', resolved: '#22c55e', closed: '#6b7280' };
 
@@ -74,7 +75,7 @@ const CustomerIncidents = () => {
                     <p style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: '600', color: 'var(--slate-900)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{incident.title}</p>
                     <p style={{ margin: 0, fontSize: '12px', color: 'var(--slate-500)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Clock size={11} />
-                      {incident.createdAt ? new Date(incident.createdAt).toLocaleString('vi-VN') : '—'}
+                      {incident.createdAt ? formatDate(incident.createdAt) : '—'}
                     </p>
                   </div>
                   <span style={{ flexShrink: 0, padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '600', background: `${statusColor[incident.status] || '#6b7280'}22`, color: statusColor[incident.status] || '#6b7280' }}>
@@ -127,7 +128,7 @@ const CustomerIncidents = () => {
               </div>
               <div>
                 <p style={{ fontSize: '13px', color: 'var(--slate-500)', margin: '0 0 6px' }}>{t('customer.incidents.lbl_created_at', 'Tạo lúc')}</p>
-                <p style={{ fontSize: '13px', color: 'var(--slate-900)', margin: 0, fontWeight: '500' }}>{selected.createdAt ? new Date(selected.createdAt).toLocaleString('vi-VN') : '—'}</p>
+                <p style={{ fontSize: '13px', color: 'var(--slate-900)', margin: 0, fontWeight: '500' }}>{selected.createdAt ? formatDate(selected.createdAt) : '—'}</p>
               </div>
             </div>
           </div>

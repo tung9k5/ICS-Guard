@@ -5,8 +5,9 @@ import ActionMenu from '@/components/ActionMenu';
 import VCheckbox from '@/components/VCheckbox';
 import VNoData from '@/components/VNoData';
 import { RULE_SEVERITIES, RULE_STATUSES } from '@/constants/ruleConstants';
+import { formatDate } from '@/utils/formatDate';
 
-const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], setSelectedIds }) => {
+const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], onSelect, onSelectAll }) => {
   const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState(null);
 
@@ -35,24 +36,6 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], setSelectedIds })
   const allSelected = rules.length > 0 && rules.every(r => selectedIds.includes(r._id));
   const someSelected = rules.length > 0 && rules.some(r => selectedIds.includes(r._id)) && !allSelected;
 
-  const handleSelectAll = (checked) => {
-    if (checked) {
-      const allIds = rules.map(r => r._id);
-      setSelectedIds(Array.from(new Set([...selectedIds, ...allIds])));
-    } else {
-      const currentIds = rules.map(r => r._id);
-      setSelectedIds(selectedIds.filter(id => !currentIds.includes(id)));
-    }
-  };
-
-  const handleSelect = (id, checked) => {
-    if (checked) {
-      setSelectedIds([...selectedIds, id]);
-    } else {
-      setSelectedIds(selectedIds.filter(selectedId => selectedId !== id));
-    }
-  };
-
   const getActions = (rule) => [
     { icon: Edit2, label: t('rules.edit', 'Chỉnh sửa'), onClick: () => onEdit(rule) },
     { icon: Trash2, label: t('rules.delete', 'Xóa'), onClick: () => onDelete(rule), danger: true }
@@ -69,7 +52,7 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], setSelectedIds })
                 <VCheckbox
                   checked={allSelected}
                   indeterminate={someSelected}
-                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  onChange={(e) => onSelectAll(e.target.checked)}
                 />
               </th>
               <th>{t('rules.list_table.table_name', 'TÊN QUY TẮC')}</th>
@@ -77,6 +60,8 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], setSelectedIds })
               <th>{t('rules.list_table.table_status', 'Trạng thái')}</th>
               <th>{t('rules.list_table.table_time_window', 'Thời gian (s)')}</th>
               <th>{t('rules.list_table.table_trigger_count', 'Ngưỡng')}</th>
+              <th>{t('common.created_at', 'Ngày tạo')}</th>
+              <th>{t('common.updated_at', 'Ngày cập nhật')}</th>
               <th className="actions-col">{t('rules.list_table.table_actions', 'Thao tác')}</th>
             </tr>
           </thead>
@@ -86,11 +71,11 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], setSelectedIds })
                 <td style={{ textAlign: 'center' }}>
                   <VCheckbox 
                     checked={selectedIds.includes(rule._id)}
-                    onChange={(e) => handleSelect(rule._id, e.target.checked)}
+                    onChange={(e) => onSelect(rule._id, e.target.checked)}
                     style={{ cursor: 'pointer' }}
                   />
                 </td>
-                <td>
+                <td style={{ maxWidth: '180px' }}>
                   <div className="truncate-text font-medium text-primary" title={rule.rule_name}>{rule.rule_name}</div>
                 </td>
                 <td>
@@ -105,6 +90,8 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], setSelectedIds })
                 </td>
                 <td>{rule.time_window_seconds}s</td>
                 <td>{rule.trigger_count}</td>
+                <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(rule.createdAt)}</td>
+                <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(rule.updatedAt)}</td>
                 <td className="actions-col">
                   <ActionMenu 
                     actions={getActions(rule)}
@@ -124,7 +111,7 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], setSelectedIds })
             <VCheckbox
               checked={allSelected}
               indeterminate={someSelected}
-              onChange={(e) => handleSelectAll(e.target.checked)}
+              onChange={(e) => onSelectAll(e.target.checked)}
             />
           </div>
           <div className="col-title">{t('rules.list_table.mobile_name', 'Tên quy tắc')}</div>
@@ -142,7 +129,7 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], setSelectedIds })
                   onClick={(e) => e.stopPropagation()}>
                   <VCheckbox 
                     checked={isSelected}
-                    onChange={(e) => handleSelect(rule._id, e.target.checked)}
+                    onChange={(e) => onSelect(rule._id, e.target.checked)}
                     style={{ cursor: 'pointer' }}
                   />
                 </div>
@@ -182,6 +169,14 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], setSelectedIds })
                   <div className="detail-row">
                     <span className="detail-label">{t('rules.list_table.table_trigger_count', 'Ngưỡng')}</span>
                     <span className="detail-value">{rule.trigger_count}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">{t('common.created_at', 'Ngày tạo')}</span>
+                    <span className="detail-value">{formatDate(rule.createdAt)}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">{t('common.updated_at', 'Ngày cập nhật')}</span>
+                    <span className="detail-value">{formatDate(rule.updatedAt)}</span>
                   </div>
                 </div>
               )}

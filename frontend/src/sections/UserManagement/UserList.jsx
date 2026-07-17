@@ -5,6 +5,7 @@ import VNoData from '@/components/VNoData';
 import VStatus from '@/components/VStatus';
 import VCheckbox from '@/components/VCheckbox';
 import { useTranslation } from 'react-i18next';
+import { formatDate } from '@/utils/formatDate';
 
 const UserList = ({ 
   users, 
@@ -58,11 +59,12 @@ const UserList = ({
                   style={{ cursor: 'pointer' }}
                 />
               </th>
-              <th>{t('users.list.table_username')}</th>
               <th>{t('users.list.table_fullname')}</th>
               <th>{t('users.list.table_email')}</th>
               <th>{t('users.list.table_role')}</th>
               <th>{t('users.list.table_status')}</th>
+              <th>{t('common.created_at', 'Ngày tạo')}</th>
+              <th>{t('common.updated_at', 'Ngày cập nhật')}</th>
               <th className="actions-col">{t('users.list.table_actions')}</th>
             </tr>
           </thead>
@@ -84,17 +86,11 @@ const UserList = ({
                       style={{ cursor: 'pointer' }}
                     />
                   </td>
-                  <td>
-                    <div className="user-name" title={user.username}>
-                      <User size={16} className="text-primary" style={{ flexShrink: 0 }} />
-                      <span className="truncate-text">{user.username}</span>
-                    </div>
+                  <td style={{ maxWidth: '150px' }}>
+                    <div className="truncate-text" title={user.full_name}>{user.full_name || 'N/A'}</div>
                   </td>
-                  <td>
-                    <span className="truncate-text" title={user.full_name}>{user.full_name || 'N/A'}</span>
-                  </td>
-                  <td>
-                    <span className="truncate-text" title={user.email}>{user.email || 'N/A'}</span>
+                  <td style={{ maxWidth: '180px' }}>
+                    <div className="truncate-text" title={user.email}>{user.email || 'N/A'}</div>
                   </td>
                   <td>
                     <VStatus 
@@ -108,6 +104,8 @@ const UserList = ({
                       label={user.is_active ? t('users.list.status_active') : t('users.list.status_inactive')} 
                     />
                   </td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(user.createdAt)}</td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(user.updatedAt)}</td>
                   <td className="actions-col">
                     <ActionMenu 
                       actions={actions} 
@@ -132,7 +130,6 @@ const UserList = ({
               style={{ cursor: 'pointer' }}
             />
           </div>
-          <div className="col-id">{t('users.list.mobile_username')}</div>
           <div className="col-title">{t('users.list.mobile_fullname')}</div>
           <div className="col-action"></div>
         </div>
@@ -191,6 +188,14 @@ const UserList = ({
                         label={user.is_active ? t('users.list.status_active') : t('users.list.status_inactive')} 
                       />
                     </span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">{t('common.created_at', 'Ngày tạo')}</span>
+                    <span className="detail-value">{formatDate(user.createdAt)}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">{t('common.updated_at', 'Ngày cập nhật')}</span>
+                    <span className="detail-value">{formatDate(user.updatedAt)}</span>
                   </div>
                 </div>
               )}

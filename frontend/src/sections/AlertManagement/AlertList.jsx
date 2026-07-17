@@ -5,6 +5,7 @@ import ActionMenu from '@/components/ActionMenu';
 import VCheckbox from '@/components/VCheckbox';
 import VNoData from '@/components/VNoData';
 import { ALERT_SEVERITIES, ALERT_STATUSES } from '@/constants/alertConstants';
+import { formatDate } from '@/utils/formatDate';
 
 const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, onSelectAll }) => {
   const { t } = useTranslation();
@@ -74,7 +75,8 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
               <th>{t('alerts.list_table.table_rule', 'Từ quy tắc')}</th>
               <th>{t('alerts.list_table.table_severity', 'Mức độ')}</th>
               <th>{t('alerts.list_table.table_status', 'Trạng thái')}</th>
-              <th>{t('alerts.list_table.table_detected_at', 'Thời gian')}</th>
+              <th>{t('common.created_at', 'Ngày tạo')}</th>
+              <th>{t('common.updated_at', 'Ngày cập nhật')}</th>
               <th className="actions-col">{t('alerts.list_table.table_actions', 'Thao tác')}</th>
             </tr>
           </thead>
@@ -90,12 +92,10 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
                       style={{ cursor: 'pointer' }}
                     />
                   </td>
-                  <td>
-                    <div className="alert-name" title={alert.title}>
-                      <ShieldAlert size={16} className="text-primary" style={{ flexShrink: 0 }} />
-                      <span className="truncate-text">{alert.title}</span>
+                  <td style={{ maxWidth: '180px' }}>
+                    <div className="alert-title" title={alert.title}>
+                      <span className="truncate-text" style={{ flex: 1, minWidth: 0 }}>{alert.title}</span>
                     </div>
-                    {alert.description && <div style={{ fontSize: '12px', color: 'var(--slate-500)', marginTop: '2px' }}>{alert.description}</div>}
                   </td>
                   <td>{alert.rule_name || '-'}</td>
                   <td>
@@ -108,7 +108,8 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
                       {getStatusLabel(alert.status)}
                     </span>
                   </td>
-                  <td style={{ whiteSpace: 'nowrap' }}>{new Date(alert.detected_at).toLocaleString()}</td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(alert.createdAt)}</td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(alert.updatedAt)}</td>
                   <td className="actions-col">
                     <ActionMenu 
                       actions={getActions(alert)}
@@ -186,8 +187,12 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
                     <span className="detail-value">{alert.rule_name || '-'}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">{t('alerts.list_table.table_detected_at', 'Thời gian')}</span>
-                    <span className="detail-value">{new Date(alert.detected_at).toLocaleString()}</span>
+                    <span className="detail-label">{t('common.created_at', 'Ngày tạo')}</span>
+                    <span className="detail-value">{formatDate(alert.createdAt)}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">{t('common.updated_at', 'Ngày cập nhật')}</span>
+                    <span className="detail-value">{formatDate(alert.updatedAt)}</span>
                   </div>
                 </div>
               )}

@@ -10,6 +10,8 @@ import VButton from '@/components/VButton';
 import DeleteConfirmModal from '@/Dialog/DeleteConfirmModal';
 import { Trash2, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
+import { useLoader } from '@/hooks/useLoader';
+import { useSelection } from '@/hooks/useSelection';
 import './AttackSimulator.scss';
 
 const DEVICE_TYPES = ['PLC', 'HMI', 'Switch', 'RTU', 'Sensor'];
@@ -17,7 +19,7 @@ const DEVICE_TYPES = ['PLC', 'HMI', 'Switch', 'RTU', 'Sensor'];
 const AttackSimulator = () => {
   const { t } = useTranslation();
   const [devices, setDevices] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { isLoading: loading, showLoading, hideLoading } = useLoader(false);
   const [attackLoading, setAttackLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [deviceType, setDeviceType] = useState('all');
@@ -29,13 +31,13 @@ const AttackSimulator = () => {
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [selectedIds, setSelectedIds] = useState([]);
+  const { selectedIds, handleSelect, handleSelectAll, clearSelection } = useSelection(devices, 'id', '_id');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deviceToDelete, setDeviceToDelete] = useState(null);
 
   const fetchDevices = async () => {
     try {
-      setLoading(true);
+      showLoading();
       const res = await ApiAttacks.getDevices({
         page,
         per_page: perPage,
@@ -57,7 +59,7 @@ const AttackSimulator = () => {
       console.error(err);
       toast.error(t('attack.fetch_error'));
     } finally {
-      setLoading(false);
+      hideLoading();
     }
   };
 
@@ -86,22 +88,6 @@ const AttackSimulator = () => {
     }
   };
 
-  const handleSelectAll = (checked) => {
-    if (checked) {
-      setSelectedIds(devices.map(d => d.id || d._id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
-  const handleSelect = (id, checked) => {
-    if (checked) {
-      setSelectedIds(prev => [...prev, id]);
-    } else {
-      setSelectedIds(prev => prev.filter(item => item !== id));
-    }
-  };
-
   const confirmDelete = (id) => {
     setDeviceToDelete(id);
     setIsDeleteModalOpen(true);
@@ -112,7 +98,7 @@ const AttackSimulator = () => {
       if (deviceToDelete === 'bulk') {
         await ApiAttacks.bulkDeleteDevices(selectedIds);
         toast.success(t('common.delete_success', 'Xóa thành công'));
-        setSelectedIds([]);
+        clearSelection();
       } else {
         await ApiAttacks.deleteDevice(deviceToDelete);
         toast.success(t('common.delete_success', 'Xóa thành công'));

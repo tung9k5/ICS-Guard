@@ -11,6 +11,8 @@ import VHeaderPage from '@/components/VHeaderPage';
 import VFilterPage from '@/components/VFilterPage';
 import { toast } from '@/utils/toast';
 import { useTranslation } from 'react-i18next';
+import { useLoader } from '@/hooks/useLoader';
+import { useSelection } from '@/hooks/useSelection';
 import { SEARCH_DEBOUNCE_MS, DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
 import { RULE_SEVERITIES, RULE_STATUSES } from '@/constants/ruleConstants';
 import VSelectFilter from '@/components/VSelectFilter';
@@ -19,7 +21,7 @@ import './RuleManagement.scss';
 const RuleManagement = () => {
   const { t } = useTranslation();
   const [rules, setRules] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { isLoading: loading, showLoading, hideLoading } = useLoader(false);
   const [search, setSearch] = useState('');
   const [severity, setSeverity] = useState('');
   const [status, setStatus] = useState('');
@@ -34,12 +36,12 @@ const RuleManagement = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [ruleToDelete, setRuleToDelete] = useState(null);
 
-  const [selectedRuleIds, setSelectedRuleIds] = useState([]);
+  const { selectedIds: selectedRuleIds, handleSelect, handleSelectAll, clearSelection } = useSelection(rules, 'id', '_id');
   const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
 
   const fetchRules = useCallback(async () => {
     try {
-      setLoading(true);
+      showLoading();
       const res = await rulesApi.getAllRules({
         page,
         per_page: perPage,
@@ -55,7 +57,7 @@ const RuleManagement = () => {
     } catch (error) {
       toast.error(t('error_general', 'Có lỗi xảy ra'));
     } finally {
-      setLoading(false);
+      hideLoading();
     }
   }, [page, perPage, search, severity, status, order, t]);
 
@@ -108,7 +110,7 @@ const RuleManagement = () => {
       await rulesApi.deleteRule(ruleToDelete._id);
       toast.success(t('common.delete_success', 'Xóa thành công'));
       setIsDeleteModalOpen(false);
-      setSelectedRuleIds(selectedRuleIds.filter(id => id !== ruleToDelete._id));
+      clearSelection();
       fetchRules();
     } catch (error) {
       toast.error(t('error_general', 'Có lỗi xảy ra'));
@@ -120,7 +122,7 @@ const RuleManagement = () => {
     try {
       await rulesApi.bulkDeleteRules({ ids: selectedRuleIds });
       toast.success(t('common.delete_success', 'Xóa thành công'));
-      setSelectedRuleIds([]);
+      clearSelection();
       setIsBulkDeleteModalOpen(false);
       fetchRules();
     } catch (error) {
@@ -233,7 +235,8 @@ const RuleManagement = () => {
               onEdit={handleEdit}
               onDelete={confirmDelete}
               selectedIds={selectedRuleIds}
-              setSelectedIds={setSelectedRuleIds}
+              onSelect={handleSelect}
+              onSelectAll={handleSelectAll}
             />
 
             {rules && rules.length > 0 && (

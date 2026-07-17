@@ -5,6 +5,7 @@ import VNoData from '@/components/VNoData';
 import VStatus from '@/components/VStatus';
 import VCheckbox from '@/components/VCheckbox';
 import { useTranslation } from 'react-i18next';
+import { formatDate } from '@/utils/formatDate';
 
 const getSeverityStyle = (severity) => {
   switch (severity) {
@@ -72,6 +73,8 @@ const IncidentList = ({
               <th>{t('incidents.list.table_severity')}</th>
               <th>{t('incidents.list.table_status')}</th>
               <th>{t('incidents.list.table_desc')}</th>
+              <th>{t('common.created_at', 'Ngày tạo')}</th>
+              <th>{t('common.updated_at', 'Ngày cập nhật')}</th>
               <th className="actions-col">{t('incidents.list.table_actions')}</th>
             </tr>
           </thead>
@@ -94,10 +97,9 @@ const IncidentList = ({
                       style={{ cursor: 'pointer' }}
                     />
                   </td>
-                  <td>
-                    <div className="incident-name" title={incident.title}>
-                      <ShieldAlert size={16} className="text-primary" style={{ flexShrink: 0 }} />
-                      <span className="truncate-text">{incident.title}</span>
+                  <td style={{ maxWidth: '180px' }}>
+                    <div className="incident-title" title={incident.title}>
+                      <span className="truncate-text" style={{ flex: 1, minWidth: 0 }}>{incident.title}</span>
                     </div>
                   </td>
                   <td>
@@ -113,9 +115,11 @@ const IncidentList = ({
                       label={getStatusLabel(incident.status)} 
                     />
                   </td>
-                  <td className="text-muted">
+                  <td className="text-muted" style={{ maxWidth: '200px' }}>
                     <span className="truncate-text" title={incident.description}>{incident.description || '-'}</span>
                   </td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(incident.createdAt)}</td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(incident.updatedAt)}</td>
                   <td className="actions-col">
                     <ActionMenu 
                       actions={actions} 
@@ -199,6 +203,14 @@ const IncidentList = ({
                   <div className="detail-row">
                     <span className="detail-label">{t('incidents.list.table_desc')}</span>
                     <span className="detail-value">{incident.description || '-'}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">{t('common.created_at', 'Ngày tạo')}</span>
+                    <span className="detail-value">{formatDate(incident.createdAt)}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="detail-label">{t('common.updated_at', 'Ngày cập nhật')}</span>
+                    <span className="detail-value">{formatDate(incident.updatedAt)}</span>
                   </div>
                 </div>
               )}

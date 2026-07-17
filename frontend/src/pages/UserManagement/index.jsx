@@ -10,13 +10,15 @@ import VHeaderPage from '@/components/VHeaderPage';
 import VFilterPage from '@/components/VFilterPage';
 import { toast } from '@/utils/toast';
 import { useTranslation } from 'react-i18next';
+import { useLoader } from '@/hooks/useLoader';
+import { useSelection } from '@/hooks/useSelection';
 import { SEARCH_DEBOUNCE_MS, DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
 import './UserManagement.scss';
 
 const UserManagement = () => {
   const { t } = useTranslation();
   const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const { isLoading: loading, showLoading, hideLoading } = useLoader(false);
   
   // Filter & Pagination States
   const [search, setSearch] = useState('');
@@ -29,7 +31,7 @@ const UserManagement = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const [selectedIds, setSelectedIds] = useState([]);
+  const { selectedIds, handleSelect, handleSelectAll, clearSelection } = useSelection(users, 'id', '_id');
   
   // Delete Modal State
   const [deleteModalState, setDeleteModalState] = useState({
@@ -40,7 +42,7 @@ const UserManagement = () => {
 
   const fetchUsers = useCallback(async () => {
     try {
-      setLoading(true);
+      showLoading();
       
       const params = {
         search,
@@ -66,12 +68,12 @@ const UserManagement = () => {
         setUsers([]);
         setTotal(0);
       }
-      setSelectedIds([]); 
+      clearSelection(); 
     } catch (err) {
       console.error('Error fetching users:', err);
       toast.error(t('users.fetch_error'));
     } finally {
-      setLoading(false);
+      hideLoading();
     }
   }, [search, status, role, order, page, perPage, t]);
 
@@ -101,23 +103,6 @@ const UserManagement = () => {
     });
   };
 
-  const handleSelectUser = (id, isSelected) => {
-    if (isSelected) {
-      setSelectedIds(prev => [...prev, id]);
-    } else {
-      setSelectedIds(prev => prev.filter(item => item !== id));
-    }
-  };
-
-  const handleSelectAll = (isSelected) => {
-    if (isSelected) {
-      const allIds = users.map(u => u.id || u._id);
-      setSelectedIds(allIds);
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
   const handleBulkDelete = () => {
     if (selectedIds.length === 0) return;
     const usersToDelete = users.filter(u => selectedIds.includes(u.id || u._id));
@@ -143,7 +128,7 @@ const UserManagement = () => {
         const ids = items.map(i => i.id || i._id);
         await ApiUser.deleteMultipleUsers(ids);
         toast.success(t('common.delete_success', 'Xóa thành công'));
-        setSelectedIds([]);
+        clearSelection();
       }
       fetchUsers();
     } catch (err) {
@@ -256,7 +241,7 @@ const UserManagement = () => {
           onEdit={handleEditUser}
           onDelete={handleDeleteUser}
           selectedIds={selectedIds}
-          onSelect={handleSelectUser}
+          onSelect={handleSelect}
           onSelectAll={handleSelectAll}
         />
 
