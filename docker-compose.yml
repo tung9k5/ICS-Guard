@@ -23,7 +23,8 @@ services:
   # 2. Backend API (FastAPI / NestJS)
   backend:
     build:
-      context: ./backend
+      context: .
+      dockerfile: ./backend/Dockerfile
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
