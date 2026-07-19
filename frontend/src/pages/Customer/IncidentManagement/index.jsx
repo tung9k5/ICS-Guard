@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import incidentsApi from '@/api/incidents';
 import { toast } from '@/utils/toast';
 import VHeaderPage from '@/components/VHeaderPage';
-import VNodata from '@/components/VNodata';
+import VNoData from '@/components/VNoData';
 import VPagination from '@/components/VPagination';
 import VButton from '@/components/VButton';
 import { formatDate } from '@/utils/formatDate';
@@ -55,7 +55,7 @@ const CustomerIncidents = () => {
             {loading ? (
               <div style={{ padding: '40px', textAlign: 'center', color: 'var(--slate-500)' }}>{t('customer.common.loading', 'Đang tải...')}</div>
             ) : incidents.length === 0 ? (
-              <VNodata title={t('customer.incidents.no_data', 'Không có sự cố nào')} />
+              <VNoData title={t('customer.incidents.no_data', 'Không có sự cố nào')} />
             ) : incidents.map((incident, i) => (
               <div
                 key={incident._id}
