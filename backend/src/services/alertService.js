@@ -2,7 +2,7 @@ import alertRepository from '../repositories/alertRepository.js';
 import auditRepository from '../repositories/auditRepository.js';
 import deviceRepository from '../repositories/deviceRepository.js';
 import AppError from '../utils/AppError.js';
-import { Severity } from '../../../shared/constants/severity.js';
+import { Severity } from '../shared/constants/severity.js';
 
 class AlertService {
   async getAll(queryParams, user) {

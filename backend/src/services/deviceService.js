@@ -4,7 +4,7 @@ import { isolateDevice } from './securityService.js';
 import { sendEmailAlert } from './emailService.js';
 import { sendTelegramAlert } from './telegramService.js';
 import { publishMqtt } from './mqttService.js';
-import { validateDevice } from '../../../shared/schemas/deviceSchema.js';
+import { validateDevice } from '../shared/schemas/deviceSchema.js';
 import { ROLES, DEVICE_STATUSES, ATTACK_TYPES } from '../constants/index.js';
 import AppError from '../utils/AppError.js';
 import socketService from './socketService.js';
