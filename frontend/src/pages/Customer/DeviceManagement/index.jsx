@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import deviceApi from '@/api/device';
 import { toast } from '@/utils/toast';
 import VHeaderPage from '@/components/VHeaderPage';
-import VNodata from '@/components/VNodata';
+import VNoData from '@/components/VNoData';
 import VPagination from '@/components/VPagination';
 import VButton from '@/components/VButton';
 import { formatDate } from '@/utils/formatDate';
@@ -58,7 +58,7 @@ const CustomerDevices = () => {
         {loading ? (
           <div style={{ padding: '40px', textAlign: 'center', color: 'var(--slate-500)' }}>{t('customer.common.loading', 'Đang tải...')}</div>
         ) : devices.length === 0 ? (
-          <VNodata title={t('customer.devices.no_data', 'Chưa có thiết bị nào')} />
+          <VNoData title={t('customer.devices.no_data', 'Chưa có thiết bị nào')} />
         ) : (
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
