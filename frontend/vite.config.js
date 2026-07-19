@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => {
         '.ngrok.app',
         'localhost',
         '127.0.0.1',
+        '.onrender.com'
       ],
 
       proxy: {
