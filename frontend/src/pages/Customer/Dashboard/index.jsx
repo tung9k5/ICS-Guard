@@ -5,7 +5,7 @@ import deviceApi from '@/api/device';
 import alertsApi from '@/api/alerts';
 import incidentsApi from '@/api/incidents';
 import VHeaderPage from '@/components/VHeaderPage';
-import VNodata from '@/components/VNodata';
+import VNoData from '@/components/VNoData';
 import VButton from '@/components/VButton';
 import Viewlogo from '@/components/Viewlogo';
 import { formatDate } from '@/utils/formatDate';
@@ -110,7 +110,7 @@ const CustomerDashboard = () => {
             {loading ? (
               <p style={{ padding: '20px 24px', color: 'var(--slate-500)', fontSize: '14px', textAlign: 'center' }}>{t('customer.common.loading', 'Đang tải...')}</p>
             ) : recentAlerts.length === 0 ? (
-              <VNodata title={t('customer.alerts.no_data', 'Không có cảnh báo nào')} />
+              <VNoData title={t('customer.alerts.no_data', 'Không có cảnh báo nào')} />
             ) : recentAlerts.map((alert, i) => (
               <div key={alert._id || i} style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
