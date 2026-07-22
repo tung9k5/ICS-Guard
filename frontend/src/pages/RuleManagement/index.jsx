@@ -11,24 +11,36 @@ import VHeaderPage from '@/components/VHeaderPage';
 import VFilterPage from '@/components/VFilterPage';
 import { toast } from '@/utils/toast';
 import { useTranslation } from 'react-i18next';
-import { useLoader } from '@/hooks/useLoader';
 import { useSelection } from '@/hooks/useSelection';
-import { SEARCH_DEBOUNCE_MS, DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
+import { useFetchList } from '@/hooks/useFetchList';
+import { DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
 import { RULE_SEVERITIES, RULE_STATUSES } from '@/constants/ruleConstants';
 import VSelectFilter from '@/components/VSelectFilter';
 import './RuleManagement.scss';
 
 const RuleManagement = () => {
   const { t } = useTranslation();
-  const [rules, setRules] = useState([]);
-  const { isLoading: loading, showLoading, hideLoading } = useLoader(false);
-  const [search, setSearch] = useState('');
-  const [severity, setSeverity] = useState('');
-  const [status, setStatus] = useState('');
-  const [order, setOrder] = useState('desc');
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(DEFAULT_PAGE_SIZE);
-  const [total, setTotal] = useState(0);
+
+  const {
+    data: rules,
+    total,
+    isLoading: loading,
+    search,
+    handleSearchChange,
+    order,
+    setOrder,
+    page,
+    setPage,
+    perPage,
+    setPerPage,
+    filters,
+    handleFilterChange,
+    fetchData: fetchRules
+  } = useFetchList({
+    fetchFn: rulesApi.getAllRules,
+    initialFilters: { severity: '', is_active: '' },
+    errorMessageKey: 'error_general'
+  });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedRule, setSelectedRule] = useState(null);
@@ -37,41 +49,12 @@ const RuleManagement = () => {
   const [ruleToDelete, setRuleToDelete] = useState(null);
 
   const { selectedIds: selectedRuleIds, handleSelect, handleSelectAll, clearSelection } = useSelection(rules, 'id', '_id');
-  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
-
-  const fetchRules = useCallback(async () => {
-    try {
-      showLoading();
-      const res = await rulesApi.getAllRules({
-        page,
-        per_page: perPage,
-        search,
-        severity,
-        is_active: status,
-        order
-      });
-      if (res.status === 'success') {
-        setRules(res.data);
-        setTotal(res.pagination?.total || 0);
-      }
-    } catch (error) {
-      toast.error(t('error_general', 'Có lỗi xảy ra'));
-    } finally {
-      hideLoading();
-    }
-  }, [page, perPage, search, severity, status, order, t]);
-
+  
   useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchRules();
-    }, SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [fetchRules]);
+    clearSelection();
+  }, [rules, clearSelection]);
 
-  const handleSearchChange = (e) => {
-    setSearch(e.target.value);
-    setPage(1);
-  };
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
 
   const handleCreate = () => {
     setSelectedRule(null);
@@ -163,28 +146,25 @@ const RuleManagement = () => {
         <VFilterPage
           searchPlaceholder={t('rules.search_placeholder', 'Tìm tên quy tắc...')}
           searchValue={search}
-          onSearchChange={handleSearchChange}
+          onSearchChange={(e) => handleSearchChange(e.target.value)}
         >
           <div className="filter-select-wrapper">
             <select 
               className="v-filter-select" 
-              value={severity} 
-              onChange={(e) => {
-                setSeverity(e.target.value);
-                setPage(1);
-              }}
-              style={{ paddingRight: severity ? '28px' : undefined }}
+              value={filters.severity} 
+              onChange={(e) => handleFilterChange('severity', e.target.value)}
+              style={{ paddingRight: filters.severity ? '28px' : undefined }}
             >
               <option value="">{t('rules.filter_severity', 'Tất cả mức độ')}</option>
               {RULE_SEVERITIES.map(sev => (
                 <option key={sev.value} value={sev.value}>{sev.label}</option>
               ))}
             </select>
-            {severity && (
+            {filters.severity && (
               <X 
                 size={14} 
                 className="clear-icon"
-                onClick={() => { setSeverity(''); setPage(1); }}
+                onClick={() => handleFilterChange('severity', '')}
               />
             )}
           </div>
@@ -192,23 +172,20 @@ const RuleManagement = () => {
           <div className="filter-select-wrapper">
             <select 
               className="v-filter-select" 
-              value={status} 
-              onChange={(e) => {
-                setStatus(e.target.value);
-                setPage(1);
-              }}
-              style={{ paddingRight: status ? '28px' : undefined }}
+              value={filters.is_active} 
+              onChange={(e) => handleFilterChange('is_active', e.target.value)}
+              style={{ paddingRight: filters.is_active ? '28px' : undefined }}
             >
               <option value="">{t('rules.filter_status', 'Tất cả trạng thái')}</option>
               {RULE_STATUSES.map(stat => (
                 <option key={stat.value} value={stat.value}>{stat.label}</option>
               ))}
             </select>
-            {status && (
+            {filters.is_active && (
               <X 
                 size={14} 
                 className="clear-icon"
-                onClick={() => { setStatus(''); setPage(1); }}
+                onClick={() => handleFilterChange('is_active', '')}
               />
             )}
           </div>

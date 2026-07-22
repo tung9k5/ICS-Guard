@@ -27,7 +27,8 @@ export const DEVICE_TYPES = {
   CONTROLLER: 'controller',
   CHIP: 'chip',
   SENSOR: 'sensor',
-  ACTUATOR: 'actuator'
+  ACTUATOR: 'actuator',
+  IOT_DEVICE: 'IoT Device'
 };
 
 export const INCIDENT_TIMELINE_TYPES = {
@@ -55,4 +56,10 @@ export const ATTACK_TYPES = {
   TRAFFIC_SPIKE: 'traffic_spike',
   OVERHEAT: 'overheat',
   ROLLBACK: 'rollback'
+};
+
+export const AUDIT_ACTIONS = {
+  ALERT_STATUS_UPDATED: 'ALERT_STATUS_UPDATED',
+  DEVICE_UNISOLATION_TRIGGERED: 'DEVICE_UNISOLATION_TRIGGERED',
+  DEVICE_ROLLBACK_TRIGGERED: 'DEVICE_ROLLBACK_TRIGGERED'
 };

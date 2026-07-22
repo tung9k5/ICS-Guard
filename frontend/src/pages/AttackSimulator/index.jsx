@@ -14,7 +14,7 @@ import { useLoader } from '@/hooks/useLoader';
 import { useSelection } from '@/hooks/useSelection';
 import './AttackSimulator.scss';
 
-const DEVICE_TYPES = ['PLC', 'HMI', 'Switch', 'RTU', 'Sensor'];
+import { DEVICE_TYPES } from '@/constants/deviceConstants';
 
 const AttackSimulator = () => {
   const { t } = useTranslation();
@@ -145,7 +145,7 @@ const AttackSimulator = () => {
             defaultValue="all"
             onChange={(val) => { setDeviceType(val); setPage(1); }}
             placeholder={t('assets.filter_type_all')}
-            options={DEVICE_TYPES.map(tp => ({ value: tp, label: tp }))}
+            options={DEVICE_TYPES.map(tp => ({ value: tp.value, label: tp.label }))}
           />
 
           {/* Order filter */}

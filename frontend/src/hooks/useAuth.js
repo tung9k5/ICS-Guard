@@ -18,6 +18,8 @@ export const useAuth = () => {
     try {
       const response = await authApi.login(formData);
       if (response && response.access_token) {
+        localStorage.setItem('access_token', response.access_token);
+        
         if (rememberMe) {
           const expires = Date.now() + 30 * 24 * 60 * 60 * 1000;
           localStorage.setItem('remembered_account', JSON.stringify({
@@ -30,13 +32,9 @@ export const useAuth = () => {
 
         toast.success(t('auth.login.success'));
         if (isAttacker) {
-          localStorage.setItem('attacker_access_token', response.access_token);
-          localStorage.setItem('attacker_refresh_token', response.refresh_token);
           navigate('/attacker', { replace: true });
         } else {
-          localStorage.setItem('access_token', response.access_token);
-          localStorage.setItem('refresh_token', response.refresh_token);
-          const role = response.user?.role || 'admin';
+          const role = response.user?.role;
           navigate(getDefaultRoute(role), { replace: true });
         }
       }
@@ -53,9 +51,8 @@ export const useAuth = () => {
       const res = await authApi.loginGoogle({ idToken: credential });
       if (res && res.access_token) {
         localStorage.setItem('access_token', res.access_token);
-        localStorage.setItem('refresh_token', res.refresh_token);
         toast.success(t('auth.login.success'));
-        const role = res.user?.role || 'customer';
+        const role = res.user?.role;
         navigate(getDefaultRoute(role), { replace: true });
       }
     } catch (err) {

@@ -16,16 +16,16 @@ class AuthService {
         role: user.role, 
         isFirstLogin: user.isFirstLogin === undefined ? true : user.isFirstLogin 
       },
-      process.env.JWT_SECRET || 'ics_guard_access_secret_key_2026_@_secure',
-      { expiresIn: process.env.JWT_ACCESS_EXPIRY || AUTH_CONSTANTS.JWT_ACCESS_EXPIRY_DEFAULT }
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_ACCESS_EXPIRY || '1h' }
     );
   }
 
   generateRefreshToken(user) {
     return jwt.sign(
       { id: user._id },
-      process.env.JWT_SECRET || 'ics_guard_refresh_secret_key_2026_@_secure',
-      { expiresIn: process.env.JWT_REFRESH_EXPIRY || AUTH_CONSTANTS.JWT_REFRESH_EXPIRY_DEFAULT }
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_REFRESH_EXPIRY || '7d' }
     );
   }
 
@@ -80,7 +80,7 @@ class AuthService {
   async refresh(refreshToken) {
     let decoded;
     try {
-      decoded = jwt.verify(refreshToken, process.env.JWT_SECRET || 'ics_guard_refresh_secret_key_2026_@_secure');
+      decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
     } catch (err) {
       throw new AppError('Invalid or expired refresh token.', 401);
     }
@@ -230,6 +230,10 @@ class AuthService {
       throw new AppError('Invalid Google ID token.', 401);
     }
     
+    if (response.data.aud !== process.env.GOOGLE_CLIENT_ID) {
+      throw new AppError('Invalid audience for Google ID token.', 401);
+    }
+
     const { email, name, sub } = response.data;
     let user = await userRepository.findByEmailOrUsername(email);
 

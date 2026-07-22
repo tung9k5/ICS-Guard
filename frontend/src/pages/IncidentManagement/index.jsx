@@ -10,28 +10,42 @@ import VHeaderPage from '@/components/VHeaderPage';
 import VFilterPage from '@/components/VFilterPage';
 import { toast } from '@/utils/toast';
 import { useTranslation } from 'react-i18next';
-import { useLoader } from '@/hooks/useLoader';
 import { useSelection } from '@/hooks/useSelection';
-import { SEARCH_DEBOUNCE_MS, DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
+import { useFetchList } from '@/hooks/useFetchList';
+import { DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
 import './IncidentManagement.scss';
 
 const IncidentManagement = () => {
   const { t } = useTranslation();
-  const [incidents, setIncidents] = useState([]);
-  const { isLoading: loading, showLoading, hideLoading } = useLoader(false);
-  
-  // Filter & Pagination States
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
-  const [severity, setSeverity] = useState('');
-  const [order, setOrder] = useState('desc');
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(DEFAULT_PAGE_SIZE);
-  const [total, setTotal] = useState(0);
+  const {
+    data: incidents,
+    total,
+    isLoading: loading,
+    search,
+    handleSearchChange,
+    order,
+    setOrder,
+    page,
+    setPage,
+    perPage,
+    setPerPage,
+    filters,
+    handleFilterChange,
+    fetchData: fetchIncidents
+  } = useFetchList({
+    fetchFn: ApiIncident.getAll,
+    initialFilters: { status: '', severity: '' },
+    errorMessageKey: 'incidents.fetch_error'
+  });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingIncident, setEditingIncident] = useState(null);
   const { selectedIds, handleSelect, handleSelectAll, clearSelection } = useSelection(incidents, 'id', '_id');
+  
+  // Clear selection when data changes
+  useEffect(() => {
+    clearSelection();
+  }, [incidents, clearSelection]);
   
   // Delete Modal State
   const [deleteModalState, setDeleteModalState] = useState({
@@ -39,50 +53,6 @@ const IncidentManagement = () => {
     items: [],
     loading: false
   });
-
-  const fetchIncidents = useCallback(async () => {
-    try {
-      showLoading();
-      
-      const params = {
-        search,
-        status,
-        severity,
-        order,
-        page,
-        per_page: perPage
-      };
-
-      const res = await ApiIncident.getAll(params);
-      
-      if (res && res.pagination) {
-        setIncidents(res.data);
-        setTotal(res.pagination.total);
-      } else if (res && res.data && Array.isArray(res.data)) {
-        setIncidents(res.data);
-        setTotal(res.meta?.total || res.total || res.data.length);
-      } else if (Array.isArray(res)) {
-        setIncidents(res);
-        setTotal(res.length);
-      } else {
-        setIncidents([]);
-        setTotal(0);
-      }
-      clearSelection(); 
-    } catch (err) {
-      console.error('Error fetching incidents:', err);
-      toast.error(t('incidents.fetch_error'));
-    } finally {
-      hideLoading();
-    }
-  }, [search, status, severity, order, page, perPage, t]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchIncidents();
-    }, SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [fetchIncidents]);
 
   const handleCreate = () => {
     setEditingIncident(null);
@@ -179,20 +149,14 @@ const IncidentManagement = () => {
         <VFilterPage 
           searchPlaceholder={t('incidents.search_placeholder')}
           searchValue={search}
-          onSearchChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1); 
-          }}
+          onSearchChange={(e) => handleSearchChange(e.target.value)}
         >
           <div className="filter-select-wrapper">
             <select 
               className="v-filter-select" 
-              value={status} 
-              onChange={(e) => {
-                setStatus(e.target.value);
-                setPage(1);
-              }}
-              style={{ paddingRight: status ? '28px' : undefined }}
+              value={filters.status} 
+              onChange={(e) => handleFilterChange('status', e.target.value)}
+              style={{ paddingRight: filters.status ? '28px' : undefined }}
             >
               <option value="">{t('incidents.filter_status_all')}</option>
               <option value="open">{t('incidents.filter_status_open')}</option>
@@ -200,11 +164,11 @@ const IncidentManagement = () => {
               <option value="remediated">{t('incidents.filter_status_remediated')}</option>
               <option value="closed">{t('incidents.filter_status_closed')}</option>
             </select>
-            {status && (
+            {filters.status && (
               <X 
                 size={14} 
                 className="clear-icon"
-                onClick={() => { setStatus(''); setPage(1); }}
+                onClick={() => handleFilterChange('status', '')}
               />
             )}
           </div>
@@ -212,12 +176,9 @@ const IncidentManagement = () => {
           <div className="filter-select-wrapper">
             <select 
               className="v-filter-select" 
-              value={severity} 
-              onChange={(e) => {
-                setSeverity(e.target.value);
-                setPage(1);
-              }}
-              style={{ paddingRight: severity ? '28px' : undefined }}
+              value={filters.severity} 
+              onChange={(e) => handleFilterChange('severity', e.target.value)}
+              style={{ paddingRight: filters.severity ? '28px' : undefined }}
             >
               <option value="">{t('incidents.filter_severity_all')}</option>
               <option value="LOW">{t('incidents.filter_severity_low')}</option>
@@ -225,11 +186,11 @@ const IncidentManagement = () => {
               <option value="HIGH">{t('incidents.filter_severity_high')}</option>
               <option value="CRITICAL">{t('incidents.filter_severity_critical')}</option>
             </select>
-            {severity && (
+            {filters.severity && (
               <X 
                 size={14} 
                 className="clear-icon"
-                onClick={() => { setSeverity(''); setPage(1); }}
+                onClick={() => handleFilterChange('severity', '')}
               />
             )}
           </div>
