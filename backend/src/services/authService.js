@@ -66,8 +66,6 @@ class AuthService {
       message: 'Login successful.',
       accessToken,
       refreshToken,
-      access_token: accessToken,
-      refresh_token: refreshToken,
       user: {
         id: user._id,
         username: user.username,
@@ -119,8 +117,6 @@ class AuthService {
     return {
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
-      access_token: newAccessToken,
-      refresh_token: newRefreshToken,
       user: {
         id: user._id,
         username: user.username,
@@ -166,8 +162,6 @@ class AuthService {
       message: 'Thiết lập onboarding thành công.',
       accessToken,
       refreshToken,
-      access_token: accessToken,
-      refresh_token: refreshToken,
       user: {
         id: updatedUser._id,
         username: updatedUser.username,
@@ -210,8 +204,6 @@ class AuthService {
       message: 'Registration successful.',
       accessToken,
       refreshToken,
-      access_token: accessToken,
-      refresh_token: refreshToken,
       user: {
         id: newUser._id,
         username: newUser.username,
@@ -274,8 +266,6 @@ class AuthService {
       message: 'Login successful.',
       accessToken,
       refreshToken,
-      access_token: accessToken,
-      refresh_token: refreshToken,
       user: {
         id: user._id,
         username: user.username,
