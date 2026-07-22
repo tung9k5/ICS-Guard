@@ -35,7 +35,7 @@ import attackRoutes from './routes/attackRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import ruleRoutes from './routes/ruleRoutes.js';
 import alertRoutes from './routes/alertRoutes.js';
-
+import aiRoutes from './routes/aiRoutes.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -79,6 +79,7 @@ app.use('/api/attacks', attackRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/rules', ruleRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.use((err, req, res, next) => {
   console.error('[Global Error]', err);

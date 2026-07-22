@@ -17,7 +17,10 @@ export default defineConfig(({ mode }) => {
 
     server: {
       host: true,
-      port: parseInt(env.FRONTEND_PORT) || 3000,
+      port: parseInt(env.FRONTEND_PORT),
+      fs: {
+        allow: ['..']
+      },
 
       allowedHosts: [
         '.ngrok-free.app',

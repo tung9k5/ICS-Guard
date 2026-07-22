@@ -30,7 +30,7 @@ logs/
 
 # IDEs
 .idea/
-
+.vscode/
 *.swp
 *.swo
 

@@ -60,6 +60,9 @@
     }
   },
   "common": {
+    "toast_success_title": "Thành công",
+    "toast_error_title": "Lỗi",
+    "toast_info_title": "Thông báo",
     "processing_data": "Đang xử lý dữ liệu...",
     "loading": "Đang tải dữ liệu...",
     "no_data": "Không có dữ liệu",
