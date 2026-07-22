@@ -9,8 +9,8 @@ export const login = async (req, res, next) => {
 
     const result = await authService.login(email, password, ipAddress);
     
-    res.cookie('access_token', result.access_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
-    res.cookie('refresh_token', result.refresh_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
+    res.cookie('access_token', result.accessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
+    res.cookie('refresh_token', result.refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
 
     return res.json(result);
   } catch (error) {
@@ -23,8 +23,8 @@ export const refreshToken = async (req, res, next) => {
     const token = req.cookies?.refresh_token || req.body.refreshToken || req.body.refresh_token;
     const result = await authService.refresh(token);
 
-    res.cookie('access_token', result.access_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
-    res.cookie('refresh_token', result.refresh_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
+    res.cookie('access_token', result.accessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
+    res.cookie('refresh_token', result.refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
 
     return res.json(result);
   } catch (error) {
@@ -60,8 +60,8 @@ export const setupOnboarding = async (req, res, next) => {
     const { newPassword, email, telegramChatId } = req.body;
     const result = await authService.setupOnboarding(req.user.id, newPassword, email, telegramChatId);
     
-    res.cookie('access_token', result.access_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
-    res.cookie('refresh_token', result.refresh_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
+    res.cookie('access_token', result.accessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
+    res.cookie('refresh_token', result.refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
 
     return successResponse(res, result, result.message);
   } catch (error) {
@@ -73,8 +73,8 @@ export const register = async (req, res, next) => {
   try {
     const result = await authService.register(req.body);
     
-    res.cookie('access_token', result.access_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
-    res.cookie('refresh_token', result.refresh_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
+    res.cookie('access_token', result.accessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
+    res.cookie('refresh_token', result.refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
 
     return res.status(201).json(result);
   } catch (error) {
@@ -86,8 +86,8 @@ export const googleLogin = async (req, res, next) => {
   try {
     const result = await authService.googleLogin(req.body.idToken);
     
-    res.cookie('access_token', result.access_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
-    res.cookie('refresh_token', result.refresh_token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
+    res.cookie('access_token', result.accessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
+    res.cookie('refresh_token', result.refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
 
     return res.json(result);
   } catch (error) {
