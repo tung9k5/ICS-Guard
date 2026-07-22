@@ -1,17 +1,15 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
-import bcrypt from 'bcryptjs';
+import cookieParser from 'cookie-parser';
+import { corsOptions } from './config/cors.js';
+import { globalLimiter, authLimiter } from './config/rateLimit.js';
 import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import http from 'http';
 import swaggerUi from 'swagger-ui-express';
-import swaggerJsdoc from 'swagger-jsdoc';
 
 // Database context and models
-import { connectDB, User, Device, Rule } from './models/index.js';
+import { connectDB } from './models/index.js';
 
 // Middlewares
 import ipBlockMiddleware from './middlewares/ipBlockMiddleware.js';
@@ -35,54 +33,27 @@ import dashboardRoutes from './routes/dashboardRoutes.js';
 import ruleRoutes from './routes/ruleRoutes.js';
 import alertRoutes from './routes/alertRoutes.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const server = http.createServer(app);
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 
-// Enable CORS
-app.use(cors());
+app.use(cors(corsOptions));
 
-// Parse JSON request bodies
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
-
-// Express trust proxy setup (so req.ip parses header correctly behind proxies)
+app.use(cookieParser());
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ limit: '1mb', extended: true }));
 app.set('trust proxy', 1);
 
-// 1. Apply global IP block middleware BEFORE any other route
 app.use(ipBlockMiddleware);
 
-// 1.5 Rate Limiting (Memory-based)
-const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // Limit each IP to 200 requests per windowMs
-  message: { error: 'TooManyRequests', message: 'Quá nhiều truy vấn từ IP của bạn, vui lòng thử lại sau 15 phút.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-const MAX_LOGIN_ATTEMPTS = 999999; // Không giới hạn đăng nhập
-
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: MAX_LOGIN_ATTEMPTS, // Đã bỏ giới hạn (dùng hằng số lớn)
-  message: { error: 'TooManyRequests', message: 'Tần suất đăng nhập quá cao, IP tạm khóa 15 phút để bảo vệ.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// Apply global limiter to all routes
 app.use(globalLimiter);
 
-// 2. Configure Swagger UI
+
 const swaggerDocument = JSON.parse(fs.readFileSync('./swagger-output.json', 'utf8'));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// Base route for API overview
 app.get('/', (req, res) => {
   res.status(200).json({
     name: 'ICS-Guard API',
@@ -92,8 +63,6 @@ app.get('/', (req, res) => {
     timestamp: new Date(),
   });
 });
-
-// Mount Routes
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/v1/auth', authLimiter, authRoutes);
 app.use('/v1/auth', authLimiter, authRoutes);
@@ -108,7 +77,6 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/rules', ruleRoutes);
 app.use('/api/alerts', alertRoutes);
 
-// Global Error Handler
 app.use((err, req, res, next) => {
   console.error('[Global Error]', err);
   const statusCode = err.statusCode || err.status || 500;
@@ -118,110 +86,23 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Database Seeding Logic (Phương án A)
-const seedDatabase = async () => {
-  try {
-    // 1. Connect to MongoDB
-    await connectDB();
 
-    const seedDir = path.resolve(__dirname, '../../scripts/seed');
-    console.log(`[Bootstrap] Checking seed directory: ${seedDir}`);
 
-    // Helper to read and clean seed files (parsing standard Dates)
-    const parseSeedFile = (filename) => {
-      const filePath = path.join(seedDir, filename);
-      if (!fs.existsSync(filePath)) {
-        console.warn(`[Bootstrap] Seed file not found: ${filePath}`);
-        return null;
-      }
-      const content = fs.readFileSync(filePath, 'utf8');
-      const data = JSON.parse(content);
-      return data.map(item => {
-        const cleaned = { ...item };
-        // Map EJSON dates
-        if (cleaned.created_at && cleaned.created_at.$date) {
-          cleaned.createdAt = new Date(cleaned.created_at.$date);
-          delete cleaned.created_at;
-        }
-        if (cleaned.updated_at && cleaned.updated_at.$date) {
-          cleaned.updatedAt = new Date(cleaned.updated_at.$date);
-          delete cleaned.updated_at;
-        }
-        return cleaned;
-      });
-    };
-
-    // Seed Users (Force refresh to apply the new enterprise roles schema)
-    console.log('[Bootstrap] Checking if users seeding is needed...');
-    const userCount = await User.countDocuments();
-    if (userCount === 0) {
-      const usersData = parseSeedFile('users.json');
-      if (usersData && usersData.length > 0) {
-        for (let user of usersData) {
-          let plainPassword = 'User@123';
-          if (user.username === 'admin_soc') plainPassword = 'password';
-          else if (user.username === 'l1_analyst') plainPassword = 'L1@123';
-          else if (user.username === 'l2_responder') plainPassword = 'L2@123';
-          else if (user.username === 'l3_manager') plainPassword = 'L3@123';
-          else if (user.username === 'ot_operator') plainPassword = 'OT@123';
-          
-          user.password_hash = await bcrypt.hash(plainPassword, 10);
-          console.log(`[Bootstrap] Seeding user "${user.username}" with password "${plainPassword}"`);
-        }
-        await User.insertMany(usersData);
-        console.log(`[Bootstrap] Seeded ${usersData.length} users into MongoDB.`);
-      }
-    }
-
-    // Seed Devices (Force refresh to apply the new hierarchical schema)
-    const devicesData = parseSeedFile('devices.json');
-    if (devicesData && devicesData.length > 0) {
-      console.log('[Bootstrap] Wiping and re-seeding Devices collection to apply new schema...');
-      await Device.deleteMany({});
-      await Device.insertMany(devicesData);
-      console.log(`[Bootstrap] Seeded ${devicesData.length} devices into MongoDB.`);
-    }
-
-    // Seed Rules
-    const ruleCount = await Rule.countDocuments();
-    if (ruleCount === 0) {
-      const rulesData = parseSeedFile('rules.json');
-      if (rulesData && rulesData.length > 0) {
-        await Rule.insertMany(rulesData);
-        console.log(`[Bootstrap] Seeded ${rulesData.length} rules into MongoDB.`);
-      }
-    } else {
-      console.log(`[Bootstrap] Rules collection already has ${ruleCount} records. Skipping seeding.`);
-    }
-
-  } catch (error) {
-    console.error('[Bootstrap] Failed to sync and seed database:', error);
-    process.exit(1);
-  }
-};
-
-// Start Server
 const startServer = async () => {
-  // Sync databases & seed default assets
-  await seedDatabase();
+  await connectDB();
 
-  // Initialize InfluxDB database
   await initInflux();
 
-  // Connect to Mosquitto MQTT Broker
   connectMqtt();
 
-  // Connect to RabbitMQ (background task listener)
   try {
     await connectQueue();
   } catch (err) {
     console.warn('[Bootstrap] Queue connection warning: RabbitMQ might be starting up in Docker. Worker will try auto-reconnecting...');
   }
   
-  // Initialize Telegram Bot
   initTelegramBot();
 
-  // Initialize Socket.io service
   initSocket(server);
 
   server.listen(PORT, () => {

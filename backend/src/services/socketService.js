@@ -1,13 +1,11 @@
 import { Server } from 'socket.io';
+import { socketCorsOptions } from '../config/cors.js';
 
 let io = null;
 
 export const initSocket = (server) => {
   io = new Server(server, {
-    cors: {
-      origin: '*', // Hỗ trợ kết nối chéo nguồn (CORS) cho môi trường dev
-      methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    }
+    cors: socketCorsOptions
   });
 
   io.on('connection', (socket) => {

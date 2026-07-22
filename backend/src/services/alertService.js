@@ -3,13 +3,14 @@ import auditRepository from '../repositories/auditRepository.js';
 import deviceRepository from '../repositories/deviceRepository.js';
 import AppError from '../utils/AppError.js';
 import { Severity } from '../shared/constants/severity.js';
+import { ROLES, ALERT_STATUSES, AUDIT_STATUSES, AUDIT_ACTIONS } from '../constants/index.js';
 
 class AlertService {
   async getAll(queryParams, user) {
     const { search, status, severity, order, page = 1, per_page = 10, rule_name, device_id } = queryParams;
 
     let query = {};
-    if (user && user.id && user.role !== 'admin' && user.role !== 'Admin') {
+    if (user && user.id && user.role?.toLowerCase() !== ROLES.ADMIN) {
       const userDevices = await deviceRepository.findAll({ userId: user.id }, {}, 0, 10000, '_id');
       const userDeviceIds = userDevices.map(d => d._id);
       if (device_id && userDeviceIds.includes(device_id)) {
@@ -55,7 +56,7 @@ class AlertService {
     if (!alert) throw new AppError('Alert not found', 404);
 
     const updateData = { status };
-    if (['resolved', 'false_positive'].includes(status)) {
+    if ([ALERT_STATUSES.RESOLVED, ALERT_STATUSES.FALSE_POSITIVE].includes(status)) {
       updateData.resolved_at = new Date();
       updateData.resolved_by = user.username;
     }
@@ -63,10 +64,10 @@ class AlertService {
     const updatedAlert = await alertRepository.updateStatusById(id, updateData);
 
     await auditRepository.create({
-      action: `ALERT_STATUS_UPDATED`,
+      action: AUDIT_ACTIONS.ALERT_STATUS_UPDATED,
       username: user.username,
       details: { alertId: id, oldStatus: alert.status, newStatus: status },
-      status: 'SUCCESS',
+      status: AUDIT_STATUSES.SUCCESS,
     });
 
     return updatedAlert;

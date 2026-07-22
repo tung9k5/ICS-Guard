@@ -5,7 +5,7 @@ import { sendEmailAlert } from './emailService.js';
 import { sendTelegramAlert } from './telegramService.js';
 import { publishMqtt } from './mqttService.js';
 import { validateDevice } from '../shared/schemas/deviceSchema.js';
-import { ROLES, DEVICE_STATUSES, ATTACK_TYPES } from '../constants/index.js';
+import { ROLES, DEVICE_STATUSES, ATTACK_TYPES, AUDIT_STATUSES, AUDIT_ACTIONS, DEVICE_TYPES } from '../constants/index.js';
 import AppError from '../utils/AppError.js';
 import socketService from './socketService.js';
 
@@ -15,7 +15,7 @@ class DeviceService {
 
     let query = {};
     if (user && user.id) {
-      if (user.role !== ROLES.ADMIN && user.role !== 'Admin') {
+      if (user.role?.toLowerCase() !== ROLES.ADMIN) {
         query.userId = user.id;
       }
     }
@@ -98,7 +98,7 @@ class DeviceService {
       _id: customId,
       userId: user ? user.id : null,
       name,
-      type: type || 'IoT Device',
+      type: type || DEVICE_TYPES.IOT_DEVICE,
       ipAddress: actualIp,
       macAddress: defaultMac,
       description: description || '',
@@ -192,11 +192,11 @@ class DeviceService {
     }
 
     await auditRepository.create({
-      action: `DEVICE_UNISOLATION_TRIGGERED`,
+      action: AUDIT_ACTIONS.DEVICE_UNISOLATION_TRIGGERED,
       username: actor,
       ipAddress,
       details: { deviceId: updatedDevice._id, name: updatedDevice.name, ipAddress: updatedDevice.ipAddress },
-      status: 'SUCCESS',
+      status: AUDIT_STATUSES.SUCCESS,
     });
 
     const subject = `DEVICE RECONNECTED: ${updatedDevice.name}`;
@@ -223,11 +223,11 @@ class DeviceService {
     publishMqtt('ics/control/attack', { device_id: id, attack_type: ATTACK_TYPES.ROLLBACK });
 
     await auditRepository.create({
-      action: `DEVICE_ROLLBACK_TRIGGERED`,
+      action: AUDIT_ACTIONS.DEVICE_ROLLBACK_TRIGGERED,
       username: actor,
       ipAddress,
       details: { deviceId: updatedDevice._id, name: updatedDevice.name, ipAddress: updatedDevice.ipAddress },
-      status: 'SUCCESS',
+      status: AUDIT_STATUSES.SUCCESS,
     });
 
     const subject = `DEVICE LOGIC ROLLBACK: ${updatedDevice.name}`;

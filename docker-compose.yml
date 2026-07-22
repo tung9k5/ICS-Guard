@@ -37,6 +37,8 @@ services:
       - INFLUXDB_URL=http://influxdb:8086
       - JWT_SECRET=${JWT_SECRET}
       - FRONTEND_URL=${FRONTEND_URL}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
     depends_on:
       - mongodb
       - rabbitmq

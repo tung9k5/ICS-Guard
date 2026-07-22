@@ -3,18 +3,21 @@ import { User } from '../models/index.js';
 
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
+  let token = req.cookies?.access_token;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!token && authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  }
+
+  if (!token) {
     return res.status(401).json({
       error: 'Unauthorized',
       message: 'Access token is missing or malformed.',
     });
   }
 
-  const token = authHeader.split(' ')[1];
-
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ics_guard_access_secret_key_2026_@_secure');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     const user = await User.findById(decoded.id);
 

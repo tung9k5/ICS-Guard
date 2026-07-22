@@ -7,15 +7,8 @@ import VCheckbox from '@/components/VCheckbox';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/utils/formatDate';
 
-const getSeverityStyle = (severity) => {
-  switch (severity) {
-    case 'CRITICAL': return { backgroundColor: 'var(--red-100)', color: 'var(--red-700)', borderColor: 'var(--red-300)' };
-    case 'HIGH': return { backgroundColor: 'var(--orange-100)', color: 'var(--orange-700)', borderColor: 'var(--orange-300)' };
-    case 'MEDIUM': return { backgroundColor: 'var(--amber-100)', color: 'var(--amber-700)', borderColor: 'var(--amber-300)' };
-    case 'LOW': return { backgroundColor: 'var(--green-100)', color: 'var(--green-700)', borderColor: 'var(--green-300)' };
-    default: return {};
-  }
-};
+import { INCIDENT_STATUS, getIncidentSeverityStyle, getIncidentStatusLabel } from '@/constants/incidentConstants';
+
 
 const IncidentList = ({ 
   incidents, 
@@ -34,16 +27,7 @@ const IncidentList = ({
     setExpandedId(expandedId === id ? null : id);
   };
 
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case 'open': return t('incidents.list.status_open');
-      case 'investigating': return t('incidents.list.status_investigating');
-      case 'remediated': return t('incidents.list.status_remediated');
-      case 'closed': return t('incidents.list.status_closed');
-      default: return status;
-    }
-  };
-  
+
   if (loading) {
     return <div className="incident-loading">{t('incidents.list.loading')}</div>;
   }
@@ -105,14 +89,14 @@ const IncidentList = ({
                   <td>
                     <VStatus 
                       label={incident.severity || 'N/A'}
-                      style={getSeverityStyle(incident.severity)}
+                      style={getIncidentSeverityStyle(incident.severity)}
                       className="badge-outline"
                     />
                   </td>
                   <td>
                     <VStatus 
-                      status={incident.status === 'open' ? 'inactive' : incident.status === 'closed' ? 'active' : 'default'} 
-                      label={getStatusLabel(incident.status)} 
+                      status={incident.status === INCIDENT_STATUS.OPEN ? 'inactive' : incident.status === INCIDENT_STATUS.CLOSED ? 'active' : 'default'} 
+                      label={getIncidentStatusLabel(incident.status, t)} 
                     />
                   </td>
                   <td className="text-muted" style={{ maxWidth: '200px' }}>
@@ -183,7 +167,7 @@ const IncidentList = ({
                     <span className="detail-value">
                       <VStatus 
                         label={incident.severity || 'N/A'}
-                        style={getSeverityStyle(incident.severity)}
+                        style={getIncidentSeverityStyle(incident.severity)}
                         className="badge-outline"
                       />
                     </span>
@@ -195,8 +179,8 @@ const IncidentList = ({
                     <span className="detail-label">{t('incidents.list.table_status')}</span>
                     <span className="detail-value">
                       <VStatus 
-                        status={incident.status === 'open' ? 'inactive' : incident.status === 'closed' ? 'active' : 'default'} 
-                        label={getStatusLabel(incident.status)} 
+                        status={incident.status === INCIDENT_STATUS.OPEN ? 'inactive' : incident.status === INCIDENT_STATUS.CLOSED ? 'active' : 'default'} 
+                        label={getIncidentStatusLabel(incident.status, t)} 
                       />
                     </span>
                   </div>
