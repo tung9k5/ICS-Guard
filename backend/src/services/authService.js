@@ -17,7 +17,10 @@ class AuthService {
         isFirstLogin: user.isFirstLogin === undefined ? true : user.isFirstLogin 
       },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_ACCESS_EXPIRY || '1h' }
+      { 
+        expiresIn: process.env.ACCESS_TOKEN_EXPIRE_MINUTES ? process.env.ACCESS_TOKEN_EXPIRE_MINUTES + 'm' : AUTH_CONSTANTS.JWT_ACCESS_EXPIRY_DEFAULT,
+        algorithm: process.env.JWT_ALGORITHM
+      }
     );
   }
 
@@ -25,7 +28,10 @@ class AuthService {
     return jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_REFRESH_EXPIRY || '7d' }
+      { 
+        expiresIn: AUTH_CONSTANTS.JWT_REFRESH_EXPIRY_DEFAULT,
+        algorithm: process.env.JWT_ALGORITHM
+      }
     );
   }
 
@@ -54,7 +60,7 @@ class AuthService {
     const accessToken = this.generateAccessToken(user);
     const refreshToken = this.generateRefreshToken(user);
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 365);
+    expiresAt.setDate(expiresAt.getDate() + 7);
 
     await authRepository.createRefreshToken({
       userId: user._id,
@@ -78,7 +84,9 @@ class AuthService {
   async refresh(refreshToken) {
     let decoded;
     try {
-      decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+      decoded = jwt.verify(refreshToken, process.env.JWT_SECRET, {
+        algorithms: [process.env.JWT_ALGORITHM]
+      });
     } catch (err) {
       throw new AppError('Invalid or expired refresh token.', 401);
     }
@@ -106,7 +114,7 @@ class AuthService {
     const newAccessToken = this.generateAccessToken(user);
     const newRefreshToken = this.generateRefreshToken(user);
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 365);
+    expiresAt.setDate(expiresAt.getDate() + 7);
 
     await authRepository.createRefreshToken({
       userId: user._id,
@@ -141,36 +149,6 @@ class AuthService {
     return user;
   }
 
-  async setupOnboarding(userId, newPassword, email, telegramChatId) {
-    const user = await userRepository.findById(userId, '+password_hash');
-    if (!user) throw new AppError('Không tìm thấy tài khoản.', 404);
-
-    const password_hash = await bcrypt.hash(newPassword, 10);
-    const updateData = { password_hash, email, isFirstLogin: false };
-    
-    if (!user.contactInfo) {
-      updateData.contactInfo = { telegramChatId: telegramChatId || null };
-    } else {
-      updateData.contactInfo = { ...user.contactInfo, telegramChatId: telegramChatId || null };
-    }
-
-    const updatedUser = await userRepository.updateById(userId, updateData);
-    const accessToken = this.generateAccessToken(updatedUser);
-    const refreshToken = this.generateRefreshToken(updatedUser);
-
-    return {
-      message: 'Thiết lập onboarding thành công.',
-      accessToken,
-      refreshToken,
-      user: {
-        id: updatedUser._id,
-        username: updatedUser.username,
-        role: updatedUser.role,
-        isFirstLogin: false
-      }
-    };
-  }
-
   async register({ username, email, password, full_name }) {
     const existingUser = await userRepository.findByEmailOrUsername(email);
     const existingUsername = await userRepository.findByUsername(username);
@@ -192,7 +170,7 @@ class AuthService {
     const accessToken = this.generateAccessToken(newUser);
     const refreshToken = this.generateRefreshToken(newUser);
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 365);
+    expiresAt.setDate(expiresAt.getDate() + 7);
 
     await authRepository.createRefreshToken({
       userId: newUser._id,
@@ -254,7 +232,7 @@ class AuthService {
     const accessToken = this.generateAccessToken(user);
     const refreshToken = this.generateRefreshToken(user);
     const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 365);
+    expiresAt.setDate(expiresAt.getDate() + 7);
 
     await authRepository.createRefreshToken({
       userId: user._id,

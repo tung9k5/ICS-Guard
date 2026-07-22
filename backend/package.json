@@ -5,7 +5,6 @@
   "main": "src/app.js",
   "type": "module",
   "scripts": {
-    "prestart": "npm run swagger",
     "start": "node src/app.js",
     "predev": "npm run swagger",
     "dev": "node --watch src/app.js",
@@ -14,6 +13,7 @@
     "swagger": "node swagger.js"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "amqplib": "^0.10.3",
     "axios": "^1.6.8",
     "bcryptjs": "^2.4.3",

@@ -3,8 +3,7 @@ import incidentRepository from '../repositories/incidentRepository.js';
 import incidentTimelineRepository from '../repositories/incidentTimelineRepository.js';
 import AppError from '../utils/AppError.js';
 import { ROLES, INCIDENT_STATUSES, SEVERITY_LEVELS, INCIDENT_TIMELINE_TYPES } from '../constants/index.js';
-
-const AI_ENGINE_URL = process.env.AI_ENGINE_URL || 'http://ai-engine:5000';
+import { analyzeIncident } from '../../../ai-gemini/index.js';
 
 class IncidentService {
   async getAll(queryParams, user) {
@@ -155,17 +154,10 @@ class IncidentService {
 
   async runBackgroundAiAnalysis(incidentId, incidentData, alertsData) {
     try {
-      const analyzeUrl = `${AI_ENGINE_URL}/api/v1/analyze`;
-      console.log(`[IncidentService] Calling AI Engine at: ${analyzeUrl}`);
+      console.log(`[IncidentService] Calling AI Gemini Analysis for incident: ${incidentId}`);
 
-      const response = await axios.post(analyzeUrl, {
-        incident: incidentData,
-        alerts: alertsData
-      }, {
-        timeout: 120000
-      });
+      const aiReport = await analyzeIncident(incidentData, alertsData);
 
-      const aiReport = response.data;
       console.log(`[IncidentService] AI Analysis completed successfully for incident ${incidentId}`);
 
       await incidentRepository.updateById(incidentId, { status: 'investigated' });

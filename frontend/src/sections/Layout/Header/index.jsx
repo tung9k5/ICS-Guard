@@ -14,7 +14,7 @@ const Header = ({ toggleSidebar, user, onUpdateUser, onOpenProfile }) => {
           <Menu size={20} />
         </button>
         <div className="header-titles">
-          <h2>{t('layout.header.hello', { name: user?.full_name || user?.username || '...' })}</h2>
+          <h2>{t('layout.header.hello', { name: user?.username})}</h2>
           <p>{t('layout.header.subtitle')}</p>
         </div>
       </div>

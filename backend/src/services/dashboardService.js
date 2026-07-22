@@ -78,8 +78,8 @@ class DashboardService {
   }
 
   async getNetworkTraffic() {
-    const INFLUXDB_URL = process.env.INFLUXDB_URL || 'http://influxdb:8086';
-    const DB_NAME = process.env.INFLUXDB_DB || 'ics_telemetry';
+    const INFLUXDB_URL = process.env.INFLUXDB_URL;
+    const DB_NAME = process.env.INFLUXDB_DB;
     const queryUrl = `${INFLUXDB_URL}/query`;
     
     // Group by 3h for the last 24h

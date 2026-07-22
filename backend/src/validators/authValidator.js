@@ -26,23 +26,6 @@ export const validateRegister = (req, res, next) => {
   next();
 };
 
-export const validateOnboarding = (req, res, next) => {
-  const { newPassword, email } = req.body;
-  if (!newPassword || !email) {
-    return errorResponse(res, 'New password and email are required', null, 400);
-  }
-  
-  if (newPassword.length < 6) {
-    return errorResponse(res, 'Password must be at least 6 characters', null, 400);
-  }
-  
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return errorResponse(res, 'Invalid email format', null, 400);
-  }
-  
-  next();
-};
 
 export const validateRefreshToken = (req, res, next) => {
   const refreshToken = req.body.refreshToken || req.body.refresh_token;

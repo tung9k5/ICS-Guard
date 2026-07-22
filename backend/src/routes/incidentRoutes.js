@@ -29,6 +29,6 @@ router.get('/:id', validateMongoId, getIncidentById);
 router.put('/:id', authorize(['admin', 'customer']), validateMongoId, validateUpdateIncident, auditLogger('INCIDENT_UPDATE'), updateIncident);
 router.delete('/:id', authorize(['admin',]), validateMongoId, auditLogger('INCIDENT_DELETE'), deleteIncident);
 
-router.post('/:id/analyze', authorize(['admin']), validateMongoId, auditLogger('INCIDENT_AI_ANALYSIS'), triggerAiAnalysis);
+router.post('/:id/ai-analyze', authorize(['admin']), validateMongoId, auditLogger('INCIDENT_AI_ANALYSIS'), triggerAiAnalysis);
 
 export default router;
