@@ -9,7 +9,7 @@ class GeminiClient {
       console.warn('[AI Gemini] Cảnh báo: Chưa cài đặt API Key trong biến môi trường.');
     }
     
-    this.genAI = new GoogleGenerativeAI(this.apiKey || 'dummy-key-to-prevent-crash');
+    this.genAI = new GoogleGenerativeAI(this.apiKey);
   }
 
   getModel(modelName = this.defaultModel) {
