@@ -4,7 +4,6 @@ import {
   refreshToken,
   logout,
   getProfile,
-  setupOnboarding,
   register,
   googleLogin,
 } from '../controllers/authController.js';
@@ -14,7 +13,6 @@ import auditLogger from '../middlewares/auditMiddleware.js';
 import {
   validateLogin,
   validateRegister,
-  validateOnboarding,
   validateRefreshToken,
   validateGoogleLogin
 } from '../validators/authValidator.js';
@@ -30,6 +28,5 @@ router.post('/register', validateRegister, auditLogger('USER_REGISTER'), registe
 
 router.get('/profile', authMiddleware, getProfile);
 router.put('/profile', authMiddleware, auditLogger('PROFILE_UPDATE'), updateProfile);
-router.post('/onboarding', authMiddleware, validateOnboarding, auditLogger('USER_ONBOARDING'), setupOnboarding);
 
 export default router;

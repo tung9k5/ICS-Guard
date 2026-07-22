@@ -30,12 +30,10 @@ logs/
 
 # IDEs
 .idea/
-.vscode/
+
 *.swp
 *.swo
 
-# Docker
-docker-compose.override.yml
 
 # Swagger autogen
 swagger-output.json

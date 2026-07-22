@@ -4,7 +4,7 @@ import incidentTimelineRepository from '../repositories/incidentTimelineReposito
 import AppError from '../utils/AppError.js';
 import { ROLES, INCIDENT_STATUSES, SEVERITY_LEVELS, INCIDENT_TIMELINE_TYPES } from '../constants/index.js';
 
-const AI_ENGINE_URL = process.env.AI_ENGINE_URL || 'http://ai-engine:5000';
+const AI_ENGINE_URL = process.env.AI_ENGINE_URL;
 
 class IncidentService {
   async getAll(queryParams, user) {

@@ -5,7 +5,7 @@ import { ALERT_STATUSES, INCIDENT_STATUSES, SEVERITY_LEVELS, INCIDENT_TIMELINE_T
 let connection = null;
 let channel = null;
 
-const RABBITMQ_URL = process.env.RABBITMQ_URL || 'amqp://guest:guest@localhost:5672/';
+const RABBITMQ_URL = process.env.RABBITMQ_URL;
 const AI_ANALYSIS_QUEUE = 'ai_analysis_queue';
 const AI_RESPONSE_QUEUE = 'ai_response_queue';
 

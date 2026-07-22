@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const INFLUXDB_URL = process.env.INFLUXDB_URL || 'http://influxdb:8086';
-const DB_NAME = process.env.INFLUXDB_DB || 'ics_telemetry';
+const INFLUXDB_URL = process.env.INFLUXDB_URL;
+const DB_NAME = process.env.INFLUXDB_DB;
 
 console.log(`[InfluxService] Initializing. InfluxDB URL: ${INFLUXDB_URL}, DB: ${DB_NAME}`);
 

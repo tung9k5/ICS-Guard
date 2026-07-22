@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
 
       proxy: {
         '/api': {
-          target: 'http://backend:8000',
+          target: env.VITE_PROXY_TARGET,
           changeOrigin: true,
         },
       },

@@ -16,6 +16,7 @@ services:
       - VITE_GOOGLE_GSI_CLIENT_URL=${VITE_GOOGLE_GSI_CLIENT_URL}
       - VITE_API_URL=${VITE_API_URL}
       - VITE_GEMINI_API_KEY=${VITE_GEMINI_API_KEY}
+      - VITE_PROXY_TARGET=${VITE_PROXY_TARGET}
     depends_on:
       - backend
     restart: always
@@ -39,6 +40,8 @@ services:
       - FRONTEND_URL=${FRONTEND_URL}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
       - GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+      - MQTT_URL=mqtt://mosquitto:${MQTT_PORT:-1883}
+      - MQTT_TLS_PORT=${MQTT_TLS_PORT:-8883}
     depends_on:
       - mongodb
       - rabbitmq

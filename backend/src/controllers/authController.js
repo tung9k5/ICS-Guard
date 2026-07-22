@@ -55,19 +55,6 @@ export const getProfile = async (req, res, next) => {
   }
 };
 
-export const setupOnboarding = async (req, res, next) => {
-  try {
-    const { newPassword, email, telegramChatId } = req.body;
-    const result = await authService.setupOnboarding(req.user.id, newPassword, email, telegramChatId);
-    
-    res.cookie('access_token', result.accessToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
-    res.cookie('refresh_token', result.refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'Strict' });
-
-    return successResponse(res, result, result.message);
-  } catch (error) {
-    next(error);
-  }
-};
 
 export const register = async (req, res, next) => {
   try {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bell, Menu, User, Users } from 'lucide-react';
+import { Bell, Menu, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
@@ -13,7 +13,7 @@ const CustomerHeader = ({ toggleSidebar, user, onOpenProfile }) => {
           <Menu size={20} />
         </button>
         <div className="header-titles">
-          <h2>{t('layout.header.hello', { name: user?.full_name || user?.username || t('layout.header.loading', '...') })}</h2>
+          <h2>{t('layout.header.hello', { name: user?.username || t('layout.header.loading', '...') })}</h2>
           <p>{t('layout.header.subtitle')}</p>
         </div>
       </div>
