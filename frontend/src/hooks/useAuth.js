@@ -17,8 +17,9 @@ export const useAuth = () => {
     setLoading(true);
     try {
       const response = await authApi.login(formData);
-      if (response && response.access_token) {
-        localStorage.setItem('access_token', response.access_token);
+      if (response && (response.accessToken)) {
+        localStorage.setItem('access_token', response.accessToken);
+        localStorage.setItem('refresh_token', response.refreshToken);
         
         if (rememberMe) {
           const expires = Date.now() + 30 * 24 * 60 * 60 * 1000;
@@ -49,8 +50,9 @@ export const useAuth = () => {
     try {
       setLoading(true);
       const res = await authApi.loginGoogle({ idToken: credential });
-      if (res && res.access_token) {
-        localStorage.setItem('access_token', res.access_token);
+      if (res && (res.accessToken || res.access_token)) {
+        localStorage.setItem('access_token', res.accessToken || res.access_token);
+        localStorage.setItem('refresh_token', res.refreshToken || res.refresh_token);
         toast.success(t('auth.login.success'));
         const role = res.user?.role;
         navigate(getDefaultRoute(role), { replace: true });
