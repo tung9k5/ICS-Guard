@@ -5,6 +5,7 @@ const baseURL = import.meta.env.VITE_API_URL;
 
 const http = axios.create({
   baseURL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -23,11 +24,6 @@ const getAuthKeys = () => {
 http.interceptors.request.use(
   (config) => {
     showGlobalLoading();
-    const { accessTokenKey } = getAuthKeys();
-    const token = localStorage.getItem(accessTokenKey);
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
-    }
     return config;
   },
   (error) => {
@@ -58,12 +54,10 @@ http.interceptors.response.use(
   async (error) => {
     hideGlobalLoading();
     const originalRequest = error.config;
-    const { accessTokenKey, refreshTokenKey, loginUrl } = getAuthKeys();
+    const { loginUrl } = getAuthKeys();
     
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (originalRequest.url.includes('/auth/refresh')) {
-        localStorage.removeItem(accessTokenKey);
-        localStorage.removeItem(refreshTokenKey);
         window.location.href = loginUrl;
         return Promise.reject(error);
       }
@@ -72,8 +66,7 @@ http.interceptors.response.use(
         return new Promise(function(resolve, reject) {
           failedQueue.push({ resolve, reject });
         })
-          .then((token) => {
-            originalRequest.headers['Authorization'] = 'Bearer ' + token;
+          .then(() => {
             return http(originalRequest);
           })
           .catch((err) => {
@@ -85,31 +78,11 @@ http.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken = localStorage.getItem(refreshTokenKey);
-        if (!refreshToken) {
-          throw new Error('No refresh token available');
-        }
-
-        const { data } = await axios.post(`${baseURL}/auth/refresh`, {
-          refreshToken: refreshToken
-        });
-        
-        if (data && data.access_token) {
-          localStorage.setItem(accessTokenKey, data.access_token);
-          if (data.refresh_token) {
-            localStorage.setItem(refreshTokenKey, data.refresh_token);
-          }
-          
-          originalRequest.headers['Authorization'] = `Bearer ${data.access_token}`;
-          
-          processQueue(null, data.access_token);
-          
-          return http(originalRequest);
-        }
+        await axios.post(`${baseURL}/auth/refresh`, {}, { withCredentials: true });
+        processQueue(null);
+        return http(originalRequest);
       } catch (err) {
         processQueue(err, null);
-        localStorage.removeItem(accessTokenKey);
-        localStorage.removeItem(refreshTokenKey);
         window.location.href = loginUrl;
         return Promise.reject(err);
       } finally {

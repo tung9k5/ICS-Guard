@@ -12,28 +12,42 @@ import VFilterPage from '@/components/VFilterPage';
 import { DEVICE_TYPES } from '@/constants/deviceConstants';
 import { toast } from '@/utils/toast';
 import { useTranslation } from 'react-i18next';
-import { useLoader } from '@/hooks/useLoader';
 import { useSelection } from '@/hooks/useSelection';
-import { SEARCH_DEBOUNCE_MS, DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
+import { useFetchList } from '@/hooks/useFetchList';
+import { DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
 import './DeviceManagement.scss';
-
+ 
 const DeviceManagement = () => {
   const { t } = useTranslation();
-  const [devices, setDevices] = useState([]);
-  const { isLoading: loading, showLoading, hideLoading } = useLoader(false);
-  
-  // Filter & Pagination States
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
-  const [type, setType] = useState('');
-  const [order, setOrder] = useState('desc');
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(DEFAULT_PAGE_SIZE);
-  const [total, setTotal] = useState(0);
+  const {
+    data: devices,
+    total,
+    isLoading: loading,
+    search,
+    handleSearchChange,
+    order,
+    setOrder,
+    page,
+    setPage,
+    perPage,
+    setPerPage,
+    filters,
+    handleFilterChange,
+    fetchData: fetchDevices
+  } = useFetchList({
+    fetchFn: ApiDevice.getAll,
+    initialFilters: { status: '', type: '' },
+    errorMessageKey: 'assets.fetch_error'
+  });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingDevice, setEditingDevice] = useState(null);
   const { selectedIds, handleSelect, handleSelectAll, clearSelection } = useSelection(devices, 'id', '_id');
+  
+  // Clear selection when data changes
+  useEffect(() => {
+    clearSelection();
+  }, [devices, clearSelection]);
   
   // Delete Modal State
   const [deleteModalState, setDeleteModalState] = useState({
@@ -41,52 +55,6 @@ const DeviceManagement = () => {
     items: [],
     loading: false
   });
-
-  const fetchDevices = useCallback(async () => {
-    try {
-      showLoading();
-      
-      const params = {
-        search,
-        status,
-        type,
-        order,
-        page,
-        per_page: perPage
-      };
-
-      const res = await ApiDevice.getAll(params);
-      
-      // Handle both Laravel-style pagination and flat array gracefully
-      if (res && res.pagination) {
-        setDevices(res.data);
-        setTotal(res.pagination.total);
-      } else if (res && res.data && Array.isArray(res.data)) {
-        setDevices(res.data);
-        setTotal(res.meta?.total || res.total || res.data.length);
-      } else if (Array.isArray(res)) {
-        setDevices(res);
-        setTotal(res.length);
-      } else {
-        setDevices([]);
-        setTotal(0);
-      }
-      clearSelection(); // Clear selection when data changes
-    } catch (err) {
-      console.error('Error fetching devices:', err);
-      toast.error(t('assets.fetch_error'));
-    } finally {
-      hideLoading();
-    }
-  }, [search, status, type, order, page, perPage]);
-
-  // Use a slight debounce for search input
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchDevices();
-    }, SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [fetchDevices]);
 
   const handleAddDevice = () => {
     setEditingDevice(null);
@@ -176,31 +144,25 @@ const DeviceManagement = () => {
         <VFilterPage 
           searchPlaceholder={t('assets.filter_search_placeholder')}
           searchValue={search}
-          onSearchChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1); // Reset page on search
-          }}
+          onSearchChange={(e) => handleSearchChange(e.target.value)}
         >
           <div className="filter-select-wrapper">
             <select 
               className="v-filter-select" 
-              value={type} 
-              onChange={(e) => {
-                setType(e.target.value);
-                setPage(1);
-              }}
-              style={{ paddingRight: type ? '28px' : undefined }}
+              value={filters.type} 
+              onChange={(e) => handleFilterChange('type', e.target.value)}
+              style={{ paddingRight: filters.type ? '28px' : undefined }}
             >
               <option value="">{t('assets.filter_type_all')}</option>
               {DEVICE_TYPES.map(t => (
                 <option key={t.value} value={t.value}>{t.label}</option>
               ))}
             </select>
-            {type && (
+            {filters.type && (
               <X 
                 size={14} 
                 className="clear-icon"
-                onClick={() => { setType(''); setPage(1); }}
+                onClick={() => handleFilterChange('type', '')}
               />
             )}
           </div>
@@ -208,22 +170,19 @@ const DeviceManagement = () => {
           <div className="filter-select-wrapper">
             <select 
               className="v-filter-select" 
-              value={status} 
-              onChange={(e) => {
-                setStatus(e.target.value);
-                setPage(1);
-              }}
-              style={{ paddingRight: status ? '28px' : undefined }}
+              value={filters.status} 
+              onChange={(e) => handleFilterChange('status', e.target.value)}
+              style={{ paddingRight: filters.status ? '28px' : undefined }}
             >
               <option value="">{t('assets.filter_status_all')}</option>
               <option value="active">{t('assets.filter_status_active')}</option>
               <option value="inactive">{t('assets.filter_status_inactive')}</option>
             </select>
-            {status && (
+            {filters.status && (
               <X 
                 size={14} 
                 className="clear-icon"
-                onClick={() => { setStatus(''); setPage(1); }}
+                onClick={() => handleFilterChange('status', '')}
               />
             )}
           </div>

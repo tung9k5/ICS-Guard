@@ -10,28 +10,42 @@ import VHeaderPage from '@/components/VHeaderPage';
 import VFilterPage from '@/components/VFilterPage';
 import { toast } from '@/utils/toast';
 import { useTranslation } from 'react-i18next';
-import { useLoader } from '@/hooks/useLoader';
 import { useSelection } from '@/hooks/useSelection';
-import { SEARCH_DEBOUNCE_MS, DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
+import { useFetchList } from '@/hooks/useFetchList';
+import { DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
 import './UserManagement.scss';
 
 const UserManagement = () => {
   const { t } = useTranslation();
-  const [users, setUsers] = useState([]);
-  const { isLoading: loading, showLoading, hideLoading } = useLoader(false);
-  
-  // Filter & Pagination States
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
-  const [role, setRole] = useState('');
-  const [order, setOrder] = useState('desc');
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(DEFAULT_PAGE_SIZE);
-  const [total, setTotal] = useState(0);
+  const {
+    data: users,
+    total,
+    isLoading: loading,
+    search,
+    handleSearchChange,
+    order,
+    setOrder,
+    page,
+    setPage,
+    perPage,
+    setPerPage,
+    filters,
+    handleFilterChange,
+    fetchData: fetchUsers
+  } = useFetchList({
+    fetchFn: ApiUser.getAllUsers,
+    initialFilters: { status: '', role: '' },
+    errorMessageKey: 'users.fetch_error'
+  });
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const { selectedIds, handleSelect, handleSelectAll, clearSelection } = useSelection(users, 'id', '_id');
+  
+  // Clear selection when data changes
+  useEffect(() => {
+    clearSelection();
+  }, [users, clearSelection]);
   
   // Delete Modal State
   const [deleteModalState, setDeleteModalState] = useState({
@@ -39,50 +53,6 @@ const UserManagement = () => {
     items: [],
     loading: false
   });
-
-  const fetchUsers = useCallback(async () => {
-    try {
-      showLoading();
-      
-      const params = {
-        search,
-        status,
-        role,
-        order,
-        page,
-        per_page: perPage
-      };
-
-      const res = await ApiUser.getAllUsers(params);
-      
-      if (res && res.pagination) {
-        setUsers(res.data);
-        setTotal(res.pagination.total);
-      } else if (res && res.data && Array.isArray(res.data)) {
-        setUsers(res.data);
-        setTotal(res.meta?.total || res.total || res.data.length);
-      } else if (Array.isArray(res)) {
-        setUsers(res);
-        setTotal(res.length);
-      } else {
-        setUsers([]);
-        setTotal(0);
-      }
-      clearSelection(); 
-    } catch (err) {
-      console.error('Error fetching users:', err);
-      toast.error(t('users.fetch_error'));
-    } finally {
-      hideLoading();
-    }
-  }, [search, status, role, order, page, perPage, t]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchUsers();
-    }, SEARCH_DEBOUNCE_MS);
-    return () => clearTimeout(timer);
-  }, [fetchUsers]);
 
   const handleAddUser = () => {
     setEditingUser(null);
@@ -168,30 +138,24 @@ const UserManagement = () => {
         <VFilterPage 
           searchPlaceholder={t('users.search_placeholder')}
           searchValue={search}
-          onSearchChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1); 
-          }}
+          onSearchChange={(e) => handleSearchChange(e.target.value)}
         >
           <div className="filter-select-wrapper">
             <select 
               className="v-filter-select" 
-              value={status} 
-              onChange={(e) => {
-                setStatus(e.target.value);
-                setPage(1);
-              }}
-              style={{ paddingRight: status ? '28px' : undefined }}
+              value={filters.status} 
+              onChange={(e) => handleFilterChange('status', e.target.value)}
+              style={{ paddingRight: filters.status ? '28px' : undefined }}
             >
               <option value="">{t('users.filter_status_all')}</option>
               <option value="active">{t('users.filter_status_active')}</option>
               <option value="inactive">{t('users.filter_status_inactive')}</option>
             </select>
-            {status && (
+            {filters.status && (
               <X 
                 size={14} 
                 className="clear-icon"
-                onClick={() => { setStatus(''); setPage(1); }}
+                onClick={() => handleFilterChange('status', '')}
               />
             )}
           </div>
@@ -199,12 +163,9 @@ const UserManagement = () => {
           <div className="filter-select-wrapper">
             <select 
               className="v-filter-select" 
-              value={role} 
-              onChange={(e) => {
-                setRole(e.target.value);
-                setPage(1);
-              }}
-              style={{ paddingRight: role ? '28px' : undefined }}
+              value={filters.role} 
+              onChange={(e) => handleFilterChange('role', e.target.value)}
+              style={{ paddingRight: filters.role ? '28px' : undefined }}
             >
               <option value="">{t('users.filter_role_all')}</option>
               <option value="admin">{t('users.filter_role_admin')}</option>
@@ -213,11 +174,11 @@ const UserManagement = () => {
               <option value="l3_manager">{t('users.filter_role_l3')}</option>
               <option value="ot_operator">{t('users.filter_role_ot')}</option>
             </select>
-            {role && (
+            {filters.role && (
               <X 
                 size={14} 
                 className="clear-icon"
-                onClick={() => { setRole(''); setPage(1); }}
+                onClick={() => handleFilterChange('role', '')}
               />
             )}
           </div>
