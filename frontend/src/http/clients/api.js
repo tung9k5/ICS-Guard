@@ -23,7 +23,9 @@ const getAuthKeys = () => {
 
 http.interceptors.request.use(
   (config) => {
-    showGlobalLoading();
+    if (!config.hideLoading) {
+      showGlobalLoading();
+    }
     return config;
   },
   (error) => {
@@ -48,12 +50,16 @@ const processQueue = (error, token = null) => {
 
 http.interceptors.response.use(
   (response) => {
-    hideGlobalLoading();
+    if (!response.config.hideLoading) {
+      hideGlobalLoading();
+    }
     return response.data;
   },
   async (error) => {
-    hideGlobalLoading();
     const originalRequest = error.config;
+    if (originalRequest && !originalRequest.hideLoading) {
+      hideGlobalLoading();
+    }
     const { loginUrl } = getAuthKeys();
     
     if (error.response?.status === 401 && !originalRequest._retry) {

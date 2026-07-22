@@ -4,18 +4,17 @@ services:
     build:
       context: ./frontend
     ports:
-      # Map chính xác cổng FRONTEND_PORT (ví dụ: 3000 -> 3000)
-      - "${FRONTEND_PORT:-3000}:${FRONTEND_PORT:-3000}"
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
     volumes:
-      # Mount code để hot-reload
       - ./frontend:/app
-      # Giữ lại node_modules trong container
       - /app/node_modules
     environment:
+      - FRONTEND_PORT=${FRONTEND_PORT}
       - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
       - VITE_GOOGLE_GSI_CLIENT_URL=${VITE_GOOGLE_GSI_CLIENT_URL}
       - VITE_API_URL=${VITE_API_URL}
       - VITE_GEMINI_API_KEY=${VITE_GEMINI_API_KEY}
+      - VITE_PROXY_TARGET=${VITE_PROXY_TARGET}
     depends_on:
       - backend
     restart: always
@@ -25,20 +24,27 @@ services:
     build:
       context: ./backend
     ports:
-      - "${BACKEND_PORT:-8000}:8000"
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    command: sh -c "cd /ai-gemini && npm install && cd /app && npm start"
     volumes:
       - ./backend:/app
+      - ./ai-gemini:/ai-gemini
       - /app/node_modules
     environment:
-      - PORT=8000
+      - PORT=${BACKEND_PORT}
+      - VITE_GEMINI_API_KEY=${VITE_GEMINI_API_KEY}
       - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-123456}@mongodb:27017/${MONGO_DB}?authSource=admin
       - MONGO_DB=${MONGO_DB}
       - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER:-guest}:${RABBITMQ_DEFAULT_PASS:-guest}@rabbitmq:5672/
       - INFLUXDB_URL=http://influxdb:8086
       - JWT_SECRET=${JWT_SECRET}
+      - JWT_ALGORITHM=${JWT_ALGORITHM}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
       - FRONTEND_URL=${FRONTEND_URL}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
       - GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+      - MQTT_URL=mqtt://mosquitto:${MQTT_PORT:-1883}
+      - MQTT_TLS_PORT=${MQTT_TLS_PORT:-8883}
     depends_on:
       - mongodb
       - rabbitmq
@@ -52,7 +58,7 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
     ports:
-      - "${MONGO_PORT:-27017}:27017"
+      - "${MONGO_PORT}:${MONGO_PORT}"
     volumes:
       - mongodb_data:/data/db
       - ./infrastructure/mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
@@ -75,8 +81,8 @@ services:
   mosquitto:
     image: eclipse-mosquitto:2
     ports:
-      - "${MQTT_PORT:-1883}:1883"
-      - "${MQTT_TLS_PORT:-8883}:8883"
+      - "${MQTT_PORT}:${MQTT_PORT}"
+      - "${MQTT_TLS_PORT}:${MQTT_TLS_PORT}"
     volumes:
       - ./infrastructure/mosquitto/config:/mosquitto/config
       - mosquitto_data:/mosquitto/data
@@ -116,8 +122,8 @@ services:
       dockerfile: simulator/Dockerfile
     environment:
       - MQTT_HOST=mosquitto
-      - MQTT_PORT=8883
-      - BACKEND_URL=http://backend:8000
+      - MQTT_PORT=${MQTT_PORT}
+      - BACKEND_URL=${BACKEND_URL}
     depends_on:
       - mosquitto
       - backend

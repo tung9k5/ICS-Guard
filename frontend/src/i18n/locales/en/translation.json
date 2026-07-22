@@ -59,6 +59,9 @@
     }
   },
   "common": {
+    "toast_success_title": "Success",
+    "toast_error_title": "Error",
+    "toast_info_title": "Info",
     "processing_data": "Processing data...",
     "loading": "Loading data...",
     "no_data": "No data available",

@@ -1,7 +1,7 @@
-﻿@import 'assets/base_color';
+@use 'assets/base_color';
 
 :root {
-  --bg-primary: var(--primary-blue); /* or a specific blue if needed */
+  --bg-primary: var(--primary-blue);
   --bg-secondary: var(--slate-800);
   --bg-content: var(--gray-200);
   --bg-glass: rgba(15, 20, 35, 0.35);
@@ -54,7 +54,7 @@ input, button, textarea, select {
   z-index: 99999 !important;
 }
 
-// Global truncate utility
+
 .truncate-text {
   display: inline-block;
   max-width: 200px;
@@ -64,13 +64,13 @@ input, button, textarea, select {
   vertical-align: middle;
 }
 
-// Global table cell word-break fix for long unbroken strings (IDs, emails, IPs)
+
 .v-table td {
   overflow-wrap: break-word;
-  word-break: break-word; // graceful break at word boundaries first
+  word-break: break-word; 
 }
 
-// Custom scrollbar for table containers
+
 .custom-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: var(--slate-300) transparent;

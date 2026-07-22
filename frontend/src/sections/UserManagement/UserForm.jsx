@@ -5,8 +5,10 @@ import VInput from '@/components/VInput';
 import ApiUser from '@/api/users';
 import { toast } from '@/utils/toast';
 import VDialog from '@/components/VDialog';
+import { useTranslation } from 'react-i18next';
 
 const UserForm = ({ user, onClose, onSuccess }) => {
+  const { t } = useTranslation();
   const isEdit = !!user;
   const [loading, setLoading] = useState(false);
   
@@ -30,7 +32,7 @@ const UserForm = ({ user, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.username || !formData.email || !formData.role || (!isEdit && !formData.password)) {
-      toast.error('Vui lòng điền đầy đủ các trường bắt buộc');
+      toast.error(t('common.error_required', 'Vui lòng điền đầy đủ các trường bắt buộc'));
       return;
     }
 
@@ -42,15 +44,15 @@ const UserForm = ({ user, onClose, onSuccess }) => {
           delete updateData.password;
         }
         await ApiUser.updateUser(user.id || user._id, updateData);
-        toast.success('Cập nhật người dùng thành công');
+        toast.success(t('users.update_success', 'Cập nhật người dùng thành công'));
       } else {
         await ApiUser.createUser(formData);
-        toast.success('Thêm người dùng mới thành công');
+        toast.success(t('users.create_success', 'Thêm người dùng mới thành công'));
       }
       onSuccess();
     } catch (err) {
       console.error('Lỗi khi lưu người dùng:', err);
-      toast.error(err?.response?.data?.message || 'Có lỗi xảy ra khi lưu người dùng');
+      toast.error(err?.response?.data?.message || t('users.save_error', 'Có lỗi xảy ra khi lưu người dùng'));
     } finally {
       setLoading(false);
     }

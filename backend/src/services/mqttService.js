@@ -14,7 +14,7 @@ import { DEVICE_STATUSES, ALERT_STATUSES, INCIDENT_STATUSES, SEVERITY_LEVELS, IN
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-let MQTT_URL = process.env.MQTT_URL || 'mqtt://mosquitto:1883';
+let MQTT_URL = process.env.MQTT_URL;
 
 let mqttClient = null;
 
@@ -41,8 +41,9 @@ export const connectMqtt = () => {
       options.rejectUnauthorized = false; // Allow self-signed certificate hostname mismatches
       
       // Update protocol and port for TLS
+      const tlsPort = process.env.MQTT_TLS_PORT;
       if (MQTT_URL.startsWith('mqtt://')) {
-        MQTT_URL = MQTT_URL.replace('mqtt://', 'mqtts://').replace(':1883', ':8883');
+        MQTT_URL = MQTT_URL.replace('mqtt://', 'mqtts://').replace(/:\d+$/, `:${tlsPort}`);
       }
     } catch (err) {
       console.error('[MqttService] Failed to load CA certificate:', err.message);
