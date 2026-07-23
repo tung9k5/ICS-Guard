@@ -1,14 +1,28 @@
 import geminiClient from '../client.js';
 import { chatbotSystemInstruction } from '../prompts/index.js';
 
-export const handleChat = async (messages) => {
+export const handleChat = async (messages, language = 'vi') => {
   try {
     const model = geminiClient.getModel();
     
-    const formattedContents = messages.map(msg => ({
-      role: (msg.sender === 'bot' || msg.role === 'model') ? 'model' : 'user',
-      parts: [{ text: msg.text }]
-    }));
+    let systemInstruction = chatbotSystemInstruction;
+    
+    const langContext = language === 'en' 
+        ? "IMPORTANT: You MUST reply in English based on the user's current system language." 
+        : "IMPORTANT: You MUST reply in Vietnamese based on the user's current system language.";
+        
+    systemInstruction = `${systemInstruction}\n\n${langContext}`;
+    
+    const formattedContents = messages.map(msg => {
+      let text = msg.text;
+      if (msg.sender === 'bot' && msg.reactions && (msg.reactions.like > 0 || msg.reactions.heart > 0)) {
+        text += `\n[System note: The user highly appreciated this response, giving it ${msg.reactions.like || 0} likes and ${msg.reactions.heart || 0} hearts. Learn from this response style.]`;
+      }
+      return {
+        role: (msg.sender === 'bot' || msg.role === 'model') ? 'model' : 'user',
+        parts: [{ text }]
+      };
+    });
     
     if (formattedContents.length > 0 && formattedContents[0].role !== 'user') {
        formattedContents.shift();
@@ -16,7 +30,7 @@ export const handleChat = async (messages) => {
 
     const requestOptions = {
        contents: formattedContents,
-       systemInstruction: chatbotSystemInstruction,
+       systemInstruction: systemInstruction,
        generationConfig: {
          temperature: 0.2,
          topK: 40,

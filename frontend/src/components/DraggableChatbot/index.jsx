@@ -10,8 +10,37 @@ const DraggableChatbot = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isChatWindowOpen, setIsChatWindowOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const hasMoved = useRef(false);
   const offset = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const checkUnread = () => {
+      if (isChatWindowOpen) {
+        setUnreadCount(0);
+        const saved = localStorage.getItem('chatbot_messages');
+        if (saved) {
+          const msgs = JSON.parse(saved);
+          localStorage.setItem('chatbot_read_count', msgs.length.toString());
+        }
+      } else {
+        const saved = localStorage.getItem('chatbot_messages');
+        const readCountStr = localStorage.getItem('chatbot_read_count');
+        const readCount = readCountStr ? parseInt(readCountStr, 10) : 0;
+        if (saved) {
+          const msgs = JSON.parse(saved);
+          const unread = msgs.length - readCount;
+          setUnreadCount(unread > 0 ? unread : 0);
+        } else {
+          setUnreadCount(readCount === 0 ? 1 : 0);
+        }
+      }
+    };
+    
+    checkUnread();
+    const interval = setInterval(checkUnread, 1000);
+    return () => clearInterval(interval);
+  }, [isChatWindowOpen]);
 
   useEffect(() => {
 
@@ -112,13 +141,17 @@ const DraggableChatbot = () => {
             </div>
             <div 
               className="chatbot-sub-fab"
-              title="Hệ thống"
+              title={t('chatbot.system', { defaultValue: 'Hệ thống' })}
+              style={{ position: 'relative' }}
               onClick={() => {
                 setIsChatWindowOpen(true);
                 setIsOpen(false);
               }}
             >
               <MessageSquare size={24} />
+              {unreadCount > 0 && (
+                <span className="unread-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>
+              )}
             </div>
           </div>
         )}
@@ -128,12 +161,16 @@ const DraggableChatbot = () => {
           onMouseDown={handleMouseDown}
           onTouchStart={handleMouseDown}
           onClick={handleClick}
+          style={{ position: 'relative' }}
         >
           {isOpen || isChatWindowOpen ? <X size={28} /> : <User size={28} />}
+          {!isOpen && !isChatWindowOpen && unreadCount > 0 && (
+            <span className="unread-badge-main">{unreadCount > 9 ? '9+' : unreadCount}</span>
+          )}
         </div>
       </div>
 
-      {isChatWindowOpen && <ChatWindow onClose={() => setIsChatWindowOpen(false)} />}
+      <ChatWindow isOpen={isChatWindowOpen} onClose={() => setIsChatWindowOpen(false)} />
     </>
   );
 };

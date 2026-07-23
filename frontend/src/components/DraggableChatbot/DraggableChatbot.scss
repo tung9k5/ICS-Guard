@@ -32,6 +32,25 @@
         transform: scale(1.1);
         background-color: var(--slate-50);
       }
+
+      .unread-badge {
+        position: absolute;
+        top: -2px;
+        right: -2px;
+        background-color: #ef4444;
+        color: white;
+        border-radius: 50%;
+        width: 22px;
+        height: 22px;
+        font-size: 11px;
+        font-weight: bold;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        border: 2px solid var(--white);
+        z-index: 10;
+      }
     }
   }
 
@@ -62,6 +81,25 @@
     &.dragging {
       transform: scale(1.05);
       box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+    }
+
+    .unread-badge-main {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background-color: #ef4444;
+      color: white;
+      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      font-size: 11px;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      border: 2px solid var(--white);
+      z-index: 10;
     }
   }
 }
