@@ -83,7 +83,7 @@ services:
       - "${MQTT_PORT}:${MQTT_PORT}"
       - "${MQTT_TLS_PORT}:${MQTT_TLS_PORT}"
     volumes:
-      - ./iot/mosquitto/config:/mosquitto/config
+      - ./backend/mosquitto/config:/mosquitto/config
       - mosquitto_data:/mosquitto/data
       - mosquitto_log:/mosquitto/log
     restart: always
