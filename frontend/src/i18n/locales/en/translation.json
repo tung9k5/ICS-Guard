@@ -72,6 +72,8 @@
     "newest": "Newest",
     "oldest": "Oldest",
     "ai_analyze": "AI Analysis",
+    "created_at": "Created At",
+    "updated_at": "Updated At",
     "idle_timeout": {
       "title": "Are you still there?",
       "description_1": "Your session will automatically log out in ",
@@ -549,8 +551,22 @@
       "detail_title": "Incident Details",
       "lbl_title": "Title",
       "lbl_description": "Description",
-      "lbl_status": "Status",
-      "lbl_created_at": "Created At"
+      "lbl_status": "Status"
     }
+  },
+  "chatbot": {
+    "title": "ICS-Guard AI Assistant",
+    "greeting": "👋 I am an AI assistant ready to help you with the ICS-Guard system. How can I help you?",
+    "minimize": "Minimize",
+    "minimize_window": "Minimize window",
+    "maximize": "Maximize",
+    "close": "Close",
+    "copy": "Copy",
+    "like": "Like",
+    "heart": "Heart",
+    "expiration_notice": "This chat will be automatically deleted in {{timeLeft}} if there is no new interaction",
+    "placeholder": "Ask me anything...",
+    "fallback": "Sorry, I cannot answer right now.",
+    "error": "An error occurred while connecting to AI: {{message}}"
   }
 }

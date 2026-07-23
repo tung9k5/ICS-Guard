@@ -1,9 +1,9 @@
 .v-filter-page {
-  padding: 16px 24px;
+  padding: 12px 24px;
   border-bottom: 1px solid var(--slate-200);
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 20px;
   justify-content: space-between;
   align-items: center;
   background: var(--white);
@@ -11,7 +11,7 @@
   .filter-search {
     flex: 1;
     min-width: 250px;
-    max-width: 400px;
+    max-width: 360px;
 
     .search-input {
       margin-bottom: 0;

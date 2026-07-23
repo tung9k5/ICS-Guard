@@ -22,6 +22,13 @@
     right: 40px;
   }
 
+  &.chat-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.5);
+    visibility: hidden;
+  }
+
   @media (max-width: 640px) {
     width: 100%;
     height: 100%;
@@ -107,17 +114,45 @@
       
       &.bot {
         align-self: flex-start;
+        
+        .message-content {
+          align-items: flex-start;
+        }
+        
+        .reactions-count {
+          right: 10px;
+        }
+        
+        .floating-emote {
+          right: 20px;
+        }
       }
       
       &.user {
         align-self: flex-end;
         flex-direction: row-reverse;
         
+        .message-content {
+          align-items: flex-end;
+          
+          .message-actions {
+            flex-direction: row-reverse;
+          }
+        }
+        
         .message-bubble {
           background-color: var(--primary-color, var(--blue-500));
           color: var(--white); /* Ensure white text for user messages */
           border-bottom-right-radius: 4px;
           border-bottom-left-radius: 16px;
+        }
+        
+        .reactions-count {
+          right: 10px;
+        }
+        
+        .floating-emote {
+          left: 20px;
         }
       }
       
@@ -133,8 +168,23 @@
         flex-shrink: 0;
       }
       
-      .message-bubble {
+      .message-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
         max-width: 80%;
+        position: relative;
+        
+        .floating-emote {
+          position: absolute;
+          bottom: 20px;
+          pointer-events: none;
+          animation: floatUp 1.5s ease-out forwards;
+          z-index: 10;
+        }
+      }
+      
+      .message-bubble {
         width: fit-content;
         padding: 10px 14px;
         border-radius: 16px;
@@ -147,7 +197,76 @@
         overflow-wrap: break-word;
         word-break: normal;
         white-space: pre-wrap;
+        position: relative;
+        
+        &.has-reactions {
+          margin-bottom: 14px;
+        }
+        
+        .reactions-count {
+          position: absolute;
+          bottom: -14px;
+          display: flex;
+          gap: 4px;
+          background: var(--white);
+          padding: 2px 6px;
+          border-radius: 12px;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+          border: 1px solid var(--slate-100);
+          z-index: 5;
+          white-space: nowrap;
+          
+          .react-badge {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            font-size: 10px;
+            color: var(--slate-600);
+            font-weight: 600;
+          }
+        }
       }
+
+      .message-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.7);
+        padding: 0 4px;
+        white-space: nowrap;
+        
+        .copy-btn {
+          background: transparent;
+          border: none;
+          color: inherit;
+          cursor: pointer;
+          padding: 2px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 4px;
+          transition: all 0.2s;
+          
+          &:hover {
+            background-color: rgba(255,255,255,0.15);
+            color: #ffffff;
+          }
+        }
+      }
+    }
+    
+    .expiration-notice {
+      text-align: center;
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.75);
+      margin-top: 8px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-style: italic;
     }
     
     .typing-indicator {
@@ -244,4 +363,10 @@
 @keyframes typing {
   0%, 80%, 100% { transform: scale(0); }
   40% { transform: scale(1); }
+}
+
+@keyframes floatUp {
+  0% { transform: translateY(0) scale(0.5); opacity: 1; }
+  50% { transform: translateY(-30px) scale(1.2); opacity: 1; }
+  100% { transform: translateY(-60px) scale(1); opacity: 0; }
 }

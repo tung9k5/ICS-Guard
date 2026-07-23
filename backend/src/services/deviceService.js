@@ -44,20 +44,20 @@ class DeviceService {
       sortOption, 
       skip, 
       limitNumber, 
-      '_id name type zone ipAddress ip_address macAddress mac_address description status createdAt updatedAt'
+      '_id name type zone ipAddress ip_address macAddress mac_address description status location manufacturer serial_number uptime battery_level tags configuration createdAt updatedAt'
     );
 
     return { devices, total, pageNumber, limitNumber };
   }
 
   async getById(id) {
-    const device = await deviceRepository.findById(id, '_id name type zone ipAddress ip_address macAddress mac_address description status createdAt updatedAt');
+    const device = await deviceRepository.findById(id, '_id name type zone ipAddress ip_address macAddress mac_address description status location manufacturer serial_number uptime battery_level tags configuration createdAt updatedAt');
     if (!device) throw new AppError('Device not found', 404);
     return device;
   }
 
   async create(data, user) {
-    const { name, type, ipAddress, ip_address, macAddress, description, status, node_type, _id, id } = data;
+    const { name, type, ipAddress, ip_address, macAddress, description, status, node_type, _id, id, location, manufacturer, serial_number, uptime, battery_level, tags, configuration } = data;
     const actualIp = ipAddress || ip_address;
     const defaultMac = macAddress || `00:00:00:${Math.floor(Math.random() * 100)}:${Math.floor(Math.random() * 100)}:${Math.floor(Math.random() * 100)}`;
     
@@ -103,6 +103,14 @@ class DeviceService {
       macAddress: defaultMac,
       description: description || '',
       status: status || DEVICE_STATUSES.ACTIVE,
+      node_type,
+      location,
+      manufacturer,
+      serial_number,
+      uptime,
+      battery_level,
+      tags: tags || [],
+      configuration: configuration || {},
       lastSeen: new Date(),
     });
 
@@ -114,13 +122,20 @@ class DeviceService {
       mac_address: newDevice.macAddress,
       description: newDevice.description,
       status: newDevice.status,
+      location: newDevice.location,
+      manufacturer: newDevice.manufacturer,
+      serial_number: newDevice.serial_number,
+      uptime: newDevice.uptime,
+      battery_level: newDevice.battery_level,
+      tags: newDevice.tags,
+      configuration: newDevice.configuration,
       createdAt: newDevice.createdAt,
       updatedAt: newDevice.updatedAt
     };
   }
 
   async update(id, data) {
-    const { name, type, ipAddress, ip_address, macAddress, description, status } = data;
+    const { name, type, ipAddress, ip_address, macAddress, description, status, location, manufacturer, serial_number, uptime, battery_level, tags, configuration } = data;
     const device = await deviceRepository.findById(id);
     if (!device) throw new AppError('Device not found', 404);
 
@@ -128,6 +143,13 @@ class DeviceService {
     if (name !== undefined) updateData.name = name;
     if (type !== undefined) updateData.type = type;
     if (description !== undefined) updateData.description = description;
+    if (location !== undefined) updateData.location = location;
+    if (manufacturer !== undefined) updateData.manufacturer = manufacturer;
+    if (serial_number !== undefined) updateData.serial_number = serial_number;
+    if (uptime !== undefined) updateData.uptime = uptime;
+    if (battery_level !== undefined) updateData.battery_level = battery_level;
+    if (tags !== undefined) updateData.tags = tags;
+    if (configuration !== undefined) updateData.configuration = configuration;
     
     const actualIp = ipAddress || ip_address;
     if (actualIp !== undefined) {
