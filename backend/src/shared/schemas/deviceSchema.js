@@ -27,6 +27,18 @@ export const validateDevice = (data) => {
     errors.status = `Status must be one of: ${validStatusList.join(', ')}`;
   }
   
+  if (data.battery_level !== undefined && (typeof data.battery_level !== 'number' || data.battery_level < 0 || data.battery_level > 100)) {
+    errors.battery_level = 'Battery level must be a number between 0 and 100.';
+  }
+  
+  if (data.uptime !== undefined && (typeof data.uptime !== 'number' || data.uptime < 0)) {
+    errors.uptime = 'Uptime must be a positive number.';
+  }
+  
+  if (data.tags && !Array.isArray(data.tags)) {
+    errors.tags = 'Tags must be an array of strings.';
+  }
+  
   return {
     isValid: Object.keys(errors).length === 0,
     errors
