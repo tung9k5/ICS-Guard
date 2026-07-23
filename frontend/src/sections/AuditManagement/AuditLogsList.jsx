@@ -9,6 +9,7 @@ import VCheckbox from '@/components/VCheckbox';
 import VFilterPage from '@/components/VFilterPage';
 import VSelectFilter from '@/components/VSelectFilter';
 import ActionMenu from '@/components/ActionMenu';
+import VStatus from '@/components/VStatus';
 import DeleteConfirmModal from '@/Dialog/DeleteConfirmModal';
 import { toast } from 'react-toastify';
 import { formatDate } from '@/utils/formatDate';
@@ -36,6 +37,14 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
   const [total, setTotal] = useState(0);
+
+  const getActionVariant = (act) => {
+    if (!act) return 'neutral';
+    if (act.includes('DELETE') || act.includes('BLOCK') || (act.includes('ISOLATE') && !act.includes('UNISOLATE'))) return 'danger';
+    if (act.includes('CREATE') || act.includes('UNBLOCK') || act.includes('UNISOLATE')) return 'success';
+    if (act.includes('UPDATE') || act.includes('ANALYZE')) return 'warning';
+    return 'neutral';
+  };
 
   const [expandedId, setExpandedId] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -224,9 +233,7 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                       <span className="truncate-text" title={log.role}>{log.role || 'System'}</span>
                     </td>
                     <td>
-                      <span className="action-badge">
-                        {log.action}
-                      </span>
+                      <VStatus status={getActionVariant(log.action)} label={log.action} />
                     </td>
                     <td>
                       {log.ipAddress || 'N/A'}
@@ -301,7 +308,7 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                       <div className="detail-row">
                         <span className="detail-label">{t('audit.logs.table_action')}</span>
                         <span className="detail-value">
-                          <span className="action-badge">{log.action}</span>
+                          <VStatus status={getActionVariant(log.action)} label={log.action} />
                         </span>
                         <div className="card-action-menu" style={{ marginLeft: '12px' }}>
                           <ActionMenu

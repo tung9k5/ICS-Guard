@@ -73,6 +73,8 @@
     "newest": "Mới nhất",
     "oldest": "Cũ nhất",
     "ai_analyze": "Phân tích AI",
+    "created_at": "Ngày tạo",
+    "updated_at": "Ngày cập nhật",
     "idle_timeout": {
       "title": "Bạn còn ở đó không?",
       "description_1": "Phiên đăng nhập sẽ tự động đăng xuất sau ",
@@ -550,8 +552,22 @@
       "detail_title": "Chi tiết sự cố",
       "lbl_title": "Tiêu đề",
       "lbl_description": "Mô tả",
-      "lbl_status": "Trạng thái",
-      "lbl_created_at": "Tạo lúc"
+      "lbl_status": "Trạng thái"
     }
+  },
+  "chatbot": {
+    "title": "Trợ lý ảo ICS-Guard",
+    "greeting": "👋 Mình là trợ lý AI sẵn sàng hỗ trợ bạn về hệ thống ICS-Guard. Bạn cần giúp gì?",
+    "minimize": "Thu nhỏ",
+    "minimize_window": "Thu nhỏ cửa sổ",
+    "maximize": "Phóng to",
+    "close": "Đóng",
+    "copy": "Sao chép",
+    "like": "Thích",
+    "heart": "Thả tim",
+    "expiration_notice": "Đoạn chat này sẽ tự động xóa sau {{timeLeft}} nếu không có tương tác mới",
+    "placeholder": "Hãy hỏi tôi bất cứ điều gì...",
+    "fallback": "Xin lỗi, tôi không thể trả lời lúc này.",
+    "error": "Đã xảy ra lỗi khi kết nối với AI: {{message}}"
   }
 }

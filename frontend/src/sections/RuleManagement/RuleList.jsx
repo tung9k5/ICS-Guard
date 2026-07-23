@@ -4,6 +4,7 @@ import { Edit2, Trash2, ShieldAlert, ChevronDown, ChevronUp } from 'lucide-react
 import ActionMenu from '@/components/ActionMenu';
 import VCheckbox from '@/components/VCheckbox';
 import VNoData from '@/components/VNoData';
+import VStatus from '@/components/VStatus';
 import { RULE_SEVERITIES, RULE_STATUSES } from '@/constants/ruleConstants';
 import { formatDate } from '@/utils/formatDate';
 
@@ -24,12 +25,12 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], onSelect, onSelec
     return sev ? sev.label : val;
   };
 
-  const getSeverityClass = (severity) => {
+  const getSeverityVariant = (severity) => {
     switch (severity) {
-      case 'CRITICAL': return 'badge-danger';
-      case 'HIGH': return 'badge-warning';
-      case 'MEDIUM': return 'badge-info';
-      default: return 'badge-success';
+      case 'CRITICAL': return 'danger';
+      case 'HIGH': return 'warning';
+      case 'MEDIUM': return 'neutral';
+      default: return 'success';
     }
   };
 
@@ -79,14 +80,10 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], onSelect, onSelec
                   <div className="truncate-text font-medium text-primary" title={rule.rule_name}>{rule.rule_name}</div>
                 </td>
                 <td>
-                  <span className={`badge ${getSeverityClass(rule.severity)}`}>
-                    {getSeverityLabel(rule.severity)}
-                  </span>
+                  <VStatus status={getSeverityVariant(rule.severity)} label={getSeverityLabel(rule.severity)} showDot />
                 </td>
                 <td>
-                  <span className={`badge ${rule.is_active ? 'badge-success' : 'badge-secondary'}`}>
-                    {rule.is_active ? t('rules.status_active', 'Đang hoạt động') : t('rules.status_inactive', 'Tạm dừng')}
-                  </span>
+                  <VStatus status={rule.is_active ? 'active' : 'inactive'} label={rule.is_active ? t('rules.status_active', 'Đang hoạt động') : t('rules.status_inactive', 'Tạm dừng')} showDot />
                 </td>
                 <td>{rule.time_window_seconds}s</td>
                 <td>{rule.trigger_count}</td>
@@ -146,9 +143,7 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], onSelect, onSelec
                   <div className="detail-row">
                     <span className="detail-label">{t('rules.list_table.table_severity', 'Mức độ')}</span>
                     <span className="detail-value">
-                      <span className={`badge ${getSeverityClass(rule.severity)}`}>
-                        {getSeverityLabel(rule.severity)}
-                      </span>
+                      <VStatus status={getSeverityVariant(rule.severity)} label={getSeverityLabel(rule.severity)} showDot />
                     </span>
                     <div className="card-action-menu">
                       <ActionMenu actions={getActions(rule)} direction="down" />
@@ -157,9 +152,7 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], onSelect, onSelec
                   <div className="detail-row">
                     <span className="detail-label">{t('rules.list_table.table_status', 'Trạng thái')}</span>
                     <span className="detail-value">
-                      <span className={`badge ${rule.is_active ? 'badge-success' : 'badge-secondary'}`}>
-                        {rule.is_active ? t('rules.status_active') : t('rules.status_inactive')}
-                      </span>
+                      <VStatus status={rule.is_active ? 'active' : 'inactive'} label={rule.is_active ? t('rules.status_active') : t('rules.status_inactive')} showDot />
                     </span>
                   </div>
                   <div className="detail-row">

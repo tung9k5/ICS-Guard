@@ -1,35 +1,43 @@
 .v-status {
   display: inline-flex;
   align-items: center;
-  padding: 10px 8px;
-  border-radius: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
-  line-height: 1;
+  line-height: 1.2;
   white-space: nowrap;
+  letter-spacing: 0.3px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
   &-success {
-    background: var(--green-100);
-    color: var(--green-800);
-    border: 1px solid var(--green-200);
+    background: var(--green-50, #f0fdf4);
+    color: var(--green-700, #15803d);
+    border: 1px solid var(--green-200, #bbf7d0);
   }
 
   &-danger {
-    background: var(--red-100);
-    color: var(--apple-red-dark);
-    border: 1px solid var(--red-200);
+    background: var(--red-50, #fef2f2);
+    color: var(--red-700, #b91c1c);
+    border: 1px solid var(--red-200, #fecaca);
   }
 
   &-warning {
-    background: var(--yellow-100, #fef3c7);
-    color: var(--yellow-800, #92400e);
-    border: 1px solid var(--yellow-200, #fde68a);
+    background: var(--yellow-50, #fefce8);
+    color: var(--yellow-800, #854d0e);
+    border: 1px solid var(--yellow-200, #fef08a);
   }
 
   &-neutral {
-    background: var(--slate-100);
-    color: var(--slate-700);
-    border: 1px solid var(--slate-200);
+    background: var(--slate-50, #f8fafc);
+    color: var(--slate-700, #334155);
+    border: 1px solid var(--slate-200, #e2e8f0);
   }
 
   /* Optional dots indicator */
@@ -38,10 +46,11 @@
     height: 6px;
     border-radius: 50%;
     margin-right: 6px;
+    box-shadow: 0 0 4px currentColor;
     
-    &.dot-success { background-color: var(--green-500); }
-    &.dot-danger { background-color: var(--red-500); }
+    &.dot-success { background-color: var(--green-500, #22c55e); }
+    &.dot-danger { background-color: var(--red-500, #ef4444); }
     &.dot-warning { background-color: var(--amber-500, #f59e0b); }
-    &.dot-neutral { background-color: var(--slate-400); }
+    &.dot-neutral { background-color: var(--slate-400, #94a3b8); }
   }
 }

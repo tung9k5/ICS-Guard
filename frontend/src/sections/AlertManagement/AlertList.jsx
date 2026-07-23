@@ -4,6 +4,7 @@ import { CheckCircle, XCircle, Trash2, ShieldAlert, ChevronDown, ChevronUp } fro
 import ActionMenu from '@/components/ActionMenu';
 import VCheckbox from '@/components/VCheckbox';
 import VNoData from '@/components/VNoData';
+import VStatus from '@/components/VStatus';
 import { ALERT_SEVERITIES, ALERT_STATUSES } from '@/constants/alertConstants';
 import { formatDate } from '@/utils/formatDate';
 
@@ -29,20 +30,20 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
     return stat ? stat.label : val;
   };
 
-  const getSeverityClass = (severity) => {
+  const getSeverityVariant = (severity) => {
     switch (severity) {
-      case 'CRITICAL': return 'badge-danger';
-      case 'HIGH': return 'badge-warning';
-      case 'MEDIUM': return 'badge-info';
-      default: return 'badge-success';
+      case 'CRITICAL': return 'danger';
+      case 'HIGH': return 'warning';
+      case 'MEDIUM': return 'neutral';
+      default: return 'success';
     }
   };
 
-  const getStatusClass = (status) => {
+  const getStatusVariant = (status) => {
     switch (status) {
-      case 'resolved': return 'badge-success';
-      case 'false_positive': return 'badge-secondary';
-      default: return 'badge-danger';
+      case 'resolved': return 'success';
+      case 'false_positive': return 'neutral';
+      default: return 'danger';
     }
   };
 
@@ -99,14 +100,10 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
                   </td>
                   <td>{alert.rule_name || '-'}</td>
                   <td>
-                    <span className={`badge ${getSeverityClass(alert.severity)}`}>
-                      {getSeverityLabel(alert.severity)}
-                    </span>
+                    <VStatus status={getSeverityVariant(alert.severity)} label={getSeverityLabel(alert.severity)} showDot />
                   </td>
                   <td>
-                    <span className={`badge ${getStatusClass(alert.status)}`}>
-                      {getStatusLabel(alert.status)}
-                    </span>
+                    <VStatus status={getStatusVariant(alert.status)} label={getStatusLabel(alert.status)} showDot />
                   </td>
                   <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(alert.createdAt)}</td>
                   <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(alert.updatedAt)}</td>
@@ -166,9 +163,7 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
                   <div className="detail-row">
                     <span className="detail-label">{t('alerts.list_table.table_severity', 'Mức độ')}</span>
                     <span className="detail-value">
-                      <span className={`badge ${getSeverityClass(alert.severity)}`}>
-                        {getSeverityLabel(alert.severity)}
-                      </span>
+                      <VStatus status={getSeverityVariant(alert.severity)} label={getSeverityLabel(alert.severity)} showDot />
                     </span>
                     <div className="card-action-menu">
                       <ActionMenu actions={getActions(alert)} direction="down" />
@@ -177,9 +172,7 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
                   <div className="detail-row">
                     <span className="detail-label">{t('alerts.list_table.table_status', 'Trạng thái')}</span>
                     <span className="detail-value">
-                      <span className={`badge ${getStatusClass(alert.status)}`}>
-                        {getStatusLabel(alert.status)}
-                      </span>
+                      <VStatus status={getStatusVariant(alert.status)} label={getStatusLabel(alert.status)} showDot />
                     </span>
                   </div>
                   <div className="detail-row">

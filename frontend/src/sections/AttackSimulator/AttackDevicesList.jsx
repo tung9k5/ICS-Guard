@@ -7,6 +7,7 @@ import VNoData from '@/components/VNoData';
 import VCheckbox from '@/components/VCheckbox';
 import VButton from '@/components/VButton';
 import ActionMenu from '@/components/ActionMenu';
+import VStatus from '@/components/VStatus';
 import { formatDate } from '@/utils/formatDate';
 
 const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChange, onPerPageChange, onLaunch, selectedIds = [], onSelect, onSelectAll, onDelete }) => {
@@ -85,9 +86,11 @@ const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChang
                     </td>
                     <td style={{ whiteSpace: 'nowrap' }}>{device.ipAddress || '-'}</td>
                     <td>
-                      <span className={`v-badge ${device.status === 'active' ? 'v-badge--success' : 'v-badge--danger'}`}>
-                        {device.status === 'active' ? t('assets.filter_status_active') : t('assets.filter_status_inactive')}
-                      </span>
+                      <VStatus 
+                        status={device.status} 
+                        label={device.status === 'active' ? t('assets.filter_status_active') : t('assets.filter_status_inactive')} 
+                        showDot 
+                      />
                     </td>
                     <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(device.createdAt)}</td>
                     <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(device.updatedAt)}</td>
@@ -168,9 +171,11 @@ const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChang
                       <div className="detail-row">
                         <span className="detail-label">{t('attack.list.table_status')}</span>
                         <span className="detail-value">
-                          <span className={`v-badge ${device.status === 'active' ? 'v-badge--success' : 'v-badge--danger'}`}>
-                            {device.status === 'active' ? t('assets.filter_status_active') : t('assets.filter_status_inactive')}
-                          </span>
+                          <VStatus 
+                            status={device.status} 
+                            label={device.status === 'active' ? t('assets.filter_status_active') : t('assets.filter_status_inactive')} 
+                            showDot 
+                          />
                         </span>
                       </div>
                       <div className="detail-row">

@@ -7,17 +7,31 @@ import VHeaderPage from '@/components/VHeaderPage';
 import VNoData from '@/components/VNoData';
 import VPagination from '@/components/VPagination';
 import VButton from '@/components/VButton';
+import VStatus from '@/components/VStatus';
 import { formatDate } from '@/utils/formatDate';
 
 const StatusBadge = ({ status }) => {
   const { t } = useTranslation();
-  const map = { online: ['#22c55e', t('customer.status.online', 'Online')], offline: ['#6b7280', t('customer.status.offline', 'Offline')], quarantined: ['#ef4444', t('customer.status.quarantined', 'Quarantined')] };
-  const [color, label] = map[status] || ['#6b7280', status];
-  return (
-    <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '600', background: `${color}22`, color, textTransform: 'uppercase' }}>
-      {label}
-    </span>
-  );
+  
+  const getVariant = () => {
+    switch(status) {
+      case 'online': return 'success';
+      case 'offline': return 'neutral';
+      case 'quarantined': return 'danger';
+      default: return 'neutral';
+    }
+  };
+  
+  const getLabel = () => {
+    switch(status) {
+      case 'online': return t('customer.status.online', 'Online');
+      case 'offline': return t('customer.status.offline', 'Offline');
+      case 'quarantined': return t('customer.status.quarantined', 'Quarantined');
+      default: return status;
+    }
+  };
+
+  return <VStatus status={getVariant()} label={getLabel()} showDot />;
 };
 
 const CustomerDevices = () => {
