@@ -1,39 +1,38 @@
 import './MainLayout.scss';
 import React, { useState } from 'react';
 import { Outlet, Navigate, useNavigate, useLocation, Link } from 'react-router-dom';
-import { AlertOctagon } from 'lucide-react';
 import authApi from '@/api/auth';
-import http from '@/http/clients/api';
 import Sidebar from '@/sections/Layout/Sidebar';
 import Header from '@/sections/Layout/Header';
 import GlobalLoading from '@/components/GlobalLoading';
 import Profile from '@/sections/Profile';
 import DraggableChatbot from '@/components/DraggableChatbot';
+import { AUTH_KEYS } from '@/constants/authConstants';
 
 const MainLayout = () => {
-  const token = localStorage.getItem('access_token');
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [emergencyAlert, setEmergencyAlert] = useState(null);
-  const [quarantineLoading, setQuarantineLoading] = useState(false);
+  const token = localStorage.getItem(AUTH_KEYS.ACCESS_TOKEN);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [user, setUser] = useState(() => {
-    const cached = sessionStorage.getItem('cached_user');
+    const cached = sessionStorage.getItem(AUTH_KEYS.CACHED_USER);
     return cached ? JSON.parse(cached) : null;
   });
 
+  const fetchedRef = React.useRef(false);
+
   React.useEffect(() => {
     const fetchUser = async () => {
+      if (fetchedRef.current) return;
+      fetchedRef.current = true;
       try {
-        const token = localStorage.getItem('access_token');
+        const token = localStorage.getItem(AUTH_KEYS.ACCESS_TOKEN);
         if (!token) return;
         
         // Fetch current user info
         const res = await authApi.getProfile();
         const userData = res.data?.user || res.data || res.user;
         if (userData) {
-          sessionStorage.setItem('cached_user', JSON.stringify(userData));
+          sessionStorage.setItem(AUTH_KEYS.CACHED_USER, JSON.stringify(userData));
           setUser(userData);
         }
       } catch (err) {
@@ -74,7 +73,7 @@ const MainLayout = () => {
         </main>
       </div>
       <GlobalLoading />
-      <DraggableChatbot />
+      <DraggableChatbot key={user?.id || user?._id || 'guest'} user={user} />
       {isProfileOpen && (
         <Profile
           user={user} 

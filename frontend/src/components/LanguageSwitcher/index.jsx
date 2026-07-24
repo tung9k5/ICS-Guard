@@ -19,27 +19,27 @@ const LanguageSwitcher = () => {
     <div className="language-switcher-dropdown" style={{ position: 'relative', display: 'inline-block' }}>
       <div 
         onClick={() => setIsOpen(!isOpen)}
-        style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '4px 8px', borderRadius: '4px', border: '1px solid var(--border-light, var(--gray-light))' }}
+        style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', padding: '0.2857rem 0.5714rem', borderRadius: '0.2857rem', border: '0.0714rem solid var(--border-light, var(--gray-light))' }}
       >
-        <img src={currentLang.img} alt={currentLang.label} style={{ width: '24px', height: '16px', objectFit: 'cover', marginRight: '8px' }} />
-        <span style={{ fontSize: '14px', fontWeight: '500' }}>{currentLang.label}</span>
+        <img src={currentLang.img} alt={currentLang.label} style={{ width: '1.7143rem', height: '1.1429rem', objectFit: 'cover', marginRight: '0.5714rem' }} />
+        <span style={{ fontSize: '1rem', fontWeight: '500' }}>{currentLang.label}</span>
       </div>
       
       {isOpen && (
-        <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '4px', backgroundColor: 'var(--bg-primary, var(--white-short))', border: '1px solid var(--border-light, var(--gray-light))', borderRadius: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '125px' }}>
+        <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '0.2857rem', backgroundColor: 'var(--bg-primary, var(--white-short))', border: '0.0714rem solid var(--border-light, var(--gray-light))', borderRadius: '0.2857rem', boxShadow: '0 0.1429rem 0.5714rem rgba(0,0,0,0.1)', zIndex: 100, minWidth: '8.9286rem' }}>
           <div 
             onClick={() => changeLanguage('vi')}
-            style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', cursor: 'pointer', backgroundColor: currentLang.code === 'vi' ? 'var(--bg-secondary, var(--apple-gray-1))' : 'transparent' }}
+            style={{ display: 'flex', alignItems: 'center', padding: '0.5714rem 0.8571rem', cursor: 'pointer', backgroundColor: currentLang.code === 'vi' ? 'var(--bg-secondary, var(--apple-gray-1))' : 'transparent' }}
           >
-            <img src="/image-vi.png" alt="Vietnamese" style={{ width: '24px', height: '16px', objectFit: 'cover', marginRight: '8px' }} />
-            <span style={{ fontSize: '14px' }}>Tiếng Việt</span>
+            <img src="/image-vi.png" alt="Vietnamese" style={{ width: '1.7143rem', height: '1.1429rem', objectFit: 'cover', marginRight: '0.5714rem' }} />
+            <span style={{ fontSize: '1rem' }}>Tiếng Việt</span>
           </div>
           <div 
             onClick={() => changeLanguage('en')}
-            style={{ display: 'flex', alignItems: 'center', padding: '8px 12px', cursor: 'pointer', backgroundColor: currentLang.code === 'en' ? 'var(--bg-secondary, var(--apple-gray-1))' : 'transparent' }}
+            style={{ display: 'flex', alignItems: 'center', padding: '0.5714rem 0.8571rem', cursor: 'pointer', backgroundColor: currentLang.code === 'en' ? 'var(--bg-secondary, var(--apple-gray-1))' : 'transparent' }}
           >
-            <img src="/image-en.png" alt="English" style={{ width: '24px', height: '16px', objectFit: 'cover', marginRight: '8px' }} />
-            <span style={{ fontSize: '14px' }}>English</span>
+            <img src="/image-en.png" alt="English" style={{ width: '1.7143rem', height: '1.1429rem', objectFit: 'cover', marginRight: '0.5714rem' }} />
+            <span style={{ fontSize: '1rem' }}>English</span>
           </div>
         </div>
       )}

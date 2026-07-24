@@ -5,19 +5,19 @@
   width: 100vw;
   height: 100vh;
   background-color: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(0.2857rem);
   z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 1.4286rem;
   animation: fadeIn 0.2s ease-out;
 
   .v-dialog-content {
     background-color: var(--white-100);
-    border: 1px solid var(--slate-200);
-    border-radius: 16px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    border: 0.0714rem solid var(--slate-200);
+    border-radius: 1.1429rem;
+    box-shadow: 0 1.4286rem 1.7857rem -0.3571rem rgba(0, 0, 0, 0.1), 0 0.7143rem 0.7143rem -0.3571rem rgba(0, 0, 0, 0.04);
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
@@ -27,19 +27,19 @@
     flex-direction: column;
 
     /* Configurable via style prop */
-    max-width: 500px;
+    max-width: 35.7143rem;
   }
 
   .v-dialog-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 20px 24px;
-    border-bottom: 1px solid var(--slate-100);
+    padding: 1.4286rem 1.7143rem;
+    border-bottom: 0.0714rem solid var(--slate-100);
 
     h3 {
       margin: 0;
-      color: #000000;
+      color: $black;
       font-size: 1.25rem;
       font-weight: 600;
     }
@@ -52,8 +52,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 6px;
-      border-radius: 8px;
+      padding: 0.4286rem;
+      border-radius: 0.5714rem;
       transition: all 0.2s;
 
       &:hover {
@@ -64,7 +64,7 @@
   }
 
   .v-dialog-body {
-    padding: 24px;
+    padding: 1.7143rem;
     color: var(--slate-700);
     flex-grow: 1;
     overflow-y: auto;
@@ -73,11 +73,11 @@
   .v-dialog-footer {
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
-    padding: 16px 24px;
-    border-top: 1px solid var(--slate-100);
+    gap: 0.8571rem;
+    padding: 1.1429rem 1.7143rem;
+    border-top: 0.0714rem solid var(--slate-100);
     background-color: var(--slate-50);
-    border-radius: 0 0 16px 16px;
+    border-radius: 0 0 1.1429rem 1.1429rem;
   }
 }
 
@@ -89,7 +89,7 @@
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.97);
+    transform: translateY(1.4286rem) scale(0.97);
   }
   to {
     opacity: 1;

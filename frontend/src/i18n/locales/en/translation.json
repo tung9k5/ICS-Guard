@@ -3,7 +3,7 @@
     "attacker_portal": "Attacker Simulation Portal",
     "welcome_ics_guard": "Welcome to ICS Guard",
     "attacker_desc": "Tool for testing stability and simulating industrial infrastructure intrusion scenarios.",
-    "ics_guard_desc": "Next-generation cybersecurity monitoring platform for industrial control systems.",
+    "ics_guard_desc": "A next-generation cybersecurity solution providing real-time monitoring, proactive early threat detection, and maximum protection for your entire Industrial Control Systems (ICS/SCADA).",
     "login": {
       "success": "Login successful",
       "google_fail": "Google login failed",
@@ -18,7 +18,7 @@
       "submit": "Login",
       "or": "Or",
       "missing_env": "Please add VITE_GOOGLE_CLIENT_ID and VITE_GOOGLE_GSI_CLIENT_URL to .env file",
-      "login_google": "Login with Google",
+      "login_google": "LOGIN WITH GOOGLE",
       "no_account": "Don't have an account? ",
       "register_now": "Register now"
     },
@@ -469,10 +469,7 @@
       "mobile_username": "Username",
       "mobile_fullname": "Full Name",
       "role_admin": "Administrator",
-      "role_l1": "L1 Analyst",
-      "role_l2": "L2 Responder",
-      "role_l3": "L3 Manager",
-      "role_ot": "OT Operator",
+      "role_customer": "Customer",
       "status_active": "Active",
       "status_inactive": "Inactive"
     }

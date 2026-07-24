@@ -19,6 +19,14 @@ export default {
     });
   },
 
+  getGoogleAuthUrl(options = {}) {
+    return http({
+      url: '/auth/google',
+      method: 'GET',
+      ...options
+    });
+  },
+
   refreshToken(data, options = {}) {
     return http({
       url: '/auth/refresh',

@@ -5,7 +5,7 @@ import userRepository from '../repositories/userRepository.js';
 import authRepository from '../repositories/authRepository.js';
 import { handleFailedLogin, handleSuccessfulLogin, registerFailedIpAttempt } from './securityService.js';
 import AppError from '../utils/AppError.js';
-import { AUTH_CONSTANTS, ROLES } from '../constants/index.js';
+import { AUTH_CONSTANTS, ROLES, AUTH_PROVIDERS } from '../constants/index.js';
 
 class AuthService {
   generateAccessToken(user) {
@@ -35,8 +35,8 @@ class AuthService {
     );
   }
 
-  async login(email, password, ipAddress) {
-    const user = await userRepository.findByEmailOrUsername(email);
+  async login(username, password, ipAddress) {
+    const user = await userRepository.findByUsername(username);
     
     if (user) {
       const now = new Date();
@@ -195,7 +195,8 @@ class AuthService {
   async googleLogin(idToken) {
     let response;
     try {
-      response = await axios.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+      const url = process.env.GOOGLE_OAUTH_TOKENINFO_URL;
+      response = await axios.get(`${url}?id_token=${idToken}`);
     } catch (err) {
       throw new AppError('Invalid Google ID token.', 401);
     }
@@ -217,8 +218,132 @@ class AuthService {
         full_name: name,
         password_hash,
         role: ROLES.CUSTOMER,
-        isFirstLogin: false
+        isFirstLogin: false,
+        provider_type: AUTH_PROVIDERS.GOOGLE,
+        provider_id: sub
       });
+    } else if (user.provider_type !== AUTH_PROVIDERS.GOOGLE) {
+      await userRepository.updateById(user._id, {
+        provider_type: AUTH_PROVIDERS.GOOGLE,
+        provider_id: sub
+      });
+      user.provider_type = AUTH_PROVIDERS.GOOGLE;
+      user.provider_id = sub;
+    }
+
+    const now = new Date();
+    if (user.login_failures && user.login_failures.lockout_until && user.login_failures.lockout_until > now) {
+      const waitTimeMin = Math.ceil((user.login_failures.lockout_until - now) / 60000);
+      throw new AppError(`Account is locked. Please try again after ${waitTimeMin} minute(s).`, 403);
+    }
+
+    await handleSuccessfulLogin(user);
+
+    const accessToken = this.generateAccessToken(user);
+    const refreshToken = this.generateRefreshToken(user);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    await authRepository.createRefreshToken({
+      userId: user._id,
+      token: refreshToken,
+      expiresAt,
+    });
+
+    return {
+      message: 'Login successful.',
+      accessToken,
+      refreshToken,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        isFirstLogin: user.isFirstLogin === undefined ? true : user.isFirstLogin,
+      },
+    };
+  }
+
+  getGoogleAuthUrl() {
+    const rootUrl = process.env.GOOGLE_OAUTH_AUTH_URL;
+    const options = {
+      redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      access_type: 'offline',
+      response_type: 'code',
+      prompt: 'consent',
+      scope: [
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'https://www.googleapis.com/auth/userinfo.email',
+      ].join(' '),
+    };
+    const qs = new URLSearchParams(options);
+    return `${rootUrl}?${qs.toString()}`;
+  }
+
+  async googleCallback(code) {
+    const url = process.env.GOOGLE_OAUTH_TOKEN_URL;
+    const values = {
+      code,
+      client_id: process.env.GOOGLE_CLIENT_ID,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET,
+      redirect_uri: process.env.GOOGLE_REDIRECT_URI,
+      grant_type: 'authorization_code',
+    };
+    const qs = new URLSearchParams(values);
+    
+    let res;
+    try {
+      res = await axios.post(url, qs.toString(), {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
+    } catch (error) {
+      console.error('Google token error', error?.response?.data || error);
+      throw new AppError('Failed to fetch Google OAuth tokens', 401);
+    }
+
+    const { id_token, access_token } = res.data;
+    
+    let googleUser;
+    try {
+      const userInfoUrl = process.env.GOOGLE_OAUTH_USERINFO_URL;
+      const gRes = await axios.get(`${userInfoUrl}?alt=json&access_token=${access_token}`, {
+        headers: {
+          Authorization: `Bearer ${id_token}`,
+        },
+      });
+      googleUser = gRes.data;
+    } catch (error) {
+      console.error('Google user info error', error?.response?.data || error);
+       throw new AppError('Failed to fetch user', 401);
+    }
+    
+    const { email, name, id: sub } = googleUser;
+    let user = await userRepository.findByEmailOrUsername(email);
+
+    if (!user) {
+      const randomPassword = Math.random().toString(36).slice(-10);
+      const password_hash = await bcrypt.hash(randomPassword, 10);
+      
+      user = await userRepository.create({
+        username: email.split('@')[0] + '_' + sub.substring(0, 4),
+        email,
+        full_name: name,
+        password_hash,
+        role: ROLES.CUSTOMER,
+        isFirstLogin: false,
+        provider_type: AUTH_PROVIDERS.GOOGLE,
+        provider_id: sub
+      });
+    } else if (user.provider_type !== AUTH_PROVIDERS.GOOGLE) {
+      await userRepository.updateById(user._id, {
+        provider_type: AUTH_PROVIDERS.GOOGLE,
+        provider_id: sub
+      });
+      user.provider_type = AUTH_PROVIDERS.GOOGLE;
+      user.provider_id = sub;
     }
 
     const now = new Date();

@@ -1,6 +1,8 @@
 import auditRepository from '../repositories/auditRepository.js';
 import blockedIpRepository from '../repositories/blockedIpRepository.js';
 import AppError from '../utils/AppError.js';
+import { AUDIT_STATUSES } from '../constants/index.js';
+import { parsePagination, buildSortOption } from '../utils/pagination.js';
 
 class AuditService {
   async getLogs(queryParams) {
@@ -14,11 +16,8 @@ class AuditService {
     if (status) query.status = status;
     if (action) query.action = action;
 
-    const sortOption = order === 'asc' ? { createdAt: 1 } : { createdAt: -1 };
-    
-    const pageNumber = parseInt(page, 10);
-    const limitNumber = parseInt(per_page, 10);
-    const skip = (pageNumber - 1) * limitNumber;
+    const sortOption = buildSortOption(order);
+    const { pageNumber, limitNumber, skip } = parsePagination(page, per_page);
 
     const total = await auditRepository.countAll(query);
     const logs = await auditRepository.findAll(query, sortOption, skip, limitNumber);
@@ -45,11 +44,8 @@ class AuditService {
       query.ipAddress = new RegExp(search, 'i');
     }
 
-    const sortOption = order === 'asc' ? { createdAt: 1 } : { createdAt: -1 };
-    
-    const pageNumber = parseInt(page, 10);
-    const limitNumber = parseInt(per_page, 10);
-    const skip = (pageNumber - 1) * limitNumber;
+    const sortOption = buildSortOption(order);
+    const { pageNumber, limitNumber, skip } = parsePagination(page, per_page);
 
     const total = await blockedIpRepository.countAll(query);
     const blockedIps = await blockedIpRepository.findAll(query, sortOption, skip, limitNumber);
@@ -62,13 +58,13 @@ class AuditService {
     if (blocked.deletedCount === 0) {
       throw new AppError('IP Address not found in blocked list', 404);
     }
-    
+
     await auditRepository.create({
       action: 'IP_MANUAL_UNBLOCK',
       username: username || 'System',
       ipAddress: 'System',
       details: { unblockedIp: ipAddress },
-      status: 'SUCCESS',
+      status: AUDIT_STATUSES.SUCCESS,
     });
   }
 

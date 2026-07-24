@@ -41,7 +41,7 @@ const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChang
             <table className="v-table">
               <thead>
                 <tr>
-                  <th style={{ width: '40px', textAlign: 'center' }}>
+                  <th style={{ width: '2.8571rem', textAlign: 'center' }}>
                     <VCheckbox 
                       checked={devices.length > 0 && selectedIds.length === devices.length}
                       indeterminate={selectedIds.length > 0 && selectedIds.length < devices.length}
@@ -71,7 +71,7 @@ const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChang
                         style={{ cursor: 'pointer' }}
                       />
                     </td>
-                    <td style={{ maxWidth: '200px' }}>
+                    <td style={{ maxWidth: '14.2857rem' }}>
                       <div className="device-info">
                         <div className="icon-wrapper">
                           {getDeviceIcon(device.type)}
@@ -92,8 +92,8 @@ const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChang
                         showDot 
                       />
                     </td>
-                    <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(device.createdAt)}</td>
-                    <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(device.updatedAt)}</td>
+                    <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(device.createdAt)}</td>
+                    <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(device.updatedAt)}</td>
                     <td className="actions-col">
                       <ActionMenu 
                         actions={[
@@ -133,7 +133,7 @@ const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChang
               return (
                 <div className={`mobile-card ${isExpanded ? 'expanded' : ''} ${isSelected ? 'selected' : ''}`} key={id}>
                   <div className="mobile-card-header" onClick={() => toggleExpand(id)}>
-                    <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
+                    <div className="col-checkbox" style={{ width: '2.8571rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
                       <VCheckbox 
                         checked={isSelected}
                         onChange={(e) => onSelect(id, e.target.checked)}
@@ -141,13 +141,13 @@ const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChang
                       />
                     </div>
                     <div className="col-id">
-                      <div className="device-info" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div className="icon-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', borderRadius: '6px', background: 'var(--slate-100)', color: 'var(--slate-600)' }}>
+                      <div className="device-info" style={{ display: 'flex', alignItems: 'center', gap: '0.5714rem' }}>
+                        <div className="icon-wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '2.2857rem', height: '2.2857rem', borderRadius: '0.4286rem', background: 'var(--slate-100)', color: 'var(--slate-600)' }}>
                           {getDeviceIcon(device.type)}
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <strong className="truncate-text" style={{ maxWidth: '150px' }}>{device.name}</strong>
-                          <span style={{ fontSize: '12px', color: 'var(--slate-500)' }}>{String(id).substring(0, 8)}...</span>
+                          <strong className="truncate-text" style={{ maxWidth: '10.7143rem' }}>{device.name}</strong>
+                          <span style={{ fontSize: '0.8571rem', color: 'var(--slate-500)' }}>{String(id).substring(0, 8)}...</span>
                         </div>
                       </div>
                     </div>
@@ -186,7 +186,7 @@ const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChang
                         <span className="detail-label">{t('common.updated_at', 'Ngày cập nhật')}</span>
                         <span className="detail-value">{formatDate(device.updatedAt)}</span>
                       </div>
-                      <div className="detail-row" style={{ borderBottom: 'none', paddingBottom: 0, paddingTop: '16px', display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                      <div className="detail-row" style={{ borderBottom: 'none', paddingBottom: 0, paddingTop: '1.1429rem', display: 'flex', gap: '0.5714rem', justifyContent: 'center' }}>
                         <VButton 
                           variant="danger" 
                           onClick={() => onLaunch(device)}

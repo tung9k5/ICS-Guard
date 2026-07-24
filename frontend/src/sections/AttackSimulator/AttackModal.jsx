@@ -22,7 +22,7 @@ const AttackModal = ({ device, onClose, onConfirm, loading }) => {
       isOpen={true}
       onClose={onClose}
       title={t('attack.modal.title')}
-      maxWidth="500px"
+      maxWidth="35.7143rem"
     >
       <div className="attack-modal-content">
         <div className="target-info">
@@ -51,7 +51,7 @@ const AttackModal = ({ device, onClose, onConfirm, loading }) => {
           </div>
         </div>
 
-        <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+        <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.8571rem', marginTop: '1.7143rem' }}>
           <VButton variant="secondary" onClick={onClose} disabled={loading}>
             {t('attack.modal.btn_cancel')}
           </VButton>

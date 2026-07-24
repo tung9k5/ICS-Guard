@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Edit2, Trash2, Activity, ChevronDown, ChevronUp } from 'lucide-react';
 import ActionMenu from '@/components/ActionMenu';
 import VNoData from '@/components/VNoData';
@@ -7,6 +7,7 @@ import VCheckbox from '@/components/VCheckbox';
 import { getDeviceTypeLabel, getDeviceTypeStyle } from '@/constants/deviceConstants';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/utils/formatDate';
+import { useExpandable } from '@/hooks/useExpandable';
 
 const DeviceList = ({ 
   devices, 
@@ -19,11 +20,7 @@ const DeviceList = ({
   onSelectAll
 }) => {
   const { t } = useTranslation();
-  const [expandedId, setExpandedId] = useState(null);
-
-  const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
+  const { expandedId, toggleExpand } = useExpandable();
   
   if (loading) {
     return <div className="device-loading">{t('assets.list.loading')}</div>;
@@ -42,7 +39,7 @@ const DeviceList = ({
         <table className="device-table">
           <thead>
             <tr>
-              <th style={{ width: '40px', textAlign: 'center' }}>
+              <th style={{ width: '2.8571rem', textAlign: 'center' }}>
                 <VCheckbox 
                   indeterminate={selectedIds.length > 0 && selectedIds.length < devices.length}
                   checked={allSelected} 
@@ -80,8 +77,8 @@ const DeviceList = ({
                     />
                   </td>
                   <td><strong>{id}</strong></td>
-                  <td style={{ maxWidth: '150px' }}>
-                    <div className="device-name" title={device.name} style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                  <td style={{ maxWidth: '10.7143rem' }}>
+                    <div className="device-name" title={device.name} style={{ display: 'flex', alignItems: 'center', gap: '0.5714rem', minWidth: 0 }}>
                       <Activity size={16} className="text-primary" style={{ flexShrink: 0 }} />
                       <span className="truncate-text" style={{ flex: 1, minWidth: 0 }}>{device.name}</span>
                     </div>
@@ -101,11 +98,11 @@ const DeviceList = ({
                       label={device.status === 'active' ? t('assets.filter_status_active') : t('assets.filter_status_inactive')} 
                     />
                   </td>
-                  <td className="text-muted" style={{ maxWidth: '200px' }}>
+                  <td className="text-muted" style={{ maxWidth: '14.2857rem' }}>
                     <div className="truncate-text" title={device.description}>{device.description || 'không có mô tả'}</div>
                   </td>
-                  <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(device.createdAt)}</td>
-                  <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(device.updatedAt)}</td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(device.createdAt)}</td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(device.updatedAt)}</td>
                   <td className="actions-col">
                     <ActionMenu 
                       actions={actions} 
@@ -122,7 +119,7 @@ const DeviceList = ({
       {/* --- MOBILE LIST VIEW --- */}
       <div className="mobile-device-list">
         <div className="mobile-list-header" style={{ display: 'flex', alignItems: 'center' }}>
-          <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="col-checkbox" style={{ width: '2.8571rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <VCheckbox 
               indeterminate={selectedIds.length > 0 && selectedIds.length < devices.length}
               checked={allSelected} 
@@ -148,7 +145,7 @@ const DeviceList = ({
             <div className={`mobile-card ${isExpanded ? 'expanded' : ''} ${isSelected ? 'selected' : ''}`} key={id}>
               {/* Card Header (Always visible) */}
               <div className="mobile-card-header" style={{ display: 'flex', alignItems: 'center' }}>
-                <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="col-checkbox" style={{ width: '2.8571rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <VCheckbox 
                     checked={isSelected}
                     onChange={(e) => onSelect(id, e.target.checked)}

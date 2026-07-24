@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { showGlobalLoading, hideGlobalLoading } from '@/utils/loadingEvent';
+import { AUTH_KEYS } from '@/constants/authConstants';
 
 const baseURL = import.meta.env.VITE_API_URL;
 
@@ -15,8 +16,8 @@ const http = axios.create({
 const getAuthKeys = () => {
   const isAttacker = window.location.pathname.startsWith('/attacker');
   return {
-    accessTokenKey: isAttacker ? 'attacker_access_token' : 'access_token',
-    refreshTokenKey: isAttacker ? 'attacker_refresh_token' : 'refresh_token',
+    accessTokenKey: isAttacker ? AUTH_KEYS.ATTACKER_ACCESS_TOKEN : AUTH_KEYS.ACCESS_TOKEN,
+    refreshTokenKey: isAttacker ? AUTH_KEYS.ATTACKER_REFRESH_TOKEN : AUTH_KEYS.REFRESH_TOKEN,
     loginUrl: isAttacker ? '/attacker/login' : '/login'
   };
 };
@@ -63,8 +64,15 @@ http.interceptors.response.use(
     const { loginUrl } = getAuthKeys();
     
     if (error.response?.status === 401 && !originalRequest._retry) {
-      if (originalRequest.url.includes('/auth/refresh')) {
-        window.location.href = loginUrl;
+      if (
+        originalRequest.url.includes('/auth/refresh') ||
+        originalRequest.url.includes('/auth/login') ||
+        originalRequest.url.includes('/auth/google') ||
+        originalRequest.url.includes('/auth/register')
+      ) {
+        if (originalRequest.url.includes('/auth/refresh')) {
+          window.location.href = loginUrl;
+        }
         return Promise.reject(error);
       }
 

@@ -1,9 +1,10 @@
-import geminiClient from '../client.js';
+import AiFactory from '../AiFactory.js';
 import { getAnalysisSystemInstruction } from '../prompts/index.js';
+import { AI_CONFIG } from '../constants/config.js';
 
 export const analyzeIncident = async (incidentData, alertsData) => {
   try {
-    const model = geminiClient.getModel();
+    const aiService = AiFactory.getInstance();
     
     const promptPayload = {
       incident: incidentData,
@@ -11,18 +12,16 @@ export const analyzeIncident = async (incidentData, alertsData) => {
     };
     
     const promptText = `Analyze the following ICS incident and alert telemetry data:\n\n${JSON.stringify(promptPayload, null, 2)}`;
+    const contents = [{ role: 'user', parts: [{ text: promptText }] }];
     
-    const requestOptions = {
-       contents: [{ role: 'user', parts: [{ text: promptText }] }],
-       systemInstruction: getAnalysisSystemInstruction(),
-       generationConfig: {
-         temperature: 0.1,
-         responseMimeType: "application/json",
-       }
+    const config = {
+      // Typically analysis requires lower temperature, so we might halve the default
+      temperature: AI_CONFIG.GENERATION.TEMPERATURE / 2,
+      responseMimeType: "application/json",
     };
     
-    const result = await model.generateContent(requestOptions);
-    return parseAIResponse(result.response.text());
+    const result = await aiService.generateContent(getAnalysisSystemInstruction(), contents, config);
+    return parseAIResponse(result);
   } catch (error) {
     console.error('[AI Analysis Service] Lỗi thực thi:', error.message);
     throw new Error('Không thể phân tích sự cố bằng engine AI.');
@@ -42,3 +41,4 @@ const parseAIResponse = (text) => {
     };
   }
 };
+
