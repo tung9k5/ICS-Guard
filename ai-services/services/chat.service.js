@@ -1,9 +1,10 @@
-import geminiClient from '../client.js';
+import AiFactory from '../AiFactory.js';
 import { chatbotSystemInstruction } from '../prompts/index.js';
+import { AI_CONFIG } from '../constants/config.js';
 
 export const handleChat = async (messages, language = 'vi') => {
   try {
-    const model = geminiClient.getModel();
+    const aiService = AiFactory.getInstance();
     
     let systemInstruction = chatbotSystemInstruction;
     
@@ -28,20 +29,17 @@ export const handleChat = async (messages, language = 'vi') => {
        formattedContents.shift();
     }
 
-    const requestOptions = {
-       contents: formattedContents,
-       systemInstruction: systemInstruction,
-       generationConfig: {
-         temperature: 0.2,
-         topK: 40,
-         topP: 0.95,
-       }
+    const config = {
+      temperature: AI_CONFIG.GENERATION.TEMPERATURE,
+      topK: AI_CONFIG.GENERATION.TOP_K,
+      topP: AI_CONFIG.GENERATION.TOP_P,
     };
     
-    const result = await model.generateContent(requestOptions);
-    return result.response.text();
+    const result = await aiService.generateContent(systemInstruction, formattedContents, config);
+    return result;
   } catch (error) {
     console.error('[AI Chat Service] Lỗi khi tạo câu trả lời:', error.message);
     throw new Error('Hệ thống AI hiện đang bận hoặc xảy ra lỗi. Vui lòng thử lại sau.');
   }
 };
+

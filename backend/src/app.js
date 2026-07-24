@@ -52,7 +52,6 @@ app.use(ipBlockMiddleware);
 
 app.use(globalLimiter);
 
-
 const swaggerDocument = JSON.parse(fs.readFileSync('./swagger-output.json', 'utf8'));
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -86,11 +85,9 @@ app.use((err, req, res, next) => {
   const statusCode = err.statusCode || err.status || 500;
   res.status(statusCode).json({
     error: err.name || (statusCode >= 500 ? 'InternalServerError' : 'BadRequest'),
-    message: err.message || 'An unexpected error occurred.',
+    message: err.translations || err.message || 'An unexpected error occurred',
   });
 });
-
-
 
 const startServer = async () => {
   await connectDB();

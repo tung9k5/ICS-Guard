@@ -1,13 +1,13 @@
 .header {
-  height: 70px;
+  height: 5rem;
   background: rgba(30, 58, 138, 0.95);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(0.8571rem);
+  border-bottom: 0.0714rem solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0.2857rem 1.7143rem rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 24px;
+  padding: 0 1.7143rem;
   position: sticky;
   top: 0;
   z-index: 90;
@@ -15,18 +15,18 @@
   .header-left {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 1.1429rem;
 
     .toggle-sidebar-btn {
       background: none;
       border: none;
       color: var(--slate-400);
       cursor: pointer;
-      padding: 8px;
+      padding: 0.5714rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 8px;
+      border-radius: 0.5714rem;
       transition: all 0.2s;
 
       &:hover {
@@ -40,14 +40,14 @@
       flex-direction: column;
       
       h2 {
-        font-size: 18px;
+        font-size: 1.2857rem;
         font-weight: 600;
         color: var(--slate-50);
         margin: 0;
       }
 
       p {
-        font-size: 13px;
+        font-size: 0.9286rem;
         color: var(--slate-400);
         margin: 0;
       }
@@ -57,14 +57,14 @@
   .header-right {
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 1.4286rem;
 
     .language-selector {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 0.5714rem;
       color: var(--slate-400);
-      font-size: 14px;
+      font-size: 1rem;
       cursor: pointer;
     }
 
@@ -74,7 +74,7 @@
       color: var(--slate-400);
       position: relative;
       cursor: pointer;
-      padding: 8px;
+      padding: 0.5714rem;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -87,10 +87,10 @@
 
       .notification-dot {
         position: absolute;
-        top: 6px;
-        right: 8px;
-        width: 8px;
-        height: 8px;
+        top: 0.4286rem;
+        right: 0.5714rem;
+        width: 0.5714rem;
+        height: 0.5714rem;
         background-color: var(--danger-color);
         border-radius: 50%;
       }
@@ -99,12 +99,12 @@
     .user-profile {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 0.8571rem;
       color: var(--slate-400);
       cursor: pointer;
-      border-radius: 8px;
+      border-radius: 0.5714rem;
       transition: background-color 0.2s;
-      border: 2px solid rgba(255, 255, 255, 0.05);
+      border: 0.1429rem solid rgba(255, 255, 255, 0.05);
       border-radius: 50%;
 
       &:hover {
@@ -112,8 +112,8 @@
       }
 
       .avatar {
-        width: 32px;
-        height: 32px;
+        width: 2.2857rem;
+        height: 2.2857rem;
         background-color: rgba(255, 255, 255, 0.1);
         border-radius: 50%;
         display: flex;
@@ -128,14 +128,14 @@
         align-items: flex-start;
 
         .user-name {
-          font-size: 14px;
+          font-size: 1rem;
           font-weight: 500;
           color: var(--slate-50);
           line-height: 1.2;
         }
 
         .user-role {
-          font-size: 11px;
+          font-size: 0.7857rem;
           font-weight: 400;
           color: var(--slate-400);
           text-transform: capitalize;
@@ -144,8 +144,8 @@
     }
   }
 
-  @media (max-width: 768px) {
-    padding: 0 16px;
+  @media (max-width: 54.8571rem) {
+    padding: 0 1.1429rem;
     
     .header-left {
       .header-titles {
@@ -159,7 +159,7 @@
       }
       
       .user-profile {
-        padding: 8px;
+        padding: 0.5714rem;
       }
     }
   }

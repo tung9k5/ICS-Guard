@@ -8,6 +8,7 @@ import { validateDevice } from '../shared/schemas/deviceSchema.js';
 import { ROLES, DEVICE_STATUSES, ATTACK_TYPES, AUDIT_STATUSES, AUDIT_ACTIONS, DEVICE_TYPES } from '../constants/index.js';
 import AppError from '../utils/AppError.js';
 import socketService from './socketService.js';
+import { parsePagination, buildSortOption } from '../utils/pagination.js';
 
 class DeviceService {
   async getAll(queryParams, user) {
@@ -19,7 +20,7 @@ class DeviceService {
         query.userId = user.id;
       }
     }
-    
+
     if (search) {
       const searchRegex = new RegExp(search, 'i');
       query.$or = [
@@ -32,18 +33,15 @@ class DeviceService {
     if (status) query.status = status;
     if (type) query.type = type;
 
-    const sortOption = order === 'asc' ? { createdAt: 1 } : { createdAt: -1 };
-    
-    const pageNumber = parseInt(page, 10);
-    const limitNumber = parseInt(per_page, 10);
-    const skip = (pageNumber - 1) * limitNumber;
+    const sortOption = buildSortOption(order);
+    const { pageNumber, limitNumber, skip } = parsePagination(page, per_page);
 
     const total = await deviceRepository.countAll(query);
     const devices = await deviceRepository.findAll(
-      query, 
-      sortOption, 
-      skip, 
-      limitNumber, 
+      query,
+      sortOption,
+      skip,
+      limitNumber,
       '_id name type zone ipAddress ip_address macAddress mac_address description status location manufacturer serial_number uptime battery_level tags configuration createdAt updatedAt'
     );
 
@@ -60,7 +58,7 @@ class DeviceService {
     const { name, type, ipAddress, ip_address, macAddress, description, status, node_type, _id, id, location, manufacturer, serial_number, uptime, battery_level, tags, configuration } = data;
     const actualIp = ipAddress || ip_address;
     const defaultMac = macAddress || `00:00:00:${Math.floor(Math.random() * 100)}:${Math.floor(Math.random() * 100)}:${Math.floor(Math.random() * 100)}`;
-    
+
     let customId = _id || id;
     if (!customId) {
       if (macAddress) {
@@ -150,13 +148,13 @@ class DeviceService {
     if (battery_level !== undefined) updateData.battery_level = battery_level;
     if (tags !== undefined) updateData.tags = tags;
     if (configuration !== undefined) updateData.configuration = configuration;
-    
+
     const actualIp = ipAddress || ip_address;
     if (actualIp !== undefined) {
       updateData.ipAddress = actualIp.trim();
       updateData.ip_address = actualIp.trim();
     }
-    
+
     if (macAddress !== undefined) {
       updateData.macAddress = macAddress.trim();
       updateData.mac_address = macAddress.trim();
@@ -164,7 +162,7 @@ class DeviceService {
     if (status !== undefined) updateData.status = status;
 
     const updatedDevice = await deviceRepository.updateById(id, updateData);
-    
+
     const cleanDevice = {
       _id: updatedDevice._id,
       name: updatedDevice.name,
@@ -208,7 +206,7 @@ class DeviceService {
     if (device.status === DEVICE_STATUSES.ACTIVE || device.status === DEVICE_STATUSES.ONLINE) throw new AppError('Device is already active', 400);
 
     const updatedDevice = await deviceRepository.updateById(id, { status: DEVICE_STATUSES.ACTIVE });
-    
+
     if (typeof socketService !== 'undefined') {
       socketService.emitDeviceStatusChanged(updatedDevice);
     }
@@ -223,7 +221,7 @@ class DeviceService {
 
     const subject = `DEVICE RECONNECTED: ${updatedDevice.name}`;
     const text = `Security Notice: Device "${updatedDevice.name}" (IP: ${updatedDevice.ipAddress}) has been reconnected (un-isolated) by ${actor}.`;
-    
+
     await sendEmailAlert({
       subject,
       text,
@@ -254,7 +252,7 @@ class DeviceService {
 
     const subject = `DEVICE LOGIC ROLLBACK: ${updatedDevice.name}`;
     const text = `Security Notice: PLC device "${updatedDevice.name}" logic has been rolled back to a clean safe state by ${actor}.`;
-    
+
     await sendEmailAlert({
       subject,
       text,

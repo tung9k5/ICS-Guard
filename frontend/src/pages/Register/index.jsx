@@ -38,9 +38,9 @@ const Register = () => {
 
   return (
     <div className="auth-form-card">
-      <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '8px' }}>{t('auth.register.welcome')}</h2>
-        <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>{t('auth.register.enter_info')}</p>
+      <div style={{ textAlign: 'center', marginBottom: '1.7143rem' }}>
+        <h2 style={{ fontSize: '1.7143rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '0.5714rem' }}>{t('auth.register.welcome')}</h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: '1rem' }}>{t('auth.register.enter_info')}</p>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -97,6 +97,7 @@ const Register = () => {
             type="submit" 
             variant="primary" 
             fullWidth 
+            size="lg"
             loading={loading}
           >
             {t('auth.register.submit')}

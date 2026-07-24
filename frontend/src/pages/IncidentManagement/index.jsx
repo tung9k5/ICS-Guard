@@ -130,7 +130,7 @@ const IncidentManagement = () => {
       <VHeaderPage 
         title={t('incidents.page_title')}
         action={
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '0.8571rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {selectedIds.length > 0 && (
               <VButton variant="danger" onClick={handleBulkDelete} style={{ flex: '1 1 auto', whiteSpace: 'nowrap' }}>
                 <Trash2 size={18} />
@@ -156,7 +156,7 @@ const IncidentManagement = () => {
               className="v-filter-select" 
               value={filters.status} 
               onChange={(e) => handleFilterChange('status', e.target.value)}
-              style={{ paddingRight: filters.status ? '28px' : undefined }}
+              style={{ paddingRight: filters.status ? '2rem' : undefined }}
             >
               <option value="">{t('incidents.filter_status_all')}</option>
               <option value="open">{t('incidents.filter_status_open')}</option>
@@ -178,7 +178,7 @@ const IncidentManagement = () => {
               className="v-filter-select" 
               value={filters.severity} 
               onChange={(e) => handleFilterChange('severity', e.target.value)}
-              style={{ paddingRight: filters.severity ? '28px' : undefined }}
+              style={{ paddingRight: filters.severity ? '2rem' : undefined }}
             >
               <option value="">{t('incidents.filter_severity_all')}</option>
               <option value="LOW">{t('incidents.filter_severity_low')}</option>

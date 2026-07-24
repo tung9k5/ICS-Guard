@@ -70,6 +70,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  provider_type: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local',
+  },
+  provider_id: {
+    type: String,
+    default: null,
+  },
 }, {
   timestamps: true,
 });

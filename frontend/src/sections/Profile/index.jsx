@@ -82,7 +82,7 @@ const ProfileModal = ({ user, onClose, onUpdate }) => {
       visible={true}
       onHide={onClose}
       header={t('profile.title')}
-      style={{ maxWidth: '600px' }}
+      style={{ maxWidth: '42.8571rem' }}
     >
       {loading ? (
         <div className="modal-loading">{t('profile.loading')}</div>
@@ -125,12 +125,12 @@ const ProfileModal = ({ user, onClose, onUpdate }) => {
               disabled
             />
 
-            <div style={{ marginTop: 'auto', paddingTop: '8px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <div style={{ marginTop: 'auto', paddingTop: '0.5714rem', display: 'flex', justifyContent: 'flex-end', gap: '0.8571rem' }}>
               <VButton type="button" variant="outline" onClick={onClose}>
                 {t('profile.cancel')}
               </VButton>
               <VButton type="submit" variant="primary" disabled={saving} loading={saving}>
-                <Check size={16} style={{ marginRight: '8px' }} /> {saving ? t('profile.saving') : t('profile.save')}
+                <Check size={16} style={{ marginRight: '0.5714rem' }} /> {saving ? t('profile.saving') : t('profile.save')}
               </VButton>
             </div>
           </div>

@@ -5,19 +5,20 @@ import { CHATBOT_MAX_INPUT_LENGTH } from '@/constants/chatbotConstants';
 import './ChatWindow.scss';
 import { aiApi } from '@/api/ai';
 
-const ChatWindow = ({ isOpen, onClose }) => {
+const ChatWindow = ({ isOpen, onClose, user }) => {
   const { t, i18n } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState(() => {
-    const saved = localStorage.getItem('chatbot_messages');
-    const lastUpdated = localStorage.getItem('chatbot_last_updated');
+    const userId = user?.id || user?._id || 'guest';
+    const saved = localStorage.getItem(`chatbot_messages_${userId}`);
+    const lastUpdated = localStorage.getItem(`chatbot_last_updated_${userId}`);
     if (saved && lastUpdated) {
       const timeDiff = Date.now() - parseInt(lastUpdated, 10);
       if (timeDiff < 24 * 60 * 60 * 1000) {
         return JSON.parse(saved);
       } else {
-        localStorage.removeItem('chatbot_messages');
-        localStorage.removeItem('chatbot_last_updated');
+        localStorage.removeItem(`chatbot_messages_${userId}`);
+        localStorage.removeItem(`chatbot_last_updated_${userId}`);
       }
     }
     return [
@@ -32,15 +33,17 @@ const ChatWindow = ({ isOpen, onClose }) => {
   const [timeLeft, setTimeLeft] = useState(null);
 
   useEffect(() => {
-    localStorage.setItem('chatbot_messages', JSON.stringify(messages));
-    localStorage.setItem('chatbot_last_updated', Date.now().toString());
+    const userId = user?.id || user?._id || 'guest';
+    localStorage.setItem(`chatbot_messages_${userId}`, JSON.stringify(messages));
+    localStorage.setItem(`chatbot_last_updated_${userId}`, Date.now().toString());
     
     // Update expiration timer whenever messages change
     updateExpirationTime();
-  }, [messages]);
+  }, [messages, user]);
 
   const updateExpirationTime = () => {
-    const lastUpdated = localStorage.getItem('chatbot_last_updated');
+    const userId = user?.id || user?._id || 'guest';
+    const lastUpdated = localStorage.getItem(`chatbot_last_updated_${userId}`);
     if (lastUpdated) {
       const expiresAt = parseInt(lastUpdated, 10) + 24 * 60 * 60 * 1000;
       const remaining = expiresAt - Date.now();
@@ -67,7 +70,7 @@ const ChatWindow = ({ isOpen, onClose }) => {
       updateExpirationTime();
     }, 1000); // Check every second
     return () => clearInterval(timer);
-  }, []);
+  }, [user]);
 
   const messagesEndRef = useRef(null);
 
@@ -145,7 +148,7 @@ const ChatWindow = ({ isOpen, onClose }) => {
       <div className="chat-header">
         <div className="header-left">
           <div className="bot-icon">
-            <img src="/image-logo.png" alt="ICS-Guard Bot" style={{ width: '70px', height: '70px', objectFit: 'contain' }} />
+            <img src="/image-logo.png" alt="ICS-Guard Bot" style={{ width: '5rem', height: '5rem', objectFit: 'contain' }} />
           </div>
           <span className="title">{t('chatbot.title')}</span>
         </div>
@@ -167,7 +170,7 @@ const ChatWindow = ({ isOpen, onClose }) => {
           <div key={msg.id} className={`message-row ${msg.sender}`}>
             {msg.sender === 'bot' && (
               <div className="msg-avatar">
-                <img src="/image-logo.png" alt="Bot" style={{ width: '65px', height: '65px', objectFit: 'contain' }} />
+                <img src="/image-logo.png" alt="Bot" style={{ width: '4.6429rem', height: '4.6429rem', objectFit: 'contain' }} />
               </div>
             )}
             <div className="message-content">
@@ -175,8 +178,8 @@ const ChatWindow = ({ isOpen, onClose }) => {
                 {msg.text}
                 {msg.reactions && (msg.reactions.like > 0 || msg.reactions.heart > 0) && (
                   <div className="reactions-count">
-                    {msg.reactions.like > 0 && <span className="react-badge"><ThumbsUp size={10} fill="#3b82f6" color="#3b82f6" /> {msg.reactions.like}</span>}
-                    {msg.reactions.heart > 0 && <span className="react-badge"><Heart size={10} fill="#ef4444" color="#ef4444" /> {msg.reactions.heart}</span>}
+                    {msg.reactions.like > 0 && <span className="react-badge"><ThumbsUp size={10} fill="var(--blue-500)" color="var(--blue-500)" /> {msg.reactions.like}</span>}
+                    {msg.reactions.heart > 0 && <span className="react-badge"><Heart size={10} fill="var(--red-500)" color="var(--red-500)" /> {msg.reactions.heart}</span>}
                   </div>
                 )}
               </div>
@@ -189,13 +192,13 @@ const ChatWindow = ({ isOpen, onClose }) => {
                   <Heart size={14} />
                 </button>
                 <button className="copy-btn" onClick={() => handleCopy(msg.id, msg.text)} title={t('chatbot.copy')}>
-                  {copiedId === msg.id ? <Check size={14} color="#10b981" /> : <Copy size={14} />}
+                  {copiedId === msg.id ? <Check size={14} color="var(--green-500)" /> : <Copy size={14} />}
                 </button>
               </div>
               
               {floatingEmotes.filter(e => e.msgId === msg.id).map(e => (
                 <div key={e.id} className={`floating-emote ${e.type}`}>
-                  {e.type === 'heart' ? <Heart size={20} fill="#ef4444" color="#ef4444" /> : <ThumbsUp size={20} fill="#3b82f6" color="#3b82f6" />}
+                  {e.type === 'heart' ? <Heart size={20} fill="var(--red-500)" color="var(--red-500)" /> : <ThumbsUp size={20} fill="var(--blue-500)" color="var(--blue-500)" />}
                 </div>
               ))}
             </div>
@@ -204,7 +207,7 @@ const ChatWindow = ({ isOpen, onClose }) => {
         {isTyping && (
           <div className="message-row bot">
             <div className="msg-avatar">
-              <img src="/image-logo.png" alt="Bot" style={{ width: '65px', height: '65px', objectFit: 'contain' }} />
+              <img src="/image-logo.png" alt="Bot" style={{ width: '4.6429rem', height: '4.6429rem', objectFit: 'contain' }} />
             </div>
             <div className="message-bubble typing-indicator">
               <span></span>

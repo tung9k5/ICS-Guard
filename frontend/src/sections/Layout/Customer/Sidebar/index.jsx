@@ -5,6 +5,9 @@ import {
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import authApi from '@/api/auth';
+import { toast } from '@/utils/toast';
+import { AUTH_KEYS } from '@/constants/authConstants';
+import { APP_ROUTES } from '@/constants/routes';
 import Viewlogo from '@/components/Viewlogo';
 
 const CustomerSidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
@@ -20,17 +23,18 @@ const CustomerSidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
 
   const handleLogout = async () => {
     try {
-      const refreshToken = localStorage.getItem('refresh_token');
+      const refreshToken = localStorage.getItem(AUTH_KEYS.REFRESH_TOKEN);
       if (refreshToken) {
         await authApi.logout({ refreshToken });
       }
     } catch (e) {
       console.error('Logout failed:', e);
     } finally {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      sessionStorage.removeItem('cached_user');
-      navigate('/login', { replace: true });
+      localStorage.removeItem(AUTH_KEYS.ACCESS_TOKEN);
+      localStorage.removeItem(AUTH_KEYS.REFRESH_TOKEN);
+      sessionStorage.removeItem(AUTH_KEYS.CACHED_USER);
+      toast.success(t('auth.logout.success', 'Logged out successfully'));
+      navigate(APP_ROUTES.AUTH.LOGIN, { replace: true });
     }
   };
 
@@ -54,7 +58,7 @@ const CustomerSidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
             <Viewlogo
               animate={false}
               className="logo-icon"
-              style={{ width: '40px', height: '40px', cursor: 'pointer', objectFit: 'cover' }}
+              style={{ width: '2.8571rem', height: '2.8571rem', cursor: 'pointer', objectFit: 'cover' }}
               onClick={() => setIsFullscreenLogo(true)}
             />
             <div>
@@ -98,7 +102,7 @@ const CustomerSidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
           onClick={() => setIsFullscreenLogo(false)}
         >
           <button
-            style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}
+            style={{ position: 'absolute', top: '1.4286rem', right: '1.4286rem', background: 'transparent', border: 'none', color: 'var(--white-short)', cursor: 'pointer' }}
             onClick={(e) => { e.stopPropagation(); setIsFullscreenLogo(false); }}
           >
             <X size={32} />

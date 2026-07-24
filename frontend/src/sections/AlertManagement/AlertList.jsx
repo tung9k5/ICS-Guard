@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle, XCircle, Trash2, ShieldAlert, ChevronDown, ChevronUp } from 'lucide-react';
 import ActionMenu from '@/components/ActionMenu';
@@ -7,14 +7,12 @@ import VNoData from '@/components/VNoData';
 import VStatus from '@/components/VStatus';
 import { ALERT_SEVERITIES, ALERT_STATUSES } from '@/constants/alertConstants';
 import { formatDate } from '@/utils/formatDate';
+import { useExpandable } from '@/hooks/useExpandable';
+import { getSeverityVariant } from '@/utils/statusHelpers';
 
 const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, onSelectAll }) => {
   const { t } = useTranslation();
-  const [expandedId, setExpandedId] = useState(null);
-
-  const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
+  const { expandedId, toggleExpand } = useExpandable();
 
   if (!alerts || alerts.length === 0) {
     return <VNoData message={t('alerts.no_data', 'Không có cảnh báo nào')} />;
@@ -30,14 +28,7 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
     return stat ? stat.label : val;
   };
 
-  const getSeverityVariant = (severity) => {
-    switch (severity) {
-      case 'CRITICAL': return 'danger';
-      case 'HIGH': return 'warning';
-      case 'MEDIUM': return 'neutral';
-      default: return 'success';
-    }
-  };
+
 
   const getStatusVariant = (status) => {
     switch (status) {
@@ -64,7 +55,7 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
         <table className="alert-table">
           <thead>
             <tr>
-              <th style={{ width: '40px', textAlign: 'center' }}>
+              <th style={{ width: '2.8571rem', textAlign: 'center' }}>
                 <VCheckbox 
                   checked={allSelected} 
                   indeterminate={selectedIds.length > 0 && selectedIds.length < alerts.length}
@@ -93,7 +84,7 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
                       style={{ cursor: 'pointer' }}
                     />
                   </td>
-                  <td style={{ maxWidth: '180px' }}>
+                  <td style={{ maxWidth: '12.8571rem' }}>
                     <div className="alert-title" title={alert.title}>
                       <span className="truncate-text" style={{ flex: 1, minWidth: 0 }}>{alert.title}</span>
                     </div>
@@ -105,8 +96,8 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
                   <td>
                     <VStatus status={getStatusVariant(alert.status)} label={getStatusLabel(alert.status)} showDot />
                   </td>
-                  <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(alert.createdAt)}</td>
-                  <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(alert.updatedAt)}</td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(alert.createdAt)}</td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(alert.updatedAt)}</td>
                   <td className="actions-col">
                     <ActionMenu 
                       actions={getActions(alert)}
@@ -123,7 +114,7 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
       {/* --- MOBILE LIST VIEW --- */}
       <div className="mobile-alert-list">
         <div className="mobile-list-header" style={{ display: 'flex', alignItems: 'center' }}>
-          <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="col-checkbox" style={{ width: '2.8571rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <VCheckbox 
               checked={allSelected} 
               indeterminate={selectedIds.length > 0 && selectedIds.length < alerts.length}
@@ -143,7 +134,7 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
           return (
             <div className={`mobile-card ${isExpanded ? 'expanded' : ''} ${isSelected ? 'selected' : ''}`} key={id}>
               <div className="mobile-card-header" style={{ display: 'flex', alignItems: 'center' }}>
-                <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="col-checkbox" style={{ width: '2.8571rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <VCheckbox 
                     checked={isSelected}
                     onChange={(e) => onSelect(id, e.target.checked)}

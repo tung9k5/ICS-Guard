@@ -1,6 +1,7 @@
 export const INCIDENT_STATUSES = {
   OPEN: 'open',
   INVESTIGATING: 'investigating',
+  INVESTIGATED: 'investigated',
   REMEDIATED: 'remediated',
   CLOSED: 'closed'
 };

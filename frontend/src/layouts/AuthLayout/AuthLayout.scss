@@ -36,7 +36,7 @@
     transform: translateY(-50%);
     z-index: 2;
     text-align: left;
-    max-width: 600px;
+    max-width: 42.8571rem;
 
     h1 {
       font-size: 3.5rem;
@@ -48,14 +48,14 @@
       background: var(--accent-gradient-light);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      text-shadow: 0 0.2857rem 0.8571rem rgba(0, 0, 0, 0.3);
     }
 
     p {
       font-size: 1.25rem;
       color: rgba(255, 255, 255, 0.85);
       line-height: 1.6;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      text-shadow: 0 0.1429rem 0.2857rem rgba(0, 0, 0, 0.5);
     }
   }
 }
@@ -64,11 +64,11 @@
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 480px;
+  max-width: 34.2857rem;
   background-color: var(--bg-glass); 
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid var(--border-light);
+  backdrop-filter: blur(1.7143rem) saturate(160%);
+  -webkit-backdrop-filter: blur(1.7143rem) saturate(160%);
+  border: 0.0714rem solid var(--border-light);
   border-radius: 1.5rem;
   padding: 3rem;
   margin: auto 5vw; /* Margin auto cho phép tự động căn giữa mà không bị kẹt khi cuộn */
@@ -83,7 +83,7 @@
   margin-bottom: 1.5rem; /* Giảm margin một chút để bù cho logo to ra */
 
   .auth-logo {
-    height: 140px; /* Phóng to logo */
+    height: 10rem; /* Phóng to logo */
     width: auto;
     max-width: 100%; /* Đảm bảo không bao giờ vỡ khung */
     object-fit: contain;
@@ -98,7 +98,7 @@
 }
 
 /* Responsive cho điện thoại */
-@media (max-width: 900px) {
+@media (max-width: 64.2857rem) {
   .auth-layout {
     justify-content: center;
   }
@@ -124,12 +124,12 @@
     background: linear-gradient(135deg, var(--red-500) 0%, var(--orange-500) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    text-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    text-shadow: 0 0.2857rem 0.8571rem rgba(239, 68, 68, 0.25);
   }
 
   .auth-panel {
     border-color: rgba(239, 68, 68, 0.25);
-    box-shadow: 0 8px 32px 0 rgba(239, 68, 68, 0.15);
+    box-shadow: 0 0.5714rem 2.2857rem 0 rgba(239, 68, 68, 0.15);
     
     .auth-subtitle {
       color: var(--red-500);

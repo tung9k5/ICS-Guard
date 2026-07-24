@@ -9,7 +9,7 @@ import VPagination from '@/components/VPagination';
 import VButton from '@/components/VButton';
 import { formatDate } from '@/utils/formatDate';
 
-const statusColor = { open: '#ef4444', investigating: '#f97316', resolved: '#22c55e', closed: '#6b7280' };
+const statusColor = { open: 'var(--red-500)', investigating: 'var(--orange-500)', resolved: 'var(--green-500)', closed: 'var(--custom-color-14)' };
 
 const CustomerIncidents = () => {
   const { t } = useTranslation();
@@ -42,18 +42,18 @@ const CustomerIncidents = () => {
       <VHeaderPage 
         title={t('customer.incidents.title', 'Sự cố')}
         action={
-          <VButton onClick={fetchIncidents} variant="outline" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <VButton onClick={fetchIncidents} variant="outline" style={{ display: 'flex', alignItems: 'center', gap: '0.4286rem' }}>
             <RefreshCw size={15} /> {t('customer.common.refresh', 'Làm mới')}
           </VButton>
         }
       />
 
-      <div style={{ display: 'flex', gap: '20px' }}>
+      <div style={{ display: 'flex', gap: '1.4286rem' }}>
         {/* List */}
         <div style={{ flex: selected ? '0 0 55%' : '1' }}>
-          <div style={{ background: 'var(--white)', borderRadius: '12px', border: '1px solid var(--slate-200)', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+          <div style={{ background: 'var(--white)', borderRadius: '0.8571rem', border: '0.0714rem solid var(--slate-200)', overflow: 'hidden', boxShadow: '0 0.2857rem 0.4286rem -0.0714rem rgba(0, 0, 0, 0.05)' }}>
             {loading ? (
-              <div style={{ padding: '40px', textAlign: 'center', color: 'var(--slate-500)' }}>{t('customer.common.loading', 'Đang tải...')}</div>
+              <div style={{ padding: '2.8571rem', textAlign: 'center', color: 'var(--slate-500)' }}>{t('customer.common.loading', 'Đang tải...')}</div>
             ) : incidents.length === 0 ? (
               <VNoData title={t('customer.incidents.no_data', 'Không có sự cố nào')} />
             ) : incidents.map((incident, i) => (
@@ -61,8 +61,8 @@ const CustomerIncidents = () => {
                 key={incident._id}
                 onClick={() => setSelected(incident)}
                 style={{
-                  padding: '16px 20px',
-                  borderBottom: i < incidents.length - 1 ? '1px solid var(--slate-200)' : 'none',
+                  padding: '1.1429rem 1.4286rem',
+                  borderBottom: i < incidents.length - 1 ? '0.0714rem solid var(--slate-200)' : 'none',
                   cursor: 'pointer',
                   background: selected?._id === incident._id ? 'var(--slate-50)' : 'var(--white)',
                   transition: 'background 0.15s',
@@ -70,15 +70,15 @@ const CustomerIncidents = () => {
                 onMouseEnter={e => e.currentTarget.style.background = 'var(--slate-50)'}
                 onMouseLeave={e => e.currentTarget.style.background = selected?._id === incident._id ? 'var(--slate-50)' : 'var(--white)'}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.8571rem' }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: '0 0 4px', fontSize: '14px', fontWeight: '600', color: 'var(--slate-900)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{incident.title}</p>
-                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--slate-500)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <p style={{ margin: '0 0 0.2857rem', fontSize: '1rem', fontWeight: '600', color: 'var(--slate-900)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{incident.title}</p>
+                    <p style={{ margin: 0, fontSize: '0.8571rem', color: 'var(--slate-500)', display: 'flex', alignItems: 'center', gap: '0.4286rem' }}>
                       <Clock size={11} />
                       {incident.createdAt ? formatDate(incident.createdAt) : '—'}
                     </p>
                   </div>
-                  <span style={{ flexShrink: 0, padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '600', background: `${statusColor[incident.status] || '#6b7280'}22`, color: statusColor[incident.status] || '#6b7280' }}>
+                  <span style={{ flexShrink: 0, padding: '0.2143rem 0.7143rem', borderRadius: '1.4286rem', fontSize: '0.7857rem', fontWeight: '600', background: `${statusColor[incident.status] || 'var(--custom-color-14)'}22`, color: statusColor[incident.status] || 'var(--custom-color-14)' }}>
                     {statusLabel[incident.status] || incident.status}
                   </span>
                 </div>
@@ -86,7 +86,7 @@ const CustomerIncidents = () => {
             ))}
 
             {total > 0 && incidents.length > 0 && (
-              <div style={{ borderTop: '1px solid var(--slate-200)', background: 'var(--slate-50)' }}>
+              <div style={{ borderTop: '0.0714rem solid var(--slate-200)', background: 'var(--slate-50)' }}>
                 <VPagination 
                   page={page}
                   perPage={perPage}
@@ -106,29 +106,29 @@ const CustomerIncidents = () => {
 
         {/* Detail panel */}
         {selected && (
-          <div style={{ flex: '0 0 42%', background: 'var(--white)', borderRadius: '12px', border: '1px solid var(--slate-200)', padding: '24px', alignSelf: 'flex-start', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-              <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: 'var(--slate-900)' }}>{t('customer.incidents.detail_title', 'Chi tiết sự cố')}</h3>
-              <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', color: 'var(--slate-500)', cursor: 'pointer', fontSize: '20px', lineHeight: 1 }}>×</button>
+          <div style={{ flex: '0 0 42%', background: 'var(--white)', borderRadius: '0.8571rem', border: '0.0714rem solid var(--slate-200)', padding: '1.7143rem', alignSelf: 'flex-start', boxShadow: '0 0.2857rem 0.4286rem -0.0714rem rgba(0, 0, 0, 0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.1429rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1429rem', fontWeight: '600', color: 'var(--slate-900)' }}>{t('customer.incidents.detail_title', 'Chi tiết sự cố')}</h3>
+              <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', color: 'var(--slate-500)', cursor: 'pointer', fontSize: '1.4286rem', lineHeight: 1 }}>×</button>
             </div>
-            <div style={{ marginBottom: '16px' }}>
-              <p style={{ fontSize: '13px', color: 'var(--slate-500)', margin: '0 0 4px' }}>{t('customer.incidents.lbl_title', 'Tiêu đề')}</p>
-              <p style={{ fontSize: '15px', fontWeight: '600', color: 'var(--slate-900)', margin: 0 }}>{selected.title}</p>
+            <div style={{ marginBottom: '1.1429rem' }}>
+              <p style={{ fontSize: '0.9286rem', color: 'var(--slate-500)', margin: '0 0 0.2857rem' }}>{t('customer.incidents.lbl_title', 'Tiêu đề')}</p>
+              <p style={{ fontSize: '1.0714rem', fontWeight: '600', color: 'var(--slate-900)', margin: 0 }}>{selected.title}</p>
             </div>
             {selected.description && (
-              <div style={{ marginBottom: '16px' }}>
-                <p style={{ fontSize: '13px', color: 'var(--slate-500)', margin: '0 0 4px' }}>{t('customer.incidents.lbl_description', 'Mô tả')}</p>
-                <p style={{ fontSize: '14px', color: 'var(--slate-900)', margin: 0, lineHeight: '1.5' }}>{selected.description}</p>
+              <div style={{ marginBottom: '1.1429rem' }}>
+                <p style={{ fontSize: '0.9286rem', color: 'var(--slate-500)', margin: '0 0 0.2857rem' }}>{t('customer.incidents.lbl_description', 'Mô tả')}</p>
+                <p style={{ fontSize: '1rem', color: 'var(--slate-900)', margin: 0, lineHeight: '1.5' }}>{selected.description}</p>
               </div>
             )}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: 'var(--slate-50)', padding: '16px', borderRadius: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.1429rem', background: 'var(--slate-50)', padding: '1.1429rem', borderRadius: '0.5714rem' }}>
               <div>
-                <p style={{ fontSize: '13px', color: 'var(--slate-500)', margin: '0 0 6px' }}>{t('customer.incidents.lbl_status', 'Trạng thái')}</p>
-                <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '600', background: `${statusColor[selected.status] || '#6b7280'}22`, color: statusColor[selected.status] || '#6b7280' }}>{statusLabel[selected.status] || selected.status}</span>
+                <p style={{ fontSize: '0.9286rem', color: 'var(--slate-500)', margin: '0 0 0.4286rem' }}>{t('customer.incidents.lbl_status', 'Trạng thái')}</p>
+                <span style={{ padding: '0.2143rem 0.7143rem', borderRadius: '1.4286rem', fontSize: '0.7857rem', fontWeight: '600', background: `${statusColor[selected.status] || 'var(--custom-color-14)'}22`, color: statusColor[selected.status] || 'var(--custom-color-14)' }}>{statusLabel[selected.status] || selected.status}</span>
               </div>
               <div>
-                <p style={{ fontSize: '13px', color: 'var(--slate-500)', margin: '0 0 6px' }}>{t('customer.incidents.lbl_created_at', 'Tạo lúc')}</p>
-                <p style={{ fontSize: '13px', color: 'var(--slate-900)', margin: 0, fontWeight: '500' }}>{selected.createdAt ? formatDate(selected.createdAt) : '—'}</p>
+                <p style={{ fontSize: '0.9286rem', color: 'var(--slate-500)', margin: '0 0 0.4286rem' }}>{t('customer.incidents.lbl_created_at', 'Tạo lúc')}</p>
+                <p style={{ fontSize: '0.9286rem', color: 'var(--slate-900)', margin: 0, fontWeight: '500' }}>{selected.createdAt ? formatDate(selected.createdAt) : '—'}</p>
               </div>
             </div>
           </div>

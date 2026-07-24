@@ -61,13 +61,13 @@ const CustomerDashboard = () => {
     fetchStats();
   }, []);
 
-  const severityColor = { critical: '#ef4444', high: '#f97316', medium: '#eab308', low: '#22c55e' };
+  const severityColor = { critical: 'var(--red-500)', high: 'var(--orange-500)', medium: 'var(--yellow-500)', low: 'var(--green-500)' };
 
   return (
     <div className="assets-page">
       
       <div className="dashboard-container" style={{ minHeight: 'auto' }}>
-        <div className="promo-banner" style={{ margin: 0, marginBottom: '32px' }}>
+        <div className="promo-banner" style={{ margin: 0, marginBottom: '2.2857rem' }}>
           <div className="promo-content">
             <div className="promo-text">
               <h2>{t('dashboard.banner.title', 'Bảo vệ hệ thống tối đa!')}</h2>
@@ -90,49 +90,49 @@ const CustomerDashboard = () => {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(15.7143rem, 1fr))', gap: '1.1429rem', marginBottom: '1.1429rem' }}>
           <StatCard icon={Server} label={t('customer.dashboard.devices', 'Thiết bị')} value={stats.devices} color="var(--primary)" loading={loading} />
-          <StatCard icon={Bell} label={t('customer.dashboard.total_alerts', 'Tổng Cảnh báo')} value={stats.alerts} color="#f97316" loading={loading} />
-          <StatCard icon={AlertTriangle} label={t('customer.dashboard.active_alerts', 'Cảnh báo đang mở')} value={stats.activeAlerts} color="#ef4444" loading={loading} />
-          <StatCard icon={ShieldAlert} label={t('customer.dashboard.incidents', 'Sự cố')} value={stats.incidents} color="#8b5cf6" loading={loading} />
+          <StatCard icon={Bell} label={t('customer.dashboard.total_alerts', 'Tổng Cảnh báo')} value={stats.alerts} color="var(--orange-500)" loading={loading} />
+          <StatCard icon={AlertTriangle} label={t('customer.dashboard.active_alerts', 'Cảnh báo đang mở')} value={stats.activeAlerts} color="var(--red-500)" loading={loading} />
+          <StatCard icon={ShieldAlert} label={t('customer.dashboard.incidents', 'Sự cố')} value={stats.incidents} color="var(--purple-500)" loading={loading} />
         </div>
 
         <div style={{
-          background: 'var(--white)', borderRadius: '12px',
-          border: '1px solid var(--slate-200)', overflow: 'hidden',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+          background: 'var(--white)', borderRadius: '0.8571rem',
+          border: '0.0714rem solid var(--slate-200)', overflow: 'hidden',
+          boxShadow: '0 0.2857rem 0.4286rem -0.0714rem rgba(0, 0, 0, 0.05)',
         }}>
-          <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--slate-200)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ padding: '1.1429rem 1.7143rem', borderBottom: '0.0714rem solid var(--slate-200)', display: 'flex', alignItems: 'center', gap: '0.5714rem' }}>
 
-            <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600', color: 'var(--slate-900)' }}>{t('customer.dashboard.recent_alerts', 'Cảnh báo gần đây')}</h3>
+            <h3 style={{ margin: 0, fontSize: '1.1429rem', fontWeight: '600', color: 'var(--slate-900)' }}>{t('customer.dashboard.recent_alerts', 'Cảnh báo gần đây')}</h3>
           </div>
           <div style={{ padding: '0' }}>
             {loading ? (
-              <p style={{ padding: '20px 24px', color: 'var(--slate-500)', fontSize: '14px', textAlign: 'center' }}>{t('customer.common.loading', 'Đang tải...')}</p>
+              <p style={{ padding: '1.4286rem 1.7143rem', color: 'var(--slate-500)', fontSize: '1rem', textAlign: 'center' }}>{t('customer.common.loading', 'Đang tải...')}</p>
             ) : recentAlerts.length === 0 ? (
               <VNoData title={t('customer.alerts.no_data', 'Không có cảnh báo nào')} />
             ) : recentAlerts.map((alert, i) => (
               <div key={alert._id || i} style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '16px 24px', borderBottom: i < recentAlerts.length - 1 ? '1px solid var(--slate-100)' : 'none',
+                padding: '1.1429rem 1.7143rem', borderBottom: i < recentAlerts.length - 1 ? '0.0714rem solid var(--slate-100)' : 'none',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.8571rem' }}>
                   <div style={{
-                    width: '8px', height: '8px', borderRadius: '50%',
-                    background: severityColor[alert.severity] || '#6b7280',
+                    width: '0.5714rem', height: '0.5714rem', borderRadius: '50%',
+                    background: severityColor[alert.severity] || 'var(--custom-color-14)',
                   }} />
                   <div>
-                    <p style={{ margin: 0, fontSize: '14px', color: 'var(--slate-900)', fontWeight: '500' }}>{alert.title || alert.rule_name || t('customer.alerts.default_alert', 'Alert')}</p>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--slate-500)' }}>{alert.device_name || alert.source_ip || ''}</p>
-                      {alert.createdAt && <span style={{ fontSize: '11px', color: 'var(--slate-400)' }}>{formatDate(alert.createdAt)}</span>}
+                    <p style={{ margin: 0, fontSize: '1rem', color: 'var(--slate-900)', fontWeight: '500' }}>{alert.title || alert.rule_name || t('customer.alerts.default_alert', 'Alert')}</p>
+                    <div style={{ display: 'flex', gap: '0.7143rem', alignItems: 'center' }}>
+                      <p style={{ margin: 0, fontSize: '0.8571rem', color: 'var(--slate-500)' }}>{alert.device_name || alert.source_ip || ''}</p>
+                      {alert.createdAt && <span style={{ fontSize: '0.7857rem', color: 'var(--slate-400)' }}>{formatDate(alert.createdAt)}</span>}
                     </div>
                   </div>
                 </div>
                 <span style={{
-                  padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '600',
-                  background: `${severityColor[alert.severity] || '#6b7280'}22`,
-                  color: severityColor[alert.severity] || '#6b7280',
+                  padding: '0.2143rem 0.7143rem', borderRadius: '1.4286rem', fontSize: '0.7857rem', fontWeight: '600',
+                  background: `${severityColor[alert.severity] || 'var(--custom-color-14)'}22`,
+                  color: severityColor[alert.severity] || 'var(--custom-color-14)',
                   textTransform: 'uppercase',
                 }}>
                   {alert.severity || t('customer.common.unknown', 'unknown')}

@@ -7,8 +7,10 @@ import VPagination from '@/components/VPagination';
 import VNoData from '@/components/VNoData';
 import VFilterPage from '@/components/VFilterPage';
 import VButton from '@/components/VButton';
-import { toast } from 'react-toastify';
+import VDialog from '@/components/VDialog';
+import { toast } from '@/utils/toast';
 import { formatDate } from '@/utils/formatDate';
+import { useExpandable } from '@/hooks/useExpandable';
 
 const BlockedIpsList = () => {
   const { t } = useTranslation();
@@ -19,11 +21,11 @@ const BlockedIpsList = () => {
   const [perPage, setPerPage] = useState(10);
   const [total, setTotal] = useState(0);
 
-  const [expandedId, setExpandedId] = useState(null);
+  const { expandedId, toggleExpand } = useExpandable();
 
-  const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
+  // Unblock confirm dialog state (replaces window.confirm)
+  const [unblockModalOpen, setUnblockModalOpen] = useState(false);
+  const [ipToUnblock, setIpToUnblock] = useState(null);
 
   const fetchIps = async () => {
     try {
@@ -57,13 +59,19 @@ const BlockedIpsList = () => {
     // eslint-disable-next-line
   }, [page, perPage, search]);
 
-  const handleUnblock = async (ipAddress) => {
-    if (!window.confirm(`Bạn có chắc muốn mở khóa cho IP: ${ipAddress}?`)) return;
+  const openUnblockConfirm = (ipAddress) => {
+    setIpToUnblock(ipAddress);
+    setUnblockModalOpen(true);
+  };
 
+  const handleUnblock = async () => {
+    if (!ipToUnblock) return;
     try {
       setLoading(true);
-      await ApiAudit.unblockIp(ipAddress);
+      await ApiAudit.unblockIp(ipToUnblock);
       toast.success(t('audit.unblock_success'));
+      setUnblockModalOpen(false);
+      setIpToUnblock(null);
       fetchIps();
     } catch (err) {
       console.error(err);
@@ -95,11 +103,11 @@ const BlockedIpsList = () => {
             <table className="v-table">
               <thead>
                 <tr>
-                  <th style={{ width: '140px', whiteSpace: 'nowrap' }}>{t('audit.blocked.table_ip')}</th>
+                  <th style={{ width: '10rem', whiteSpace: 'nowrap' }}>{t('audit.blocked.table_ip')}</th>
                   <th>{t('audit.blocked.table_reason')}</th>
                   <th style={{ whiteSpace: 'nowrap' }}>{t('common.created_at', 'Ngày tạo')}</th>
                   <th style={{ whiteSpace: 'nowrap' }}>{t('common.updated_at', 'Ngày cập nhật')}</th>
-                  <th style={{ width: '110px' }}>{t('audit.blocked.table_actions')}</th>
+                  <th style={{ width: '7.8571rem' }}>{t('audit.blocked.table_actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -111,7 +119,7 @@ const BlockedIpsList = () => {
                         <span style={{ whiteSpace: 'nowrap' }}>{ip.ipAddress}</span>
                       </div>
                     </td>
-                    <td style={{ maxWidth: '250px' }}>
+                    <td style={{ maxWidth: '17.8571rem' }}>
                       <div className="reason-text truncate-text" title={ip.reason}>{ip.reason || '-'}</div>
                     </td>
                     <td className="time-col" style={{ whiteSpace: 'nowrap' }}>
@@ -123,7 +131,7 @@ const BlockedIpsList = () => {
                     <td>
                       <VButton 
                         variant="outline"
-                        onClick={() => handleUnblock(ip.ipAddress)}
+                        onClick={() => openUnblockConfirm(ip.ipAddress)}
                       >
                         <Unlock size={16} />
                         {t('audit.btn_unblock')}
@@ -180,10 +188,10 @@ const BlockedIpsList = () => {
                           {formatDate(ip.updatedAt)}
                         </span>
                       </div>
-                      <div className="detail-row" style={{ borderBottom: 'none', paddingBottom: 0, paddingTop: '16px', display: 'flex', justifyContent: 'center' }}>
+                      <div className="detail-row" style={{ borderBottom: 'none', paddingBottom: 0, paddingTop: '1.1429rem', display: 'flex', justifyContent: 'center' }}>
                         <VButton 
                           variant="outline"
-                          onClick={() => handleUnblock(ip.ipAddress)}
+                          onClick={() => openUnblockConfirm(ip.ipAddress)}
                           style={{ width: '100%' }}
                         >
                           <Unlock size={16} />
@@ -213,6 +221,38 @@ const BlockedIpsList = () => {
           }}
         />
       )}
+
+      <VDialog
+        visible={unblockModalOpen}
+        onHide={() => { setUnblockModalOpen(false); setIpToUnblock(null); }}
+        header={t('audit.unblock_confirm_title', 'Mở khóa IP')}
+        style={{ maxWidth: '28.5714rem' }}
+      >
+        <div style={{ textAlign: 'center', padding: '0' }}>
+          <p style={{ margin: 0, color: 'var(--slate-700)', fontSize: '1.0714rem', lineHeight: '1.5' }}>
+            {t('audit.unblock_confirm_msg', 'Bạn có chắc muốn mở khóa cho IP')}{' '}
+            <strong>{ipToUnblock}</strong>?
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: '0.8571rem', paddingTop: '1.1429rem' }}>
+          <VButton
+            variant="outline"
+            onClick={() => { setUnblockModalOpen(false); setIpToUnblock(null); }}
+            style={{ flex: 1 }}
+          >
+            {t('common.cancel', 'Hủy')}
+          </VButton>
+          <VButton
+            variant="primary"
+            onClick={handleUnblock}
+            loading={loading}
+            style={{ flex: 1 }}
+          >
+            <Unlock size={16} />
+            {t('audit.btn_unblock')}
+          </VButton>
+        </div>
+      </VDialog>
     </div>
   );
 };

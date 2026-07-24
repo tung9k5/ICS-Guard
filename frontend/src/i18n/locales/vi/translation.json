@@ -3,7 +3,7 @@
     "attacker_portal": "Cổng Mô Phỏng Tấn Công",
     "welcome_ics_guard": "Chào mừng đến với ICS Guard",
     "attacker_desc": "Công cụ thử nghiệm độ ổn định và mô phỏng các kịch bản xâm nhập hạ tầng công nghiệp.",
-    "ics_guard_desc": "Nền tảng giám sát an ninh mạng thế hệ mới dành cho hệ thống điều khiển công nghiệp.",
+    "ics_guard_desc": "Giải pháp an ninh mạng thế hệ mới, cung cấp khả năng giám sát theo thời gian thực, chủ động phát hiện sớm các mối đe dọa và bảo vệ tối đa cho toàn bộ hệ thống điều khiển công nghiệp (ICS/SCADA).",
     "login": {
       "success": "Đăng nhập thành công",
       "google_fail": "Đăng nhập Google thất bại",
@@ -18,7 +18,7 @@
       "submit": "Đăng Nhập",
       "or": "Hoặc",
       "missing_env": "Vui lòng thêm VITE_GOOGLE_CLIENT_ID và VITE_GOOGLE_GSI_CLIENT_URL vào file .env",
-      "login_google": "Đăng nhập bằng Google",
+      "login_google": "ĐĂNG NHẬP VỚI GOOGLE",
       "no_account": "Chưa có tài khoản? ",
       "register_now": "Đăng ký ngay"
     },

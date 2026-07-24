@@ -5,9 +5,9 @@ import { loadingEvent } from '@/utils/loadingEvent';
 import { GLOBAL_LOADING_MIN_DURATION_MS, GLOBAL_LOADING_ICON_INTERVAL_MS } from '@/constants/uiConstants';
 import './GlobalLoading.scss';
 
-const GlobalLoading = () => {
+const GlobalLoading = ({ forceShow = false }) => {
   const { t } = useTranslation();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(forceShow);
   const [iconIndex, setIconIndex] = useState(0);
   const startTimeRef = useRef(0);
   const hideTimeoutRef = useRef(null);

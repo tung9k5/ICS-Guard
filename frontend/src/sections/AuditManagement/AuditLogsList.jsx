@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Info, User, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -11,9 +11,11 @@ import VSelectFilter from '@/components/VSelectFilter';
 import ActionMenu from '@/components/ActionMenu';
 import VStatus from '@/components/VStatus';
 import DeleteConfirmModal from '@/Dialog/DeleteConfirmModal';
-import { toast } from 'react-toastify';
+import { toast } from '@/utils/toast';
 import { formatDate } from '@/utils/formatDate';
 import { useLoader } from '@/hooks/useLoader';
+import { useExpandable } from '@/hooks/useExpandable';
+
 
 // Known audit actions from server (extend as needed)
 const AUDIT_ACTIONS = [
@@ -38,6 +40,25 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
   const [perPage, setPerPage] = useState(10);
   const [total, setTotal] = useState(0);
 
+  const { expandedId, toggleExpand } = useExpandable();
+
+  // Sync useSelection results back to parent's selectedIds
+  const handleSelectWithSync = useCallback((id, checked) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, id]);
+    } else {
+      setSelectedIds(prev => prev.filter(item => item !== id));
+    }
+  }, [setSelectedIds]);
+
+  const handleSelectAllWithSync = useCallback((checked) => {
+    if (checked) {
+      setSelectedIds(logs.map(log => log.id || log._id));
+    } else {
+      setSelectedIds([]);
+    }
+  }, [logs, setSelectedIds]);
+
   const getActionVariant = (act) => {
     if (!act) return 'neutral';
     if (act.includes('DELETE') || act.includes('BLOCK') || (act.includes('ISOLATE') && !act.includes('UNISOLATE'))) return 'danger';
@@ -46,7 +67,6 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
     return 'neutral';
   };
 
-  const [expandedId, setExpandedId] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [logToDelete, setLogToDelete] = useState(null);
 
@@ -55,26 +75,6 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
       confirmDelete('bulk');
     }
   }, [triggerBulkDelete]);
-
-  const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
-
-  const handleSelectAll = (checked) => {
-    if (checked) {
-      setSelectedIds(logs.map(log => log.id || log._id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
-  const handleSelect = (id, checked) => {
-    if (checked) {
-      setSelectedIds(prev => [...prev, id]);
-    } else {
-      setSelectedIds(prev => prev.filter(item => item !== id));
-    }
-  };
 
   const confirmDelete = (id) => {
     setLogToDelete(id);
@@ -169,7 +169,6 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
             ...AUDIT_ACTIONS.map(act => ({ value: act, label: act }))
           ]}
         />
-        {/* Order filter */}
         <VSelectFilter
           value={order}
           defaultValue="desc"
@@ -193,11 +192,11 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
             <table className="v-table">
               <thead>
                 <tr>
-                  <th style={{ width: '40px', textAlign: 'center' }}>
+                  <th style={{ width: '2.8571rem', textAlign: 'center' }}>
                     <VCheckbox 
                       checked={logs.length > 0 && selectedIds.length === logs.length}
                       indeterminate={selectedIds.length > 0 && selectedIds.length < logs.length}
-                      onChange={(e) => handleSelectAll(e.target.checked)}
+                      onChange={(e) => handleSelectAllWithSync(e.target.checked)}
                     />
                   </th>
                   <th>{t('audit.logs.table_username', 'TÊN NGƯỜI DÙNG')}</th>
@@ -216,17 +215,17 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                     <td style={{ textAlign: 'center' }}>
                       <VCheckbox 
                         checked={selectedIds.includes(log.id || log._id)}
-                        onChange={(e) => handleSelect(log.id || log._id, e.target.checked)}
+                        onChange={(e) => handleSelectWithSync(log.id || log._id, e.target.checked)}
                         style={{ cursor: 'pointer' }}
                       />
                     </td>
-                    <td style={{ maxWidth: '150px' }}>
-                      <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                    <td style={{ maxWidth: '10.7143rem' }}>
+                      <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '0.5714rem', minWidth: 0 }}>
                         <User size={16} style={{ flexShrink: 0 }} />
                         <span className="truncate-text" style={{ flex: 1, minWidth: 0 }} title={log.username}>{log.username || 'System'}</span>
                       </div>
                     </td>
-                    <td style={{ maxWidth: '180px' }}>
+                    <td style={{ maxWidth: '12.8571rem' }}>
                       <div className="truncate-text" title={log.email || log.details?.body?.email || 'N/A'}>{log.email || log.details?.body?.email || 'N/A'}</div>
                     </td>
                     <td>
@@ -262,11 +261,11 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
         {!loading && logs.length > 0 && (
           <div className="mobile-list">
             <div className="mobile-list-header">
-              <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="col-checkbox" style={{ width: '2.8571rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <input
                   type="checkbox"
                   checked={logs.length > 0 && selectedIds.length === logs.length}
-                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  onChange={(e) => handleSelectAllWithSync(e.target.checked)}
                   style={{ cursor: 'pointer' }}
                 />
               </div>
@@ -281,20 +280,20 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
               return (
                 <div className={`mobile-card ${isExpanded ? 'expanded' : ''} ${selectedIds.includes(id) ? 'selected' : ''}`} key={id}>
                   <div className="mobile-card-header" onClick={() => toggleExpand(id)}>
-                    <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
+                    <div className="col-checkbox" style={{ width: '2.8571rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={selectedIds.includes(id)}
-                        onChange={(e) => handleSelect(id, e.target.checked)}
+                        onChange={(e) => handleSelectWithSync(id, e.target.checked)}
                         style={{ cursor: 'pointer' }}
                       />
                     </div>
                     <div className="col-id">
-                      <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '0.5714rem' }}>
                         <User size={16} style={{ flexShrink: 0, color: 'var(--slate-400)' }} />
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <strong className="truncate-text" style={{ maxWidth: '150px' }}>{log.username || 'System'}</strong>
-                          <span style={{ fontSize: '12px', color: 'var(--slate-500)' }}>{formatDate(log.createdAt)}</span>
+                          <strong className="truncate-text" style={{ maxWidth: '10.7143rem' }}>{log.username || 'System'}</strong>
+                          <span style={{ fontSize: '0.8571rem', color: 'var(--slate-500)' }}>{formatDate(log.createdAt)}</span>
                         </div>
                       </div>
                     </div>
@@ -310,7 +309,7 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                         <span className="detail-value">
                           <VStatus status={getActionVariant(log.action)} label={log.action} />
                         </span>
-                        <div className="card-action-menu" style={{ marginLeft: '12px' }}>
+                        <div className="card-action-menu" style={{ marginLeft: '0.8571rem' }}>
                           <ActionMenu
                             actions={[
                               { label: t('common.delete'), icon: Trash2, danger: true, onClick: () => confirmDelete(id) }

@@ -13,6 +13,8 @@ services:
       - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
       - VITE_GOOGLE_GSI_CLIENT_URL=${VITE_GOOGLE_GSI_CLIENT_URL}
       - VITE_API_URL=${VITE_API_URL}
+      - VITE_USE_OPENAI=${VITE_USE_OPENAI}
+      - VITE_OPENAI_API_KEY=${VITE_OPENAI_API_KEY}
       - VITE_GEMINI_API_KEY=${VITE_GEMINI_API_KEY}
       - VITE_PROXY_TARGET=${VITE_PROXY_TARGET}
     depends_on:
@@ -25,13 +27,15 @@ services:
       context: ./backend
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
-    command: sh -c "cd /ai-gemini && npm install && cd /app && npm start"
+    command: sh -c "cd /ai-services && npm install && cd /app && npm start"
     volumes:
       - ./backend:/app
-      - ./ai-gemini:/ai-gemini
+      - ./ai-services:/ai-services
       - /app/node_modules
     environment:
       - PORT=${BACKEND_PORT}
+      - VITE_USE_OPENAI=${VITE_USE_OPENAI}
+      - VITE_OPENAI_API_KEY=${VITE_OPENAI_API_KEY}
       - VITE_GEMINI_API_KEY=${VITE_GEMINI_API_KEY}
       - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-123456}@mongodb:27017/${MONGO_DB}?authSource=admin
       - MONGO_DB=${MONGO_DB}
@@ -42,7 +46,14 @@ services:
       - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
       - FRONTEND_URL=${FRONTEND_URL}
       - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
-      - GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-$VITE_GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI}
+      - COOKIE_DOMAIN=${COOKIE_DOMAIN}
+      - GOOGLE_OAUTH_AUTH_URL=${GOOGLE_OAUTH_AUTH_URL}
+      - GOOGLE_OAUTH_TOKEN_URL=${GOOGLE_OAUTH_TOKEN_URL}
+      - GOOGLE_OAUTH_USERINFO_URL=${GOOGLE_OAUTH_USERINFO_URL}
+      - GOOGLE_OAUTH_TOKENINFO_URL=${GOOGLE_OAUTH_TOKENINFO_URL}
       - MQTT_URL=mqtt://mosquitto:${MQTT_PORT:-1883}
       - MQTT_TLS_PORT=${MQTT_TLS_PORT:-8883}
     depends_on:
@@ -58,7 +69,7 @@ services:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
     ports:
-      - "${MONGO_PORT}:${MONGO_PORT}"
+      - "${MONGO_PORT}:27017"
     volumes:
       - mongodb_data:/data/db
     restart: always
