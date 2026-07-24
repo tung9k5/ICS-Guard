@@ -7,8 +7,8 @@
     border: none;
     color: var(--slate-500);
     cursor: pointer;
-    padding: 6px;
-    border-radius: 6px;
+    padding: 0.4286rem;
+    border-radius: 0.4286rem;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -24,13 +24,13 @@
     position: absolute;
     right: 0;
     top: 100%;
-    margin-top: 4px;
+    margin-top: 0.2857rem;
     background: var(--white);
-    border: 1px solid var(--slate-200);
-    border-radius: 8px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    min-width: 160px;
-    padding: 8px 0;
+    border: 0.0714rem solid var(--slate-200);
+    border-radius: 0.5714rem;
+    box-shadow: 0 0.7143rem 1.0714rem -0.2143rem rgba(0, 0, 0, 0.1), 0 0.2857rem 0.4286rem -0.1429rem rgba(0, 0, 0, 0.05);
+    min-width: 11.4286rem;
+    padding: 0.5714rem 0;
     z-index: 50;
     animation: dropdownFadeIn 0.2s ease-out;
 
@@ -38,20 +38,20 @@
       top: auto;
       bottom: 100%;
       margin-top: 0;
-      margin-bottom: 4px;
+      margin-bottom: 0.2857rem;
       animation: dropdownFadeInUp 0.2s ease-out;
     }
 
     .action-menu-item {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 0.7143rem;
       width: 100%;
-      padding: 10px 16px;
+      padding: 0.7143rem 1.1429rem;
       background: transparent;
       border: none;
       color: var(--slate-700);
-      font-size: 14px;
+      font-size: 1rem;
       text-align: left;
       cursor: pointer;
       transition: all 0.2s ease;
@@ -75,7 +75,7 @@
 @keyframes dropdownFadeIn {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-0.5714rem);
   }
   to {
     opacity: 1;
@@ -86,7 +86,7 @@
 @keyframes dropdownFadeInUp {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(0.5714rem);
   }
   to {
     opacity: 1;

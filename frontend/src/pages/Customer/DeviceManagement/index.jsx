@@ -62,15 +62,15 @@ const CustomerDevices = () => {
       <VHeaderPage 
         title={t('customer.devices.title', 'Thiết bị của tôi')}
         action={
-          <VButton onClick={fetchDevices} variant="outline" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <VButton onClick={fetchDevices} variant="outline" style={{ display: 'flex', alignItems: 'center', gap: '0.4286rem' }}>
             <RefreshCw size={15} /> {t('customer.common.refresh', 'Làm mới')}
           </VButton>
         }
       />
 
-      <div style={{ background: 'var(--white)', borderRadius: '12px', border: '1px solid var(--slate-200)', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+      <div style={{ background: 'var(--white)', borderRadius: '0.8571rem', border: '0.0714rem solid var(--slate-200)', overflow: 'hidden', boxShadow: '0 0.2857rem 0.4286rem -0.0714rem rgba(0, 0, 0, 0.05)' }}>
         {loading ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--slate-500)' }}>{t('customer.common.loading', 'Đang tải...')}</div>
+          <div style={{ padding: '2.8571rem', textAlign: 'center', color: 'var(--slate-500)' }}>{t('customer.common.loading', 'Đang tải...')}</div>
         ) : devices.length === 0 ? (
           <VNoData title={t('customer.devices.no_data', 'Chưa có thiết bị nào')} />
         ) : (
@@ -86,32 +86,32 @@ const CustomerDevices = () => {
                   t('customer.devices.col_risk_score', 'Risk Score'),
                   t('common.created_at', 'Ngày tạo')
                 ].map((h, index) => (
-                  <th key={index} style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px', color: 'var(--slate-800)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid var(--slate-200)' }}>{h}</th>
+                  <th key={index} style={{ padding: '0.8571rem 1.1429rem', textAlign: 'left', fontSize: '0.9286rem', color: 'var(--slate-800)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.0357rem', borderBottom: '0.0714rem solid var(--slate-200)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {devices.map((device, i) => (
-                <tr key={device._id} style={{ borderBottom: i < devices.length - 1 ? '1px solid var(--slate-200)' : 'none', background: 'var(--white)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--slate-50)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--white)'}>
-                  <td style={{ padding: '14px 16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      {device.status === 'online' ? <Wifi size={15} color="#22c55e" /> : <WifiOff size={15} color="#6b7280" />}
-                      <span style={{ fontSize: '14px', fontWeight: '500', color: 'var(--slate-900)' }}>{device.name}</span>
+                <tr key={device._id} style={{ borderBottom: i < devices.length - 1 ? '0.0714rem solid var(--slate-200)' : 'none', background: 'var(--white)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--slate-50)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--white)'}>
+                  <td style={{ padding: '1rem 1.1429rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5714rem' }}>
+                      {device.status === 'online' ? <Wifi size={15} color="var(--green-500)" /> : <WifiOff size={15} color="var(--custom-color-14)" />}
+                      <span style={{ fontSize: '1rem', fontWeight: '500', color: 'var(--slate-900)' }}>{device.name}</span>
                     </div>
                   </td>
-                  <td style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--slate-500)', fontFamily: 'monospace' }}>{device.ip}</td>
-                  <td style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--slate-500)', fontFamily: 'monospace' }}>{device.mac || '—'}</td>
-                  <td style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--slate-500)' }}>{device.zone || '—'}</td>
-                  <td style={{ padding: '14px 16px' }}><StatusBadge status={device.status} /></td>
-                  <td style={{ padding: '14px 16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{ flex: 1, height: '6px', background: 'var(--slate-100)', borderRadius: '3px', overflow: 'hidden', maxWidth: '80px' }}>
-                        <div style={{ height: '100%', width: `${device.risk_score || 0}%`, background: device.risk_score > 70 ? '#ef4444' : device.risk_score > 40 ? '#f97316' : '#22c55e', borderRadius: '3px' }} />
+                  <td style={{ padding: '1rem 1.1429rem', fontSize: '0.9286rem', color: 'var(--slate-500)', fontFamily: 'monospace' }}>{device.ip}</td>
+                  <td style={{ padding: '1rem 1.1429rem', fontSize: '0.9286rem', color: 'var(--slate-500)', fontFamily: 'monospace' }}>{device.mac || '—'}</td>
+                  <td style={{ padding: '1rem 1.1429rem', fontSize: '0.9286rem', color: 'var(--slate-500)' }}>{device.zone || '—'}</td>
+                  <td style={{ padding: '1rem 1.1429rem' }}><StatusBadge status={device.status} /></td>
+                  <td style={{ padding: '1rem 1.1429rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5714rem' }}>
+                      <div style={{ flex: 1, height: '0.4286rem', background: 'var(--slate-100)', borderRadius: '0.2143rem', overflow: 'hidden', maxWidth: '5.7143rem' }}>
+                        <div style={{ height: '100%', width: `${device.risk_score || 0}%`, background: device.risk_score > 70 ? 'var(--red-500)' : device.risk_score > 40 ? 'var(--orange-500)' : 'var(--green-500)', borderRadius: '0.2143rem' }} />
                       </div>
-                      <span style={{ fontSize: '12px', color: 'var(--slate-500)' }}>{device.risk_score || 0}%</span>
+                      <span style={{ fontSize: '0.8571rem', color: 'var(--slate-500)' }}>{device.risk_score || 0}%</span>
                     </div>
                   </td>
-                  <td style={{ padding: '14px 16px', fontSize: '12px', color: 'var(--slate-500)' }}>
+                  <td style={{ padding: '1rem 1.1429rem', fontSize: '0.8571rem', color: 'var(--slate-500)' }}>
                     {device.createdAt ? formatDate(device.createdAt) : '—'}
                   </td>
                 </tr>
@@ -121,7 +121,7 @@ const CustomerDevices = () => {
         )}
 
         {total > 0 && devices.length > 0 && (
-          <div style={{ borderTop: '1px solid var(--slate-200)', background: 'var(--slate-50)' }}>
+          <div style={{ borderTop: '0.0714rem solid var(--slate-200)', background: 'var(--slate-50)' }}>
             <VPagination 
               page={page}
               perPage={perPage}

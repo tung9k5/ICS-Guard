@@ -73,7 +73,7 @@ const DeviceForm = ({ device, onClose, onSuccess }) => {
       visible={true}
       onHide={onClose}
       header={isEdit ? t('assets.form.title_edit') : t('assets.form.title_add')}
-      style={{ maxWidth: '700px' }}
+      style={{ maxWidth: '50rem' }}
     >
       <form onSubmit={handleSubmit} className="device-form">
         
@@ -103,14 +103,14 @@ const DeviceForm = ({ device, onClose, onSuccess }) => {
           <div className="v-input-wrapper mb-0">
             <label className="v-input-label">
               {t('assets.form.label_type')}
-              <span style={{ color: 'var(--red-500)', marginLeft: '4px' }}>*</span>
+              <span style={{ color: 'var(--red-500)', marginLeft: '0.2857rem' }}>*</span>
             </label>
             <select 
               name="type" 
               value={formData.type} 
               onChange={handleChange}
               className="v-input"
-              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '1px solid var(--slate-300)' }}
+              style={{ width: '100%', padding: '0.7143rem 1rem', borderRadius: '0.5714rem', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '0.0714rem solid var(--slate-300)' }}
             >
               <option value="">{t('assets.form.select_type')}</option>
               {DEVICE_TYPES.map(t => (
@@ -122,14 +122,14 @@ const DeviceForm = ({ device, onClose, onSuccess }) => {
           <div className="v-input-wrapper mb-0">
             <label className="v-input-label">
               {t('assets.form.label_status')}
-              <span style={{ color: 'var(--red-500)', marginLeft: '4px' }}>*</span>
+              <span style={{ color: 'var(--red-500)', marginLeft: '0.2857rem' }}>*</span>
             </label>
             <select 
               name="status" 
               value={formData.status} 
               onChange={handleChange}
               className="v-input"
-              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '1px solid var(--slate-300)' }}
+              style={{ width: '100%', padding: '0.7143rem 1rem', borderRadius: '0.5714rem', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '0.0714rem solid var(--slate-300)' }}
             >
               <option value="active">{t('assets.filter_status_active')}</option>
               <option value="inactive">{t('assets.filter_status_inactive')}</option>
@@ -149,7 +149,7 @@ const DeviceForm = ({ device, onClose, onSuccess }) => {
           />
         </div>
 
-        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+        <div style={{ marginTop: '1.7143rem', display: 'flex', justifyContent: 'flex-end', gap: '0.8571rem' }}>
           <VButton type="button" variant="outline" onClick={onClose}>
             {t('assets.form.btn_cancel')}
           </VButton>

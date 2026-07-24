@@ -9,8 +9,8 @@ import VPagination from '@/components/VPagination';
 import VButton from '@/components/VButton';
 import { formatDate } from '@/utils/formatDate';
 
-const severityColor = { critical: '#ef4444', high: '#f97316', medium: '#eab308', low: '#22c55e', info: '#3b82f6' };
-const statusColor = { new: '#ef4444', acknowledged: '#f97316', resolved: '#22c55e', false_positive: '#6b7280' };
+const severityColor = { critical: 'var(--red-500)', high: 'var(--orange-500)', medium: 'var(--yellow-500)', low: 'var(--green-500)', info: 'var(--blue-500)' };
+const statusColor = { new: 'var(--red-500)', acknowledged: 'var(--orange-500)', resolved: 'var(--green-500)', false_positive: 'var(--custom-color-14)' };
 
 const CustomerAlerts = () => {
   const { t } = useTranslation();
@@ -56,15 +56,15 @@ const CustomerAlerts = () => {
       <VHeaderPage 
         title={t('customer.alerts.title', 'Cảnh báo')}
         action={
-          <VButton onClick={fetchAlerts} variant="outline" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <VButton onClick={fetchAlerts} variant="outline" style={{ display: 'flex', alignItems: 'center', gap: '0.4286rem' }}>
             <RefreshCw size={15} /> {t('customer.common.refresh', 'Làm mới')}
           </VButton>
         }
       />
 
-      <div style={{ background: 'var(--white)', borderRadius: '12px', border: '1px solid var(--slate-200)', overflow: 'hidden', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+      <div style={{ background: 'var(--white)', borderRadius: '0.8571rem', border: '0.0714rem solid var(--slate-200)', overflow: 'hidden', boxShadow: '0 0.2857rem 0.4286rem -0.0714rem rgba(0, 0, 0, 0.05)' }}>
         {loading ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: 'var(--slate-500)' }}>{t('customer.common.loading', 'Đang tải...')}</div>
+          <div style={{ padding: '2.8571rem', textAlign: 'center', color: 'var(--slate-500)' }}>{t('customer.common.loading', 'Đang tải...')}</div>
         ) : alerts.length === 0 ? (
           <VNoData title={t('customer.alerts.no_data', 'Không có cảnh báo nào')} />
         ) : (
@@ -79,34 +79,34 @@ const CustomerAlerts = () => {
                   t('customer.alerts.col_time', 'Thời gian'),
                   t('customer.alerts.col_action', 'Hành động')
                 ].map((h, index) => (
-                  <th key={index} style={{ padding: '12px 16px', textAlign: 'left', fontSize: '13px', color: 'var(--slate-800)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid var(--slate-200)' }}>{h}</th>
+                  <th key={index} style={{ padding: '0.8571rem 1.1429rem', textAlign: 'left', fontSize: '0.9286rem', color: 'var(--slate-800)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.0357rem', borderBottom: '0.0714rem solid var(--slate-200)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {alerts.map((alert, i) => (
-                <tr key={alert._id} style={{ borderBottom: i < alerts.length - 1 ? '1px solid var(--slate-200)' : 'none', background: 'var(--white)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--slate-50)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--white)'}>
-                  <td style={{ padding: '14px 16px' }}>
-                    <span style={{ fontSize: '14px', fontWeight: '500', color: 'var(--slate-900)' }}>{alert.title || alert.rule_name || t('customer.alerts.default_alert', 'Alert')}</span>
+                <tr key={alert._id} style={{ borderBottom: i < alerts.length - 1 ? '0.0714rem solid var(--slate-200)' : 'none', background: 'var(--white)', transition: 'background 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--slate-50)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--white)'}>
+                  <td style={{ padding: '1rem 1.1429rem' }}>
+                    <span style={{ fontSize: '1rem', fontWeight: '500', color: 'var(--slate-900)' }}>{alert.title || alert.rule_name || t('customer.alerts.default_alert', 'Alert')}</span>
                   </td>
-                  <td style={{ padding: '14px 16px', fontSize: '13px', color: 'var(--slate-500)', fontFamily: 'monospace' }}>{alert.source_ip || alert.device_name || '—'}</td>
-                  <td style={{ padding: '14px 16px' }}>
-                    <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '600', background: `${severityColor[alert.severity] || '#6b7280'}22`, color: severityColor[alert.severity] || '#6b7280', textTransform: 'uppercase' }}>{alert.severity}</span>
+                  <td style={{ padding: '1rem 1.1429rem', fontSize: '0.9286rem', color: 'var(--slate-500)', fontFamily: 'monospace' }}>{alert.source_ip || alert.device_name || '—'}</td>
+                  <td style={{ padding: '1rem 1.1429rem' }}>
+                    <span style={{ padding: '0.2143rem 0.7143rem', borderRadius: '1.4286rem', fontSize: '0.7857rem', fontWeight: '600', background: `${severityColor[alert.severity] || 'var(--custom-color-14)'}22`, color: severityColor[alert.severity] || 'var(--custom-color-14)', textTransform: 'uppercase' }}>{alert.severity}</span>
                   </td>
-                  <td style={{ padding: '14px 16px' }}>
-                    <span style={{ padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '600', background: `${statusColor[alert.status] || '#6b7280'}22`, color: statusColor[alert.status] || '#6b7280' }}>{statusLabel[alert.status] || alert.status}</span>
+                  <td style={{ padding: '1rem 1.1429rem' }}>
+                    <span style={{ padding: '0.2143rem 0.7143rem', borderRadius: '1.4286rem', fontSize: '0.7857rem', fontWeight: '600', background: `${statusColor[alert.status] || 'var(--custom-color-14)'}22`, color: statusColor[alert.status] || 'var(--custom-color-14)' }}>{statusLabel[alert.status] || alert.status}</span>
                   </td>
-                  <td style={{ padding: '14px 16px', fontSize: '12px', color: 'var(--slate-500)' }}>
+                  <td style={{ padding: '1rem 1.1429rem', fontSize: '0.8571rem', color: 'var(--slate-500)' }}>
                     {alert.createdAt ? formatDate(alert.createdAt) : '—'}
                   </td>
-                  <td style={{ padding: '14px 16px' }}>
-                    <div style={{ display: 'flex', gap: '6px' }}>
+                  <td style={{ padding: '1rem 1.1429rem' }}>
+                    <div style={{ display: 'flex', gap: '0.4286rem' }}>
                       {alert.status === 'new' && (
                         <button
                           onClick={() => handleUpdateStatus(alert._id, 'acknowledged')}
                           disabled={updating === alert._id}
                           title={t('customer.alerts.btn_ack_title', 'Acknowledge')}
-                          style={{ padding: '5px 10px', borderRadius: '6px', border: 'none', background: 'rgba(249,115,22,0.15)', color: '#f97316', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}
+                          style={{ padding: '0.3571rem 0.7143rem', borderRadius: '0.4286rem', border: 'none', background: 'rgba(249,115,22,0.15)', color: 'var(--orange-500)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2857rem', fontSize: '0.8571rem' }}
                         >
                           <CheckCircle size={13} /> {t('customer.alerts.btn_ack', 'ACK')}
                         </button>
@@ -116,7 +116,7 @@ const CustomerAlerts = () => {
                           onClick={() => handleUpdateStatus(alert._id, 'resolved')}
                           disabled={updating === alert._id}
                           title={t('customer.alerts.btn_resolve_title', 'Resolve')}
-                          style={{ padding: '5px 10px', borderRadius: '6px', border: 'none', background: 'rgba(34,197,94,0.15)', color: '#22c55e', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}
+                          style={{ padding: '0.3571rem 0.7143rem', borderRadius: '0.4286rem', border: 'none', background: 'rgba(34,197,94,0.15)', color: 'var(--green-500)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2857rem', fontSize: '0.8571rem' }}
                         >
                           <XCircle size={13} /> {t('customer.alerts.btn_resolve', 'Resolve')}
                         </button>
@@ -130,7 +130,7 @@ const CustomerAlerts = () => {
         )}
 
         {total > 0 && alerts.length > 0 && (
-          <div style={{ borderTop: '1px solid var(--slate-200)', background: 'var(--slate-50)' }}>
+          <div style={{ borderTop: '0.0714rem solid var(--slate-200)', background: 'var(--slate-50)' }}>
             <VPagination 
               page={page}
               perPage={perPage}

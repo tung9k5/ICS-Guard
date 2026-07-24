@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import ChatWindow from './ChatWindow';
 import './DraggableChatbot.scss';
 
-const DraggableChatbot = () => {
+const DraggableChatbot = ({ user }) => {
   const { t } = useTranslation();
   const [position, setPosition] = useState({ x: window.innerWidth - 80, y: window.innerHeight - 80 });
   const [isDragging, setIsDragging] = useState(false);
@@ -16,16 +16,20 @@ const DraggableChatbot = () => {
 
   useEffect(() => {
     const checkUnread = () => {
+      const userId = user?.id || user?._id || 'guest';
+      const msgKey = `chatbot_messages_${userId}`;
+      const readKey = `chatbot_read_count_${userId}`;
+      
       if (isChatWindowOpen) {
         setUnreadCount(0);
-        const saved = localStorage.getItem('chatbot_messages');
+        const saved = localStorage.getItem(msgKey);
         if (saved) {
           const msgs = JSON.parse(saved);
-          localStorage.setItem('chatbot_read_count', msgs.length.toString());
+          localStorage.setItem(readKey, msgs.length.toString());
         }
       } else {
-        const saved = localStorage.getItem('chatbot_messages');
-        const readCountStr = localStorage.getItem('chatbot_read_count');
+        const saved = localStorage.getItem(msgKey);
+        const readCountStr = localStorage.getItem(readKey);
         const readCount = readCountStr ? parseInt(readCountStr, 10) : 0;
         if (saved) {
           const msgs = JSON.parse(saved);
@@ -170,7 +174,7 @@ const DraggableChatbot = () => {
         </div>
       </div>
 
-      <ChatWindow isOpen={isChatWindowOpen} onClose={() => setIsChatWindowOpen(false)} />
+      <ChatWindow isOpen={isChatWindowOpen} onClose={() => setIsChatWindowOpen(false)} user={user} />
     </>
   );
 };

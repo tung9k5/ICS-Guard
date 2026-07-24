@@ -1,5 +1,8 @@
 import { errorResponse } from '../utils/response.js';
 
+// Rule severity includes INFO (unlike incident severity which starts at LOW)
+const VALID_SEVERITIES = ['INFO', 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+
 export const validateCreateRule = (req, res, next) => {
   const { rule_name, time_window_seconds, trigger_count, severity } = req.body;
 
@@ -15,11 +18,8 @@ export const validateCreateRule = (req, res, next) => {
     return errorResponse(res, 'trigger_count must be a positive number', null, 400);
   }
 
-  if (severity) {
-    const validSeverities = ['INFO', 'MEDIUM', 'HIGH', 'CRITICAL'];
-    if (!validSeverities.includes(severity)) {
-      return errorResponse(res, `Severity must be one of: ${validSeverities.join(', ')}`, null, 400);
-    }
+  if (severity && !VALID_SEVERITIES.includes(severity)) {
+    return errorResponse(res, `Severity must be one of: ${VALID_SEVERITIES.join(', ')}`, null, 400);
   }
 
   next();
@@ -39,12 +39,9 @@ export const validateUpdateRule = (req, res, next) => {
       return errorResponse(res, 'trigger_count must be a positive number', null, 400);
     }
   }
-  
-  if (severity) {
-    const validSeverities = ['INFO', 'MEDIUM', 'HIGH', 'CRITICAL'];
-    if (!validSeverities.includes(severity)) {
-      return errorResponse(res, `Severity must be one of: ${validSeverities.join(', ')}`, null, 400);
-    }
+
+  if (severity && !VALID_SEVERITIES.includes(severity)) {
+    return errorResponse(res, `Severity must be one of: ${VALID_SEVERITIES.join(', ')}`, null, 400);
   }
 
   next();

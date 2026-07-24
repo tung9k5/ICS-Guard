@@ -1,4 +1,4 @@
-import { handleChat } from '../../../ai-gemini/index.js';
+import { handleChat } from '../../../ai-services/index.js';
 import { successResponse } from '../utils/response.js';
 
 export const processChatMessage = async (req, res, next) => {

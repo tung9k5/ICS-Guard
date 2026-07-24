@@ -125,7 +125,7 @@ const DeviceManagement = () => {
       <VHeaderPage 
         title={t('assets.page_title')}
         action={
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '0.8571rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {selectedIds.length > 0 && (
               <VButton variant="danger" onClick={handleBulkDelete} style={{ flex: '1 1 auto', whiteSpace: 'nowrap' }}>
                 <Trash2 size={18} />
@@ -151,7 +151,7 @@ const DeviceManagement = () => {
               className="v-filter-select" 
               value={filters.type} 
               onChange={(e) => handleFilterChange('type', e.target.value)}
-              style={{ paddingRight: filters.type ? '28px' : undefined }}
+              style={{ paddingRight: filters.type ? '2rem' : undefined }}
             >
               <option value="">{t('assets.filter_type_all')}</option>
               {DEVICE_TYPES.map(t => (
@@ -172,7 +172,7 @@ const DeviceManagement = () => {
               className="v-filter-select" 
               value={filters.status} 
               onChange={(e) => handleFilterChange('status', e.target.value)}
-              style={{ paddingRight: filters.status ? '28px' : undefined }}
+              style={{ paddingRight: filters.status ? '2rem' : undefined }}
             >
               <option value="">{t('assets.filter_status_all')}</option>
               <option value="active">{t('assets.filter_status_active')}</option>

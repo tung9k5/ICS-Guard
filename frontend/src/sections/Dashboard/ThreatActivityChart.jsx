@@ -16,7 +16,7 @@ const ThreatActivityChart = ({ rawData = [] }) => {
   const tickCount = 6;
 
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: '300px' }}>
+    <div style={{ width: '100%', height: '100%', minHeight: '21.4286rem' }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
@@ -33,9 +33,9 @@ const ThreatActivityChart = ({ rawData = [] }) => {
           />
           <Tooltip 
             cursor={{ fill: 'var(--gray-700)', opacity: 0.4 }}
-            contentStyle={{ backgroundColor: 'var(--gray-800)', border: 'none', borderRadius: '8px', color: 'var(--white-short)' }}
+            contentStyle={{ backgroundColor: 'var(--gray-800)', border: 'none', borderRadius: '0.5714rem', color: 'var(--white-short)' }}
           />
-          <Legend wrapperStyle={{ paddingTop: '20px' }} />
+          <Legend wrapperStyle={{ paddingTop: '1.4286rem' }} />
           <Bar dataKey="low" name={t('dashboard.threat_level.low', 'Thấp')} stackId="a" fill="var(--green-500)" radius={[0, 0, 4, 4]} />
           <Bar dataKey="medium" name={t('dashboard.threat_level.medium', 'Trung bình')} stackId="a" fill="var(--amber-500)" />
           <Bar dataKey="high" name={t('dashboard.threat_level.high', 'Cao')} stackId="a" fill="var(--red-500)" radius={[4, 4, 0, 0]} />

@@ -1,17 +1,17 @@
 .modal-loading {
-  padding: 60px;
+  padding: 4.2857rem;
   text-align: center;
   color: var(--slate-400);
-  font-size: 16px;
+  font-size: 1.1429rem;
 }
 
 .profile-form-layout {
   display: flex;
   flex-direction: row;
-  padding: 12px 0;
-  gap: 24px;
+  padding: 0.8571rem 0;
+  gap: 1.7143rem;
 
-  @media (max-width: 600px) {
+  @media (max-width: 42.8571rem) {
     flex-direction: column;
     align-items: stretch;
     padding-top: 0;
@@ -25,10 +25,10 @@
     cursor: pointer;
 
     .avatar-frame {
-      width: 180px;
-      height: 180px;
-      border-radius: 12px;
-      border: 2px dashed rgba(255, 255, 255, 0.2);
+      width: 12.8571rem;
+      height: 12.8571rem;
+      border-radius: 0.8571rem;
+      border: 0.1429rem dashed rgba(255, 255, 255, 0.2);
       overflow: hidden;
       position: relative;
       background: rgba(15, 23, 42, 0.5);
@@ -67,12 +67,12 @@
         align-items: center;
         justify-content: center;
         color: var(--white-short);
-        gap: 8px;
+        gap: 0.5714rem;
         opacity: 0;
         transition: opacity 0.3s;
 
         span {
-          font-size: 14px;
+          font-size: 1rem;
           font-weight: 500;
         }
       }

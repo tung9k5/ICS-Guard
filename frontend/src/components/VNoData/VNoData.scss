@@ -4,18 +4,18 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 20px;
+  padding: 5.7143rem 1.4286rem;
   width: 100%;
-  min-height: 400px;
+  min-height: 28.5714rem;
   background: transparent;
 
   .no-data-icon-wrapper {
-    margin-bottom: 24px;
+    margin-bottom: 1.7143rem;
     background: var(--slate-50);
-    padding: 28px;
+    padding: 2rem;
     border-radius: 50%;
-    border: 1px solid var(--slate-200);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02);
+    border: 0.0714rem solid var(--slate-200);
+    box-shadow: 0 0.2857rem 0.4286rem -0.0714rem rgba(0, 0, 0, 0.02);
     
     .no-data-icon {
       color: var(--slate-400); /* xám nhạt */
@@ -25,7 +25,7 @@
 
   .no-data-text {
     color: var(--slate-500); /* slate-500 */
-    font-size: 16px;
+    font-size: 1.1429rem;
     font-weight: 500;
   }
 }

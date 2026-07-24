@@ -1,4 +1,6 @@
-import { BlockedIp, AuditLog } from '../models/index.js';
+import auditRepository from '../repositories/auditRepository.js';
+import blockedIpRepository from '../repositories/blockedIpRepository.js';
+import socketService from './socketService.js';
 import { sendEmailAlert } from './emailService.js';
 import { sendTelegramAlert } from './telegramService.js';
 import { publishMqtt } from './mqttService.js';
@@ -30,17 +32,13 @@ export const registerFailedIpAttempt = async (ipAddress) => {
     const reason = `Auto Block: Exceeded ${maxAttempts} failed requests within 5 minutes.`;
 
     try {
-      await BlockedIp.findOneAndUpdate(
-        { ipAddress },
-        { reason, expiresAt },
-        { upsert: true, new: true }
-      );
+      await blockedIpRepository.upsertByIp(ipAddress, { reason, expiresAt });
 
       // Clear memory
       delete failedIpAttempts[ipAddress];
 
       // Audit Log
-      await AuditLog.create({
+      await auditRepository.create({
         action: 'IP_AUTO_BLOCK',
         username: 'System',
         ipAddress,
@@ -82,9 +80,9 @@ export const handleFailedLogin = async (user, ipAddress) => {
 
   if (user.login_failures.count >= maxAttempts) {
     user.login_failures.lockout_until = new Date(Date.now() + lockMinutes * 60 * 1000);
-    
+
     // Audit Log
-    await AuditLog.create({
+    await auditRepository.create({
       userId: user._id,
       username: user.username,
       action: 'USER_LOCKOUT',
@@ -96,7 +94,7 @@ export const handleFailedLogin = async (user, ipAddress) => {
     // Send Alert Notification
     const alertSubject = `USER ACCOUNT LOCKEDOUT: ${user.username}`;
     const alertText = `Security Alert: User account "${user.username}" has been locked for ${lockMinutes} minutes due to ${maxAttempts} consecutive failed login attempts. Origin IP: ${ipAddress}`;
-    
+
     await sendEmailAlert({
       subject: alertSubject,
       text: alertText,
@@ -124,12 +122,10 @@ export const handleSuccessfulLogin = async (user) => {
   }
 };
 
-import socketService from './socketService.js';
-
 export const isolateDevice = async (device, triggeredBy = 'System', ipAddress = 'Internal') => {
   if (device.status === DEVICE_STATUSES.ISOLATED) return;
 
-  device.status = DEVICE_STATUSES.ISOLATED; // or 'quarantined'
+  device.status = DEVICE_STATUSES.ISOLATED;
   await device.save();
 
   // Automatically stop attack simulation on isolated device
@@ -140,8 +136,8 @@ export const isolateDevice = async (device, triggeredBy = 'System', ipAddress = 
   }
 
   // Audit Log
-  await AuditLog.create({
-    action: `DEVICE_ISOLATION_TRIGGERED`,
+  await auditRepository.create({
+    action: 'DEVICE_ISOLATION_TRIGGERED',
     username: triggeredBy,
     ipAddress,
     details: { deviceId: device._id, name: device.name, ipAddress: device.ipAddress },
@@ -151,7 +147,7 @@ export const isolateDevice = async (device, triggeredBy = 'System', ipAddress = 
   // Notifications
   const subject = `DEVICE ISOLATED: ${device.name}`;
   const text = `Critical Alert: Device "${device.name}" (IP: ${device.ipAddress}, Type: ${device.type}) has been isolated from the network. Triggered by ${triggeredBy}.`;
-  
+
   await sendEmailAlert({
     subject,
     text,

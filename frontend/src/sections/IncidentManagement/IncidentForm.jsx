@@ -57,7 +57,7 @@ const IncidentForm = ({ incident, onClose, onSuccess }) => {
       visible={true}
       onHide={onClose}
       header={isEdit ? 'Cập nhật sự cố' : 'Thêm sự cố'}
-      style={{ maxWidth: '600px' }}
+      style={{ maxWidth: '42.8571rem' }}
     >
       <form onSubmit={handleSubmit} className="incident-form">
         
@@ -77,14 +77,14 @@ const IncidentForm = ({ incident, onClose, onSuccess }) => {
           <div className="v-input-wrapper mb-0">
             <label className="v-input-label">
               Mức độ nghiêm trọng
-              <span style={{ color: 'var(--red-500)', marginLeft: '4px' }}>*</span>
+              <span style={{ color: 'var(--red-500)', marginLeft: '0.2857rem' }}>*</span>
             </label>
             <select 
               name="severity" 
               value={formData.severity} 
               onChange={handleChange}
               className="v-input"
-              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '1px solid var(--slate-300)' }}
+              style={{ width: '100%', padding: '0.7143rem 1rem', borderRadius: '0.5714rem', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '0.0714rem solid var(--slate-300)' }}
             >
               <option value="LOW">Thấp (Low)</option>
               <option value="MEDIUM">Trung bình (Medium)</option>
@@ -96,14 +96,14 @@ const IncidentForm = ({ incident, onClose, onSuccess }) => {
           <div className="v-input-wrapper mb-0">
             <label className="v-input-label">
               Trạng thái
-              <span style={{ color: 'var(--red-500)', marginLeft: '4px' }}>*</span>
+              <span style={{ color: 'var(--red-500)', marginLeft: '0.2857rem' }}>*</span>
             </label>
             <select 
               name="status" 
               value={formData.status} 
               onChange={handleChange}
               className="v-input"
-              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '1px solid var(--slate-300)' }}
+              style={{ width: '100%', padding: '0.7143rem 1rem', borderRadius: '0.5714rem', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '0.0714rem solid var(--slate-300)' }}
             >
               <option value="open">Mở</option>
               <option value="investigating">Đang điều tra</option>
@@ -126,7 +126,7 @@ const IncidentForm = ({ incident, onClose, onSuccess }) => {
           />
         </div>
 
-        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+        <div style={{ marginTop: '1.7143rem', display: 'flex', justifyContent: 'flex-end', gap: '0.8571rem' }}>
           <VButton type="button" variant="outline" onClick={onClose}>
             Hủy bỏ
           </VButton>

@@ -1,56 +1,56 @@
 .v-status {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
+  padding: 0.2857rem 0.7143rem;
+  border-radius: 1.4286rem;
+  font-size: 0.8571rem;
   font-weight: 600;
   line-height: 1.2;
   white-space: nowrap;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.0214rem;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 0.0714rem 0.1429rem rgba(0, 0, 0, 0.05);
   
   &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transform: translateY(-0.0714rem);
+    box-shadow: 0 0.1429rem 0.2857rem rgba(0, 0, 0, 0.1);
   }
 
   &-success {
-    background: var(--green-50, #f0fdf4);
-    color: var(--green-700, #15803d);
-    border: 1px solid var(--green-200, #bbf7d0);
+    background: var(--green-50, $custom-color-1);
+    color: var(--green-700, $custom-color-2);
+    border: 0.0714rem solid var(--green-200, $green-200);
   }
 
   &-danger {
-    background: var(--red-50, #fef2f2);
-    color: var(--red-700, #b91c1c);
-    border: 1px solid var(--red-200, #fecaca);
+    background: var(--red-50, $red-50);
+    color: var(--red-700, $red-700);
+    border: 0.0714rem solid var(--red-200, $red-200);
   }
 
   &-warning {
-    background: var(--yellow-50, #fefce8);
-    color: var(--yellow-800, #854d0e);
-    border: 1px solid var(--yellow-200, #fef08a);
+    background: var(--yellow-50, $custom-color-3);
+    color: var(--yellow-800, $custom-color-4);
+    border: 0.0714rem solid var(--yellow-200, $custom-color-5);
   }
 
   &-neutral {
-    background: var(--slate-50, #f8fafc);
-    color: var(--slate-700, #334155);
-    border: 1px solid var(--slate-200, #e2e8f0);
+    background: var(--slate-50, $slate-50);
+    color: var(--slate-700, $slate-700);
+    border: 0.0714rem solid var(--slate-200, $slate-200);
   }
 
   /* Optional dots indicator */
   .status-dot {
-    width: 6px;
-    height: 6px;
+    width: 0.4286rem;
+    height: 0.4286rem;
     border-radius: 50%;
-    margin-right: 6px;
-    box-shadow: 0 0 4px currentColor;
+    margin-right: 0.4286rem;
+    box-shadow: 0 0 0.2857rem currentColor;
     
-    &.dot-success { background-color: var(--green-500, #22c55e); }
-    &.dot-danger { background-color: var(--red-500, #ef4444); }
-    &.dot-warning { background-color: var(--amber-500, #f59e0b); }
-    &.dot-neutral { background-color: var(--slate-400, #94a3b8); }
+    &.dot-success { background-color: var(--green-500, $green-500); }
+    &.dot-danger { background-color: var(--red-500, $red-500); }
+    &.dot-warning { background-color: var(--amber-500, $amber-500); }
+    &.dot-neutral { background-color: var(--slate-400, $slate-400); }
   }
 }

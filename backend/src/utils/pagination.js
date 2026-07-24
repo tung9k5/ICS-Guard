@@ -1,3 +1,27 @@
+/**
+ * Parses and normalizes pagination query parameters.
+ * Eliminates the repeated parseInt + skip calculation across all services.
+ * @param {number|string} page
+ * @param {number|string} per_page
+ * @returns {{ pageNumber: number, limitNumber: number, skip: number }}
+ */
+export const parsePagination = (page = 1, per_page = 10) => {
+  const pageNumber = parseInt(page, 10);
+  const limitNumber = parseInt(per_page, 10);
+  const skip = (pageNumber - 1) * limitNumber;
+  return { pageNumber, limitNumber, skip };
+};
+
+/**
+ * Builds a Mongoose sort option object.
+ * @param {string} order - 'asc' or 'desc'
+ * @param {string} [field='createdAt']
+ * @returns {Object}
+ */
+export const buildSortOption = (order, field = 'createdAt') => {
+  return { [field]: order === 'asc' ? 1 : -1 };
+};
+
 export const formatPagination = (data, total, page, perPage, baseUrl = '') => {
   const lastPage = Math.ceil(total / perPage);
   const from = total > 0 ? (page - 1) * perPage + 1 : null;

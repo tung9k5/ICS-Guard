@@ -9,8 +9,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <>
     <ToastContainer 
       limit={5}
-      style={{ marginTop: '10px' }}
-      toastStyle={{ marginBottom: '12px', borderRadius: '8px' }}
+      style={{ marginTop: '0.7143rem' }}
+      toastStyle={{ marginBottom: '0.8571rem', borderRadius: '0.5714rem' }}
     />
     <App />
   </>,

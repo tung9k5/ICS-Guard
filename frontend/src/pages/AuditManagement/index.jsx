@@ -18,14 +18,14 @@ const AuditManagement = () => {
       <VHeaderPage 
         title={t('audit.page_title')}
         action={
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '0.8571rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {selectedLogIds.length > 0 && activeTab === 'logs' && (
               <VButton variant="danger" onClick={() => setTriggerBulkDelete(prev => prev + 1)} style={{ flex: '1 1 auto', whiteSpace: 'nowrap' }}>
                 <Trash2 size={18} />
                 {t('audit.delete_selected', { count: selectedLogIds.length, defaultValue: `Xóa đã chọn (${selectedLogIds.length})` })}
               </VButton>
             )}
-            <div style={{ display: 'flex', gap: '12px', flex: '1 1 auto', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: '0.8571rem', flex: '1 1 auto', justifyContent: 'flex-end' }}>
               <VButton 
                 variant={activeTab === 'logs' ? 'primary' : 'outline'} 
                 onClick={() => setActiveTab('logs')}

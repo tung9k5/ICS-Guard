@@ -5,6 +5,7 @@ import VButton from '@/components/VButton';
 import { useTranslation } from 'react-i18next';
 import { IDLE_TIMEOUT_MS, COUNTDOWN_SECONDS } from '@/constants/idleTimeoutConstants';
 import VDialog from '@/components/VDialog';
+import { AUTH_KEYS } from '@/constants/authConstants';
 
 const IdleTimeout = () => {
   const { t } = useTranslation();
@@ -18,7 +19,7 @@ const IdleTimeout = () => {
 
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
   // Fast check if user is logged in
-  const isLoggedIn = !!localStorage.getItem('access_token') || !!localStorage.getItem('attacker_access_token');
+  const isLoggedIn = !!localStorage.getItem(AUTH_KEYS.ACCESS_TOKEN) || !!localStorage.getItem(AUTH_KEYS.ATTACKER_ACCESS_TOKEN);
 
   const updateShowDialog = (value) => {
     setShowDialog(value);
@@ -151,19 +152,19 @@ const IdleTimeout = () => {
       visible={showDialog}
       onHide={() => {}}
       header={t('common.idle_timeout.title', 'Bạn còn ở đó không?')}
-      style={{ maxWidth: '400px' }}
+      style={{ maxWidth: '28.5714rem' }}
       closeOnEscape={false}
       closable={false}
     >
-      <div style={{ textAlign: 'center', padding: '10px 0 20px 0' }}>
-        <p style={{ margin: 0, color: 'var(--slate-700)', fontSize: '15px', lineHeight: '1.5' }}>
+      <div style={{ textAlign: 'center', padding: '0.7143rem 0 1.4286rem 0' }}>
+        <p style={{ margin: 0, color: 'var(--slate-700)', fontSize: '1.0714rem', lineHeight: '1.5' }}>
           {t('common.idle_timeout.description_1', 'Phiên đăng nhập sẽ tự động đăng xuất sau ')}
           <strong>{countdown}</strong>
           {t('common.idle_timeout.description_2', ' giây nữa do không có hoạt động.')}
         </p>
       </div>
       <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <VButton variant="primary" onClick={handleContinue} style={{ minWidth: '150px' }}>
+        <VButton variant="primary" onClick={handleContinue} style={{ minWidth: '10.7143rem' }}>
           {t('common.idle_timeout.continue', 'Tiếp tục sử dụng')}
         </VButton>
       </div>
