@@ -4,44 +4,42 @@
 
 ICS-Guard là hệ thống giám sát an toàn mạng cho IoT/ICS, gồm các thành phần:
 
-- **Frontend**: ReactJS Dashboard
-- **Backend**: FastAPI
+- **Frontend**: ReactJS (Vite) Dashboard
+- **Backend**: Node.js + Express.js API
+- **AI Services**: Node.js module (Gemini / OpenAI)
 - **Database**: MongoDB, InfluxDB
 - **Message Broker**: RabbitMQ, MQTT (Mosquitto)
+- **Proxy**: Nginx
 - **Deployment**: Docker Compose
 
-## 2. Cài đặt môi trường
+## 2. Kiến trúc hệ thống
 
-Cài đặt các phần mềm sau trước khi chạy dự án:
+```mermaid
+graph TD
+    Browser["🖥️ Browser (ReactJS)"] -->|HTTPS| Nginx["🔀 Nginx Proxy"]
+    Nginx -->|/api/*| Backend["⚙️ Backend (Express.js)"]
+    Nginx -->|/*| Frontend["🎨 Frontend (Vite)"]
+
+    Backend -->|Mongoose| MongoDB["🍃 MongoDB\n(Events, Users, Rules)"]
+    Backend -->|Line Protocol| InfluxDB["📈 InfluxDB\n(Telemetry Time-series)"]
+    Backend -->|AMQP| RabbitMQ["🐰 RabbitMQ\n(AI Analysis Queue)"]
+    Backend -->|MQTT TLS + AES| Mosquitto["📡 Mosquitto\n(IoT Broker)"]
+    Backend -->|Gemini/OpenAI API| AIServices["🤖 AI Services\n(Security Assistant)"]
+
+    IoTDevice["🔌 IoT/ICS Device"] -->|MQTT TLS| Mosquitto
+
+    Backend -->|WebSocket| Browser
+    Backend -->|Email/Telegram| Notifications["📬 Notifications"]
+```
+
+## 3. Cài đặt môi trường
 
 | Phần mềm | Phiên bản | Tải về |
 | :--- | :--- | :--- |
 | **Docker Desktop** | Mới nhất | [Tại đây](https://www.docker.com/products/docker-desktop/) |
 | **Git** | Mới nhất | [Tại đây](https://git-scm.com/downloads) |
-| **Python** | 3.11+ | [Tại đây](https://www.python.org/downloads/) |
 | **Node.js** | 20 LTS+ | [Tại đây](https://nodejs.org/) |
-| **MongoDB Compass** (Khuyến nghị)| Mới nhất | [Tại đây](https://www.mongodb.com/products/tools/compass) |
-
-> **💡 Lưu ý:**
-> - Khi cài Python, hãy chọn **Add Python to PATH**.
-
-**Kiểm tra cài đặt:**
-
-```bash
-docker --version
-docker compose version
-git --version
-python --version
-node -v
-npm -v
-```
-
-## 3. Clone dự án
-
-```bash
-git clone <repo_url>
-cd ICS-Guard
-```
+| **MongoDB Compass** (Tùy chọn) | Mới nhất | [Tại đây](https://www.mongodb.com/products/tools/compass) |
 
 ## 4. Cấu hình môi trường
 
@@ -52,6 +50,13 @@ Tạo file `.env` từ file mẫu:
 copy .env.example .env
 ```
 
+Mở file `.env` và điền các giá trị thực tế. **Không commit file `.env` lên git.**
+
+> **⚠️ Lưu ý bảo mật:**
+> - `JWT_SECRET` phải là chuỗi ngẫu nhiên mạnh (>= 32 ký tự)
+> - `AES_SECRET_KEY` phải là chuỗi hex 32 ký tự
+> - Thay đổi toàn bộ mật khẩu mặc định trước khi deploy production
+
 ## 5. Chạy dự án
 
 ```bash
@@ -60,13 +65,9 @@ docker compose up -d --build
 
 Docker sẽ tự động:
 - Build Backend và Frontend
-- Cài `requirements.txt` cho Backend
-- Cài `node_modules` cho Frontend
+- Cài `node_modules` cho Frontend và Backend
 - Khởi tạo MongoDB, RabbitMQ, Mosquitto và InfluxDB
-- Code tự động update vào Docker khi có thay đổi (Hot-reload).
-
-> **💡 Lưu ý:**
-> - Chỉ chạy lại lệnh `docker compose up -d --build` khi bạn có cài đặt thêm thư viện mới vào `requirements.txt` hoặc `package.json`. Các trường hợp sửa code thông thường không cần chạy lại lệnh này.
+- Hot-reload code khi có thay đổi
 
 ## 6. Kiểm tra
 
@@ -74,7 +75,7 @@ Docker sẽ tự động:
 docker ps
 ```
 
-Các container cần chạy bao gồm: `frontend`, `backend`, `mongodb`, `rabbitmq`, `mosquitto`, `influxdb`.
+Các container cần chạy: `frontend`, `backend`, `mongodb`, `rabbitmq`, `mosquitto`, `influxdb`, `nginx`.
 
 ## 7. Truy cập
 
@@ -88,8 +89,7 @@ Các container cần chạy bao gồm: `frontend`, `backend`, `mongodb`, `rabbit
 
 ### MongoDB Compass
 
-**Connection String:**
-- Mở ứng dụng MongoDB Compass, dán đường dẫn dưới đây vào thanh kết nối (URI) để truy cập Database:
-```text
-mongodb://admin:123456@localhost:27017/
-```
+Kết nối MongoDB Compass bằng connection string trong file `.env` của bạn (key `MONGO_URI`).
+
+> **⚠️ Không hardcode credentials.** Xem `.env.example` để biết cấu trúc URI.
+

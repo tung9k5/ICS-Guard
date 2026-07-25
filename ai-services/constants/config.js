@@ -1,5 +1,5 @@
 export const AI_CONFIG = {
-  USE_OPENAI: process.env.VITE_USE_OPENAI === 'true',
+  USE_OPENAI: process.env.USE_OPENAI === 'true',
   
   MODELS: {
     OPENAI_DEFAULT: 'gpt-5.6',

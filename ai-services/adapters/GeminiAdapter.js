@@ -3,7 +3,7 @@ import { AI_CONFIG } from '../constants/config.js';
 
 class GeminiAdapter {
   constructor() {
-    this.apiKey = process.env.VITE_GEMINI_API_KEY;
+    this.apiKey = process.env.GEMINI_API_KEY;
     this.defaultModel = AI_CONFIG.MODELS.GEMINI_DEFAULT;
     
     if (!this.apiKey) {

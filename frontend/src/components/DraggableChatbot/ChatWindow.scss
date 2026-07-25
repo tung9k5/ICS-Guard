@@ -16,10 +16,12 @@
   transform-origin: bottom right;
 
   &.expanded {
-    width: 42.8571rem;
-    height: 80vh;
-    bottom: 2.8571rem;
-    right: 2.8571rem;
+    width: 100vw;
+    height: 100vh;
+    bottom: 0;
+    right: 0;
+    border-radius: 0;
+    z-index: 9999;
   }
 
   &.chat-hidden {

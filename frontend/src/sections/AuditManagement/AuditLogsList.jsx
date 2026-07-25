@@ -152,10 +152,7 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
           placeholder={t('audit.all_roles', 'Tất cả vai trò')}
           options={[
             { value: 'admin', label: 'Admin' },
-            { value: 'l1_analyst', label: 'L1 Analyst' },
-            { value: 'l2_responder', label: 'L2 Responder' },
-            { value: 'l3_manager', label: 'L3 Manager' },
-            { value: 'ot_operator', label: 'OT Operator' }
+            { value: 'customer', label: 'Customer' },
           ]}
         />
         <VSelectFilter
@@ -189,24 +186,23 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
           ) : logs.length === 0 ? (
             <VNoData message={t('assets.list.no_data')} />
           ) : (
-            <table className="v-table">
+            <table className="v-table" style={{ tableLayout: 'fixed', width: '100%', minWidth: '100%' }}>
               <thead>
                 <tr>
-                  <th style={{ width: '2.8571rem', textAlign: 'center' }}>
+                  <th style={{ width: '3rem', textAlign: 'center' }}>
                     <VCheckbox 
                       checked={logs.length > 0 && selectedIds.length === logs.length}
                       indeterminate={selectedIds.length > 0 && selectedIds.length < logs.length}
                       onChange={(e) => handleSelectAllWithSync(e.target.checked)}
                     />
                   </th>
-                  <th>{t('audit.logs.table_username', 'TÊN NGƯỜI DÙNG')}</th>
+                  <th style={{ width: '12rem' }}>{t('audit.logs.table_username', 'TÊN NGƯỜI DÙNG')}</th>
                   <th>{t('audit.logs.table_email', 'EMAIL')}</th>
-                  <th>{t('audit.logs.table_role', 'VAI TRÒ')}</th>
-                  <th>{t('audit.logs.table_action')}</th>
-                  <th>{t('audit.logs.table_ip')}</th>
-                  <th style={{ whiteSpace: 'nowrap' }}>{t('common.created_at', 'Ngày tạo')}</th>
-                  <th style={{ whiteSpace: 'nowrap' }}>{t('common.updated_at', 'Ngày cập nhật')}</th>
-                  <th className="actions-col">{t('assets.list.table_actions')}</th>
+                  <th style={{ width: '8rem' }}>{t('audit.logs.table_role', 'VAI TRÒ')}</th>
+                  <th style={{ width: '14rem' }}>{t('audit.logs.table_action')}</th>
+                  <th style={{ width: '10rem' }}>{t('common.created_at', 'Ngày tạo')}</th>
+                  <th style={{ width: '10rem' }}>{t('common.updated_at', 'Ngày cập nhật')}</th>
+                  <th className="actions-col" style={{ width: '5rem' }}>{t('assets.list.table_actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -219,23 +215,22 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                         style={{ cursor: 'pointer' }}
                       />
                     </td>
-                    <td style={{ maxWidth: '10.7143rem' }}>
-                      <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '0.5714rem', minWidth: 0 }}>
+                    <td>
+                      <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '0.5714rem', width: '100%' }}>
                         <User size={16} style={{ flexShrink: 0 }} />
                         <span className="truncate-text" style={{ flex: 1, minWidth: 0 }} title={log.username}>{log.username || 'System'}</span>
                       </div>
                     </td>
-                    <td style={{ maxWidth: '12.8571rem' }}>
-                      <div className="truncate-text" title={log.email || log.details?.body?.email || 'N/A'}>{log.email || log.details?.body?.email || 'N/A'}</div>
+                    <td>
+                      <div className="truncate-text" style={{ display: 'block', width: '100%' }} title={log.user?.email || log.details?.body?.email || 'N/A'}>{log.user?.email || log.details?.body?.email || 'N/A'}</div>
                     </td>
                     <td>
-                      <span className="truncate-text" title={log.role}>{log.role || 'System'}</span>
+                      <span className="truncate-text" style={{ display: 'block', width: '100%' }} title={log.user?.role || 'N/A'}>{log.user?.role || 'N/A'}</span>
                     </td>
                     <td>
-                      <VStatus status={getActionVariant(log.action)} label={log.action} />
-                    </td>
-                    <td>
-                      {log.ipAddress || 'N/A'}
+                      <div className="truncate-text" style={{ display: 'block', width: '100%' }} title={log.action}>
+                        <VStatus status={getActionVariant(log.action)} label={log.action} />
+                      </div>
                     </td>
                     <td className="time-col">
                       {formatDate(log.createdAt)}
@@ -317,10 +312,6 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                             direction="down"
                           />
                         </div>
-                      </div>
-                      <div className="detail-row">
-                        <span className="detail-label">{t('audit.logs.table_ip')}</span>
-                        <span className="detail-value">{log.ipAddress || '-'}</span>
                       </div>
                       <div className="detail-row">
                         <span className="detail-label">{t('common.created_at', 'Ngày tạo')}</span>

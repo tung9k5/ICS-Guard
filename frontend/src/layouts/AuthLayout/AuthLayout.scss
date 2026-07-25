@@ -76,6 +76,13 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+
+  /* Deep CSS: Override VInput labels to white in Auth forms */
+  .v-input-wrapper {
+    .v-input-label, .v-label {
+      color: var(--white);
+    }
+  }
 }
 
 .auth-header {

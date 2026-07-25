@@ -1,0 +1,58 @@
+@use '../../assets/base_color' as c;
+
+.error-boundary-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 240px;
+  padding: 2rem;
+  width: 100%;
+}
+
+.error-boundary-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1rem;
+  max-width: 360px;
+  padding: 2rem 2.5rem 2.25rem;
+  background: rgba(c.$red-500, 0.06);
+  border: 0.0714rem solid rgba(c.$red-500, 0.2);
+  border-radius: 0.857rem;
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(8px);
+}
+
+.error-boundary-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: rgba(c.$red-500, 0.12);
+  color: var(--danger-color);
+
+  svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    stroke: var(--danger-color);
+  }
+}
+
+.error-boundary-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--danger-color);
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+.error-boundary-message {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.6;
+  max-width: 280px;
+}

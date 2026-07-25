@@ -1,12 +1,14 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import { corsOptions } from './config/cors.js';
 import { globalLimiter, authLimiter } from './config/rateLimit.js';
 import fs from 'fs';
 import http from 'http';
 import swaggerUi from 'swagger-ui-express';
+import logger from './utils/logger.js';
 
 // Constants
 import { REQUEST_BODY_LIMIT } from './constants/index.js';
@@ -41,6 +43,10 @@ const app = express();
 const server = http.createServer(app);
 const PORT = process.env.BACKEND_PORT || process.env.PORT || 8000;
 
+app.use(helmet({
+  contentSecurityPolicy: false, // Disabled to allow Swagger UI to load inline scripts
+  crossOriginEmbedderPolicy: false,
+}));
 app.use(cors(corsOptions));
 
 app.use(cookieParser());
@@ -66,9 +72,7 @@ app.get('/', (req, res) => {
   });
 });
 app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/v1/auth', authLimiter, authRoutes);
-app.use('/v1/auth', authLimiter, authRoutes);
-app.use('/auth', authLimiter, authRoutes);
+app.use('/api/v1/auth', authLimiter, authRoutes); // Alias for Google OAuth redirect compatibility
 app.use('/api/users', userRoutes);
 app.use('/api/devices', deviceRoutes);
 app.use('/api/audits', auditRoutes);
@@ -81,7 +85,7 @@ app.use('/api/alerts', alertRoutes);
 app.use('/api/ai', aiRoutes);
 
 app.use((err, req, res, next) => {
-  console.error('[Global Error]', err);
+  logger.error('[Global Error]', { message: err.message, stack: err.stack });
   const statusCode = err.statusCode || err.status || 500;
   res.status(statusCode).json({
     error: err.name || (statusCode >= 500 ? 'InternalServerError' : 'BadRequest'),
@@ -99,7 +103,7 @@ const startServer = async () => {
   try {
     await connectQueue();
   } catch (err) {
-    console.warn('[Bootstrap] Queue connection warning: RabbitMQ might be starting up in Docker. Worker will try auto-reconnecting...');
+    logger.warn('[Bootstrap] Queue connection warning: RabbitMQ might be starting up in Docker. Worker will try auto-reconnecting...');
   }
   
   initTelegramBot();
@@ -107,11 +111,11 @@ const startServer = async () => {
   initSocket(server);
 
   server.listen(PORT, () => {
-    console.log(`\n=============================================================`);
-    console.log(`ICS-GUARD SECURITY API RUNNING ON PORT ${PORT}`);
-    console.log(`Database (MongoDB): ${process.env.MONGO_URI}`);
-    console.log(`Time: ${new Date().toLocaleString()}`);
-    console.log(`=============================================================\n`);
+    logger.info(`\n=============================================================`);
+    logger.info(`ICS-GUARD SECURITY API RUNNING ON PORT ${PORT}`);
+    logger.info(`Database: MongoDB [${process.env.MONGO_DB || 'ics-guard'}]`);
+    logger.info(`Time: ${new Date().toLocaleString()}`);
+    logger.info(`=============================================================`);
   });
 };
 

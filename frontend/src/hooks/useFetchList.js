@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLoader } from './useLoader';
 import { SEARCH_DEBOUNCE_MS, DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
 import { toast } from '@/utils/toast';
@@ -16,6 +16,10 @@ export const useFetchList = ({ fetchFn, initialFilters = {}, onClearSelection, e
   const [filters, setFilters] = useState(initialFilters);
   
   const { isLoading, showLoading, hideLoading } = useLoader(false);
+
+  // Store onClearSelection in a ref so fetchData doesn't re-create on every parent render
+  const onClearSelectionRef = useRef(onClearSelection);
+  onClearSelectionRef.current = onClearSelection;
 
   const fetchData = useCallback(async () => {
     try {
@@ -47,8 +51,8 @@ export const useFetchList = ({ fetchFn, initialFilters = {}, onClearSelection, e
         setTotal(0);
       }
       
-      if (onClearSelection) {
-        onClearSelection();
+      if (onClearSelectionRef.current) {
+        onClearSelectionRef.current();
       }
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -56,7 +60,7 @@ export const useFetchList = ({ fetchFn, initialFilters = {}, onClearSelection, e
     } finally {
       hideLoading();
     }
-  }, [fetchFn, search, order, page, perPage, filters, t, errorMessageKey, onClearSelection]);
+  }, [fetchFn, search, order, page, perPage, filters, t, errorMessageKey]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

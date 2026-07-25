@@ -1,38 +1,60 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter } from 'react-router-dom';
+import { Provider, useDispatch } from 'react-redux';
+import { store } from '@/store';
+import { loginSuccess, logout, setInitialized } from '@/store/slices/authSlice';
 import AppRoutes from '@/routes/AppRoutes';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 import IdleTimeout from '@/Dialog/IdleTimeout';
 import authApi from '@/api/auth';
-import { AUTH_KEYS } from '@/constants/authConstants';
 
-function App() {
+function AppContent() {
+  const dispatch = useDispatch();
+
   useEffect(() => {
-    const isAttacker = window.location.pathname.startsWith('/attacker');
-    const refreshTokenKey = isAttacker ? AUTH_KEYS.ATTACKER_REFRESH_TOKEN : AUTH_KEYS.REFRESH_TOKEN;
-    const accessTokenKey = isAttacker ? AUTH_KEYS.ATTACKER_ACCESS_TOKEN : AUTH_KEYS.ACCESS_TOKEN;
-    
-    const existingRefreshToken = localStorage.getItem(refreshTokenKey);
-    if (existingRefreshToken) {
-      authApi.refreshToken({})
-        .then(res => {
-          const newRefreshToken = res?.refreshToken || res?.data?.refreshToken;
-          const newAccessToken = res?.accessToken || res?.data?.accessToken;
-          if (newRefreshToken) localStorage.setItem(refreshTokenKey, newRefreshToken);
-          if (newAccessToken) localStorage.setItem(accessTokenKey, newAccessToken);
-        })
-        .catch(err => {
-          console.error("Auto refresh token failed:", err);
-        });
+    const path = window.location.pathname;
+    if ((path.endsWith('/login') || path.endsWith('/register')) && !path.includes('callback')) {
+      dispatch(setInitialized());
+      return;
     }
-  }, []);
+
+    authApi.refreshToken({}, { _silent: true })
+      .then(res => {
+        if (res && (res.accessToken)) {
+          authApi.getProfile()
+            .then(profile => {
+              dispatch(loginSuccess({
+                user: profile.data,
+                accessToken: res.accessToken
+              }));
+            })
+            .catch(() => dispatch(logout()));
+        }
+      })
+      .catch(err => {
+        console.error("Auto refresh token failed or no cookie:", err);
+        dispatch(logout()); 
+      });
+  }, [dispatch]);
 
   return (
-    <BrowserRouter>
-      <IdleTimeout />
-      <AppRoutes />
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <IdleTimeout />
+        <AppRoutes />
+      </BrowserRouter>
+    </ErrorBoundary>
+  );
+}
+
+function App() {
+  return (
+    <Provider store={store}>
+      <AppContent />
+    </Provider>
   );
 }
 
 export default App;
+

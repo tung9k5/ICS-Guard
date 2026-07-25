@@ -3,7 +3,7 @@ import { AI_CONFIG } from '../constants/config.js';
 
 class OpenAIAdapter {
   constructor() {
-    this.apiKey = process.env.VITE_OPENAI_API_KEY;
+    this.apiKey = process.env.OPENAI_API_KEY;
     this.defaultModel = AI_CONFIG.MODELS.OPENAI_DEFAULT; 
     
     if (!this.apiKey) {

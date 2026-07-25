@@ -41,10 +41,6 @@
 
     td {
       color: var(--slate-900);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 14.2857rem;
     }
 
     tr:last-child td {
@@ -410,11 +406,12 @@
     .actions-col {
       width: 8.5714rem;
       text-align: right;
+      white-space: nowrap;
     }
 
     .truncate-text {
       display: inline-block;
-      max-width: 14.2857rem;
+      max-width: 100%;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;

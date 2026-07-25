@@ -12,14 +12,9 @@ const http = axios.create({
   },
 });
 
-// Helper to determine auth keys based on current URL path
-const getAuthKeys = () => {
+const getLoginUrl = () => {
   const isAttacker = window.location.pathname.startsWith('/attacker');
-  return {
-    accessTokenKey: isAttacker ? AUTH_KEYS.ATTACKER_ACCESS_TOKEN : AUTH_KEYS.ACCESS_TOKEN,
-    refreshTokenKey: isAttacker ? AUTH_KEYS.ATTACKER_REFRESH_TOKEN : AUTH_KEYS.REFRESH_TOKEN,
-    loginUrl: isAttacker ? '/attacker/login' : '/login'
-  };
+  return isAttacker ? '/attacker/login' : '/login';
 };
 
 http.interceptors.request.use(
@@ -61,7 +56,7 @@ http.interceptors.response.use(
     if (originalRequest && !originalRequest.hideLoading) {
       hideGlobalLoading();
     }
-    const { loginUrl } = getAuthKeys();
+    const loginUrl = getLoginUrl();
     
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (
@@ -71,7 +66,9 @@ http.interceptors.response.use(
         originalRequest.url.includes('/auth/register')
       ) {
         if (originalRequest.url.includes('/auth/refresh')) {
-          window.location.href = loginUrl;
+          if (!originalRequest._silent && !window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
+            window.location.href = loginUrl;
+          }
         }
         return Promise.reject(error);
       }

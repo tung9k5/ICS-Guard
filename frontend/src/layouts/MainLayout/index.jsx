@@ -1,49 +1,26 @@
 import './MainLayout.scss';
 import React, { useState } from 'react';
-import { Outlet, Navigate, useNavigate, useLocation, Link } from 'react-router-dom';
-import authApi from '@/api/auth';
+import { Outlet, Navigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { setUser } from '@/store/slices/authSlice';
 import Sidebar from '@/sections/Layout/Sidebar';
 import Header from '@/sections/Layout/Header';
 import GlobalLoading from '@/components/GlobalLoading';
 import Profile from '@/sections/Profile';
 import DraggableChatbot from '@/components/DraggableChatbot';
-import { AUTH_KEYS } from '@/constants/authConstants';
 
 const MainLayout = () => {
-  const token = localStorage.getItem(AUTH_KEYS.ACCESS_TOKEN);
+  const dispatch = useDispatch();
+  const { isInitialized, isAuthenticated, user } = useSelector(state => state.auth);
+  
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [user, setUser] = useState(() => {
-    const cached = sessionStorage.getItem(AUTH_KEYS.CACHED_USER);
-    return cached ? JSON.parse(cached) : null;
-  });
 
-  const fetchedRef = React.useRef(false);
+  if (!isInitialized) {
+    return <GlobalLoading />; // Show loading while App.jsx checks auth
+  }
 
-  React.useEffect(() => {
-    const fetchUser = async () => {
-      if (fetchedRef.current) return;
-      fetchedRef.current = true;
-      try {
-        const token = localStorage.getItem(AUTH_KEYS.ACCESS_TOKEN);
-        if (!token) return;
-        
-        // Fetch current user info
-        const res = await authApi.getProfile();
-        const userData = res.data?.user || res.data || res.user;
-        if (userData) {
-          sessionStorage.setItem(AUTH_KEYS.CACHED_USER, JSON.stringify(userData));
-          setUser(userData);
-        }
-      } catch (err) {
-        console.error('Failed to fetch user:', err);
-      }
-    };
-
-    fetchUser();
-  }, []);
-
-  if (!token) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
@@ -57,8 +34,7 @@ const MainLayout = () => {
   };
 
   const handleUpdateUser = (updatedUser) => {
-    setUser(updatedUser);
-    sessionStorage.setItem('cached_user', JSON.stringify(updatedUser));
+    dispatch(setUser(updatedUser));
   };
 
   return (
