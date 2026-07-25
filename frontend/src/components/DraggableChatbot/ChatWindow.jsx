@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bot, ChevronDown, Maximize2, X, Menu, Mic, Send, Minimize2, Copy, Check, Clock, Heart, ThumbsUp } from 'lucide-react';
+import { Bot, ChevronDown, Maximize2, X, Menu, Mic, Send, Minimize2, Copy, Check, Heart, ThumbsUp, MoreVertical, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CHATBOT_MAX_INPUT_LENGTH } from '@/constants/chatbotConstants';
 import './ChatWindow.scss';
@@ -31,6 +31,44 @@ const ChatWindow = ({ isOpen, onClose, user }) => {
   const [floatingEmotes, setFloatingEmotes] = useState([]);
 
   const [timeLeft, setTimeLeft] = useState(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+  const chatRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const handleGlobalClick = (e) => {
+      if (isOpen && chatRef.current && !chatRef.current.contains(e.target)) {
+        const fab = document.querySelector('.chatbot-fab');
+        if (fab && fab.contains(e.target)) return;
+        const menu = document.querySelector('.chatbot-menu');
+        if (menu && menu.contains(e.target)) return;
+        onClose();
+      }
+    };
+    
+    if (isOpen) {
+      setTimeout(() => {
+        document.addEventListener('mousedown', handleGlobalClick);
+      }, 100);
+    }
+    return () => document.removeEventListener('mousedown', handleGlobalClick);
+  }, [isOpen, onClose]);
+
+  const handleClearMessages = () => {
+    const initialMessage = { id: 1, text: t('chatbot.greeting'), sender: 'bot', timestamp: Date.now() };
+    setMessages([initialMessage]);
+    setIsMenuOpen(false);
+  };
 
   useEffect(() => {
     const userId = user?.id || user?._id || 'guest';
@@ -144,7 +182,7 @@ const ChatWindow = ({ isOpen, onClose, user }) => {
   };
 
   return (
-    <div className={`chat-window ${isExpanded ? 'expanded' : ''} ${!isOpen ? 'chat-hidden' : ''}`}>
+    <div ref={chatRef} className={`chat-window ${isExpanded ? 'expanded' : ''} ${!isOpen ? 'chat-hidden' : ''}`}>
       <div className="chat-header">
         <div className="header-left">
           <div className="bot-icon">
@@ -153,15 +191,55 @@ const ChatWindow = ({ isOpen, onClose, user }) => {
           <span className="title">{t('chatbot.title')}</span>
         </div>
         <div className="header-right">
-          <button className="icon-btn" onClick={onClose} title={t('chatbot.minimize')}>
-            <ChevronDown size={18} />
-          </button>
-          <button className="icon-btn" onClick={() => setIsExpanded(!isExpanded)} title={isExpanded ? t('chatbot.minimize_window') : t('chatbot.maximize')}>
-            {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
-          </button>
-          <button className="icon-btn close-btn" onClick={onClose} title={t('chatbot.close')}>
-            <X size={18} />
-          </button>
+          <div className="menu-container" ref={menuRef} style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <button className="icon-btn" onClick={() => setIsMenuOpen(!isMenuOpen)} title={t('chatbot.options', { defaultValue: 'Tùy chọn' })}>
+              <MoreVertical size={18} />
+            </button>
+            {isMenuOpen && (
+              <div className="chat-options-menu" style={{ position: 'absolute', top: '120%', right: 0, backgroundColor: 'var(--bg-card, #fff)', border: '1px solid var(--border-color, #e0e0e0)', borderRadius: '6px', padding: '4px 0', minWidth: '160px', zIndex: 100, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+                <div 
+                  className="menu-item" 
+                  onClick={() => { setIsExpanded(!isExpanded); setIsMenuOpen(false); }}
+                  style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: 'background-color 0.2s', color: 'var(--text-color, #333)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-hover, rgba(0,0,0,0.05))'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
+                  <span style={{ fontSize: '14px', fontWeight: '500' }}>{isExpanded ? t('chatbot.minimize_window', { defaultValue: 'Thu nhỏ cửa sổ' }) : t('chatbot.maximize', { defaultValue: 'Phóng to' })}</span>
+                </div>
+                <div 
+                  className="menu-item" 
+                  onClick={() => { onClose(); setIsMenuOpen(false); }}
+                  style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: 'background-color 0.2s', color: 'var(--text-color, #333)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-hover, rgba(0,0,0,0.05))'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <ChevronDown size={16} />
+                  <span style={{ fontSize: '14px', fontWeight: '500' }}>{t('chatbot.minimize', { defaultValue: 'Thu nhỏ chat' })}</span>
+                </div>
+                <div 
+                  className="menu-item" 
+                  onClick={handleClearMessages}
+                  style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--red-500, #ef4444)', transition: 'background-color 0.2s', borderTop: '1px solid var(--border-color, #eee)' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-hover, rgba(0,0,0,0.05))'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <Trash2 size={16} />
+                  <span style={{ fontSize: '14px', fontWeight: '500' }}>{t('chatbot.clear_messages', { defaultValue: 'Xóa trò chuyện' })}</span>
+                </div>
+                <div 
+                  className="menu-item" 
+                  onClick={() => { onClose(); setIsMenuOpen(false); }}
+                  style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--red-500, #ef4444)', transition: 'background-color 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-hover, rgba(0,0,0,0.05))'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <X size={16} />
+                  <span style={{ fontSize: '14px', fontWeight: '500' }}>{t('chatbot.close', { defaultValue: 'Đóng chat' })}</span>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -231,15 +309,9 @@ const ChatWindow = ({ isOpen, onClose, user }) => {
             onChange={(e) => setInputValue(e.target.value.substring(0, CHATBOT_MAX_INPUT_LENGTH))}
             onKeyPress={handleKeyPress}
           />
-          {inputValue.trim() ? (
-            <button className="action-btn send-btn" onClick={handleSend}>
-              <Send size={18} />
-            </button>
-          ) : (
-            <button className="action-btn">
-              <Mic size={20} />
-            </button>
-          )}
+          <button className="action-btn send-btn" onClick={handleSend} style={{ opacity: inputValue.trim() ? 1 : 0.5, pointerEvents: inputValue.trim() ? 'auto' : 'none' }}>
+            <Send size={18} />
+          </button>
         </div>
       </div>
     </div>

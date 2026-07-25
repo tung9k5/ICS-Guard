@@ -19,12 +19,16 @@ let MQTT_URL = process.env.MQTT_URL;
 let mqttClient = null;
 
 // AES-256-CBC Config for E2E Encryption
-const AES_SECRET_KEY = process.env.AES_SECRET_KEY || "0123456789abcdef0123456789abcdef";
-const AES_IV = process.env.AES_IV || "abcdef9876543210";
+const AES_SECRET_KEY = process.env.AES_SECRET_KEY;
 
-function decryptPayload(encryptedBase64) {
-    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(AES_SECRET_KEY), Buffer.from(AES_IV));
-    let decrypted = decipher.update(encryptedBase64, 'base64', 'utf8');
+
+function decryptPayload(encryptedData) {
+    const separatorIdx = encryptedData.indexOf(':');
+    if (separatorIdx === -1) throw new Error('Invalid encrypted payload format');
+    const iv = Buffer.from(encryptedData.substring(0, separatorIdx), 'base64');
+    const ciphertext = encryptedData.substring(separatorIdx + 1);
+    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(AES_SECRET_KEY), iv);
+    let decrypted = decipher.update(ciphertext, 'base64', 'utf8');
     decrypted += decipher.final('utf8');
     return JSON.parse(decrypted);
 }
@@ -96,12 +100,15 @@ export const publishMqtt = (topic, payload) => {
   if (mqttClient && mqttClient.connected) {
     const dataStr = typeof payload === 'string' ? payload : JSON.stringify(payload);
     
-    // Encrypt E2E Payload
-    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(AES_SECRET_KEY), Buffer.from(AES_IV));
+    // Encrypt E2E Payload with random IV per message
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(AES_SECRET_KEY), iv);
     let encrypted = cipher.update(dataStr, 'utf8', 'base64');
     encrypted += cipher.final('base64');
     
-    const securePayload = JSON.stringify({ encrypted_data: encrypted });
+    // Prepend IV (base64) before ciphertext, separated by ':'
+    const encryptedData = `${iv.toString('base64')}:${encrypted}`;
+    const securePayload = JSON.stringify({ encrypted_data: encryptedData });
     
     mqttClient.publish(topic, securePayload, { qos: 1 });
     console.log(`[MqttService] Published securely to ${topic}`);

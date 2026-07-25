@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import authApi from '@/api/auth';
 import Viewlogo from '@/components/Viewlogo';
 import { toast } from '@/utils/toast';
+import { useDispatch } from 'react-redux';
+import { logout as logoutAction } from '@/store/slices/authSlice';
 import { AUTH_KEYS } from '@/constants/authConstants';
 import { APP_ROUTES } from '@/constants/routes';
 import './Sidebar.scss';
@@ -51,6 +53,8 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, collapsed, setCollapsed }) =
   const navigate = useNavigate();
   const [isFullscreenLogo, setIsFullscreenLogo] = useState(false);
 
+  const dispatch = useDispatch();
+
   const handleClose = () => {
     if (window.innerWidth <= 768) {
       setIsSidebarOpen(false);
@@ -59,10 +63,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, collapsed, setCollapsed }) =
 
   const handleLogout = async () => {
     try {
-      const refreshToken = localStorage.getItem(AUTH_KEYS.REFRESH_TOKEN) || localStorage.getItem(AUTH_KEYS.ATTACKER_REFRESH_TOKEN);
-      if (refreshToken) {
-        await authApi.logout({ refreshToken });
-      }
+      await authApi.logout({});
     } catch (e) {
       console.error('Logout failed:', e);
     } finally {
@@ -71,6 +72,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, collapsed, setCollapsed }) =
       localStorage.removeItem(AUTH_KEYS.ATTACKER_ACCESS_TOKEN);
       localStorage.removeItem(AUTH_KEYS.ATTACKER_REFRESH_TOKEN);
       sessionStorage.removeItem(AUTH_KEYS.CACHED_USER);
+      dispatch(logoutAction());
       toast.success(t('auth.logout.success', 'Logged out successfully'));
       navigate(APP_ROUTES.AUTH.LOGIN, { replace: true });
     }

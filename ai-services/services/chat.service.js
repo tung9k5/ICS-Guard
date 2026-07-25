@@ -2,6 +2,8 @@ import AiFactory from '../AiFactory.js';
 import { chatbotSystemInstruction } from '../prompts/index.js';
 import { AI_CONFIG } from '../constants/config.js';
 
+const MAX_HISTORY_MESSAGES = 20; // Prevent context window overflow and uncontrolled API cost
+
 export const handleChat = async (messages, language = 'vi') => {
   try {
     const aiService = AiFactory.getInstance();
@@ -14,7 +16,12 @@ export const handleChat = async (messages, language = 'vi') => {
         
     systemInstruction = `${systemInstruction}\n\n${langContext}`;
     
-    const formattedContents = messages.map(msg => {
+    // Truncate history to last MAX_HISTORY_MESSAGES to prevent context overflow
+    const recentMessages = messages.length > MAX_HISTORY_MESSAGES
+      ? messages.slice(-MAX_HISTORY_MESSAGES)
+      : messages;
+    
+    const formattedContents = recentMessages.map(msg => {
       let text = msg.text;
       if (msg.sender === 'bot' && msg.reactions && (msg.reactions.like > 0 || msg.reactions.heart > 0)) {
         text += `\n[System note: The user highly appreciated this response, giving it ${msg.reactions.like || 0} likes and ${msg.reactions.heart || 0} hearts. Learn from this response style.]`;

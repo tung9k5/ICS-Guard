@@ -5,10 +5,13 @@ import authApi from '@/api/auth';
 import { useTranslation } from 'react-i18next';
 import { AUTH_KEYS } from '@/constants/authConstants';
 import { APP_ROUTES } from '@/constants/routes';
+import { useDispatch } from 'react-redux';
+import { loginSuccess } from '@/store/slices/authSlice';
 
 export const useAuth = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [loading, setLoading] = useState(false);
 
   const getDefaultRoute = (role) => {
@@ -20,8 +23,10 @@ export const useAuth = () => {
     try {
       const response = await authApi.login(formData);
       if (response && (response.accessToken)) {
-        localStorage.setItem(AUTH_KEYS.ACCESS_TOKEN, response.accessToken);
-        localStorage.setItem(AUTH_KEYS.REFRESH_TOKEN, response.refreshToken);
+        dispatch(loginSuccess({
+          user: response.user,
+          accessToken: response.accessToken
+        }));
         
         if (rememberMe) {
           const expires = Date.now() + 30 * 24 * 60 * 60 * 1000;
@@ -53,8 +58,10 @@ export const useAuth = () => {
       setLoading(true);
       const res = await authApi.loginGoogle({ idToken: credential });
       if (res && (res.accessToken || res.access_token)) {
-        localStorage.setItem(AUTH_KEYS.ACCESS_TOKEN, res.accessToken || res.access_token);
-        localStorage.setItem(AUTH_KEYS.REFRESH_TOKEN, res.refreshToken || res.refresh_token);
+        dispatch(loginSuccess({
+          user: res.user,
+          accessToken: res.accessToken || res.access_token
+        }));
         toast.success(t('auth.login.success'));
         const role = res.user?.role;
         navigate(getDefaultRoute(role), { replace: true });

@@ -77,7 +77,7 @@ const DeviceForm = ({ device, onClose, onSuccess }) => {
     >
       <form onSubmit={handleSubmit} className="device-form">
         
-        <div className="form-row form-row-3">
+        <div className="form-row form-row-2">
           <VInput 
             label={t('assets.form.label_name')}
             name="name"

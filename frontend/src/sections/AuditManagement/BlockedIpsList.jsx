@@ -6,6 +6,7 @@ import ApiAudit from '@/api/audit';
 import VPagination from '@/components/VPagination';
 import VNoData from '@/components/VNoData';
 import VFilterPage from '@/components/VFilterPage';
+import VSelectFilter from '@/components/VSelectFilter';
 import VButton from '@/components/VButton';
 import VDialog from '@/components/VDialog';
 import { toast } from '@/utils/toast';
@@ -19,6 +20,7 @@ const BlockedIpsList = () => {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
+  const [order, setOrder] = useState('desc');
   const [total, setTotal] = useState(0);
 
   const { expandedId, toggleExpand } = useExpandable();
@@ -33,7 +35,8 @@ const BlockedIpsList = () => {
       const res = await ApiAudit.getBlockedIps({
         page,
         per_page: perPage,
-        search
+        search,
+        order
       });
       if (res.data) {
         setIps(res.data);
@@ -57,7 +60,7 @@ const BlockedIpsList = () => {
     const timer = setTimeout(() => fetchIps(), 300);
     return () => clearTimeout(timer);
     // eslint-disable-next-line
-  }, [page, perPage, search]);
+  }, [page, perPage, search, order]);
 
   const openUnblockConfirm = (ipAddress) => {
     setIpToUnblock(ipAddress);
@@ -90,7 +93,18 @@ const BlockedIpsList = () => {
           setSearch(e.target.value);
           setPage(1);
         }}
-      />
+      >
+        <VSelectFilter
+          value={order}
+          defaultValue="desc"
+          onChange={(val) => { setOrder(val); setPage(1); }}
+          placeholder={t('assets.filter_order_desc')}
+          options={[
+            { value: 'asc', label: t('assets.filter_order_asc', 'Cũ nhất') },
+            { value: 'desc', label: t('assets.filter_order_desc', 'Mới nhất') },
+          ]}
+        />
+      </VFilterPage>
 
       <div className="list-container">
         {/* --- DESKTOP TABLE VIEW --- */}
@@ -100,14 +114,14 @@ const BlockedIpsList = () => {
           ) : ips.length === 0 ? (
             <VNoData message={t('assets.list.no_data')} />
           ) : (
-            <table className="v-table">
+            <table className="v-table" style={{ tableLayout: 'fixed', width: '100%', minWidth: '100%' }}>
               <thead>
                 <tr>
-                  <th style={{ width: '10rem', whiteSpace: 'nowrap' }}>{t('audit.blocked.table_ip')}</th>
+                  <th style={{ width: '12rem' }}>{t('audit.blocked.table_ip')}</th>
                   <th>{t('audit.blocked.table_reason')}</th>
-                  <th style={{ whiteSpace: 'nowrap' }}>{t('common.created_at', 'Ngày tạo')}</th>
-                  <th style={{ whiteSpace: 'nowrap' }}>{t('common.updated_at', 'Ngày cập nhật')}</th>
-                  <th style={{ width: '7.8571rem' }}>{t('audit.blocked.table_actions')}</th>
+                  <th style={{ width: '10rem' }}>{t('common.created_at', 'Ngày tạo')}</th>
+                  <th style={{ width: '10rem' }}>{t('common.updated_at', 'Ngày cập nhật')}</th>
+                  <th className="actions-col" style={{ width: '9rem' }}>{t('audit.blocked.table_actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -115,26 +129,24 @@ const BlockedIpsList = () => {
                   <tr key={ip.id || ip._id}>
                     <td>
                       <div className="ip-badge">
-                        <ShieldAlert size={16} />
                         <span style={{ whiteSpace: 'nowrap' }}>{ip.ipAddress}</span>
                       </div>
                     </td>
-                    <td style={{ maxWidth: '17.8571rem' }}>
-                      <div className="reason-text truncate-text" title={ip.reason}>{ip.reason || '-'}</div>
-                    </td>
-                    <td className="time-col" style={{ whiteSpace: 'nowrap' }}>
-                      {formatDate(ip.createdAt)}
-                    </td>
-                    <td className="time-col" style={{ whiteSpace: 'nowrap' }}>
-                      {formatDate(ip.updatedAt)}
-                    </td>
                     <td>
+                      <div className="reason-text truncate-text" style={{ display: 'block', width: '100%' }} title={ip.reason}>{ip.reason || '-'}</div>
+                    </td>
+                    <td className="time-col" style={{ whiteSpace: 'nowrap' }}>
+                      {formatDate(ip.blockedAt)}
+                    </td>
+                    <td className="time-col" style={{ whiteSpace: 'nowrap' }}>
+                      {formatDate(ip.expiresAt)}
+                    </td>
+                    <td className="actions-col">
                       <VButton 
                         variant="outline"
                         onClick={() => openUnblockConfirm(ip.ipAddress)}
                       >
                         <Unlock size={16} />
-                        {t('audit.btn_unblock')}
                       </VButton>
                     </td>
                   </tr>
@@ -161,7 +173,6 @@ const BlockedIpsList = () => {
                   <div className="mobile-card-header" onClick={() => toggleExpand(id)}>
                     <div className="col-id">
                       <div className="ip-badge">
-                        <ShieldAlert size={16} />
                         <span style={{ whiteSpace: 'nowrap' }}>{ip.ipAddress}</span>
                       </div>
                     </div>
@@ -179,13 +190,13 @@ const BlockedIpsList = () => {
                       <div className="detail-row">
                         <span className="detail-label">{t('common.created_at', 'Ngày tạo')}</span>
                         <span className="detail-value time-col">
-                          {formatDate(ip.createdAt)}
+                          {formatDate(ip.blockedAt)}
                         </span>
                       </div>
                       <div className="detail-row">
                         <span className="detail-label">{t('common.updated_at', 'Ngày cập nhật')}</span>
                         <span className="detail-value time-col">
-                          {formatDate(ip.updatedAt)}
+                          {formatDate(ip.expiresAt)}
                         </span>
                       </div>
                       <div className="detail-row" style={{ borderBottom: 'none', paddingBottom: 0, paddingTop: '1.1429rem', display: 'flex', justifyContent: 'center' }}>

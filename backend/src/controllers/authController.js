@@ -1,14 +1,19 @@
 import { successResponse } from '../utils/response.js';
 import authService from '../services/authService.js';
 import { AUTH_CONSTANTS } from '../constants/index.js';
+import AppError from '../utils/AppError.js';
 
 const setAuthCookies = (res, accessToken, refreshToken) => {
   const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'Lax',
-    domain: process.env.COOKIE_DOMAIN,
   };
+  
+  if (process.env.COOKIE_DOMAIN && process.env.COOKIE_DOMAIN !== 'localhost') {
+    cookieOptions.domain = process.env.COOKIE_DOMAIN;
+  }
+  
   res.cookie(AUTH_CONSTANTS.ACCESS_TOKEN_COOKIE, accessToken, cookieOptions);
   res.cookie(AUTH_CONSTANTS.REFRESH_TOKEN_COOKIE, refreshToken, cookieOptions);
 };
@@ -47,7 +52,10 @@ export const logout = async (req, res, next) => {
     if (token) {
       await authService.logout(token);
     }
-    const cookieOptions = { domain: process.env.COOKIE_DOMAIN };
+    const cookieOptions = {};
+    if (process.env.COOKIE_DOMAIN && process.env.COOKIE_DOMAIN !== 'localhost') {
+      cookieOptions.domain = process.env.COOKIE_DOMAIN;
+    }
     res.clearCookie(AUTH_CONSTANTS.ACCESS_TOKEN_COOKIE, cookieOptions);
     res.clearCookie(AUTH_CONSTANTS.REFRESH_TOKEN_COOKIE, cookieOptions);
     return successResponse(res, null, 'Logged out successfully');

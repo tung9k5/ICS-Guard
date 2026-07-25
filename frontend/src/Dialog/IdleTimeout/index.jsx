@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout as logoutAction } from '@/store/slices/authSlice';
 import authApi from '@/api/auth';
 import VButton from '@/components/VButton';
 import { useTranslation } from 'react-i18next';
@@ -16,10 +18,10 @@ const IdleTimeout = () => {
   const countdownIntervalRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+  const { isAuthenticated: isLoggedIn } = useSelector(state => state.auth);
 
   const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
-  // Fast check if user is logged in
-  const isLoggedIn = !!localStorage.getItem(AUTH_KEYS.ACCESS_TOKEN) || !!localStorage.getItem(AUTH_KEYS.ATTACKER_ACCESS_TOKEN);
 
   const updateShowDialog = (value) => {
     setShowDialog(value);
@@ -129,13 +131,7 @@ const IdleTimeout = () => {
     updateShowDialog(false);
     
     try {
-      const isAttacker = location.pathname.startsWith('/attacker');
-      const refreshTokenKey = isAttacker ? 'attacker_refresh_token' : 'refresh_token';
-      const refreshToken = localStorage.getItem(refreshTokenKey);
-
-      if (refreshToken) {
-        await authApi.logout({ refreshToken });
-      }
+      await authApi.logout({});
     } catch (e) {
       console.error('Logout error', e);
     } finally {
@@ -143,6 +139,7 @@ const IdleTimeout = () => {
       localStorage.removeItem('refresh_token');
       localStorage.removeItem('attacker_access_token');
       localStorage.removeItem('attacker_refresh_token');
+      dispatch(logoutAction());
       navigate('/login', { replace: true });
     }
   };
