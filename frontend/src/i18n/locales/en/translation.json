@@ -475,6 +475,9 @@
     }
   },
   "sidebar": {
+    "security_group": "Security & Incidents",
+    "system_group": "System & Devices",
+    "admin_group": "System Administration",
     "rule_management": "Rule Management",
     "alert_management": "Raw Alerts"
   },
@@ -565,5 +568,75 @@
     "placeholder": "Ask me anything...",
     "fallback": "Sorry, I cannot answer right now.",
     "error": "An error occurred while connecting to AI: {{message}}"
+  },
+  "settings": {
+    "page_title": "System Settings",
+    "tabs": {
+      "general": "General",
+      "security": "Security",
+      "notifications": "Notifications"
+    },
+    "loading": "Loading settings...",
+    "general": {
+      "title": "General Configuration",
+      "desc": "Manage your basic system preferences"
+    },
+    "security": {
+      "title": "Security Policies",
+      "desc": "Configure password expiry, 2FA, and session timeouts"
+    },
+    "notifications": {
+      "title": "Notifications & Integrations",
+      "desc": "Configure SMTP and Telegram endpoints for alerts"
+    },
+    "fields": {
+      "system_name": "System Name",
+      "timezone": "Timezone",
+      "language": "Language",
+      "session_timeout": "Session Timeout (minutes)",
+      "password_expiry": "Password Expiry (days)",
+      "require_2fa": "Require Two-Factor Authentication",
+      "smtp_host": "SMTP Host",
+      "smtp_port": "SMTP Port",
+      "telegram_bot_token": "Telegram Bot Token"
+    },
+    "save_all": "Save All Changes",
+    "toasts": {
+      "load_failed": "Failed to load settings",
+      "update_success": "Updated {{key}} successfully",
+      "update_failed": "Failed to update {{key}}",
+      "save_all_success": "All settings saved successfully",
+      "save_all_failed": "Failed to save some settings"
+    }
+  },
+  "reports": {
+    "page_title": "System Reports & Analytics",
+    "loading": "Loading analytics data...",
+    "total_devices": "Total Devices",
+    "total_alerts": "Total Alerts",
+    "total_incidents": "Total Incidents",
+    "trends_title": "Alert & Incident Trends (Last 7 Days)",
+    "alerts": "Alerts",
+    "severity_distribution": "Alert Severity Distribution",
+    "incident_status": "Incident Status",
+    "incidents": "Incidents",
+    "no_data": "No data available to display reports.",
+    "toasts": {
+      "load_failed": "Failed to load report summary"
+    },
+    "severity": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical",
+      "info": "Info"
+    },
+    "status": {
+      "open": "Open",
+      "investigating": "Investigating",
+      "remediated": "Remediated",
+      "closed": "Closed",
+      "resolved": "Resolved"
+    }
   }
 }

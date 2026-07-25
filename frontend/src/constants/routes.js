@@ -14,6 +14,8 @@ export const APP_ROUTES = {
     ALERT_MANAGEMENT: '/alert-management',
     AUDIT_MANAGEMENT: '/audit-management',
     ATTACK_SIMULATOR: '/attack-simulator',
+    SETTINGS: '/settings',
+    REPORTS: '/reports',
   },
   CUSTOMER: {
     DASHBOARD: '/customer/dashboard',
