@@ -131,6 +131,8 @@
       "table_actions": "Actions",
       "btn_edit": "Edit",
       "btn_delete": "Delete Device",
+      "btn_simulate": "Simulate",
+      "no_description": "No description",
       "mobile_id": "Code",
       "mobile_name": "Device Name"
     },

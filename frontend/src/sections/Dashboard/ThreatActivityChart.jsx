@@ -12,8 +12,7 @@ const ThreatActivityChart = ({ rawData = [] }) => {
 
   const maxVal = data.reduce((max, item) => Math.max(max, (item.low || 0) + (item.medium || 0) + (item.high || 0)), 0);
 
-  const roundedMax = Math.max(Math.ceil(maxVal / 500) * 500, 1000);
-  const tickCount = 6;
+  const roundedMax = Math.max(Math.ceil(maxVal / 5) * 5, 5); // Minimum scale of 5 to show small spikes clearly
 
   return (
     <div style={{ width: '100%', height: '100%', minHeight: '21.4286rem' }}>
@@ -28,8 +27,8 @@ const ThreatActivityChart = ({ rawData = [] }) => {
             stroke="var(--gray-400)" 
             tickLine={false} 
             axisLine={false} 
+            allowDecimals={false}
             domain={[0, roundedMax]}
-            tickCount={tickCount}
           />
           <Tooltip 
             cursor={{ fill: 'var(--gray-700)', opacity: 0.4 }}

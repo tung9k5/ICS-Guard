@@ -9,7 +9,8 @@ import { sendEmailAlert } from './emailService.js';
 import { sendTelegramAlert } from './telegramService.js';
 import { getActiveAdminSessions, addEmergencyAlert } from './sessionRegistry.js';
 import socketService from './socketService.js';
-import { DEVICE_STATUSES, ALERT_STATUSES, INCIDENT_STATUSES, SEVERITY_LEVELS, INCIDENT_TIMELINE_TYPES, ATTACK_TYPES } from '../constants/index.js';
+import logger from '../utils/logger.js';
+import { DEVICE_STATUSES, ALERT_STATUSES, INCIDENT_STATUSES, SEVERITY_LEVELS, INCIDENT_TIMELINE_TYPES, ATTACK_TYPES, THRESHOLDS, MQTT_TOPICS } from '../constants/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,7 +40,7 @@ export const connectMqtt = () => {
   // Setup TLS configuration if ca.crt exists
   const caCertPath = path.resolve(__dirname, '../certs/ca.crt');
   if (fs.existsSync(caCertPath)) {
-    console.log(`[MqttService] Found CA Certificate at: ${caCertPath}. Configuring TLS...`);
+    logger.info(`[MqttService] Found CA Certificate at: ${caCertPath}. Configuring TLS...`);
     try {
       options.ca = fs.readFileSync(caCertPath);
       options.rejectUnauthorized = false; // Allow self-signed certificate hostname mismatches
@@ -50,21 +51,21 @@ export const connectMqtt = () => {
         MQTT_URL = MQTT_URL.replace('mqtt://', 'mqtts://').replace(/:\d+$/, `:${tlsPort}`);
       }
     } catch (err) {
-      console.error('[MqttService] Failed to load CA certificate:', err.message);
+      logger.error('[MqttService] Failed to load CA certificate:', err.message);
     }
   }
 
-  console.log(`[MqttService] Connecting to MQTT Broker at: ${MQTT_URL}...`);
+  logger.info(`[MqttService] Connecting to MQTT Broker at: ${MQTT_URL}...`);
   const client = mqtt.connect(MQTT_URL, options);
   mqttClient = client;
 
   client.on('connect', () => {
-    console.log(`[MqttService] Connected to MQTT Broker successfully.`);
-    client.subscribe('ics/telemetry/#', (err) => {
+    logger.info('[MqttService] Connected to MQTT Broker successfully.');
+    client.subscribe(MQTT_TOPICS.TELEMETRY_WILDCARD, (err) => {
       if (!err) {
-        console.log('[MqttService] Subscribed to topic "ics/telemetry/#" successfully.');
+        logger.info(`[MqttService] Subscribed to topic "${MQTT_TOPICS.TELEMETRY_WILDCARD}" successfully.`);
       } else {
-        console.error('[MqttService] Subscription failed:', err.message);
+        logger.error('[MqttService] Subscription failed:', err.message);
       }
     });
   });
@@ -77,6 +78,31 @@ export const connectMqtt = () => {
       if (payload.encrypted_data) {
         payload = decryptPayload(payload.encrypted_data);
       }
+
+      // 0. Auto-register device if not exists
+      try {
+        if (payload.device_id) {
+          const device = await Device.findById(payload.device_id);
+          if (!device) {
+            await Device.create({
+              _id: payload.device_id,
+              name: `Simulator ${payload.device_id}`,
+              type: payload.device_type || 'IoT Device',
+              status: DEVICE_STATUSES.ACTIVE,
+              zone: payload.zone || 'SimZone',
+              description: 'Auto-registered from simulator telemetry',
+              ipAddress: '127.0.0.1',
+              macAddress: '00:00:00:00:00:00'
+            });
+            logger.info(`[MqttService] Auto-registered new device: ${payload.device_id}`);
+          } else if (device.status !== DEVICE_STATUSES.ACTIVE && device.status !== DEVICE_STATUSES.ISOLATED && device.status !== DEVICE_STATUSES.QUARANTINED) {
+            device.status = DEVICE_STATUSES.ACTIVE;
+            await device.save();
+          }
+        }
+      } catch (err) {
+        logger.error('[MqttService] Error auto-registering device:', err.message);
+      }
       
       // 1. Write to InfluxDB
       await writeTelemetry(payload);
@@ -87,12 +113,12 @@ export const connectMqtt = () => {
       // 3. Process structured logs
       await processStructuredLogs(payload);
     } catch (error) {
-      // Ignore parsing errors for non-json
+      logger.error('[MqttService] Error parsing/decrypting message:', error.message);
     }
   });
 
   client.on('error', (err) => {
-    console.error('[MqttService] Connection error:', err.message);
+    logger.error('[MqttService] Connection error:', err.message);
   });
 };
 
@@ -111,10 +137,10 @@ export const publishMqtt = (topic, payload) => {
     const securePayload = JSON.stringify({ encrypted_data: encryptedData });
     
     mqttClient.publish(topic, securePayload, { qos: 1 });
-    console.log(`[MqttService] Published securely to ${topic}`);
+    logger.info(`[MqttService] Published securely to ${topic}`);
     return true;
   }
-  console.error('[MqttService] MQTT Client not connected, publish failed.');
+  logger.error('[MqttService] MQTT Client not connected, publish failed.');
   return false;
 };
 
@@ -129,30 +155,28 @@ const checkTelemetryAnomalies = async (payload) => {
       return;
     }
   } catch (err) {
-    console.error('[MqttService] Failed to check device status during anomaly check:', err);
+    logger.error('[MqttService] Failed to check device status during anomaly check:', err);
   }
 
   const { bytes_per_second, temperature } = metrics;
   const now = Date.now();
 
-  // A. Check Traffic Spike (bytes_per_second > 50000)
-  if (bytes_per_second && bytes_per_second > 50000) {
-    // Check if we raised this alert recently (within last 2 minutes) to prevent alert flooding
+  // A. Check Traffic Spike
+  if (bytes_per_second && bytes_per_second > THRESHOLDS.TRAFFIC_SPIKE_BPS) {
     const recentAlert = await Alert.findOne({
       device_id,
       rule_name: 'ABNORMAL_TRAFFIC_SPIKE',
-      status: ALERT_STATUSES.NEW,
-      detected_at: { $gt: new Date(now - 2 * 60 * 1000) }
+      status: { $in: [ALERT_STATUSES.NEW, ALERT_STATUSES.ACKNOWLEDGED] }
     });
 
     if (!recentAlert) {
-      console.log(`⚠️ [Anomaly Detection] Traffic Spike detected on ${device_id}: ${bytes_per_second} Bps`);
+      logger.warn(`[Anomaly Detection] Traffic Spike detected on ${device_id}: ${bytes_per_second} Bps`);
       
       const alert = await Alert.create({
         rule_name: 'ABNORMAL_TRAFFIC_SPIKE',
         device_id,
         title: `Lưu lượng tăng đột biến trên ${device_id}`,
-        description: `Lưu lượng mạng vọt lên ${bytes_per_second} Bps (vượt ngưỡng cho phép 50,000 Bps).`,
+        description: `Lưu lượng mạng vọt lên ${bytes_per_second} Bps (vượt ngưỡng cho phép ${THRESHOLDS.TRAFFIC_SPIKE_BPS.toLocaleString()} Bps).`,
         severity: SEVERITY_LEVELS.HIGH,
         status: ALERT_STATUSES.NEW,
         detected_at: new Date()
@@ -184,7 +208,7 @@ const checkTelemetryAnomalies = async (payload) => {
       // Smart Alert Routing
       const activeAdmins = getActiveAdminSessions();
       if (activeAdmins.length > 0) {
-        console.log(`[AlertRouter] Active Admins online: ${activeAdmins.join(', ')}. Suppressing email/Telegram, adding to Emergency Queue.`);
+        logger.info(`[AlertRouter] Active Admins online: ${activeAdmins.join(', ')}. Suppressing email/Telegram, adding to Emergency Queue.`);
         addEmergencyAlert({
           device_id,
           attack_type: ATTACK_TYPES.TRAFFIC_SPIKE,
@@ -192,7 +216,7 @@ const checkTelemetryAnomalies = async (payload) => {
           admin_users: activeAdmins
         });
       } else {
-        console.log('[AlertRouter] No active Admins online. Sending notifications via Email and Telegram.');
+        logger.info('[AlertRouter] No active Admins online. Sending notifications via Email and Telegram.');
         const alertText = `🚨 *SECURITY ALERT: TRAFFIC SPIKE*\n\nDevice: *${device_id}*\nZone: *${zone || 'unknown'}*\nTraffic: *${bytes_per_second.toLocaleString()} Bps*\nSeverity: *HIGH*`;
         await sendTelegramAlert(alertText);
         await sendEmailAlert({
@@ -205,23 +229,22 @@ const checkTelemetryAnomalies = async (payload) => {
     }
   }
 
-  // B. Check Critical Temperature (temperature > 85.0)
-  if (temperature && temperature > 85.0) {
+  // B. Check Critical Temperature
+  if (temperature && temperature > THRESHOLDS.CRITICAL_TEMPERATURE_C) {
     const recentAlert = await Alert.findOne({
       device_id,
       rule_name: 'CRITICAL_OVERHEAT',
-      status: ALERT_STATUSES.NEW,
-      detected_at: { $gt: new Date(now - 2 * 60 * 1000) }
+      status: { $in: [ALERT_STATUSES.NEW, ALERT_STATUSES.ACKNOWLEDGED] }
     });
 
     if (!recentAlert) {
-      console.log(`⚠️ [Anomaly Detection] Critical overheat detected on ${device_id}: ${temperature} °C`);
+      logger.warn(`[Anomaly Detection] Critical overheat detected on ${device_id}: ${temperature} °C`);
 
       const alert = await Alert.create({
         rule_name: 'CRITICAL_OVERHEAT',
         device_id,
         title: `Nhiệt độ cực hạn trên thiết bị ${device_id}`,
-        description: `Nhiệt độ thiết bị vọt lên ${temperature} °C (vượt ngưỡng an toàn 85.0 °C).`,
+        description: `Nhiệt độ thiết bị vọt lên ${temperature} °C (vượt ngưỡng an toàn ${THRESHOLDS.CRITICAL_TEMPERATURE_C} °C).`,
         severity: SEVERITY_LEVELS.HIGH,
         status: ALERT_STATUSES.NEW,
         detected_at: new Date()
@@ -253,7 +276,7 @@ const checkTelemetryAnomalies = async (payload) => {
       // Smart Alert Routing
       const activeAdmins = getActiveAdminSessions();
       if (activeAdmins.length > 0) {
-        console.log(`[AlertRouter] Active Admins online: ${activeAdmins.join(', ')}. Suppressing email/Telegram, adding to Emergency Queue.`);
+        logger.info(`[AlertRouter] Active Admins online: ${activeAdmins.join(', ')}. Suppressing email/Telegram, adding to Emergency Queue.`);
         addEmergencyAlert({
           device_id,
           attack_type: ATTACK_TYPES.OVERHEAT,
@@ -261,7 +284,7 @@ const checkTelemetryAnomalies = async (payload) => {
           admin_users: activeAdmins
         });
       } else {
-        console.log('[AlertRouter] No active Admins online. Sending notifications via Email and Telegram.');
+        logger.info('[AlertRouter] No active Admins online. Sending notifications via Email and Telegram.');
         const alertText = `🚨 *SECURITY ALERT: CRITICAL OVERHEAT*\n\nDevice: *${device_id}*\nZone: *${zone || 'unknown'}*\nTemperature: *${temperature} °C*\nSeverity: *HIGH*`;
         await sendTelegramAlert(alertText);
         await sendEmailAlert({
@@ -329,17 +352,14 @@ const processStructuredLogs = async (payload) => {
       alert_title = `Phát hiện hành vi bất thường trên ${device_id}`;
     }
 
-    // Check recent alerts for this rule and device
-    const now = Date.now();
     const recentAlert = await Alert.findOne({
       device_id,
       rule_name,
-      status: ALERT_STATUSES.NEW,
-      detected_at: { $gt: new Date(now - 1.5 * 60 * 1000) }
+      status: { $in: [ALERT_STATUSES.NEW, ALERT_STATUSES.ACKNOWLEDGED] }
     });
 
     if (!recentAlert) {
-      console.log(`⚠️ [Anomaly Log Detection] Raised ${rule_name} on ${device_id}: ${message}`);
+      logger.warn(`[Anomaly Log Detection] Raised ${rule_name} on ${device_id}: ${message}`);
       
       const alert = await Alert.create({
         rule_name,
@@ -373,7 +393,7 @@ const processStructuredLogs = async (payload) => {
 
       // Telegram / Email alerts
       const alertText = `🚨 *CRITICAL SECURITY ALERT: ${rule_name}*\n\nDevice: *${device_id}*\nZone: *${zone || 'unknown'}*\nEvent: *${event}*\nMessage: _${message}_\nSeverity: *${severity}*`;
-      sendTelegramAlert(alertText).catch(err => console.error('[MqttService] Telegram send error:', err));
+      sendTelegramAlert(alertText).catch(err => logger.error('[MqttService] Telegram send error:', err));
       sendEmailAlert({
         subject: `[ICS-GUARD CRITICAL] ${rule_name} on ${device_id}`,
         text: `Critical Alert: ${message} (Event: ${event})`,
@@ -383,7 +403,7 @@ const processStructuredLogs = async (payload) => {
                <p><strong>Event:</strong> ${event}</p>
                <p><strong>Log Details:</strong> ${message}</p>
                <p><strong>Action Taken:</strong> Flagged in SOC Dashboard and registered for AI analysis.</p>`
-      }).catch(err => console.error('[MqttService] Email send error:', err));
+      }).catch(err => logger.error('[MqttService] Email send error:', err));
     }
   }
 };

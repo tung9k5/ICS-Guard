@@ -1,6 +1,7 @@
 import connectDB from '../config/db.js';
 import User from './user.js';
 import Device from './device.js';
+import DeviceSensor from './deviceSensor.js';
 import AuditLog from './auditLog.js';
 import BlockedIp from './blockedIp.js';
 import RefreshToken from './refreshToken.js';
@@ -14,6 +15,7 @@ const db = {
   connectDB,
   User,
   Device,
+  DeviceSensor,
   AuditLog,
   BlockedIp,
   RefreshToken,
@@ -28,6 +30,7 @@ export {
   connectDB,
   User,
   Device,
+  DeviceSensor,
   AuditLog,
   BlockedIp,
   RefreshToken,

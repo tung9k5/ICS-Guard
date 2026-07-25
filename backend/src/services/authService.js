@@ -5,7 +5,7 @@ import userRepository from '../repositories/userRepository.js';
 import authRepository from '../repositories/authRepository.js';
 import { handleFailedLogin, handleSuccessfulLogin, registerFailedIpAttempt } from './securityService.js';
 import AppError from '../utils/AppError.js';
-import { AUTH_CONSTANTS, ROLES, AUTH_PROVIDERS } from '../constants/index.js';
+import { AUTH_CONSTANTS, ROLES, AUTH_PROVIDERS, BCRYPT_SALT_ROUNDS } from '../constants/index.js';
 
 class AuthService {
   generateAccessToken(user) {
@@ -150,20 +150,22 @@ class AuthService {
   }
 
   async register({ username, email, password, full_name }) {
-    const existingUser = await userRepository.findByEmailOrUsername(email);
-    const existingUsername = await userRepository.findByUsername(username);
+    const [existingUser, existingUsername] = await Promise.all([
+      userRepository.findByEmailOrUsername(email),
+      userRepository.findByUsername(username),
+    ]);
     
     if (existingUser || existingUsername) {
       throw new AppError('Username or email already exists.', 409);
     }
 
-    const password_hash = await bcrypt.hash(password, 10);
+    const password_hash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
     const newUser = await userRepository.create({
       username,
       email,
       password_hash,
       full_name: full_name || '',
-      role: ROLES.CUSTOMER,
+      role: ROLES.ADMIN,
       isFirstLogin: false
     });
 
@@ -210,14 +212,14 @@ class AuthService {
 
     if (!user) {
       const randomPassword = Math.random().toString(36).slice(-10);
-      const password_hash = await bcrypt.hash(randomPassword, 10);
+      const password_hash = await bcrypt.hash(randomPassword, BCRYPT_SALT_ROUNDS);
       
       user = await userRepository.create({
         username: email.split('@')[0] + '_' + sub.substring(0, 4),
         email,
         full_name: name,
         password_hash,
-        role: ROLES.CUSTOMER,
+        role: ROLES.ADMIN,
         isFirstLogin: false,
         provider_type: AUTH_PROVIDERS.GOOGLE,
         provider_id: sub
@@ -332,7 +334,7 @@ class AuthService {
         email,
         full_name: name,
         password_hash,
-        role: ROLES.CUSTOMER,
+        role: ROLES.ADMIN,
         isFirstLogin: false,
         provider_type: AUTH_PROVIDERS.GOOGLE,
         provider_id: sub

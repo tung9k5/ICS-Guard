@@ -8,6 +8,7 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'Lax',
+    maxAge: AUTH_CONSTANTS.COOKIE_MAX_AGE, // 7 days — matches refresh token expiry
   };
   
   if (process.env.COOKIE_DOMAIN && process.env.COOKIE_DOMAIN !== 'localhost') {

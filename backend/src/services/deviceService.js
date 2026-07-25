@@ -10,6 +10,9 @@ import AppError from '../utils/AppError.js';
 import socketService from './socketService.js';
 import { parsePagination, buildSortOption } from '../utils/pagination.js';
 
+// Projection for device list/detail queries — avoids repeating the same field string
+const DEVICE_PROJECTION = '_id name type zone ipAddress ip_address macAddress mac_address description status location manufacturer serial_number uptime battery_level tags configuration current_scenario scenario_start_time createdAt updatedAt';
+
 class DeviceService {
   async getAll(queryParams, user) {
     const { search, status, type, order, page = 1, per_page = 10 } = queryParams;
@@ -42,17 +45,18 @@ class DeviceService {
       sortOption,
       skip,
       limitNumber,
-      '_id name type zone ipAddress ip_address macAddress mac_address description status location manufacturer serial_number uptime battery_level tags configuration createdAt updatedAt'
+      DEVICE_PROJECTION
     );
 
     return { devices, total, pageNumber, limitNumber };
   }
 
   async getById(id) {
-    const device = await deviceRepository.findById(id, '_id name type zone ipAddress ip_address macAddress mac_address description status location manufacturer serial_number uptime battery_level tags configuration createdAt updatedAt');
+    const device = await deviceRepository.findById(id, DEVICE_PROJECTION);
     if (!device) throw new AppError('Device not found', 404);
     return device;
   }
+
 
   async create(data, user) {
     const { name, type, ipAddress, ip_address, macAddress, description, status, node_type, _id, id, location, manufacturer, serial_number, uptime, battery_level, tags, configuration } = data;

@@ -132,6 +132,8 @@
       "table_actions": "Thao tác",
       "btn_edit": "Chỉnh sửa",
       "btn_delete": "Xóa thiết bị",
+      "btn_simulate": "Mô phỏng",
+      "no_description": "Không có mô tả",
       "mobile_id": "Mã",
       "mobile_name": "Tên thiết bị"
     },

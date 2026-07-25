@@ -5,6 +5,7 @@ import VInput from '@/components/VInput';
 import ApiDevice from '@/api/device';
 import DeviceList from '@/sections/DeviceManagement/DeviceList';
 import DeviceForm from '@/sections/DeviceManagement/DeviceForm';
+import SimulatorModal from '@/sections/DeviceManagement/SimulatorModal';
 import DeleteConfirmModal from '@/Dialog/DeleteConfirmModal';
 import VPagination from '@/components/VPagination';
 import VHeaderPage from '@/components/VHeaderPage';
@@ -14,7 +15,6 @@ import { toast } from '@/utils/toast';
 import { useTranslation } from 'react-i18next';
 import { useSelection } from '@/hooks/useSelection';
 import { useFetchList } from '@/hooks/useFetchList';
-import { DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
 import './DeviceManagement.scss';
  
 const DeviceManagement = () => {
@@ -42,6 +42,7 @@ const DeviceManagement = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingDevice, setEditingDevice] = useState(null);
+  const [simulatorDevice, setSimulatorDevice] = useState(null);
   const { selectedIds, handleSelect, handleSelectAll, clearSelection } = useSelection(devices, 'id', '_id');
   
   // Clear selection when data changes
@@ -77,6 +78,10 @@ const DeviceManagement = () => {
 
   const handleViewDevice = (device) => {
     toast.info(t('assets.view_details', { name: device.name, ip: device.ip_address }));
+  };
+
+  const handleSimulateDevice = (device) => {
+    setSimulatorDevice(device);
   };
 
   const handleBulkDelete = () => {
@@ -206,6 +211,7 @@ const DeviceManagement = () => {
           onEdit={handleEditDevice}
           onDelete={handleDeleteDevice}
           onView={handleViewDevice}
+          onSimulate={handleSimulateDevice}
           selectedIds={selectedIds}
           onSelect={handleSelect}
           onSelectAll={handleSelectAll}
@@ -232,6 +238,13 @@ const DeviceManagement = () => {
           device={editingDevice} 
           onClose={() => setIsFormOpen(false)} 
           onSuccess={handleFormSuccess}
+        />
+      )}
+
+      {simulatorDevice && (
+        <SimulatorModal 
+          device={simulatorDevice}
+          onClose={() => setSimulatorDevice(null)}
         />
       )}
 
