@@ -15,21 +15,21 @@ ICS-Guard là hệ thống giám sát an toàn mạng cho IoT/ICS, gồm các th
 ## 2. Kiến trúc hệ thống
 
 ```mermaid
-graph TD
-    Browser["🖥️ Browser (ReactJS)"] -->|HTTPS| Nginx["🔀 Nginx Proxy"]
-    Nginx -->|/api/*| Backend["⚙️ Backend (Express.js)"]
-    Nginx -->|/*| Frontend["🎨 Frontend (Vite)"]
+flowchart TD
+    Browser["Browser (ReactJS)"] -->|HTTPS| Nginx["Nginx Proxy"]
+    Nginx -->|/api/*| Backend["Backend (Express.js)"]
+    Nginx -->|/*| Frontend["Frontend (Vite)"]
 
-    Backend -->|Mongoose| MongoDB["🍃 MongoDB\n(Events, Users, Rules)"]
-    Backend -->|Line Protocol| InfluxDB["📈 InfluxDB\n(Telemetry Time-series)"]
-    Backend -->|AMQP| RabbitMQ["🐰 RabbitMQ\n(AI Analysis Queue)"]
-    Backend -->|MQTT TLS + AES| Mosquitto["📡 Mosquitto\n(IoT Broker)"]
-    Backend -->|Gemini/OpenAI API| AIServices["🤖 AI Services\n(Security Assistant)"]
+    Backend -->|Mongoose| MongoDB["MongoDB\n(Events, Users, Rules)"]
+    Backend -->|Line Protocol| InfluxDB["InfluxDB\n(Telemetry Time-series)"]
+    Backend -->|AMQP| RabbitMQ["RabbitMQ\n(AI Analysis Queue)"]
+    Backend -->|MQTT TLS + AES| Mosquitto["Mosquitto\n(IoT Broker)"]
+    Backend -->|Gemini/OpenAI API| AIServices["AI Services\n(Security Assistant)"]
 
-    IoTDevice["🔌 IoT/ICS Device"] -->|MQTT TLS| Mosquitto
+    IoTDevice["IoT/ICS Device"] -->|MQTT TLS| Mosquitto
 
     Backend -->|WebSocket| Browser
-    Backend -->|Email/Telegram| Notifications["📬 Notifications"]
+    Backend -->|Email/Telegram| Notifications["Notifications"]
 ```
 
 ## 3. Cài đặt môi trường
