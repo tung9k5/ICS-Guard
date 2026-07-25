@@ -18,6 +18,8 @@ const AuditManagement = lazy(() => import('@/pages/AuditManagement'));
 const AttackSimulator = lazy(() => import('@/pages/AttackSimulator'));
 const RuleManagement = lazy(() => import('@/pages/RuleManagement'));
 const AlertManagement = lazy(() => import('@/pages/AlertManagement'));
+const Settings = lazy(() => import('@/pages/Settings'));
+const Reports = lazy(() => import('@/pages/Reports'));
 const NotFound = lazy(() => import('@/pages/NotFound'));
 const UnderConstruction = lazy(() => import('@/pages/UnderConstruction'));
 const CustomerDashboard = lazy(() => import('@/pages/Customer/Dashboard'));
@@ -46,6 +48,8 @@ const AppRoutes = () => {
           <Route path={APP_ROUTES.SOC.ALERT_MANAGEMENT} element={<AlertManagement />} />
           <Route path={APP_ROUTES.SOC.AUDIT_MANAGEMENT} element={<AuditManagement />} />
           <Route path={APP_ROUTES.SOC.ATTACK_SIMULATOR} element={<AttackSimulator />} />
+          <Route path={APP_ROUTES.SOC.SETTINGS} element={<Settings />} />
+          <Route path={APP_ROUTES.SOC.REPORTS} element={<Reports />} />
         </Route>
         
         <Route element={<CustomerLayout />}>

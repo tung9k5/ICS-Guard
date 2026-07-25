@@ -8,6 +8,10 @@ RUN npm install --only=production
 
 COPY . .
 
-EXPOSE 5000
+# Run as non-root user for security
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
+EXPOSE 8000
 
 CMD ["npm", "start"]

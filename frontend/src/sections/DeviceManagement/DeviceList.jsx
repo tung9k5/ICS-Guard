@@ -15,6 +15,7 @@ const DeviceList = ({
   onEdit, 
   onDelete, 
   onView,
+  onSimulate,
   selectedIds = [],
   onSelect,
   onSelectAll
@@ -53,8 +54,8 @@ const DeviceList = ({
               <th>{t('assets.list.table_ip')}</th>
               <th>{t('assets.list.table_status')}</th>
               <th>{t('assets.list.table_desc')}</th>
-              <th>{t('common.created_at', 'Ngày tạo')}</th>
-              <th>{t('common.updated_at', 'Ngày cập nhật')}</th>
+              <th>{t('common.created_at')}</th>
+              <th>{t('common.updated_at')}</th>
               <th className="actions-col">{t('assets.list.table_actions')}</th>
             </tr>
           </thead>
@@ -64,6 +65,7 @@ const DeviceList = ({
               const isSelected = selectedIds.includes(id);
               const actions = [
                 { label: t('assets.list.btn_edit'), icon: Edit2, onClick: () => onEdit(device) },
+                { label: t('assets.list.btn_simulate'), icon: Activity, onClick: () => onSimulate && onSimulate(device) },
                 { label: t('assets.list.btn_delete'), icon: Trash2, danger: true, onClick: () => onDelete(id) }
               ];
 
@@ -99,7 +101,7 @@ const DeviceList = ({
                     />
                   </td>
                   <td className="text-muted" style={{ maxWidth: '14.2857rem' }}>
-                    <div className="truncate-text" title={device.description}>{device.description || 'không có mô tả'}</div>
+                    <div className="truncate-text" title={device.description}>{device.description || t('assets.list.no_description')}</div>
                   </td>
                   <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(device.createdAt)}</td>
                   <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(device.updatedAt)}</td>
@@ -138,6 +140,7 @@ const DeviceList = ({
           const isSelected = selectedIds.includes(id);
           const actions = [
             { label: t('assets.list.btn_edit'), icon: Edit2, onClick: () => onEdit(device) },
+            { label: t('assets.list.btn_simulate'), icon: Activity, onClick: () => onSimulate && onSimulate(device) },
             { label: t('assets.list.btn_delete'), icon: Trash2, danger: true, onClick: () => onDelete(id) }
           ];
 
@@ -193,11 +196,11 @@ const DeviceList = ({
                     <span className="detail-value text-muted">{device.description || '-'}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">{t('common.created_at', 'Ngày tạo')}</span>
+                    <span className="detail-label">{t('common.created_at')}</span>
                     <span className="detail-value">{formatDate(device.createdAt)}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">{t('common.updated_at', 'Ngày cập nhật')}</span>
+                    <span className="detail-label">{t('common.updated_at')}</span>
                     <span className="detail-value">{formatDate(device.updatedAt)}</span>
                   </div>
                 </div>

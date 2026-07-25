@@ -2,14 +2,12 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy file cấu hình package
-COPY package.json ./
+COPY package*.json ./
 
-# Cài đặt thư viện bằng npm
 RUN npm install
 
-# Copy toàn bộ mã nguồn
 COPY . .
 
-# Chạy ở chế độ phát triển (Dev)
-CMD ["npm", "run", "dev", "--", "--host"]
+EXPOSE 3000
+
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]

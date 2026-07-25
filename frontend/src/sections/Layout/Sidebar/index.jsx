@@ -140,20 +140,18 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, collapsed, setCollapsed }) =
             </NavLink>
           </NavGroup>
 
-          <NavGroup title={t('sidebar.admin_group', 'Quản trị hệ thống')} icon={Settings} collapsed={!isSidebarOpen} pathPrefixes={['/user-management', '/coming-soon']}>
+          <NavGroup title={t('sidebar.admin_group', 'Quản trị hệ thống')} icon={Settings} collapsed={!isSidebarOpen} pathPrefixes={['/user-management', '/reports', '/settings']}>
             <NavLink to="/user-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '0.5714rem 0.8571rem', minHeight: '2.8571rem' }}>
               <User size={18} />
               <span style={{ fontSize: '0.9286rem' }}>{t('layout.sidebar.users')}</span>
             </NavLink>
-            <NavLink to="/coming-soon" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '0.5714rem 0.8571rem', minHeight: '2.8571rem' }}>
+            <NavLink to="/reports" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '0.5714rem 0.8571rem', minHeight: '2.8571rem' }}>
               <FileText size={18} />
               <span style={{ fontSize: '0.9286rem', flex: 1 }}>{t('layout.sidebar.reports')}</span>
-              <span style={{ fontSize: '0.7143rem', padding: '0.1429rem 0.4286rem', background: 'rgba(59, 130, 246, 0.2)', color: 'var(--blue-400)', borderRadius: '0.7143rem', whiteSpace: 'nowrap' }}>{t('layout.sidebar.coming_soon', 'Sắp ra mắt')}</span>
             </NavLink>
-            <NavLink to="/coming-soon?settings" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '0.5714rem 0.8571rem', minHeight: '2.8571rem' }}>
+            <NavLink to="/settings" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '0.5714rem 0.8571rem', minHeight: '2.8571rem' }}>
               <Settings size={18} />
               <span style={{ fontSize: '0.9286rem', flex: 1 }}>{t('layout.sidebar.settings')}</span>
-              <span style={{ fontSize: '0.7143rem', padding: '0.1429rem 0.4286rem', background: 'rgba(59, 130, 246, 0.2)', color: 'var(--blue-400)', borderRadius: '0.7143rem', whiteSpace: 'nowrap' }}>{t('layout.sidebar.coming_soon', 'Sắp ra mắt')}</span>
             </NavLink>
           </NavGroup>
         </nav>

@@ -99,6 +99,14 @@ const deviceSchema = new mongoose.Schema({
   configuration: {
     type: mongoose.Schema.Types.Mixed,
   },
+  current_scenario: {
+    type: String,
+    default: 'NORMAL',
+  },
+  scenario_start_time: {
+    type: Date,
+    default: null,
+  },
   lastSeen: {
     type: Date,
     default: Date.now,

@@ -38,6 +38,9 @@ import dashboardRoutes from './routes/dashboardRoutes.js';
 import ruleRoutes from './routes/ruleRoutes.js';
 import alertRoutes from './routes/alertRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import settingRoutes from './routes/settingRoutes.js';
+import reportRoutes from './routes/reportRoutes.js';
+import simulatorRoutes from './routes/simulatorRoutes.js';
 
 const app = express();
 const server = http.createServer(app);
@@ -83,6 +86,9 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/rules', ruleRoutes);
 app.use('/api/alerts', alertRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/settings', settingRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/simulator', simulatorRoutes);
 
 app.use((err, req, res, next) => {
   logger.error('[Global Error]', { message: err.message, stack: err.stack });
@@ -95,6 +101,10 @@ app.use((err, req, res, next) => {
 
 const startServer = async () => {
   await connectDB();
+  
+  import('./services/settingService.js').then(module => {
+    module.default.seedDefaultSettings().catch(err => logger.error('Failed to seed settings', err));
+  });
 
   await initInflux();
 

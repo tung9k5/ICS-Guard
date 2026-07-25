@@ -25,6 +25,7 @@ frontend/
 │   │   ├── ActionMenu/           # Component menu hành động (dropdown).
 │   │   ├── DraggableChatbot/     # Component chatbot có thể kéo thả trên UI.
 │   │   ├── GlobalLoading/        # Component hiển thị trạng thái loading toàn trang.
+│   │   ├── ErrorBoundary/        # Component hiển thị trạng thái lỗi.
 │   │   ├── LanguageSwitcher/     # Component chuyển đổi ngôn ngữ.
 │   │   ├── VButton/              # Component nút bấm (Button) dùng chung.
 │   │   ├── VCheckbox/            # Component Checkbox.
