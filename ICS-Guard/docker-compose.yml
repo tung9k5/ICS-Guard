@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # 1. Frontend Dashboard (ReactJS)
+  # 1. Frontend Dashboard (React/Vite)
   frontend:
     build:
       context: ./frontend
@@ -16,11 +16,12 @@ services:
     environment:
       - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
       - VITE_GOOGLE_GSI_CLIENT_URL=${VITE_GOOGLE_GSI_CLIENT_URL}
+      - VITE_API_URL=${VITE_API_URL}
     depends_on:
       - backend
     restart: always
 
-  # 2. Backend API (FastAPI / NestJS)
+  # 2. Backend API (Node.js/Express)
   backend:
     build:
       context: ./backend
@@ -29,18 +30,35 @@ services:
     volumes:
       - ./backend:/app
       - /app/node_modules
+      - ./shared:/shared
     environment:
       - PORT=8000
-      - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME:-admin}:${MONGO_INITDB_ROOT_PASSWORD:-123456}@mongodb:27017/${MONGO_DB}?authSource=admin
+      - NODE_ENV=${NODE_ENV}
+      - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongodb:27017/${MONGO_DB}?authSource=admin&tls=true&tlsCAFile=/app/src/certs/ca.crt&tlsAllowInvalidHostnames=true
       - MONGO_DB=${MONGO_DB}
-      - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER:-guest}:${RABBITMQ_DEFAULT_PASS:-guest}@rabbitmq:5672/
+      - RABBITMQ_URL=amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672/
       - INFLUXDB_URL=http://influxdb:8086
-      - JWT_SECRET=${JWT_SECRET}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - JWT_ACCESS_EXPIRY=${JWT_ACCESS_EXPIRY}
+      - JWT_REFRESH_EXPIRY=${JWT_REFRESH_EXPIRY}
+      - DEVICE_API_KEY=${DEVICE_API_KEY}
+      - SIMULATOR_API_KEY=${SIMULATOR_API_KEY}
+      - ATTACK_SIMULATOR_API_KEY=${ATTACK_SIMULATOR_API_KEY}
+      - AES_SECRET_KEY=${AES_SECRET_KEY}
+      - AES_IV=${AES_IV}
       - FRONTEND_URL=${FRONTEND_URL}
+      - REDIS_URL=rediss://:${REDIS_PASSWORD}@redis:6379
+      - AI_ENGINE_URL=https://ai-engine:5000
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - ALLOW_INSECURE_TLS=${ALLOW_INSECURE_TLS}
+      - NODE_EXTRA_CA_CERTS=/app/src/certs/ca.crt
+      - REQUIRE_TLS=true
     depends_on:
       - mongodb
       - rabbitmq
       - influxdb
+      - redis
     restart: always
 
   # 3. MongoDB (Event DB - Lưu sự kiện, rule, incident)
@@ -49,11 +67,13 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
       - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+    command: ["mongod", "--tlsMode", "preferTLS", "--tlsCertificateKeyFile", "/certs/mongodb.pem", "--tlsCAFile", "/certs/ca.crt"]
     ports:
       - "${MONGO_PORT:-27017}:27017"
     volumes:
       - mongodb_data:/data/db
       - ./infrastructure/mongodb/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+      - ./infrastructure/mongodb/certs:/certs:ro
     restart: always
 
   # 4. InfluxDB (Time-series DB - Lưu telemetry từ thiết bị)
@@ -94,6 +114,25 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
     restart: always
 
+  # 6.5. Redis (Distributed Cache & Rate Limiting)
+  redis:
+    image: redis:7-alpine
+    command: >
+      redis-server
+      --port 0
+      --tls-port 6379
+      --tls-cert-file /certs/redis.crt
+      --tls-key-file /certs/redis.key
+      --tls-ca-cert-file /certs/ca.crt
+      --tls-auth-clients no
+      --requirepass ${REDIS_PASSWORD}
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./infrastructure/redis/certs:/certs:ro
+    restart: always
+
   # 7. Nginx (Firewall/Proxy)
   nginx:
     image: nginx:alpine
@@ -115,8 +154,22 @@ services:
       - "${AI_ENGINE_PORT:-5000}:5000"
     volumes:
       - ./ai-engine:/app
-    command: uvicorn main:app --host 0.0.0.0 --port 5000 --reload
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5:3b}
+    command: uvicorn main:app --host 0.0.0.0 --port 5000 --reload --ssl-keyfile /app/app/certs/ai-engine.key --ssl-certfile /app/app/certs/ai-engine.crt
     restart: always
+
+  # 8.5. Ollama (AI Local Model)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ics_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c", "ollama serve & sleep 10 && ollama pull $${OLLAMA_MODEL:-qwen2.5:3b} && wait"]
 
   # 9. IoT Device Simulator (Python Asyncio)
   simulator:
@@ -127,6 +180,11 @@ services:
       - MQTT_HOST=mosquitto
       - MQTT_PORT=8883
       - BACKEND_URL=http://backend:8000
+      - DEVICE_API_KEY=${DEVICE_API_KEY}
+      - SIMULATOR_API_KEY=${SIMULATOR_API_KEY}
+      - AES_SECRET_KEY=${AES_SECRET_KEY}
+      - AES_IV=${AES_IV}
+      - ALLOW_INSECURE_TLS=${ALLOW_INSECURE_TLS}
     depends_on:
       - mosquitto
       - backend
@@ -139,3 +197,5 @@ volumes:
   mosquitto_data:
   mosquitto_log:
   rabbitmq_data:
+  ollama_data:
+  redis_data:

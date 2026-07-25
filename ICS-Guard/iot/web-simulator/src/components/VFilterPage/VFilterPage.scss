@@ -1,0 +1,147 @@
+.v-filter-page {
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--slate-200);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--white);
+
+  .filter-search {
+    flex: 1;
+    min-width: 250px;
+    max-width: 400px;
+
+    .search-input {
+      margin-bottom: 0;
+      
+      .v-input-field {
+        background: var(--slate-50);
+        border: 1px solid var(--slate-200);
+        color: var(--slate-700);
+        box-shadow: none;
+        padding-top: 8px;
+        padding-bottom: 8px;
+        height: 38px;
+        border-radius: 6px;
+        
+        &::placeholder {
+          color: var(--slate-400);
+          font-size: 14px;
+        }
+
+        &:focus {
+          background: var(--white);
+          border-color: var(--blue-500);
+          box-shadow: 0 0 0 1px var(--blue-500);
+        }
+      }
+
+      .icon {
+        color: var(--slate-400);
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
+
+  .filter-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px 16px;
+
+    .filter-search {
+      max-width: 100%;
+      width: 100%;
+      min-width: unset;
+    }
+
+    .filter-actions {
+      width: 100%;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+
+      > * {
+        width: 100%;
+        max-width: 100%;
+      }
+    }
+  }
+}
+
+/* Global utility class for standard filter selects used within VFilterPage */
+.v-filter-select {
+  box-sizing: border-box;
+  padding: 0 32px 0 12px;
+  border-radius: 6px;
+  border: 1px solid var(--slate-200);
+  background-color: var(--slate-50);
+  color: var(--slate-600);
+  font-size: 14px;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 14px;
+  transition: all 0.2s ease;
+  height: 38px;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--slate-300);
+  }
+
+  &:focus {
+    background-color: var(--white);
+    border-color: var(--blue-500);
+    box-shadow: 0 0 0 1px var(--blue-500);
+    color: var(--slate-900);
+  }
+}
+
+.filter-select-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+
+  .v-filter-select {
+    width: 100%;
+  }
+
+  .clear-icon {
+    position: absolute;
+    right: 30px;
+    cursor: pointer;
+    color: var(--slate-400);
+
+    &:hover {
+      color: var(--slate-700);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .v-filter-page .filter-actions > .filter-select-wrapper {
+    display: flex;
+    width: 100%;
+  }
+
+  .v-filter-page .filter-actions > .v-filter-select {
+    width: 100%;
+  }
+}
+
+/* Alias: shorthand class for inline selects in filter bars */
+.v-select-filter {
+  @extend .v-filter-select;
+}

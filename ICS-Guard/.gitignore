@@ -5,6 +5,8 @@ Thumbs.db
 # Environment
 .env
 .env.local
+.env.*.local
+!.env.example
 .venv
 venv/
 ENV/
@@ -14,6 +16,7 @@ run.txt
 node_modules/
 npm-debug.log
 yarn-error.log
+*.timestamp-*.mjs
 
 # Python
 __pycache__/
@@ -36,3 +39,18 @@ logs/
 
 # Docker
 docker-compose.override.yml
+
+# Test artifacts
+backend/tests/manual/
+
+# Secrets & Certificates
+*.key
+*.pem
+*.csr
+*.srl
+
+backend/src/certs/
+ai-engine/app/certs/
+infrastructure/**/certs/
+iot/certs/
+iot/certificates/

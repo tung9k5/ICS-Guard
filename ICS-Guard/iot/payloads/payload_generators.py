@@ -63,7 +63,7 @@ def generate_gateway_payload(device, state):
             "cpu_usage": round(cpu, 2),
             "memory_usage": round(mem, 2),
             "bytes_per_second": bps,
-            "packet_forward_rate": pkt_rate
+            "packet_rate": pkt_rate
         },
         "logs": logs,
         "status": "active"
@@ -76,13 +76,17 @@ def generate_controller_payload(device, state):
     
     cpu = 18.0
     scan_time = 12.0 # ms
+    mem = 35.0
+    pkt_rate = 80
     bps = 8000
     logs = []
     
     if state == "logic_tampering":
         cpu = random.uniform(65.0, 85.0)
+        mem = random.uniform(50.0, 75.0)
         scan_time = random.uniform(45.0, 75.0) # elevated execution time
         bps = random.randint(9000, 12000)
+        pkt_rate = random.randint(120, 350)
         logs.append({
             "timestamp": get_timestamp(),
             "log_level": "CRITICAL",
@@ -98,8 +102,10 @@ def generate_controller_payload(device, state):
             "message": f"Scan cycle execution took {round(scan_time, 2)}ms (Limit: 50.0ms)"
         })
     elif state == "modbus_flooding":
-        cpu = random.uniform(50.0, 75.0)
-        bps = random.randint(60000, 95000)
+        cpu = random.uniform(85.0, 99.0)
+        mem = random.uniform(75.0, 95.0)
+        bps = random.randint(120000, 260000)
+        pkt_rate = random.randint(3000, 5200)
         logs.append({
             "timestamp": get_timestamp(),
             "log_level": "WARN",
@@ -117,8 +123,10 @@ def generate_controller_payload(device, state):
             })
     else:
         cpu += random.uniform(-1.0, 1.0)
+        mem += random.uniform(-1.0, 1.0)
         scan_time += random.uniform(-0.5, 0.5)
         bps += random.randint(-500, 500)
+        pkt_rate += random.randint(-10, 10)
         if random.random() < 0.05:
             logs.append({
                 "timestamp": get_timestamp(),
@@ -136,8 +144,10 @@ def generate_controller_payload(device, state):
         "timestamp": get_timestamp(),
         "metrics": {
             "cpu_usage": round(cpu, 2),
+            "memory_usage": round(mem, 2),
             "scan_cycle_time_ms": round(scan_time, 2),
-            "bytes_per_second": bps
+            "bytes_per_second": bps,
+            "packet_rate": pkt_rate
         },
         "logs": logs,
         "status": "active"
