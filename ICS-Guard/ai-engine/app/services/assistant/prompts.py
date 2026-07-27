@@ -1,5 +1,5 @@
 from typing import List
-from app.core.models import Incident, Alert
+from app.models.schemas import Incident, Alert
 
 def get_incident_analysis_prompt(incident: Incident, alerts: List[Alert]) -> str:
     """

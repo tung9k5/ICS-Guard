@@ -1,6 +1,6 @@
 from typing import List, Optional
 from datetime import datetime
-from app.core.models import Alert, Incident
+from app.models.schemas import Alert, Incident
 from app.core.constants import Severity, IncidentStatus
 
 class AlertCorrelator:

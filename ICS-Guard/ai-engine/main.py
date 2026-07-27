@@ -1,10 +1,26 @@
-from fastapi import FastAPI, HTTPException
-from typing import List
+import os
+from pathlib import Path
+
+
+def load_root_environment():
+    """Load the shared root .env without adding another runtime dependency."""
+    env_path = Path(__file__).resolve().parent.parent / ".env"
+    if not env_path.exists():
+        return
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip())
+
+
+load_root_environment()
+
+from fastapi import FastAPI
 import uvicorn
 
-# Import các models và hàm xử lý của chúng ta
-from app.core.models import Incident, Alert, AIAnalysis
-from app.assistant.analyzer import analyze_incident
+from app.api.routes import router
 
 app = FastAPI(
     title="ICS-Guard AI Engine API",
@@ -12,24 +28,9 @@ app = FastAPI(
     version="1.0.0"
 )
 
-@app.post("/api/v1/analyze", response_model=AIAnalysis, tags=["AI Assistant"])
-async def api_analyze_incident(incident: Incident, alerts: List[Alert]):
-    """
-    Nhận thông tin Incident và danh sách Alerts từ client, 
-    sau đó gửi cho AI (Ollama) phân tích và trả về báo cáo JSON.
-    """
-    try:
-        # Gọi hàm AI Analyzer mà chúng ta đã viết
-        analysis_result = analyze_incident(
-            incident=incident,
-            alerts=alerts,
-            model_name="llama3.1:latest" # Bạn có thể đặt model name vào tham số hoặc env
-        )
-        return analysis_result
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Lỗi khi gọi AI: {str(e)}")
+app.include_router(router)
 
 # Nếu bạn muốn chạy file này trực tiếp
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    reload_enabled = os.getenv("AI_RELOAD", "false").lower() == "true"
+    uvicorn.run("main:app", host="0.0.0.0", port=5000, reload=reload_enabled)

@@ -1,5 +1,5 @@
 from typing import List
-from app.core.models import Device, DeviceCVE, Alert
+from app.models.schemas import Device, DeviceCVE, Alert
 from app.core.constants import Severity, AlertStatus
 
 class RiskScorer:

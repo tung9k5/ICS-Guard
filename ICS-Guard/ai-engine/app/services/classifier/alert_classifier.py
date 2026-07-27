@@ -1,4 +1,4 @@
-from app.core.models import Alert
+from app.models.schemas import Alert
 from app.core.constants import Severity
 
 class AlertClassifier:

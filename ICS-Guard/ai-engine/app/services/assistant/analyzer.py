@@ -2,9 +2,9 @@ import requests
 import json
 from datetime import datetime
 from typing import List
-from app.core.models import Incident, Alert, AIAnalysis, MitreAttackMapping, RemediationAdvice
+from app.models.schemas import Incident, Alert, AIAnalysis, MitreAttackMapping, RemediationAdvice
 from app.core.constants import Severity
-from app.assistant.prompts import get_incident_analysis_prompt
+from app.services.assistant.prompts import get_incident_analysis_prompt
 from app.core.config import settings
 
 def analyze_incident(incident: Incident, alerts: List[Alert], model_name: str = None) -> AIAnalysis:

@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
 from typing import Optional
-from app.core.models import RawEvent, IoTTelemetry, NetworkTraffic
+from app.models.schemas import RawEvent, IoTTelemetry, NetworkTraffic
 
 class LogParser:
     @staticmethod
