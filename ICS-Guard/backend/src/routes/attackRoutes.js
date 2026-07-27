@@ -2,6 +2,7 @@ import express from 'express';
 import { launchAttack, getAttackDevices, deleteAttackDevice, deleteMultipleAttackDevices } from '../controllers/attackController.js';
 import { authorize } from '../middlewares/rbacMiddleware.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
+import attackAuthMiddleware from '../middlewares/attackAuthMiddleware.js';
 
 const router = express.Router();
 /**
@@ -37,7 +38,7 @@ const router = express.Router();
  *       500:
  *         description: Failed to publish attack command
  */
-router.post('/launch', launchAttack);
+router.post('/launch', attackAuthMiddleware, launchAttack);
 
 /**
  * @openapi

@@ -5,7 +5,9 @@ import {
   createRule,
   updateRule,
   deleteRule,
-  deleteMultipleRules
+  deleteMultipleRules,
+  backtestRule,
+  getRuleTemplates
 } from '../controllers/ruleController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 import { authorize } from '../middlewares/rbacMiddleware.js';
@@ -50,12 +52,14 @@ router.use(authMiddleware);
  *         description: Success
  */
 router.get('/', getAllRules);
+router.get('/templates', getRuleTemplates);
+router.post('/backtest', authorize(['admin', 'analyst']), backtestRule);
 router.get('/:id', getRuleById);
 
 // Admin / L2, L3 only for modifying rules
-router.post('/', authorize(['admin', 'l3_manager', 'l2_responder']), auditLogger('RULE_CREATE'), createRule);
-router.put('/:id', authorize(['admin', 'l3_manager', 'l2_responder']), auditLogger('RULE_UPDATE'), updateRule);
-router.delete('/:id', authorize(['admin', 'l3_manager']), auditLogger('RULE_DELETE'), deleteRule);
-router.post('/bulk-delete', authorize(['admin', 'l3_manager']), auditLogger('RULE_BULK_DELETE'), deleteMultipleRules);
+router.post('/', authorize(['admin', 'analyst']), auditLogger('RULE_CREATE'), createRule);
+router.put('/:id', authorize(['admin', 'analyst']), auditLogger('RULE_UPDATE'), updateRule);
+router.delete('/:id', authorize(['admin', 'analyst']), auditLogger('RULE_DELETE'), deleteRule);
+router.post('/bulk-delete', authorize(['admin', 'analyst']), auditLogger('RULE_BULK_DELETE'), deleteMultipleRules);
 
 export default router;

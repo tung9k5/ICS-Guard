@@ -1,16 +1,31 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { Device, BlockedIp, AuditLog, User } from '../models/index.js';
+import socketService from './socketService.js';
+
+const userCache = new Map();
+
+export const backupDeletedUser = (userId, userData) => {
+  userCache.set(userId, userData);
+  setTimeout(() => {
+    userCache.delete(userId);
+  }, 5 * 60 * 1000); // 5 minutes
+};
 
 let bot = null;
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
 const chatId = process.env.TELEGRAM_CHAT_ID;
 const isBotConfigured = botToken && botToken !== 'YOUR_TELEGRAM_BOT_TOKEN';
+const isPollingEnabled = process.env.TELEGRAM_POLLING_ENABLED !== 'false';
 
 // Setup Mock Bot for test/simulation when token is missing
 const mockBot = {
   sendMessage: async (targetChatId, text, options) => {
     console.log(`\n--- [MOCK TELEGRAM BOT] MESSAGE SENT TO CHAT ${targetChatId} ---`);
-    console.log(text);
+    let cleanText = text;
+    if (process.env.NODE_ENV === 'production') {
+      cleanText = text.replace(/\b\d{6}\b/, '******');
+    }
+    console.log(cleanText);
     if (options && options.reply_markup) {
       console.log('Inline Buttons:');
       options.reply_markup.inline_keyboard.forEach(row => {
@@ -24,7 +39,11 @@ const mockBot = {
   },
   editMessageText: async (text, options) => {
     console.log(`\n--- [MOCK TELEGRAM BOT] MESSAGE EDITED (ID: ${options.message_id}) ---`);
-    console.log(text);
+    let cleanText = text;
+    if (process.env.NODE_ENV === 'production') {
+      cleanText = text.replace(/\b\d{6}\b/, '******');
+    }
+    console.log(cleanText);
     console.log('-----------------------------------------------------\n');
     return { message_id: options.message_id, text };
   },
@@ -36,7 +55,7 @@ const mockBot = {
 
 // Initialize the Telegram Bot
 export const initTelegramBot = () => {
-  if (isBotConfigured) {
+  if (isBotConfigured && isPollingEnabled) {
     console.log('[TelegramService] Initializing real Telegram Bot in polling mode...');
     try {
       bot = new TelegramBot(botToken, { polling: true });
@@ -55,8 +74,8 @@ export const initTelegramBot = () => {
           const param = args.join(':'); // handles IP address colons if any (though IPv4 has no colons)
 
           if (action === 'isolate_device') {
-            const deviceId = parseInt(param);
-            const device = await Device.findByPk(deviceId);
+            const deviceId = param;
+            const device = await Device.findById(String(deviceId));
             if (!device) {
               alertResponseText = '❌ Device not found.';
             } else if (device.status === 'isolated') {
@@ -79,7 +98,7 @@ export const initTelegramBot = () => {
             }
           } else if (action === 'block_ip') {
             const ipAddress = param;
-            const existingBlock = await BlockedIp.findOne({ where: { ipAddress } });
+            const existingBlock = await BlockedIp.findOne({ ipAddress });
 
             if (existingBlock && new Date(existingBlock.expiresAt) > new Date()) {
               alertResponseText = `⚠️ IP ${ipAddress} is already blocked.`;
@@ -87,11 +106,11 @@ export const initTelegramBot = () => {
               const expiresAt = new Date();
               expiresAt.setHours(expiresAt.getHours() + 24); // Block for 24 hours
 
-              await BlockedIp.upsert({
-                ipAddress,
-                reason: 'Brute-force lockout triggered via Telegram admin action',
-                expiresAt,
-              });
+              await BlockedIp.findOneAndUpdate(
+                { ipAddress },
+                { ipAddress, reason: 'Brute-force lockout triggered via Telegram admin action', expiresAt },
+                { upsert: true, new: true }
+              );
 
               // Write Audit Log
               await AuditLog.create({
@@ -104,6 +123,35 @@ export const initTelegramBot = () => {
               });
 
               alertResponseText = `✅ IP Address ${ipAddress} has been BLOCKED for 24 hours by Admin via Telegram.`;
+            }
+          } else if (action === 'undo_delete') {
+            const userId = param;
+            const userData = userCache.get(userId);
+
+            if (!userData) {
+              alertResponseText = '❌ Đã quá thời hạn 5 phút hoặc tài khoản không thể khôi phục.';
+            } else {
+              // Restore user
+              await User.create(userData);
+              userCache.delete(userId);
+
+              // Emit WebSocket sync
+              const io = socketService.getIo();
+              if (io) {
+                io.emit('USER_SYNC', { action: 'create', user: userData });
+              }
+
+              // Audit Log
+              await AuditLog.create({
+                userId: null,
+                username: 'TelegramBot (HR Action)',
+                action: `Restore User: ${userData.username}`,
+                ipAddress: 'Telegram_Bot_API',
+                userAgent: 'Telegram Bot',
+                details: JSON.stringify({ userId, username: userData.username, role: userData.role }),
+              });
+
+              alertResponseText = `✅ Đã khôi phục thành công tài khoản của "${userData.username}"!`;
             }
           } else {
             alertResponseText = '❌ Unknown action requested.';
@@ -142,7 +190,8 @@ export const initTelegramBot = () => {
       bot = mockBot;
     }
   } else {
-    console.log('[TelegramService] Telegram Bot is not configured or using default token. Running in Mock Mode.');
+    const reason = isPollingEnabled ? 'not configured or using default token' : 'polling disabled';
+    console.log(`[TelegramService] Telegram Bot ${reason}. Running in Mock Mode.`);
     bot = mockBot;
   }
 };
@@ -187,7 +236,7 @@ export const sendTelegramAlert = async (text, inlineButtons = [], customChatId =
   // 2. Định tuyến động: Gửi thông báo đến toàn bộ Admin và L3 Manager trong DB
   try {
     const activeResponders = await User.find({
-      role: { $in: ['admin', 'l3_manager'] },
+      role: { $in: ['admin', 'analyst'] },
       'contactInfo.telegramChatId': { $ne: null },
       isAlertEnabled: true
     });
@@ -242,8 +291,8 @@ export const simulateTelegramCallback = async (callbackData, messageText = 'Aler
   const param = args.join(':');
 
   if (action === 'isolate_device') {
-    const deviceId = parseInt(param);
-    const device = await Device.findByPk(deviceId);
+    const deviceId = param;
+    const device = await Device.findById(String(deviceId));
     if (!device) {
       alertResponseText = '❌ Device not found.';
     } else {
@@ -266,11 +315,11 @@ export const simulateTelegramCallback = async (callbackData, messageText = 'Aler
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24);
 
-    await BlockedIp.upsert({
-      ipAddress,
-      reason: 'Brute-force lockout triggered via Telegram admin action (Simulated)',
-      expiresAt,
-    });
+    await BlockedIp.findOneAndUpdate(
+      { ipAddress },
+      { ipAddress, reason: 'Brute-force lockout triggered via Telegram admin action (Simulated)', expiresAt },
+      { upsert: true, new: true }
+    );
 
     await AuditLog.create({
       userId: null,

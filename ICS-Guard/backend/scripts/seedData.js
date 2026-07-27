@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,44 +29,52 @@ async function seedDatabase() {
     await IncidentTimeline.deleteMany();
     await BlockedIp.deleteMany();
 
-    // 1. Seed Users (5 users corresponding to 5 roles)
-    const roles = ['admin', 'l1_analyst', 'l2_responder', 'l3_manager', 'ot_operator'];
+    // 1. Seed Users (the four canonical operational roles)
+    const roles = ['admin', 'hr_management', 'device_management', 'analyst'];
+    const demoPassword = process.env.DEMO_USER_PASSWORD || 'Demo@12345';
     const users = [];
     for (let i = 0; i < roles.length; i++) {
       const user = new User({
         username: `${roles[i]}_user`,
-        password_hash: await bcrypt.hash('password123', 10),
+        password_hash: await bcrypt.hash(demoPassword, 10),
         email: `${roles[i]}@ics-guard.com`,
         full_name: `${roles[i].replace('_', ' ').toUpperCase()} User`,
         role: roles[i],
-        is_active: true
+        is_active: true,
+        isFirstLogin: false
       });
       await user.save();
       users.push(user);
     }
-    console.log(`Created 5 users.`);
+    console.log(`Created ${users.length} demo users.`);
 
-    // 2. Seed Devices (15 devices)
+    // 2. Seed Devices from Simulator Config (50 devices)
     const devices = [];
-    const nodeTypes = ['gateway', 'controller', 'chip', 'sensor', 'actuator'];
-    const statuses = ['active', 'isolated', 'online', 'quarantined'];
-    for (let i = 1; i <= 15; i++) {
+    const configPath = path.join(__dirname, '../../iot/simulator/config.json');
+    const simulatorDevices = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    
+    for (const d of simulatorDevices) {
       const device = new Device({
-        _id: `DEV-${1000 + i}`,
-        name: `ICS Device ${i}`,
-        type: i % 3 === 0 ? 'PLC' : (i % 2 === 0 ? 'HMI' : 'IoT Sensor'),
-        zone: `Zone-${['A', 'B', 'C'][i % 3]}`,
-        ipAddress: `192.168.10.${10 + i}`,
-        macAddress: `00:1A:2B:3C:4D:${(10 + i).toString(16).padStart(2, '0').toUpperCase()}`,
-        status: statuses[i % statuses.length],
-        risk_score: Math.floor(Math.random() * 100),
-        node_type: nodeTypes[i % nodeTypes.length],
-        userId: users[i % users.length]._id
+        _id: d._id,
+        name: d.name,
+        type: d.type,
+        node_type: d.node_type || d.type.toLowerCase(),
+        zone: d.zone,
+        ipAddress: d.ipAddress,
+        macAddress: d.macAddress,
+        status: d.status || 'active',
+        risk_score: d.risk_score || 0,
+        api_key: d.api_key,
+        firmware_version: d.firmware_version,
+        hardware_model: d.hardware_model,
+        parent_id: d.parent_id,
+        icon_path: d.icon_path,
+        userId: users[0]._id
       });
       await device.save();
       devices.push(device);
     }
-    console.log(`Created 15 devices.`);
+    console.log(`Created ${devices.length} devices from simulator config.`);
 
     // 3. Seed Rules (15 rules)
     const rules = [];

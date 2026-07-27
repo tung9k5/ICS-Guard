@@ -1,0 +1,4 @@
+[
+  { "cve_id": "CVE-2023-3814", "description": "Modbus protocol vulnerability causing DoS", "severity": "HIGH", "cvss": 7.5 },
+  { "cve_id": "CVE-2021-38295", "description": "Siemens S7-1200 Buffer Overflow", "severity": "CRITICAL", "cvss": 9.8 }
+]

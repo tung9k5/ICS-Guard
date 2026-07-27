@@ -1,8 +1,35 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import axios from 'axios';
+import crypto from 'crypto';
 import { User, RefreshToken } from '../models/index.js';
 import { handleFailedLogin, handleSuccessfulLogin, registerFailedIpAttempt } from '../services/securityService.js';
+import { sendTelegramAlert } from '../services/telegramService.js';
+import { normalizeRole } from '../utils/roles.js';
+
+const hashToken = (token) => {
+  if (!token) return '';
+  return crypto.createHash('sha256').update(token).digest('hex');
+};
+
+// -----------------------------------------------
+// In-memory OTP store (không cần Redis)
+// Format: { chatId: { code, expiresAt, attempts } }
+// -----------------------------------------------
+const telegramOtpStore = new Map();
+const OTP_TTL_MS = 5 * 60 * 1000;    // 5 phút
+const OTP_MAX_ATTEMPTS = 5;           // Tối đa 5 lần nhập sai
+
+// Dọn OTP hết hạn mỗi 10 phút
+const cleanupTimer = setInterval(() => {
+  const now = Date.now();
+  for (const [key, val] of telegramOtpStore.entries()) {
+    if (now > val.expiresAt) telegramOtpStore.delete(key);
+  }
+}, 10 * 60 * 1000);
+if (cleanupTimer.unref) {
+  cleanupTimer.unref();
+}
 
 const generateAccessToken = (user) => {
   return jwt.sign(
@@ -10,9 +37,10 @@ const generateAccessToken = (user) => {
       id: user._id, 
       username: user.username, 
       role: user.role, 
-      isFirstLogin: user.isFirstLogin === undefined ? true : user.isFirstLogin 
+      isFirstLogin: user.isFirstLogin === undefined ? true : user.isFirstLogin,
+      telegramChatId: user.contactInfo ? user.contactInfo.telegramChatId : null
     },
-    process.env.JWT_SECRET || 'ics_guard_access_secret_key_2026_@_secure',
+    process.env.JWT_ACCESS_SECRET,
     { expiresIn: process.env.JWT_ACCESS_EXPIRY || '30d' }
   );
 };
@@ -20,14 +48,15 @@ const generateAccessToken = (user) => {
 const generateRefreshToken = (user) => {
   return jwt.sign(
     { id: user._id },
-    process.env.JWT_SECRET || 'ics_guard_refresh_secret_key_2026_@_secure',
+    process.env.JWT_REFRESH_SECRET,
     { expiresIn: process.env.JWT_REFRESH_EXPIRY || '365d' }
   );
 };
 
 export const login = async (req, res) => {
-  console.log('[Login Request Body]', req.body);
-  const emailInput = req.body.email;
+  const rawUsername = req.body.username || req.body.username_or_email || req.body.email;
+  console.log('[Login Request] Attempt by:', typeof rawUsername === 'string' ? rawUsername.trim() : rawUsername);
+  const emailInput = typeof rawUsername === 'string' ? rawUsername.trim() : rawUsername;
   const { password } = req.body;
   const rawIp = req.ip || req.connection.remoteAddress;
   const ipAddress = rawIp.replace(/^::ffff:/, '');
@@ -77,6 +106,11 @@ export const login = async (req, res) => {
     }
 
     // Successful login
+    const canonicalRole = normalizeRole(user.role);
+    if (canonicalRole && canonicalRole !== user.role) {
+      user.role = canonicalRole;
+      await user.save();
+    }
     await handleSuccessfulLogin(user);
 
     // Generate tokens
@@ -90,7 +124,7 @@ export const login = async (req, res) => {
     // Save refresh token to database
     await RefreshToken.create({
       userId: user._id,
-      token: refreshToken,
+      token: hashToken(refreshToken),
       expiresAt,
     });
 
@@ -125,13 +159,13 @@ export const refresh = async (req, res) => {
     // 1. Verify token signature & expiry
     let decoded;
     try {
-      decoded = jwt.verify(refreshToken, process.env.JWT_SECRET || 'ics_guard_refresh_secret_key_2026_@_secure');
+      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     } catch (err) {
       return res.status(401).json({ error: 'Unauthorized', message: 'Invalid or expired refresh token.' });
     }
 
     // 2. Find token in DB
-    const dbToken = await RefreshToken.findOne({ token: refreshToken });
+    const dbToken = await RefreshToken.findOne({ token: hashToken(refreshToken) });
 
     // Token reuse detection (Security best practice)
     if (!dbToken || dbToken.revoked || new Date(dbToken.expiresAt) < new Date()) {
@@ -152,6 +186,12 @@ export const refresh = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized', message: 'User is locked, inactive, or no longer exists.' });
     }
 
+    const canonicalRole = normalizeRole(user.role);
+    if (canonicalRole && canonicalRole !== user.role) {
+      user.role = canonicalRole;
+      await user.save();
+    }
+
     // 4. Revoke the current refresh token (rotation)
     dbToken.revoked = true;
     await dbToken.save();
@@ -166,7 +206,7 @@ export const refresh = async (req, res) => {
     // 6. Save new refresh token
     await RefreshToken.create({
       userId: user._id,
-      token: newRefreshToken,
+      token: hashToken(newRefreshToken),
       expiresAt,
     });
 
@@ -201,7 +241,7 @@ export const logout = async (req, res) => {
   try {
     // Revoke refresh token
     const result = await RefreshToken.updateOne(
-      { token: refreshToken },
+      { token: hashToken(refreshToken) },
       { revoked: true }
     );
 
@@ -281,63 +321,55 @@ export const setupOnboarding = async (req, res) => {
 };
 
 export const register = async (req, res) => {
-  console.log('[Register Request Body]', req.body);
-  const { username, email, password, full_name } = req.body;
+  const allowPublic = process.env.ALLOW_PUBLIC_REGISTER === 'true';
+  if (!allowPublic) {
+    return res.status(403).json({
+      error: 'Forbidden',
+      message: 'Tính năng đăng ký tài khoản công khai bị vô hiệu hóa. Vui lòng liên hệ bộ phận nhân sự (HR) để tạo tài khoản.'
+    });
+  }
 
+  const { username, email, password, full_name, role } = req.body;
   if (!username || !email || !password) {
-    return res.status(400).json({ error: 'Bad Request', message: 'Username, email and password are required.' });
+    return res.status(400).json({ error: 'Bad Request', message: 'Username, email, and password are required.' });
   }
 
   try {
-    const existingUser = await User.findOne({
-      $or: [{ username }, { email }]
-    });
-
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
       return res.status(409).json({ error: 'Conflict', message: 'Username or email already exists.' });
     }
 
-    const password_hash = await bcrypt.hash(password, 10);
+    let finalRole = role || 'analyst';
+    if (finalRole === 'admin') {
+      finalRole = 'analyst';
+    }
 
+    finalRole = normalizeRole(finalRole);
+
+    const passwordHash = await bcrypt.hash(password, 10);
     const newUser = await User.create({
       username,
+      password_hash: passwordHash,
       email,
-      password_hash,
       full_name: full_name || '',
-      role: 'admin',
+      role: finalRole,
+      is_active: true,
       isFirstLogin: false
     });
 
-    const accessToken = generateAccessToken(newUser);
-    const refreshToken = generateRefreshToken(newUser);
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 365);
-
-    await RefreshToken.create({
-      userId: newUser._id,
-      token: refreshToken,
-      expiresAt,
-    });
-
     return res.status(201).json({
-      message: 'Registration successful.',
-      accessToken,
-      refreshToken,
-      access_token: accessToken,
-      refresh_token: refreshToken,
+      message: 'Registration successful',
       user: {
         id: newUser._id,
         username: newUser.username,
         email: newUser.email,
-        role: newUser.role,
-        isFirstLogin: false
+        role: newUser.role
       }
     });
-
   } catch (error) {
-    console.error('Registration error:', error);
-    return res.status(500).json({ error: 'Internal Server Error', message: 'Something went wrong.' });
+    console.error('Register error:', error);
+    return res.status(500).json({ error: 'Internal Server Error', message: 'Failed to register.' });
   }
 };
 
@@ -354,18 +386,9 @@ export const googleLogin = async (req, res) => {
     let user = await User.findOne({ email });
 
     if (!user) {
-      // Create user if not exists
-      // Generate a random password since they login with Google
-      const randomPassword = Math.random().toString(36).slice(-10);
-      const password_hash = await bcrypt.hash(randomPassword, 10);
-      
-      user = await User.create({
-        username: email.split('@')[0] + '_' + sub.substring(0, 4),
-        email,
-        full_name: name,
-        password_hash,
-        role: 'admin', // default role, adjust if needed
-        isFirstLogin: false
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'Tài khoản Google này chưa được cấp phép trong hệ thống. Vui lòng liên hệ bộ phận nhân sự (HR).'
       });
     }
 
@@ -381,6 +404,12 @@ export const googleLogin = async (req, res) => {
 
     await handleSuccessfulLogin(user);
 
+    const canonicalRole = normalizeRole(user.role);
+    if (canonicalRole && canonicalRole !== user.role) {
+      user.role = canonicalRole;
+      await user.save();
+    }
+
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
 
@@ -389,7 +418,7 @@ export const googleLogin = async (req, res) => {
 
     await RefreshToken.create({
       userId: user._id,
-      token: refreshToken,
+      token: hashToken(refreshToken),
       expiresAt,
     });
 
@@ -414,12 +443,100 @@ export const googleLogin = async (req, res) => {
   }
 };
 
+// ------------------------------------
+// Gửi mã OTP xác thực Telegram
+// ------------------------------------
+export const sendTelegramOtp = async (req, res) => {
+  const { telegramChatId } = req.body;
+
+  if (!telegramChatId) {
+    return res.status(400).json({ error: 'Bad Request', message: 'telegramChatId là bắt buộc.' });
+  }
+
+  // Kiểm tra gửi quá nhanh (còn OTP cũ chưa hết hạn và mới gửi < 30s)
+  const existing = telegramOtpStore.get(String(telegramChatId));
+  if (existing && Date.now() < existing.expiresAt && Date.now() < existing.sentAt + 30_000) {
+    const waitSec = Math.ceil((existing.sentAt + 30_000 - Date.now()) / 1000);
+    return res.status(429).json({ error: 'Too Many Requests', message: `Vui lòng đợi ${waitSec} giây trước khi gửi lại.` });
+  }
+
+  // Tạo mã OTP 6 số
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const expiresAt = Date.now() + OTP_TTL_MS;
+  const sentAt = Date.now();
+
+  telegramOtpStore.set(String(telegramChatId), { code, expiresAt, sentAt, attempts: 0 });
+
+  try {
+    console.log(`[AuthController] Gửi OTP (masked) đến Chat ID: ${telegramChatId}`);
+
+    const sent = await sendTelegramAlert(
+      `🔐 *ICS\-GUARD XÁC THỰC*\n\nMã xác nhận liên kết tài khoản của bạn là:\n\n*${code}*\n\n⏰ Mã này có hiệu lực trong *5 phút*\. Không chia sẻ mã này với bất kỳ ai\.`,
+      [],
+      telegramChatId
+    );
+
+    if (!sent) {
+      telegramOtpStore.delete(String(telegramChatId));
+      return res.status(500).json({
+        error: 'Telegram Error',
+        message: 'Không thể gửi tin nhắn. Hãy đảm bảo bạn đã chat \'/start\' với Bot trước.'
+      });
+    }
+
+    return res.status(200).json({ status: 'success', message: 'Mã xác nhận đã được gửi tới Telegram của bạn.' });
+  } catch (error) {
+    console.error('[AuthController] Lỗi gửi OTP Telegram:', error);
+    telegramOtpStore.delete(String(telegramChatId));
+    return res.status(500).json({ error: 'Internal Server Error', message: 'Gặp lỗi khi gửi mã xác nhận.' });
+  }
+};
+
+// ------------------------------------
+// Xác minh mã OTP Telegram
+// ------------------------------------
+export const verifyTelegramOtp = async (req, res) => {
+  const { telegramChatId, code } = req.body;
+
+  if (!telegramChatId || !code) {
+    return res.status(400).json({ error: 'Bad Request', message: 'telegramChatId và code là bắt buộc.' });
+  }
+
+  const record = telegramOtpStore.get(String(telegramChatId));
+
+  if (!record) {
+    return res.status(400).json({ error: 'Bad Request', message: 'Mã xác nhận không tồn tại hoặc đã hết hạn. Vui lòng gửi lại.' });
+  }
+
+  if (Date.now() > record.expiresAt) {
+    telegramOtpStore.delete(String(telegramChatId));
+    return res.status(400).json({ error: 'OTP Expired', message: 'Mã xác nhận đã hết hạn (5 phút). Vui lòng gửi lại.' });
+  }
+
+  record.attempts += 1;
+  if (record.attempts > OTP_MAX_ATTEMPTS) {
+    telegramOtpStore.delete(String(telegramChatId));
+    return res.status(429).json({ error: 'Too Many Attempts', message: 'Quá nhiều lần nhập sai. Vui lòng yêu cầu mã mới.' });
+  }
+
+  if (record.code !== String(code).trim()) {
+    const left = OTP_MAX_ATTEMPTS - record.attempts;
+    return res.status(400).json({ error: 'Invalid OTP', message: `Mã không đúng. Còn ${left} lần thử.` });
+  }
+
+  // Xác thực thành công — xóa OTP khỏi store
+  telegramOtpStore.delete(String(telegramChatId));
+  return res.status(200).json({ status: 'success', message: 'Xác thực Telegram thành công!' });
+};
+
 export default {
   login,
   refresh,
   logout,
   me,
   setupOnboarding,
+  sendTelegramOtp,
+  verifyTelegramOtp,
   register,
   googleLogin,
 };

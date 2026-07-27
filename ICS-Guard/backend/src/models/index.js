@@ -8,6 +8,7 @@ import Rule from './rule.js';
 import Alert from './alert.js';
 import Incident from './incident.js';
 import IncidentTimeline from './incidentTimeline.js';
+import Playbook from './playbook.js';
 
 const db = {
   connectDB,
@@ -20,6 +21,7 @@ const db = {
   Alert,
   Incident,
   IncidentTimeline,
+  Playbook,
 };
 
 export {
@@ -33,6 +35,7 @@ export {
   Alert,
   Incident,
   IncidentTimeline,
+  Playbook,
 };
 
 export default db;

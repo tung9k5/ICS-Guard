@@ -131,6 +131,17 @@ export const isolateDevice = async (device, triggeredBy = 'System', ipAddress = 
   device.status = 'isolated'; // or 'quarantined'
   await device.save();
 
+  // Emit WebSocket events to sync Frontend UI in real-time
+  try {
+    socketService.emitDeviceStatusChanged(device);
+    const io = socketService.getIo();
+    if (io) {
+      io.emit('DEVICE_SYNC', { action: 'update', device });
+    }
+  } catch (err) {
+    console.error('[SecurityService] Socket emit error:', err.message);
+  }
+
   // Automatically stop attack simulation on isolated device
   try {
     publishMqtt('ics/control/attack', { device_id: device._id, attack_type: 'stop' });

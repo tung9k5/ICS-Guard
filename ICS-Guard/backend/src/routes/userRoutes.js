@@ -14,66 +14,29 @@ router.use(authMiddleware);
  * @openapi
  * tags:
  *   name: Users
- *   description: User Management APIs (Roles: Admin, Analyst, Viewer)
+ *   description: User Management APIs
  */
 
 /**
  * @openapi
  * /api/users:
  *   get:
- *     summary: Get all users (Requires roles - Admin, Analyst, Viewer)
+ *     summary: Get all users
  *     tags: [Users]
  *     security:
  *       - BearerAuth: []
- *     parameters:
- *       - in: query
- *         name: role
- *         schema:
- *           type: string
- *         description: Filter by user role
- *       - in: query
- *         name: search
- *         schema:
- *           type: string
- *       - in: query
- *         name: status
- *         schema:
- *           type: string
- *       - in: query
- *         name: order
- *         schema:
- *           type: string
  *     responses:
  *       200:
  *         description: Success
- *         content:
- *           application/json:
- *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   _id:
- *                     type: string
- *                   username:
- *                     type: string
- *                   email:
- *                     type: string
- *                   role:
- *                     type: string
- *                   full_name:
- *                     type: string
- *                   is_active:
- *                     type: boolean
  */
-// GET /api/users - Admin, Analyst, Viewer
-router.get('/', authorize(['Admin', 'Analyst', 'Viewer']), getAllUsers);
+// GET /api/users - admin, hr_manager
+router.get('/', authorize(['admin', 'hr_management']), getAllUsers);
 
 /**
  * @openapi
  * /api/users/{id}:
  *   get:
- *     summary: Get user details by ID (Requires roles - Admin, Analyst, Viewer)
+ *     summary: Get user details by ID
  *     tags: [Users]
  *     security:
  *       - BearerAuth: []
@@ -86,11 +49,9 @@ router.get('/', authorize(['Admin', 'Analyst', 'Viewer']), getAllUsers);
  *     responses:
  *       200:
  *         description: Success
- *       404:
- *         description: User not found
  */
-// GET /api/users/:id - Admin, Analyst, Viewer
-router.get('/:id', authorize(['Admin', 'Analyst', 'Viewer']), getUserById);
+// GET /api/users/:id - admin, hr_manager
+router.get('/:id', authorize(['admin', 'hr_management']), getUserById);
 
 /**
  * @openapi
@@ -148,7 +109,7 @@ router.put('/profile', auditLogger('PROFILE_UPDATE'), updateProfile);
  *                 type: string
  *               role:
  *                 type: string
- *                 enum: [admin, l1_analyst, l2_responder, l3_manager, ot_operator]
+ *                 enum: [admin, hr_management, analyst, device_management]
  *               email:
  *                 type: string
  *               full_name:
@@ -157,8 +118,8 @@ router.put('/profile', auditLogger('PROFILE_UPDATE'), updateProfile);
  *       201:
  *         description: User created successfully
  */
-// POST /api/users - Admin only (Audited)
-router.post('/', authorize('Admin'), auditLogger('USER_CREATE'), createUser);
+// POST /api/users - admin, hr_manager (Audited)
+router.post('/', authorize(['admin', 'hr_management']), auditLogger('USER_CREATE'), createUser);
 
 /**
  * @openapi
@@ -183,7 +144,7 @@ router.post('/', authorize('Admin'), auditLogger('USER_CREATE'), createUser);
  *             properties:
  *               role:
  *                 type: string
- *                 enum: [admin, l1_analyst, l2_responder, l3_manager, ot_operator]
+ *                 enum: [admin, hr_management, analyst, device_management]
  *               is_active:
  *                 type: boolean
  *               password:
@@ -200,8 +161,8 @@ router.post('/', authorize('Admin'), auditLogger('USER_CREATE'), createUser);
  *       404:
  *         description: User not found
  */
-// PUT /api/users/:id - Admin only (Audited)
-router.put('/:id', authorize('Admin'), auditLogger('USER_UPDATE'), updateUser);
+// PUT /api/users/:id - admin, hr_manager (Audited)
+router.put('/:id', authorize(['admin', 'hr_management']), auditLogger('USER_UPDATE'), updateUser);
 
 /**
  * @openapi
@@ -223,9 +184,9 @@ router.put('/:id', authorize('Admin'), auditLogger('USER_UPDATE'), updateUser);
  *       404:
  *         description: User not found
  */
-// DELETE /api/users/:id - Admin only (Audited)
-router.delete('/:id', authorize('Admin'), auditLogger('USER_DELETE'), deleteUser);
-router.post('/bulk-delete', authorize('Admin'), auditLogger('USER_BULK_DELETE'), deleteMultipleUsers);
+// DELETE /api/users/:id - admin, hr_manager (Audited)
+router.delete('/:id', authorize(['admin', 'hr_management']), auditLogger('USER_DELETE'), deleteUser);
+router.post('/bulk-delete', authorize(['admin', 'hr_management']), auditLogger('USER_BULK_DELETE'), deleteMultipleUsers);
 
 // POST /api/users/heartbeat - Registered heartbeat for Admin users
 router.post('/heartbeat', (req, res) => {

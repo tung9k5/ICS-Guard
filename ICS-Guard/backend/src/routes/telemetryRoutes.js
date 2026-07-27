@@ -1,18 +1,23 @@
 import express from 'express';
-import { ingestTelemetryLog, controlAttackEndpoint, getBlockedIpsPublic, testTelegramConnectionEndpoint } from '../controllers/telemetryController.js';
+import { ingestTelemetryLog, controlAttackEndpoint, getBlockedIpsPublic, ingestSyslogEndpoint, ingestCsvEndpoint } from '../controllers/telemetryController.js';
+import deviceAuthMiddleware from '../middlewares/deviceAuthMiddleware.js';
+import attackAuthMiddleware from '../middlewares/attackAuthMiddleware.js';
 
 const router = express.Router();
 
-// Route kiểm tra kết nối Telegram Bot (Onboarding test connection)
-router.post('/test-telegram-connection', testTelegramConnectionEndpoint);
+// Route lấy danh sách IP bị chặn để đồng bộ tường lửa (Public có khóa API thiết bị)
+router.get('/blocked-ips', deviceAuthMiddleware, getBlockedIpsPublic);
 
-// Route lấy danh sách IP bị chặn để đồng bộ tường lửa (Public cho Gateway/Simulator)
-router.get('/blocked-ips', getBlockedIpsPublic);
+// Ingestion route for device simulators and log agents (Yêu cầu API key thiết bị)
+router.post('/ingest', deviceAuthMiddleware, ingestTelemetryLog);
 
-// Public ingestion route for device simulators and log agents
-router.post('/ingest', ingestTelemetryLog);
+// Route ingest Syslog (RFC 3164/5424)
+router.post('/syslog', deviceAuthMiddleware, ingestSyslogEndpoint);
 
-// Route for Attacker Console to trigger/stop attacks on devices
-router.post('/control-attack', controlAttackEndpoint);
+// Route ingest CSV Log
+router.post('/upload-logs', deviceAuthMiddleware, ingestCsvEndpoint);
+
+// Route for Attacker Console to trigger/stop attacks on devices (Bảo mật bằng Attack Auth)
+router.post('/control-attack', attackAuthMiddleware, controlAttackEndpoint);
 
 export default router;

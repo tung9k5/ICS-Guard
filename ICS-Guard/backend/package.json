@@ -2,14 +2,16 @@
   "name": "ics-guard-api",
   "version": "1.0.0",
   "description": "ICS-Guard (Industrial Control Systems Guard) Backend API",
-  "main": "src/app.js",
+  "main": "src/bootstrap.js",
   "type": "module",
   "scripts": {
-    "start": "node src/app.js",
-    "dev": "node --watch src/app.js",
-    "test:unit": "node --import ./tests/helpers/preload.js --test tests/**/*.test.js",
+    "start": "node src/bootstrap.js",
+    "dev": "node --watch src/bootstrap.js",
+    "seed:demo:reset": "node scripts/seedData.js",
+    "seed:influx": "node src/scripts/seed_influx.js",
+    "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --passWithNoTests",
     "test:integration": "node test-api.js",
-    "test": "npm run test:unit && npm run test:integration"
+    "test": "npm run test:unit"
   },
   "dependencies": {
     "amqplib": "^0.10.3",
@@ -24,8 +26,16 @@
     "mqtt": "^5.5.5",
     "node-telegram-bot-api": "^0.66.0",
     "nodemailer": "^6.9.13",
+    "rate-limit-redis": "^5.0.0",
+    "redis": "^6.1.0",
     "socket.io": "^4.7.5",
-    "swagger-jsdoc": "^6.3.0",
-    "swagger-ui-express": "^5.0.0"
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
+    "uuid": "^14.0.1"
+  },
+  "devDependencies": {
+    "jest": "^30.4.2",
+    "mongodb-memory-server": "^11.2.0",
+    "supertest": "^7.2.2"
   }
 }

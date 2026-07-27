@@ -5,7 +5,7 @@ import { successResponse, errorResponse, paginatedResponse } from '../utils/resp
 export const getAuditLogs = async (req, res) => {
   try {
     const { search, order, action, role, page = 1, per_page = 10 } = req.query;
-    
+
     let query = {};
 
     // Filter by action (exact match)
@@ -58,12 +58,12 @@ export const getAuditLogs = async (req, res) => {
       .skip(skip)
       .limit(limitNumber)
       .lean();
-    
+
     // Pre-fetch anonymous users by email in body
     const emailsToFetch = logs
       .filter(log => !log.userId && log.details?.body?.email)
       .map(log => log.details.body.email);
-    
+
     let anonymousUsersMap = {};
     if (emailsToFetch.length > 0) {
       const anonUsers = await User.find({ email: { $in: emailsToFetch } }).select('email role username _id').lean();
@@ -75,7 +75,7 @@ export const getAuditLogs = async (req, res) => {
 
     const formattedLogs = logs.map(log => {
       let user = log.userId;
-      
+
       if (!user && log.details?.body?.email) {
         user = anonymousUsersMap[log.details.body.email];
       }
@@ -95,7 +95,8 @@ export const getAuditLogs = async (req, res) => {
         action: log.action,
         ipAddress: log.ipAddress,
         userAgent: log.userAgent,
-        details: flatDetails,
+        details: log.details,
+        status: log.status,
         createdAt: log.createdAt,
       };
     });
@@ -113,7 +114,7 @@ export const getAuditLogs = async (req, res) => {
 export const getBlockedIps = async (req, res) => {
   try {
     const { search, order, page = 1, per_page = 10, ...filters } = req.query;
-    
+
     let query = {};
     if (search) {
       const searchRegex = new RegExp(search, 'i');

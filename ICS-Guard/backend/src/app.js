@@ -9,6 +9,8 @@ import { fileURLToPath } from 'url';
 import http from 'http';
 import swaggerUi from 'swagger-ui-express';
 import swaggerJsdoc from 'swagger-jsdoc';
+import RedisStore from 'rate-limit-redis';
+import redisClient from './config/redis.js';
 
 // Database context and models
 import { connectDB, User, Device, Rule } from './models/index.js';
@@ -34,9 +36,33 @@ import attackRoutes from './routes/attackRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import ruleRoutes from './routes/ruleRoutes.js';
 import alertRoutes from './routes/alertRoutes.js';
+import cveRoutes from './routes/cveRoutes.js';
+import playbookRoutes from './routes/playbookRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Security Fail-Fast Validation
+if (!process.env.JWT_ACCESS_SECRET || process.env.JWT_ACCESS_SECRET === 'ics_guard_access_secret_key_2026_@_secure' || process.env.JWT_ACCESS_SECRET.length < 32) {
+  console.error('[CRITICAL] JWT_ACCESS_SECRET is missing, default, or too weak. Must be at least 32 characters long. Halting application.');
+  process.exit(1);
+}
+
+if (!process.env.JWT_REFRESH_SECRET || process.env.JWT_REFRESH_SECRET === 'ics_guard_refresh_secret_key_2026_@_secure' || process.env.JWT_REFRESH_SECRET.length < 32) {
+  console.error('[CRITICAL] JWT_REFRESH_SECRET is missing, default, or too weak. Must be at least 32 characters long. Halting application.');
+  process.exit(1);
+}
+
+if (!process.env.AES_SECRET_KEY || process.env.AES_SECRET_KEY === '0123456789abcdef0123456789abcdef' || process.env.AES_SECRET_KEY.length !== 32) {
+  console.error('[CRITICAL] AES_SECRET_KEY is missing, default, or invalid. Must be exactly 32 bytes. Halting application.');
+  process.exit(1);
+}
+
+if (!process.env.AES_IV || process.env.AES_IV === 'abcdef9876543210' || process.env.AES_IV.length !== 16) {
+  console.error('[CRITICAL] AES_IV is missing, default, or invalid. Must be exactly 16 bytes. Halting application.');
+  process.exit(1);
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -55,21 +81,27 @@ app.set('trust proxy', 1);
 // 1. Apply global IP block middleware BEFORE any other route
 app.use(ipBlockMiddleware);
 
-// 1.5 Rate Limiting (Memory-based)
+// 1.5 Rate Limiting (Redis-based)
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 200, // Limit each IP to 200 requests per windowMs
   message: { error: 'TooManyRequests', message: 'Quá nhiều truy vấn từ IP của bạn, vui lòng thử lại sau 15 phút.' },
   standardHeaders: true,
   legacyHeaders: false,
+  store: new RedisStore({
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
 });
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 login requests per windowMs (chống Brute-force)
+  max: 20, // 20 login attempts per 15 minutes per IP
   message: { error: 'TooManyRequests', message: 'Tần suất đăng nhập quá cao, IP tạm khóa 15 phút để bảo vệ.' },
   standardHeaders: true,
   legacyHeaders: false,
+  store: new RedisStore({
+    sendCommand: (...args) => redisClient.sendCommand(args),
+  }),
 });
 
 // Apply global limiter to all routes
@@ -126,9 +158,6 @@ app.get('/', (req, res) => {
 
 // Mount Routes
 app.use('/api/auth', authLimiter, authRoutes);
-app.use('/api/v1/auth', authLimiter, authRoutes);
-app.use('/v1/auth', authLimiter, authRoutes);
-app.use('/auth', authLimiter, authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/devices', deviceRoutes);
 app.use('/api/audits', auditRoutes);
@@ -138,6 +167,9 @@ app.use('/api/attacks', attackRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/rules', ruleRoutes);
 app.use('/api/alerts', alertRoutes);
+app.use('/api/cves', cveRoutes);
+app.use('/api/playbooks', playbookRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {
@@ -148,92 +180,17 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Database Seeding Logic (Phương án A)
-const seedDatabase = async () => {
-  try {
-    // 1. Connect to MongoDB
-    await connectDB();
-
-    const seedDir = path.resolve(__dirname, '../../scripts/seed');
-    console.log(`[Bootstrap] Checking seed directory: ${seedDir}`);
-
-    // Helper to read and clean seed files (parsing standard Dates)
-    const parseSeedFile = (filename) => {
-      const filePath = path.join(seedDir, filename);
-      if (!fs.existsSync(filePath)) {
-        console.warn(`[Bootstrap] Seed file not found: ${filePath}`);
-        return null;
-      }
-      const content = fs.readFileSync(filePath, 'utf8');
-      const data = JSON.parse(content);
-      return data.map(item => {
-        const cleaned = { ...item };
-        // Map EJSON dates
-        if (cleaned.created_at && cleaned.created_at.$date) {
-          cleaned.createdAt = new Date(cleaned.created_at.$date);
-          delete cleaned.created_at;
-        }
-        if (cleaned.updated_at && cleaned.updated_at.$date) {
-          cleaned.updatedAt = new Date(cleaned.updated_at.$date);
-          delete cleaned.updated_at;
-        }
-        return cleaned;
-      });
-    };
-
-    // Seed Users (Force refresh to apply the new enterprise roles schema)
-    console.log('[Bootstrap] Checking if users seeding is needed...');
-    const userCount = await User.countDocuments();
-    if (userCount === 0) {
-      const usersData = parseSeedFile('users.json');
-      if (usersData && usersData.length > 0) {
-        for (let user of usersData) {
-          let plainPassword = 'User@123';
-          if (user.username === 'admin_soc') plainPassword = 'password';
-          else if (user.username === 'l1_analyst') plainPassword = 'L1@123';
-          else if (user.username === 'l2_responder') plainPassword = 'L2@123';
-          else if (user.username === 'l3_manager') plainPassword = 'L3@123';
-          else if (user.username === 'ot_operator') plainPassword = 'OT@123';
-          
-          user.password_hash = await bcrypt.hash(plainPassword, 10);
-          console.log(`[Bootstrap] Seeding user "${user.username}" with password "${plainPassword}"`);
-        }
-        await User.insertMany(usersData);
-        console.log(`[Bootstrap] Seeded ${usersData.length} users into MongoDB.`);
-      }
-    }
-
-    // Seed Devices (Force refresh to apply the new hierarchical schema)
-    const devicesData = parseSeedFile('devices.json');
-    if (devicesData && devicesData.length > 0) {
-      console.log('[Bootstrap] Wiping and re-seeding Devices collection to apply new schema...');
-      await Device.deleteMany({});
-      await Device.insertMany(devicesData);
-      console.log(`[Bootstrap] Seeded ${devicesData.length} devices into MongoDB.`);
-    }
-
-    // Seed Rules
-    const ruleCount = await Rule.countDocuments();
-    if (ruleCount === 0) {
-      const rulesData = parseSeedFile('rules.json');
-      if (rulesData && rulesData.length > 0) {
-        await Rule.insertMany(rulesData);
-        console.log(`[Bootstrap] Seeded ${rulesData.length} rules into MongoDB.`);
-      }
-    } else {
-      console.log(`[Bootstrap] Rules collection already has ${ruleCount} records. Skipping seeding.`);
-    }
-
-  } catch (error) {
-    console.error('[Bootstrap] Failed to sync and seed database:', error);
-    process.exit(1);
-  }
-};
-
 // Start Server
 const startServer = async () => {
-  // Sync databases & seed default assets
-  await seedDatabase();
+  // Connect to MongoDB
+  await connectDB();
+
+  // Connect to Redis
+  try {
+    await redisClient.connect();
+  } catch (err) {
+    console.warn('[Bootstrap] Redis connection failed, running on mock client:', err.message);
+  }
 
   // Initialize InfluxDB database
   await initInflux();
@@ -247,7 +204,7 @@ const startServer = async () => {
   } catch (err) {
     console.warn('[Bootstrap] Queue connection warning: RabbitMQ might be starting up in Docker. Worker will try auto-reconnecting...');
   }
-  
+
   // Initialize Telegram Bot
   initTelegramBot();
 
@@ -257,7 +214,9 @@ const startServer = async () => {
   server.listen(PORT, () => {
     console.log(`\n=============================================================`);
     console.log(`🛡️  ICS-GUARD SECURITY API RUNNING ON PORT ${PORT}  🛡️`);
-    console.log(`Database (MongoDB): ${process.env.MONGO_URI || 'mongodb://localhost:27017/ics_guard'}`);
+    const rawMongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/ics_guard';
+    const maskedMongoUri = rawMongoUri.replace(/mongodb(\+srv)?:\/\/([^:]+):([^@]+)@/, 'mongodb$1://$2:******@');
+    console.log(`Database (MongoDB): ${maskedMongoUri}`);
     console.log(`Time: ${new Date().toLocaleString()}`);
     console.log(`=============================================================\n`);
   });

@@ -71,6 +71,9 @@ const alertSchema = new mongoose.Schema({
   timestamps: true,
 });
 
+// Add TTL Index to automatically delete alerts older than 90 days (7776000 seconds)
+alertSchema.index({ createdAt: 1 }, { expireAfterSeconds: 7776000 });
+
 const Alert = mongoose.model('Alert', alertSchema);
 
 export default Alert;

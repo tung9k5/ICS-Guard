@@ -3,12 +3,16 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { writeTelemetry } from './influxService.js';
-import { Alert, Incident, IncidentTimeline, Device } from '../models/index.js';
-import { sendEmailAlert } from './emailService.js';
+import { writeTelemetry, writeDeviceEvent } from './influxService.js';
 import { sendTelegramAlert } from './telegramService.js';
+import { sendEmailAlert } from './emailService.js';
 import { getActiveAdminSessions, addEmergencyAlert } from './sessionRegistry.js';
 import socketService from './socketService.js';
+import redisClient from '../config/redis.js';
+import ruleEngineService from './ruleEngineService.js';
+import { executePlaybook } from './playbookService.js';
+import { Device, Alert, Incident, IncidentTimeline } from '../models/index.js';
+import { calculateAndUpdateRiskScore } from './riskService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,33 +22,59 @@ let MQTT_URL = process.env.MQTT_URL || 'mqtt://mosquitto:1883';
 let mqttClient = null;
 
 // AES-256-CBC Config for E2E Encryption
-const AES_SECRET_KEY = process.env.AES_SECRET_KEY || "0123456789abcdef0123456789abcdef";
-const AES_IV = process.env.AES_IV || "abcdef9876543210";
+export function decryptPayload(payloadObj) {
+    const aesSecret = process.env.AES_SECRET_KEY;
+    const aesIv = process.env.AES_IV;
+    let encryptedData = typeof payloadObj === 'string' ? payloadObj : payloadObj.encrypted_data;
+    const iv = payloadObj && payloadObj.iv;
+    const authTag = payloadObj && payloadObj.auth_tag;
+    const alg = payloadObj && payloadObj.alg;
 
-function decryptPayload(encryptedBase64) {
-    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(AES_SECRET_KEY), Buffer.from(AES_IV));
-    let decrypted = decipher.update(encryptedBase64, 'base64', 'utf8');
-    decrypted += decipher.final('utf8');
-    return JSON.parse(decrypted);
+    if (alg === 'AES-256-GCM' || (iv && authTag)) {
+        const decipher = crypto.createDecipheriv(
+            'aes-256-gcm',
+            Buffer.from(aesSecret),
+            Buffer.from(iv, 'base64')
+        );
+        decipher.setAuthTag(Buffer.from(authTag, 'base64'));
+        let decrypted = decipher.update(encryptedData, 'base64', 'utf8');
+        decrypted += decipher.final('utf8');
+        return JSON.parse(decrypted);
+    } else {
+        const decipher = crypto.createDecipheriv(
+            'aes-256-cbc',
+            Buffer.from(aesSecret),
+            Buffer.from(aesIv)
+        );
+        let decrypted = decipher.update(encryptedData, 'base64', 'utf8');
+        decrypted += decipher.final('utf8');
+        return JSON.parse(decrypted);
+    }
 }
 
 export const connectMqtt = () => {
-  const options = {};
+  const options = {
+    queueQoSZero: false, // Prevent OOM by not queueing QoS 0 messages when offline
+    queueLimit: 100 // Limit offline queue size
+  };
   
-  // Setup TLS configuration if ca.crt exists
+  // Setup TLS configuration
   const caCertPath = path.resolve(__dirname, '../certs/ca.crt');
-  if (fs.existsSync(caCertPath)) {
+  const requireTls = process.env.REQUIRE_TLS === 'true' || MQTT_URL.includes('8883') || MQTT_URL.startsWith('mqtts');
+
+  if (requireTls) {
+    if (!fs.existsSync(caCertPath)) {
+      // Fail-fast to prevent silent downgrade
+      throw new Error(`[MqttService] CRITICAL: TLS is required but ca.crt is missing at ${caCertPath}. Halting application.`);
+    }
+    
     console.log(`[MqttService] Found CA Certificate at: ${caCertPath}. Configuring TLS...`);
-    try {
-      options.ca = fs.readFileSync(caCertPath);
-      options.rejectUnauthorized = false; // Allow self-signed certificate hostname mismatches
-      
-      // Update protocol and port for TLS
-      if (MQTT_URL.startsWith('mqtt://')) {
-        MQTT_URL = MQTT_URL.replace('mqtt://', 'mqtts://').replace(':1883', ':8883');
-      }
-    } catch (err) {
-      console.error('[MqttService] Failed to load CA certificate:', err.message);
+    options.ca = fs.readFileSync(caCertPath);
+    options.rejectUnauthorized = process.env.ALLOW_INSECURE_TLS !== 'true'; 
+    
+    // Update protocol and port for TLS
+    if (MQTT_URL.startsWith('mqtt://')) {
+      MQTT_URL = MQTT_URL.replace('mqtt://', 'mqtts://').replace(':1883', ':8883');
     }
   }
 
@@ -69,17 +99,25 @@ export const connectMqtt = () => {
       
       // Decrypt E2E Payload if encrypted
       if (payload.encrypted_data) {
-        payload = decryptPayload(payload.encrypted_data);
+        payload = decryptPayload(payload);
       }
       
       // 1. Write to InfluxDB
       await writeTelemetry(payload);
  
-      // 2. Check metrics for anomalies
+      // 2. Check metrics for anomalies (Rule Engine)
       await checkTelemetryAnomalies(payload);
+
+      // 2.5. Run AI Anomaly Classification (ML Model)
+      await runAiClassification(payload);
 
       // 3. Process structured logs
       await processStructuredLogs(payload);
+
+      // 4. Update dynamic risk score in real-time
+      if (payload.device_id) {
+        calculateAndUpdateRiskScore(payload.device_id).catch(() => {});
+      }
     } catch (error) {
       // Ignore parsing errors for non-json
     }
@@ -94,12 +132,20 @@ export const publishMqtt = (topic, payload) => {
   if (mqttClient && mqttClient.connected) {
     const dataStr = typeof payload === 'string' ? payload : JSON.stringify(payload);
     
-    // Encrypt E2E Payload
-    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(AES_SECRET_KEY), Buffer.from(AES_IV));
+    // Encrypt E2E Payload using AES-256-GCM
+    const iv = crypto.randomBytes(12);
+    const aesSecret = process.env.AES_SECRET_KEY;
+    const cipher = crypto.createCipheriv('aes-256-gcm', Buffer.from(aesSecret), iv);
     let encrypted = cipher.update(dataStr, 'utf8', 'base64');
     encrypted += cipher.final('base64');
+    const authTag = cipher.getAuthTag().toString('base64');
     
-    const securePayload = JSON.stringify({ encrypted_data: encrypted });
+    const securePayload = JSON.stringify({
+      encrypted_data: encrypted,
+      iv: iv.toString('base64'),
+      auth_tag: authTag,
+      alg: 'AES-256-GCM'
+    });
     
     mqttClient.publish(topic, securePayload, { qos: 1 });
     console.log(`[MqttService] Published securely to ${topic}`);
@@ -110,49 +156,53 @@ export const publishMqtt = (topic, payload) => {
 };
 
 const checkTelemetryAnomalies = async (payload) => {
-  const { device_id, zone, metrics } = payload;
-  if (!device_id || !metrics) return;
+  const { device_id, zone } = payload;
+  if (!device_id) return;
 
   // Bypass checks if device is isolated/quarantined
   try {
-    const device = await Device.findById(device_id);
-    if (device && (device.status === 'isolated' || device.status === 'quarantined')) {
-      return;
+    const cachedStatus = await redisClient.get(`device_status:${device_id}`);
+    if (cachedStatus === 'isolated' || cachedStatus === 'quarantined') return;
+
+    if (!cachedStatus) {
+      const device = await Device.findById(device_id).lean();
+      if (device) {
+        await redisClient.setEx(`device_status:${device_id}`, 300, device.status); // Cache for 5 mins
+        if (device.status === 'isolated' || device.status === 'quarantined') return;
+      }
     }
   } catch (err) {
-    console.error('[MqttService] Failed to check device status during anomaly check:', err);
+    console.error('[MqttService] Redis cache fallback:', err.message);
   }
 
-  const { bytes_per_second, temperature } = metrics;
-  const now = Date.now();
+  // Use Dynamic Rule Engine to find matched rules
+  const matchedRules = await ruleEngineService.evaluateTelemetry(payload);
 
-  // A. Check Traffic Spike (bytes_per_second > 50000)
-  if (bytes_per_second && bytes_per_second > 50000) {
-    // Check if we raised this alert recently (within last 2 minutes) to prevent alert flooding
-    const recentAlert = await Alert.findOne({
-      device_id,
-      rule_name: 'ABNORMAL_TRAFFIC_SPIKE',
-      status: 'new',
-      detected_at: { $gt: new Date(now - 2 * 60 * 1000) }
-    });
+  for (const rule of matchedRules) {
+    const alertKey = `alert:${rule.rule_name}:${device_id}`;
+    let recentlyAlerted = false;
+    try { recentlyAlerted = await redisClient.get(alertKey); } catch(e) {}
 
-    if (!recentAlert) {
-      console.log(`⚠️ [Anomaly Detection] Traffic Spike detected on ${device_id}: ${bytes_per_second} Bps`);
-      
+    // Throttle alert based on rule's time_window_seconds
+    if (!recentlyAlerted) {
+      try { await redisClient.setEx(alertKey, rule.time_window_seconds || 120, '1'); } catch(e) {}
+
+      console.log(`⚠️ [Rule Engine] Matched Rule: ${rule.rule_name} on ${device_id}`);
+
       const alert = await Alert.create({
-        rule_name: 'ABNORMAL_TRAFFIC_SPIKE',
+        rule_name: rule.rule_name,
         device_id,
-        title: `Lưu lượng tăng đột biến trên ${device_id}`,
-        description: `Lưu lượng mạng vọt lên ${bytes_per_second} Bps (vượt ngưỡng cho phép 50,000 Bps).`,
-        severity: 'HIGH',
+        title: `Phát hiện bất thường: ${rule.rule_name} trên ${device_id}`,
+        description: rule.description || `Hệ thống phát hiện vi phạm quy tắc ${rule.rule_name}.`,
+        severity: rule.severity || 'HIGH',
         status: 'new',
         detected_at: new Date()
       });
 
       const incident = await Incident.create({
-        title: `Sự cố: Lưu lượng mạng tăng đột biến trên ${device_id}`,
-        description: `Hệ thống phát hiện thiết bị ${device_id} tại vùng ${zone || 'unknown'} gửi nhận dữ liệu với băng thông bất thường (${bytes_per_second} Bps). Nghi ngờ tấn công DDoS hoặc rò rỉ dữ liệu.`,
-        severity: 'HIGH',
+        title: `Sự cố: Vi phạm quy tắc bảo mật ${rule.rule_name} trên ${device_id}`,
+        description: `Quy tắc ${rule.rule_name} đã bị vi phạm tại vùng ${zone || 'unknown'}. Chi tiết: ${rule.description}`,
+        severity: rule.severity || 'HIGH',
         status: 'investigating',
         alert_ids: [alert._id]
       });
@@ -162,10 +212,10 @@ const checkTelemetryAnomalies = async (payload) => {
 
       await IncidentTimeline.create({
         incident_id: incident._id,
-        actor: 'Rule Engine Ingest',
+        actor: 'Rule Engine',
         action_type: 'incident_created',
-        description: `Phát hiện lưu lượng bất thường: ${bytes_per_second} Bps. Tự động cảnh báo và tạo sự cố.`,
-        metadata: { bytes_per_second }
+        description: `Tự động cảnh báo vi phạm quy tắc ${rule.rule_name}.`,
+        metadata: { payload }
       });
 
       // Phát sự kiện WebSocket
@@ -178,91 +228,93 @@ const checkTelemetryAnomalies = async (payload) => {
         console.log(`[AlertRouter] Active Admins online: ${activeAdmins.join(', ')}. Suppressing email/Telegram, adding to Emergency Queue.`);
         addEmergencyAlert({
           device_id,
-          attack_type: 'traffic_spike',
-          message: `Đang có thiết bị [${device_id}] bị tấn công DDoS (Traffic Spike) và có người dùng Admin [${activeAdmins.join(', ')}] đang đăng nhập!`,
+          attack_type: rule.rule_name,
+          message: `Thiết bị [${device_id}] vi phạm quy tắc [${rule.rule_name}] trong khi Admin [${activeAdmins.join(', ')}] đang trực tuyến!`,
           admin_users: activeAdmins
         });
       } else {
         console.log('[AlertRouter] No active Admins online. Sending notifications via Email and Telegram.');
-        const alertText = `🚨 *SECURITY ALERT: TRAFFIC SPIKE*\n\nDevice: *${device_id}*\nZone: *${zone || 'unknown'}*\nTraffic: *${bytes_per_second.toLocaleString()} Bps*\nSeverity: *HIGH*`;
+        const alertText = `🚨 *SECURITY ALERT: ${rule.rule_name}*\n\nDevice: *${device_id}*\nZone: *${zone || 'unknown'}*\nSeverity: *${rule.severity || 'HIGH'}*`;
         await sendTelegramAlert(alertText);
         await sendEmailAlert({
-          subject: `[ICS-GUARD ALERT] Traffic Spike on ${device_id}`,
-          text: `Security Alert: Device ${device_id} in ${zone} is transmitting abnormally high traffic (${bytes_per_second} Bps).`,
-          html: `<p><strong>Security Alert:</strong> Device <strong>${device_id}</strong> in <strong>${zone}</strong> is transmitting abnormally high traffic (<code>${bytes_per_second.toLocaleString()} Bps</code>).</p>
-                 <p>Recommended Action: Investigate device processes and rate limit network ports.</p>`
+          subject: `[ICS-GUARD ALERT] ${rule.rule_name} on ${device_id}`,
+          text: `Security Alert: Device ${device_id} in ${zone} violated rule ${rule.rule_name}.`,
+          html: `<p><strong>Security Alert:</strong> Device <strong>${device_id}</strong> in <strong>${zone}</strong> violated rule <strong>${rule.rule_name}</strong>.</p>`
         });
       }
+
+      // 4. Run automated playbooks for this rule
+      await executePlaybook(rule.rule_name, device_id, { alert_id: alert._id });
     }
   }
+};
 
-  // B. Check Critical Temperature (temperature > 85.0)
-  if (temperature && temperature > 85.0) {
-    const recentAlert = await Alert.findOne({
-      device_id,
-      rule_name: 'CRITICAL_OVERHEAT',
-      status: 'new',
-      detected_at: { $gt: new Date(now - 2 * 60 * 1000) }
+const runAiClassification = async (payload) => {
+  const { device_id, zone, metrics } = payload;
+  if (!device_id || !metrics) return;
+
+  try {
+    const aiUrl = process.env.AI_ENGINE_URL || 'http://localhost:5000';
+    // Native fetch (Node 18+)
+    const response = await fetch(`${aiUrl}/classify/anomaly`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ metrics })
     });
-
-    if (!recentAlert) {
-      console.log(`⚠️ [Anomaly Detection] Critical overheat detected on ${device_id}: ${temperature} °C`);
-
-      const alert = await Alert.create({
-        rule_name: 'CRITICAL_OVERHEAT',
-        device_id,
-        title: `Nhiệt độ cực hạn trên thiết bị ${device_id}`,
-        description: `Nhiệt độ thiết bị vọt lên ${temperature} °C (vượt ngưỡng an toàn 85.0 °C).`,
-        severity: 'HIGH',
-        status: 'new',
-        detected_at: new Date()
-      });
-
-      const incident = await Incident.create({
-        title: `Sự cố: Nhiệt độ quá hạn cực nghiêm trọng trên ${device_id}`,
-        description: `Cảm biến ghi nhận nhiệt độ thiết bị ${device_id} tại vùng ${zone || 'unknown'} vượt ngưỡng an toàn nghiêm trọng (${temperature} °C). Nguy cơ cháy nổ vật lý hoặc phá hỏng thiết bị điều khiển.`,
-        severity: 'HIGH',
-        status: 'investigating',
-        alert_ids: [alert._id]
-      });
-
-      alert.incident_id = incident._id;
-      await alert.save();
-
-      await IncidentTimeline.create({
-        incident_id: incident._id,
-        actor: 'Rule Engine Ingest',
-        action_type: 'incident_created',
-        description: `Phát hiện nhiệt độ bất thường: ${temperature} °C. Tự động cảnh báo và tạo sự cố.`,
-        metadata: { temperature }
-      });
-
-      // Phát sự kiện WebSocket
-      socketService.emitNewAlert(alert);
-      socketService.emitNewIncident(incident);
-
-      // Smart Alert Routing
-      const activeAdmins = getActiveAdminSessions();
-      if (activeAdmins.length > 0) {
-        console.log(`[AlertRouter] Active Admins online: ${activeAdmins.join(', ')}. Suppressing email/Telegram, adding to Emergency Queue.`);
-        addEmergencyAlert({
-          device_id,
-          attack_type: 'overheat',
-          message: `Đang có thiết bị [${device_id}] bị quá nhiệt (Critical Overheat) và có người dùng Admin [${activeAdmins.join(', ')}] đang đăng nhập!`,
-          admin_users: activeAdmins
+    
+    if (response.ok) {
+      const data = await response.json();
+      // data: { label: "DDoS", confidence: 0.95 }
+      if (data.label && data.label !== 'Normal' && data.label !== '0' && data.confidence > 0.8) {
+        const rule_name = `AI_DETECTED_${data.label.toUpperCase().replace(/\s+/g, '_')}`;
+        
+        const recentAlert = await Alert.findOne({
+          device_id, rule_name, status: 'new',
+          detected_at: { $gt: new Date(Date.now() - 5 * 60 * 1000) }
         });
-      } else {
-        console.log('[AlertRouter] No active Admins online. Sending notifications via Email and Telegram.');
-        const alertText = `🚨 *SECURITY ALERT: CRITICAL OVERHEAT*\n\nDevice: *${device_id}*\nZone: *${zone || 'unknown'}*\nTemperature: *${temperature} °C*\nSeverity: *HIGH*`;
-        await sendTelegramAlert(alertText);
-        await sendEmailAlert({
-          subject: `[ICS-GUARD ALERT] Overheat Alert on ${device_id}`,
-          text: `Security Alert: Device ${device_id} in ${zone} is running at critically high temperature (${temperature} °C).`,
-          html: `<p><strong>Security Alert:</strong> Device <strong>${device_id}</strong> in <strong>${zone}</strong> is running at critically high temperature (<code>${temperature} °C</code>).</p>
-                 <p>Recommended Action: Shutdown or isolate the physical device to prevent damage.</p>`
-        });
+        
+        if (!recentAlert) {
+          console.log(`🤖 [AI Classification] Detected ${data.label} on ${device_id} (Confidence: ${data.confidence})`);
+          
+          const alert = await Alert.create({
+            rule_name,
+            device_id,
+            title: `AI Cảnh báo: Mô hình ML phát hiện ${data.label}`,
+            description: `Mô hình phát hiện bất thường với độ tin cậy ${data.confidence * 100}% dựa trên metrics: CPU ${metrics.cpu_usage}%, Mem ${metrics.memory_usage}%`,
+            severity: 'CRITICAL',
+            status: 'new',
+            detected_at: new Date()
+          });
+
+          const incident = await Incident.create({
+            title: `Sự cố AI: ${data.label} trên ${device_id}`,
+            description: `Hệ thống AI/ML đã phát hiện luồng dữ liệu bất thường phân loại là [${data.label}]. Độ tin cậy: ${data.confidence}.`,
+            severity: 'CRITICAL',
+            status: 'investigating',
+            alert_ids: [alert._id]
+          });
+
+          alert.incident_id = incident._id;
+          await alert.save();
+
+          await IncidentTimeline.create({
+            incident_id: incident._id,
+            actor: 'AI Anomaly Detector',
+            action_type: 'incident_created',
+            description: `AI phát hiện dị thường ${data.label} (Conf: ${data.confidence})`,
+            metadata: { metrics, label: data.label, confidence: data.confidence }
+          });
+
+          socketService.emitNewAlert(alert);
+          socketService.emitNewIncident(incident);
+
+          // 4. Run automated playbooks for AI anomaly
+          await executePlaybook(rule_name, device_id, { alert_id: alert._id });
+        }
       }
     }
+  } catch (err) {
+    // Silent fail if AI engine is down
   }
 };
 
@@ -272,6 +324,18 @@ const processStructuredLogs = async (payload) => {
 
   for (const log of logs) {
     const { event, log_level, source_ip, message } = log;
+    
+    // Write physical operational log to InfluxDB
+    writeDeviceEvent({
+      device_id,
+      zone: zone || 'Default-Zone',
+      log_type: 'operational',
+      event: event || 'LOG',
+      severity: log_level || 'INFO',
+      source_ip,
+      message: message || `${event || 'Log'} event on ${device_id}`,
+      timestamp: new Date()
+    }).catch(err => console.error('[MqttService] Failed to write event to InfluxDB:', err.message));
     
     // Only raise security Alerts/Incidents for WARN, ERROR, CRITICAL logs
     if (log_level === 'INFO') continue;
@@ -375,6 +439,9 @@ const processStructuredLogs = async (payload) => {
                <p><strong>Log Details:</strong> ${message}</p>
                <p><strong>Action Taken:</strong> Flagged in SOC Dashboard and registered for AI analysis.</p>`
       }).catch(err => console.error('[MqttService] Email send error:', err));
+
+      // 4. Run automated playbooks for structured log anomaly
+      await executePlaybook(rule_name, device_id, { alert_id: alert._id });
     }
   }
 };

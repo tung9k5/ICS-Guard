@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   getAllDevices,
+  getAllDevicesRaw,
   getDeviceById,
   createDevice,
   updateDevice,
@@ -9,21 +10,32 @@ import {
   isolateDeviceEndpoint,
   unisolateDeviceEndpoint,
   rollbackDeviceEndpoint,
+  provisionDeviceEndpoint,
+  decommissionDeviceEndpoint,
+  handleSimulatorHardwareCrud,
 } from '../controllers/deviceController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 import { authorize } from '../middlewares/rbacMiddleware.js';
 import auditLogger from '../middlewares/auditMiddleware.js';
 
+import simulatorAuthMiddleware from '../middlewares/simulatorAuthMiddleware.js';
+import simulatorOrUserAuthMiddleware from '../middlewares/simulatorOrUserAuthMiddleware.js';
+
 const router = express.Router();
 
-// Apply authMiddleware globally to all device routes
+// Public routes with API keys validation
+router.get('/public/list', simulatorOrUserAuthMiddleware, getAllDevices);
+router.get('/public/list-all', simulatorOrUserAuthMiddleware, getAllDevicesRaw);   // Plain array — for Python simulator & AI engine
+router.post('/public/simulator-crud', simulatorAuthMiddleware, handleSimulatorHardwareCrud);
+
+// Apply authMiddleware globally to all other device routes
 router.use(authMiddleware);
 
 /**
  * @openapi
  * tags:
  *   name: Devices
- *   description: IoT Device Management APIs (Roles: Admin, Analyst, Viewer, L3 Manager, OT Operator)
+ *   description: IoT Device Management APIs (Roles Admin, Analyst, Viewer, L3 Manager, OT Operator)
  */
 
 /**
@@ -160,7 +172,7 @@ router.use(authMiddleware);
  *       201:
  *         description: Device registered successfully
  */
-router.get('/', authorize(['Admin', 'Analyst', 'Viewer']), getAllDevices);
+router.get('/', authorize(['admin', 'device_management', 'analyst']), getAllDevices);
 
 /**
  * @openapi
@@ -227,19 +239,22 @@ router.get('/', authorize(['Admin', 'Analyst', 'Viewer']), getAllDevices);
  *       200:
  *         description: Device deleted successfully
  */
-router.get('/:id', authorize(['Admin', 'Analyst', 'Viewer']), getDeviceById);
-router.post('/', authorize(['Admin', 'Analyst']), auditLogger('DEVICE_CREATE'), createDevice);
-router.put('/:id', authorize(['Admin', 'Analyst']), auditLogger('DEVICE_UPDATE'), updateDevice);
-router.delete('/:id', authorize(['Admin', 'Analyst']), auditLogger('DEVICE_DELETE'), deleteDevice);
-router.post('/bulk-delete', authorize(['Admin', 'Analyst']), auditLogger('DEVICE_BULK_DELETE'), deleteMultipleDevices);
+router.get('/:id', authorize(['admin', 'device_management', 'analyst']), getDeviceById);
+router.post('/', authorize(['admin', 'device_management']), auditLogger('DEVICE_CREATE'), createDevice);
+router.put('/:id', authorize(['admin', 'device_management']), auditLogger('DEVICE_UPDATE'), updateDevice);
+router.delete('/:id', authorize(['admin', 'device_management']), auditLogger('DEVICE_DELETE'), deleteDevice);
 
-// POST /api/devices/:id/isolate - Admin, L3 SOC Manager (Audited)
-router.post('/:id/isolate', authorize(['admin', 'l3_manager']), auditLogger('DEVICE_ISOLATE'), isolateDeviceEndpoint);
+// POST /api/devices/:id/isolate - admin, device_manager (Audited)
+router.post('/:id/isolate', authorize(['admin', 'device_management']), auditLogger('DEVICE_ISOLATE'), isolateDeviceEndpoint);
 
-// POST /api/devices/:id/unisolate - Admin, L3 SOC Manager (Audited)
-router.post('/:id/unisolate', authorize(['admin', 'l3_manager']), auditLogger('DEVICE_UNISOLATE'), unisolateDeviceEndpoint);
+// POST /api/devices/:id/unisolate - admin, device_manager (Audited)
+router.post('/:id/unisolate', authorize(['admin', 'device_management']), auditLogger('DEVICE_UNISOLATE'), unisolateDeviceEndpoint);
 
-// POST /api/devices/:id/rollback - Admin, L3 SOC Manager, OT Operator (Audited)
-router.post('/:id/rollback', authorize(['admin', 'l3_manager', 'ot_operator']), auditLogger('DEVICE_ROLLBACK'), rollbackDeviceEndpoint);
+// POST /api/devices/:id/rollback - admin, device_manager (Audited)
+router.post('/:id/rollback', authorize(['admin', 'device_management']), auditLogger('DEVICE_ROLLBACK'), rollbackDeviceEndpoint);
+
+// Lifecycle routes - admin, device_manager (Audited)
+router.post('/:id/provision', authorize(['admin', 'device_management']), auditLogger('DEVICE_PROVISION'), provisionDeviceEndpoint);
+router.delete('/:id/decommission', authorize(['admin', 'device_management']), auditLogger('DEVICE_DECOMMISSION'), decommissionDeviceEndpoint);
 
 export default router;

@@ -41,8 +41,8 @@ const deviceSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['active', 'inactive', 'isolated', 'online', 'offline', 'quarantined'],
-    default: 'active',
+    enum: ['active', 'inactive', 'isolated', 'online', 'offline', 'quarantined', 'unprovisioned', 'decommissioned'],
+    default: 'unprovisioned',
   },
   risk_score: {
     type: Number,
@@ -63,7 +63,13 @@ const deviceSchema = new mongoose.Schema({
   },
   node_type: {
     type: String,
-    enum: ['gateway', 'controller', 'chip', 'sensor', 'actuator'],
+    enum: [
+      'gateway', 'scada', 'hmi', 'firewall',
+      'controller', 'rtu', 'dcs',
+      'chip', 'opc_server', 'protocol_bridge', 'camera',
+      'sensor', 'sensor_pressure', 'sensor_flow', 'sensor_gas', 'sensor_vibration', 'sensor_level',
+      'actuator', 'pump', 'motor', 'breaker', 'alarm'
+    ],
     default: 'sensor',
   },
   parent_id: {

@@ -35,6 +35,19 @@ const ruleSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  category: {
+    type: String,
+    enum: ['ICS_PROTOCOL', 'BEHAVIOR', 'NETWORK_SCAN', 'THREAT_INTEL', 'CUSTOM'],
+    default: 'ICS_PROTOCOL',
+  },
+  mitre_technique: {
+    type: String,
+    default: '',
+  },
+  logic_nodes: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null,
+  },
   group_by: [String],
   actions: [
     {

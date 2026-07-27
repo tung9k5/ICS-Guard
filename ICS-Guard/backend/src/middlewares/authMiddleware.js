@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../models/index.js';
+import { normalizeRole } from '../utils/roles.js';
 
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -14,7 +15,7 @@ const authMiddleware = async (req, res, next) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ics_guard_access_secret_key_2026_@_secure');
+    const decoded = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
     
     const user = await User.findById(decoded.id);
 
@@ -31,6 +32,9 @@ const authMiddleware = async (req, res, next) => {
         message: 'Your account has been locked due to too many failed login attempts.',
       });
     }
+
+    // Keep existing demo databases compatible after the canonical role rename.
+    user.role = normalizeRole(user.role);
 
     // Attach user information to request
     req.user = user;

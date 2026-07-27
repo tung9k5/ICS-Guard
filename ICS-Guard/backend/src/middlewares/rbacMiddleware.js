@@ -1,3 +1,5 @@
+import { normalizeRole } from '../utils/roles.js';
+
 export const authorize = (allowedRoles = []) => {
   // Convert single string role to array
   if (typeof allowedRoles === 'string') {
@@ -5,7 +7,7 @@ export const authorize = (allowedRoles = []) => {
   }
 
   // Normalize allowedRoles to lowercase for robust matching
-  const normalizedAllowed = allowedRoles.map(r => r.toLowerCase());
+  const normalizedAllowed = allowedRoles.map(normalizeRole);
 
   return (req, res, next) => {
     if (!req.user) {
@@ -15,7 +17,7 @@ export const authorize = (allowedRoles = []) => {
       });
     }
 
-    const userRole = req.user.role ? req.user.role.toLowerCase() : null;
+    const userRole = normalizeRole(req.user.role);
 
     if (!userRole || !normalizedAllowed.includes(userRole)) {
       return res.status(403).json({
