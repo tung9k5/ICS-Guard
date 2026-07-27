@@ -30,7 +30,10 @@ services:
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
     volumes:
+      - ./backend:/app
+      - /app/node_modules
       - ./ai-services:/ai-services
+      - /ai-services/node_modules
     environment:
       - TZ=Asia/Ho_Chi_Minh
       - PORT=${BACKEND_PORT}
@@ -161,6 +164,9 @@ services:
   iot-simulator:
     build:
       context: ./iot-simulator
+    volumes:
+      - ./iot-simulator:/app
+      - /app/node_modules
     environment:
       - TZ=Asia/Ho_Chi_Minh
       - MQTT_URL=mqtt://mosquitto:${MQTT_PORT:-1883}
