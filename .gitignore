@@ -34,6 +34,3 @@ logs/
 *.swp
 *.swo
 
-
-# Swagger autogen
-swagger-output.json
