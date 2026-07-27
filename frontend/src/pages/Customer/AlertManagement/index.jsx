@@ -106,13 +106,15 @@ const CustomerAlerts = () => {
                 <tbody>
                   {alerts.map((alert) => (
                     <tr key={alert._id}>
-                      <td>
-                        <span style={{ fontWeight: 500, color: 'var(--slate-900)' }}>
+                      <td style={{ maxWidth: '14.2857rem' }}>
+                        <div className="truncate-text" style={{ fontWeight: 500, color: 'var(--slate-900)' }} title={alert.title || alert.rule_name || t('customer.alerts.default_alert')}>
                           {alert.title || alert.rule_name || t('customer.alerts.default_alert')}
-                        </span>
+                        </div>
                       </td>
-                      <td className="text-muted" style={{ fontFamily: 'monospace' }}>
-                        {alert.source_ip || alert.device_name || '—'}
+                      <td className="text-muted" style={{ fontFamily: 'monospace', maxWidth: '10.7143rem' }}>
+                        <div className="truncate-text" title={alert.source_ip || alert.device_name || '—'}>
+                          {alert.source_ip || alert.device_name || '—'}
+                        </div>
                       </td>
                       <td>
                         <span style={{

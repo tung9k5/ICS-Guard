@@ -196,13 +196,13 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                       onChange={(e) => handleSelectAllWithSync(e.target.checked)}
                     />
                   </th>
-                  <th style={{ width: '12rem' }}>{t('audit.logs.table_username', 'TÊN NGƯỜI DÙNG')}</th>
-                  <th>{t('audit.logs.table_email', 'EMAIL')}</th>
-                  <th style={{ width: '8rem' }}>{t('audit.logs.table_role', 'VAI TRÒ')}</th>
-                  <th style={{ width: '14rem' }}>{t('audit.logs.table_action')}</th>
-                  <th style={{ width: '10rem' }}>{t('common.created_at', 'Ngày tạo')}</th>
-                  <th style={{ width: '10rem' }}>{t('common.updated_at', 'Ngày cập nhật')}</th>
-                  <th className="actions-col" style={{ width: '5rem' }}>{t('assets.list.table_actions')}</th>
+                  <th style={{ width: '11%' }}>{t('audit.logs.table_username', 'TÊN')}</th>
+                  <th style={{ width: '15%' }}>{t('audit.logs.table_email', 'EMAIL')}</th>
+                  <th style={{ width: '8%' }}>{t('audit.logs.table_role', 'VAI TRÒ')}</th>
+                  <th style={{ width: '22%' }}>{t('audit.logs.table_action')}</th>
+                  <th style={{ width: '13%' }}>{t('common.created_at', 'Ngày tạo')}</th>
+                  <th style={{ width: '13%' }}>{t('common.updated_at', 'Ngày cập nhật')}</th>
+                  <th className="actions-col" style={{ width: '4rem' }}>{t('assets.list.table_actions')}</th>
                 </tr>
               </thead>
               <tbody>

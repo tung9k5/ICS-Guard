@@ -185,7 +185,7 @@
       "table_ip": "IP",
       "table_status": "Trạng thái",
       "table_details": "Chi tiết",
-      "table_username": "TÊN NGƯỜI DÙNG",
+      "table_username": "TÊN",
       "table_email": "EMAIL",
       "table_role": "VAI TRÒ"
     },
@@ -380,7 +380,9 @@
       "table_status": "Trạng thái",
       "table_detected_at": "Thời gian",
       "table_actions": "Thao tác",
-      "mobile_title": "Tiêu đề cảnh báo"
+      "mobile_title": "Tiêu đề cảnh báo",
+      "resolved_at": "Ngày xử lý",
+      "detected_at": "Ngày phát hiện"
     }
   },
   "incidents": {
