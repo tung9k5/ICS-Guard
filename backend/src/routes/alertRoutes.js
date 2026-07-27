@@ -4,7 +4,8 @@ import {
   getAlertById,
   updateAlertStatus,
   deleteAlert,
-  bulkDeleteAlerts
+  bulkDeleteAlerts,
+  generateFakeAlerts
 } from '../controllers/alertController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 import authorize from '../middlewares/rbacMiddleware.js';
@@ -17,6 +18,7 @@ const router = express.Router();
 router.use(authMiddleware);
 
 router.get('/', validatePagination, getAllAlerts);
+router.post('/generate', authorize(['admin']), generateFakeAlerts);
 router.post('/bulk-delete', authorize(['admin']), validateBulkIds, auditLogger('ALERT_BULK_DELETE'), bulkDeleteAlerts);
 
 router.get('/:id', validateMongoId, getAlertById);

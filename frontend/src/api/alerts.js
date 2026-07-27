@@ -21,7 +21,7 @@ export default {
   updateAlertStatus(id, status, options = {}) {
     return http({
       url: `/alerts/${id}/status`,
-      method: 'PATCH',
+      method: 'PUT',
       data: { status },
       ...options
     });

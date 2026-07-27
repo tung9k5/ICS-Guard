@@ -67,8 +67,8 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
               <th>{t('alerts.list_table.table_rule', 'Từ quy tắc')}</th>
               <th>{t('alerts.list_table.table_severity', 'Mức độ')}</th>
               <th>{t('alerts.list_table.table_status', 'Trạng thái')}</th>
-              <th>{t('common.created_at', 'Ngày tạo')}</th>
-              <th>{t('common.updated_at', 'Ngày cập nhật')}</th>
+              <th>{t('alerts.list_table.detected_at', 'Ngày phát hiện')}</th>
+              <th>{t('alerts.list_table.resolved_at', 'Ngày xử lý')}</th>
               <th className="actions-col">{t('alerts.list_table.table_actions', 'Thao tác')}</th>
             </tr>
           </thead>
@@ -96,8 +96,8 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
                   <td>
                     <VStatus status={getStatusVariant(alert.status)} label={getStatusLabel(alert.status)} showDot />
                   </td>
-                  <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(alert.createdAt)}</td>
-                  <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(alert.updatedAt)}</td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(alert.detected_at)}</td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{alert.resolved_at ? formatDate(alert.resolved_at) : '-'}</td>
                   <td className="actions-col">
                     <ActionMenu 
                       actions={getActions(alert)}
@@ -171,12 +171,12 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
                     <span className="detail-value">{alert.rule_name || '-'}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">{t('common.created_at', 'Ngày tạo')}</span>
-                    <span className="detail-value">{formatDate(alert.createdAt)}</span>
+                    <span className="detail-label">{t('alerts.list_table.detected_at', 'Ngày phát hiện')}</span>
+                    <span className="detail-value">{formatDate(alert.detected_at)}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">{t('common.updated_at', 'Ngày cập nhật')}</span>
-                    <span className="detail-value">{formatDate(alert.updatedAt)}</span>
+                    <span className="detail-label">{t('alerts.list_table.resolved_at', 'Ngày xử lý')}</span>
+                    <span className="detail-value">{alert.resolved_at ? formatDate(alert.resolved_at) : '-'}</span>
                   </div>
                 </div>
               )}

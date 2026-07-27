@@ -98,17 +98,23 @@ const CustomerDevices = () => {
                 <tbody>
                   {devices.map((device) => (
                     <tr key={device._id}>
-                      <td>
-                        <div className="device-name">
+                      <td style={{ maxWidth: '14.2857rem' }}>
+                        <div className="device-name" style={{ display: 'flex', alignItems: 'center', gap: '0.5714rem', minWidth: 0 }}>
                           {device.status === 'online'
-                            ? <Wifi size={15} color="var(--green-500)" />
-                            : <WifiOff size={15} color="var(--custom-color-14)" />}
-                          <span>{device.name}</span>
+                            ? <Wifi size={15} color="var(--green-500)" style={{ flexShrink: 0 }} />
+                            : <WifiOff size={15} color="var(--custom-color-14)" style={{ flexShrink: 0 }} />}
+                          <span className="truncate-text" title={device.name} style={{ flex: 1, minWidth: 0 }}>{device.name}</span>
                         </div>
                       </td>
-                      <td className="text-muted" style={{ fontFamily: 'monospace' }}>{device.ip}</td>
-                      <td className="text-muted" style={{ fontFamily: 'monospace' }}>{device.mac || '—'}</td>
-                      <td className="text-muted">{device.zone || '—'}</td>
+                      <td className="text-muted" style={{ fontFamily: 'monospace', maxWidth: '10.7143rem' }}>
+                        <div className="truncate-text" title={device.ip}>{device.ip}</div>
+                      </td>
+                      <td className="text-muted" style={{ fontFamily: 'monospace', maxWidth: '12.8571rem' }}>
+                        <div className="truncate-text" title={device.mac || '—'}>{device.mac || '—'}</div>
+                      </td>
+                      <td className="text-muted" style={{ maxWidth: '10.7143rem' }}>
+                        <div className="truncate-text" title={device.zone || '—'}>{device.zone || '—'}</div>
+                      </td>
                       <td><StatusBadge status={device.status} /></td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5714rem' }}>

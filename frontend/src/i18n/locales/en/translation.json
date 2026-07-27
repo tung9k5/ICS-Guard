@@ -379,7 +379,9 @@
       "table_status": "Status",
       "table_detected_at": "Detected At",
       "table_actions": "Actions",
-      "mobile_title": "Alert title"
+      "mobile_title": "Alert title",
+      "resolved_at": "Resolved At",
+      "detected_at":"Detected At"
     }
   },
   "incidents": {
