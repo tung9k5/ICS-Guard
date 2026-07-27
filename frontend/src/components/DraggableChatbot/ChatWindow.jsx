@@ -142,7 +142,8 @@ const ChatWindow = ({ isOpen, onClose, user }) => {
     }));
     
     const emoteId = Date.now() + Math.random();
-    setFloatingEmotes(prev => [...prev, { id: emoteId, msgId: id, type }]);
+    const randomX = (Math.random() - 0.5) * 40; // -20px to 20px
+    setFloatingEmotes(prev => [...prev, { id: emoteId, msgId: id, type, randomX }]);
     setTimeout(() => {
       setFloatingEmotes(prev => prev.filter(e => e.id !== emoteId));
     }, 1500);
@@ -275,7 +276,7 @@ const ChatWindow = ({ isOpen, onClose, user }) => {
               </div>
               
               {floatingEmotes.filter(e => e.msgId === msg.id).map(e => (
-                <div key={e.id} className={`floating-emote ${e.type}`}>
+                <div key={e.id} className={`floating-emote ${e.type}`} style={{ '--random-x': `${e.randomX || 0}px` }}>
                   {e.type === 'heart' ? <Heart size={20} fill="var(--red-500)" color="var(--red-500)" /> : <ThumbsUp size={20} fill="var(--blue-500)" color="var(--blue-500)" />}
                 </div>
               ))}
