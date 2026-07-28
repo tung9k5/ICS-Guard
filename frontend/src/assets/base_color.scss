@@ -1,5 +1,93 @@
+$blue-50: #eff6ff;
+$blue-100: #dbeafe;
+$blue-200: #bfdbfe;
+$blue-300: #93c5fd;
+$blue-400: #60a5fa;
+$blue-500: #3b82f6;
+$blue-600: #2563eb;
+$blue-700: #1d4ed8;
+$blue-800: #1e40af;
+$blue-900: #1e3a8a;
+$slate-50: #f8fafc;
+$slate-100: #f1f5f9;
+$slate-200: #e2e8f0;
+$slate-300: #cbd5e1;
+$slate-400: #94a3b8;
+$slate-500: #64748b;
+$slate-600: #475569;
+$slate-700: #334155;
+$slate-800: #1e293b;
+$slate-900: #0f172a;
+$red-50: #fef2f2;
+$red-100: #fee2e2;
+$red-200: #fecaca;
+$red-300: #fca5a5;
+$red-400: #f87171;
+$red-500: #ef4444;
+$red-600: #dc2626;
+$red-700: #b91c1c;
+$purple-400: #c084fc;
+$purple-500: #a78bfa;
+$white: #ffffff;
+$white-short: #ffffff;
+$white-100: #f9f9f9;
+$gray-200: #e5e5e5;
+$gray-300: #d1d5db;
+$gray-400: #9ca3af;
+$gray-700: #374151;
+$gray-800: #1f2937;
+$gray-900: #111827;
+$gray-50: #f9fafb;
+$green-100: #dcfce7;
+$green-200: #bbf7d0;
+$green-500: #10b981;
+$green-800: #166534;
+$apple-red: #ff3b30;
+$apple-red-light: #ff453a;
+$apple-red-dark: #991b1b;
+$apple-red-darkest: #7f1d1d;
+$apple-gray-1: #f5f5f5;
+$apple-gray-2: #f5f5f7;
+$apple-gray-3: #e5e5ea;
+$apple-gray-4: #aeaeae;
+$apple-dark-1: #2c2c2e;
+$apple-dark-2: #3a3a3c;
+$apple-dark-bg: #140506;
+$chat-blue: #3d5285;
+$chat-blue-light: #5a80a7;
+$gray-light: #dddddd;
+$gray-light-2: #e0e0e0;
+$gray-light-3: #dadce0;
+$gray-dark: #888888;
+$gray-dark-2: #3c4043;
+$green-50: #ecfdf5;
+$green-light: #e7fad1;
+$green-dark: #1b5e20;
+$yellow-light: #feecca;
+$red-dark: #b71c1c;
+$primary-blue: #1a3677;
+$orange-500: #f97316;
+$amber-500: #f59e0b;
+$black: #000000;
+$yellow-500: #eab308;
+$purple-500: #8b5cf6;
+$green-500: #22c55e;
+$custom-color-1: #f0fdf4;
+$custom-color-2: #15803d;
+$custom-color-3: #fefce8;
+$custom-color-4: #854d0e;
+$custom-color-5: #fef08a;
+$custom-color-6: #099fe5;
+$custom-color-7: #1cb0f6;
+$custom-color-8: #38bdf8;
+$custom-color-9: #0ea5e9;
+$custom-color-10: #0284c7;
+$custom-color-11: #06b6d4;
+$custom-color-12: #0369a1;
+$custom-color-13: #7dd3fc;
+$custom-color-14: #6b7280;
+
 :root {
-  /* Blue Scale */
   --blue-50: #eff6ff;
   --blue-100: #dbeafe;
   --blue-200: #bfdbfe;
@@ -10,8 +98,6 @@
   --blue-700: #1d4ed8;
   --blue-800: #1e40af;
   --blue-900: #1e3a8a;
-
-  /* Slate Scale */
   --slate-50: #f8fafc;
   --slate-100: #f1f5f9;
   --slate-200: #e2e8f0;
@@ -22,8 +108,6 @@
   --slate-700: #334155;
   --slate-800: #1e293b;
   --slate-900: #0f172a;
-
-  /* Red/Danger Scale */
   --red-50: #fef2f2;
   --red-100: #fee2e2;
   --red-200: #fecaca;
@@ -32,17 +116,11 @@
   --red-500: #ef4444;
   --red-600: #dc2626;
   --red-700: #b91c1c;
-
-  /* Purple Scale (for accents) */
   --purple-400: #c084fc;
   --purple-500: #a78bfa;
-
-  /* Basic Colors */
   --white: #ffffff;
+  --white-short: #ffffff;
   --white-100: #f9f9f9;
-  --white-short: #fff;
-  
-  /* Tailwind Grays */
   --gray-200: #e5e5e5;
   --gray-300: #d1d5db;
   --gray-400: #9ca3af;
@@ -50,14 +128,10 @@
   --gray-800: #1f2937;
   --gray-900: #111827;
   --gray-50: #f9fafb;
-  
-  /* Tailwind Greens */
   --green-100: #dcfce7;
   --green-200: #bbf7d0;
   --green-500: #10b981;
   --green-800: #166534;
-  
-  /* Apple / Theme specific */
   --apple-red: #ff3b30;
   --apple-red-light: #ff453a;
   --apple-red-dark: #991b1b;
@@ -69,16 +143,12 @@
   --apple-dark-1: #2c2c2e;
   --apple-dark-2: #3a3a3c;
   --apple-dark-bg: #140506;
-  
-  /* Chatbot */
   --chat-blue: #3d5285;
   --chat-blue-light: #5a80a7;
-
-  /* Edge Colors (from inline styles) */
-  --gray-light: #ddd;
+  --gray-light: #dddddd;
   --gray-light-2: #e0e0e0;
   --gray-light-3: #dadce0;
-  --gray-dark: #888;
+  --gray-dark: #888888;
   --gray-dark-2: #3c4043;
   --green-50: #ecfdf5;
   --green-light: #e7fad1;
@@ -86,10 +156,26 @@
   --yellow-light: #feecca;
   --red-dark: #b71c1c;
   --primary-blue: #1a3677;
-
-  /* Misc */
   --orange-500: #f97316;
   --amber-500: #f59e0b;
+  --black: #000000;
+  --yellow-500: #eab308;
+  --purple-500: #8b5cf6;
+  --green-500: #22c55e;
+  --custom-color-1: #f0fdf4;
+  --custom-color-2: #15803d;
+  --custom-color-3: #fefce8;
+  --custom-color-4: #854d0e;
+  --custom-color-5: #fef08a;
+  --custom-color-6: #099fe5;
+  --custom-color-7: #1cb0f6;
+  --custom-color-8: #38bdf8;
+  --custom-color-9: #0ea5e9;
+  --custom-color-10: #0284c7;
+  --custom-color-11: #06b6d4;
+  --custom-color-12: #0369a1;
+  --custom-color-13: #7dd3fc;
+  --custom-color-14: #6b7280;
 }
 
 @font-face {

@@ -60,7 +60,7 @@ const RuleForm = ({ initialData, onSubmit, onCancel, loading }) => {
       visible={true}
       onHide={onCancel}
       header={isEdit ? t('rules.edit', 'Sửa quy tắc') : t('rules.add', 'Thêm quy tắc mới')}
-      style={{ maxWidth: '800px' }}
+      style={{ maxWidth: '57.1429rem' }}
     >
       <form className="rule-form" onSubmit={handleSubmit}>
         {error && <div className="alert-error mb-4" style={{ color: 'var(--red-500)' }}>{error}</div>}
@@ -85,14 +85,14 @@ const RuleForm = ({ initialData, onSubmit, onCancel, loading }) => {
           <div className="v-input-wrapper mb-0">
             <label className="v-label">
               {t('rules.severity', 'Mức độ')}
-              <span style={{ color: 'var(--red-500)', marginLeft: '4px' }}>*</span>
+              <span style={{ color: 'var(--red-500)', marginLeft: '0.2857rem' }}>*</span>
             </label>
             <select 
               name="severity" 
               value={formData.severity} 
               onChange={handleChange} 
               className="v-input"
-              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '1px solid var(--slate-300)' }}
+              style={{ width: '100%', padding: '0.7143rem 1rem', borderRadius: '0.5714rem', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '0.0714rem solid var(--slate-300)' }}
             >
               {RULE_SEVERITIES.map(sev => (
                 <option key={sev.value} value={sev.value}>{sev.label}</option>
@@ -103,14 +103,14 @@ const RuleForm = ({ initialData, onSubmit, onCancel, loading }) => {
           <div className="v-input-wrapper mb-0">
             <label className="v-label">
               {t('rules.status', 'Trạng thái')}
-              <span style={{ color: 'var(--red-500)', marginLeft: '4px' }}>*</span>
+              <span style={{ color: 'var(--red-500)', marginLeft: '0.2857rem' }}>*</span>
             </label>
             <select 
               name="is_active" 
               value={formData.is_active} 
               onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.value === 'true' }))}
               className="v-input"
-              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '1px solid var(--slate-300)' }}
+              style={{ width: '100%', padding: '0.7143rem 1rem', borderRadius: '0.5714rem', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '0.0714rem solid var(--slate-300)' }}
             >
               <option value="true">{t('rules.status_active', 'Đang hoạt động')}</option>
               <option value="false">{t('rules.status_inactive', 'Tạm dừng')}</option>
@@ -147,7 +147,7 @@ const RuleForm = ({ initialData, onSubmit, onCancel, loading }) => {
               className="v-input"
               rows="5"
               required
-              style={{ fontFamily: 'monospace', width: '100%', padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '1px solid var(--slate-300)', resize: 'vertical' }}
+              style={{ fontFamily: 'monospace', width: '100%', padding: '0.7143rem 1rem', borderRadius: '0.5714rem', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '0.0714rem solid var(--slate-300)', resize: 'vertical' }}
             />
           </div>
           <div className="v-input-wrapper mb-0">
@@ -158,12 +158,12 @@ const RuleForm = ({ initialData, onSubmit, onCancel, loading }) => {
               onChange={handleChange}
               className="v-input"
               rows="5"
-              style={{ fontFamily: 'monospace', width: '100%', padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '1px solid var(--slate-300)', resize: 'vertical' }}
+              style={{ fontFamily: 'monospace', width: '100%', padding: '0.7143rem 1rem', borderRadius: '0.5714rem', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '0.0714rem solid var(--slate-300)', resize: 'vertical' }}
             />
           </div>
         </div>
 
-        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+        <div style={{ marginTop: '1.7143rem', display: 'flex', justifyContent: 'flex-end', gap: '0.8571rem' }}>
           <VButton type="button" variant="outline" onClick={onCancel}>
             {t('common.cancel', 'Hủy bỏ')}
           </VButton>

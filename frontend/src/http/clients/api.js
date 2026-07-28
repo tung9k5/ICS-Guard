@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { showGlobalLoading, hideGlobalLoading } from '@/utils/loadingEvent';
+import { AUTH_KEYS } from '@/constants/authConstants';
 
 const baseURL = import.meta.env.VITE_API_URL;
 
@@ -11,14 +12,9 @@ const http = axios.create({
   },
 });
 
-// Helper to determine auth keys based on current URL path
-const getAuthKeys = () => {
+const getLoginUrl = () => {
   const isAttacker = window.location.pathname.startsWith('/attacker');
-  return {
-    accessTokenKey: isAttacker ? 'attacker_access_token' : 'access_token',
-    refreshTokenKey: isAttacker ? 'attacker_refresh_token' : 'refresh_token',
-    loginUrl: isAttacker ? '/attacker/login' : '/login'
-  };
+  return isAttacker ? '/attacker/login' : '/login';
 };
 
 http.interceptors.request.use(
@@ -60,11 +56,20 @@ http.interceptors.response.use(
     if (originalRequest && !originalRequest.hideLoading) {
       hideGlobalLoading();
     }
-    const { loginUrl } = getAuthKeys();
+    const loginUrl = getLoginUrl();
     
     if (error.response?.status === 401 && !originalRequest._retry) {
-      if (originalRequest.url.includes('/auth/refresh')) {
-        window.location.href = loginUrl;
+      if (
+        originalRequest.url.includes('/auth/refresh') ||
+        originalRequest.url.includes('/auth/login') ||
+        originalRequest.url.includes('/auth/google') ||
+        originalRequest.url.includes('/auth/register')
+      ) {
+        if (originalRequest.url.includes('/auth/refresh')) {
+          if (!originalRequest._silent && !window.location.pathname.includes('/login') && !window.location.pathname.includes('/register')) {
+            window.location.href = loginUrl;
+          }
+        }
         return Promise.reject(error);
       }
 

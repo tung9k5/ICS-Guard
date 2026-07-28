@@ -23,7 +23,7 @@ const AuthLayout = () => {
       </div>
 
       <div className="auth-panel">
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
           <LanguageSwitcher />
         </div>
         

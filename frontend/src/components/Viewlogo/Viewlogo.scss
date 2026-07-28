@@ -4,10 +4,10 @@
   &.animate-float {
     width: 100%;
     height: auto;
-    margin: 0 auto 24px auto;
+    margin: 0 auto 1.7143rem auto;
     display: block;
     animation: floatImage 3s ease-in-out infinite;
-    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+    filter: drop-shadow(0 0.7143rem 1.0714rem rgba(0,0,0,0.2));
   }
 
   &.animate-spin {
@@ -17,20 +17,20 @@
 
 @keyframes hologramSpin {
   0% { transform: translateY(0) rotateX(10deg) rotateY(0deg); }
-  25% { transform: translateY(-10px) rotateX(5deg) rotateY(90deg); }
+  25% { transform: translateY(-0.7143rem) rotateX(5deg) rotateY(90deg); }
   50% { transform: translateY(0) rotateX(10deg) rotateY(180deg); }
-  75% { transform: translateY(-10px) rotateX(15deg) rotateY(270deg); }
+  75% { transform: translateY(-0.7143rem) rotateX(15deg) rotateY(270deg); }
   100% { transform: translateY(0) rotateX(10deg) rotateY(360deg); }
 }
 
 @keyframes floatImage {
   0% {
-    transform: translateY(0px);
+    transform: translateY(0);
   }
   50% {
-    transform: translateY(-15px);
+    transform: translateY(-1.0714rem);
   }
   100% {
-    transform: translateY(0px);
+    transform: translateY(0);
   }
 }

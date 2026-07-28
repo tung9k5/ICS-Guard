@@ -1,19 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle, XCircle, Trash2, ShieldAlert, ChevronDown, ChevronUp } from 'lucide-react';
 import ActionMenu from '@/components/ActionMenu';
 import VCheckbox from '@/components/VCheckbox';
 import VNoData from '@/components/VNoData';
+import VStatus from '@/components/VStatus';
 import { ALERT_SEVERITIES, ALERT_STATUSES } from '@/constants/alertConstants';
 import { formatDate } from '@/utils/formatDate';
+import { useExpandable } from '@/hooks/useExpandable';
+import { getSeverityVariant } from '@/utils/statusHelpers';
 
 const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, onSelectAll }) => {
   const { t } = useTranslation();
-  const [expandedId, setExpandedId] = useState(null);
-
-  const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
+  const { expandedId, toggleExpand } = useExpandable();
 
   if (!alerts || alerts.length === 0) {
     return <VNoData message={t('alerts.no_data', 'Không có cảnh báo nào')} />;
@@ -29,20 +28,13 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
     return stat ? stat.label : val;
   };
 
-  const getSeverityClass = (severity) => {
-    switch (severity) {
-      case 'CRITICAL': return 'badge-danger';
-      case 'HIGH': return 'badge-warning';
-      case 'MEDIUM': return 'badge-info';
-      default: return 'badge-success';
-    }
-  };
 
-  const getStatusClass = (status) => {
+
+  const getStatusVariant = (status) => {
     switch (status) {
-      case 'resolved': return 'badge-success';
-      case 'false_positive': return 'badge-secondary';
-      default: return 'badge-danger';
+      case 'resolved': return 'success';
+      case 'false_positive': return 'neutral';
+      default: return 'danger';
     }
   };
 
@@ -63,7 +55,7 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
         <table className="alert-table">
           <thead>
             <tr>
-              <th style={{ width: '40px', textAlign: 'center' }}>
+              <th style={{ width: '2.8571rem', textAlign: 'center' }}>
                 <VCheckbox 
                   checked={allSelected} 
                   indeterminate={selectedIds.length > 0 && selectedIds.length < alerts.length}
@@ -75,8 +67,8 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
               <th>{t('alerts.list_table.table_rule', 'Từ quy tắc')}</th>
               <th>{t('alerts.list_table.table_severity', 'Mức độ')}</th>
               <th>{t('alerts.list_table.table_status', 'Trạng thái')}</th>
-              <th>{t('common.created_at', 'Ngày tạo')}</th>
-              <th>{t('common.updated_at', 'Ngày cập nhật')}</th>
+              <th>{t('alerts.list_table.detected_at', 'Ngày phát hiện')}</th>
+              <th>{t('alerts.list_table.resolved_at', 'Ngày xử lý')}</th>
               <th className="actions-col">{t('alerts.list_table.table_actions', 'Thao tác')}</th>
             </tr>
           </thead>
@@ -92,24 +84,20 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
                       style={{ cursor: 'pointer' }}
                     />
                   </td>
-                  <td style={{ maxWidth: '180px' }}>
+                  <td style={{ maxWidth: '12.8571rem' }}>
                     <div className="alert-title" title={alert.title}>
                       <span className="truncate-text" style={{ flex: 1, minWidth: 0 }}>{alert.title}</span>
                     </div>
                   </td>
                   <td>{alert.rule_name || '-'}</td>
                   <td>
-                    <span className={`badge ${getSeverityClass(alert.severity)}`}>
-                      {getSeverityLabel(alert.severity)}
-                    </span>
+                    <VStatus status={getSeverityVariant(alert.severity)} label={getSeverityLabel(alert.severity)} showDot />
                   </td>
                   <td>
-                    <span className={`badge ${getStatusClass(alert.status)}`}>
-                      {getStatusLabel(alert.status)}
-                    </span>
+                    <VStatus status={getStatusVariant(alert.status)} label={getStatusLabel(alert.status)} showDot />
                   </td>
-                  <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(alert.createdAt)}</td>
-                  <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(alert.updatedAt)}</td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(alert.detected_at)}</td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{alert.resolved_at ? formatDate(alert.resolved_at) : '-'}</td>
                   <td className="actions-col">
                     <ActionMenu 
                       actions={getActions(alert)}
@@ -126,7 +114,7 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
       {/* --- MOBILE LIST VIEW --- */}
       <div className="mobile-alert-list">
         <div className="mobile-list-header" style={{ display: 'flex', alignItems: 'center' }}>
-          <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="col-checkbox" style={{ width: '2.8571rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <VCheckbox 
               checked={allSelected} 
               indeterminate={selectedIds.length > 0 && selectedIds.length < alerts.length}
@@ -146,7 +134,7 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
           return (
             <div className={`mobile-card ${isExpanded ? 'expanded' : ''} ${isSelected ? 'selected' : ''}`} key={id}>
               <div className="mobile-card-header" style={{ display: 'flex', alignItems: 'center' }}>
-                <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="col-checkbox" style={{ width: '2.8571rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <VCheckbox 
                     checked={isSelected}
                     onChange={(e) => onSelect(id, e.target.checked)}
@@ -166,9 +154,7 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
                   <div className="detail-row">
                     <span className="detail-label">{t('alerts.list_table.table_severity', 'Mức độ')}</span>
                     <span className="detail-value">
-                      <span className={`badge ${getSeverityClass(alert.severity)}`}>
-                        {getSeverityLabel(alert.severity)}
-                      </span>
+                      <VStatus status={getSeverityVariant(alert.severity)} label={getSeverityLabel(alert.severity)} showDot />
                     </span>
                     <div className="card-action-menu">
                       <ActionMenu actions={getActions(alert)} direction="down" />
@@ -177,9 +163,7 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
                   <div className="detail-row">
                     <span className="detail-label">{t('alerts.list_table.table_status', 'Trạng thái')}</span>
                     <span className="detail-value">
-                      <span className={`badge ${getStatusClass(alert.status)}`}>
-                        {getStatusLabel(alert.status)}
-                      </span>
+                      <VStatus status={getStatusVariant(alert.status)} label={getStatusLabel(alert.status)} showDot />
                     </span>
                   </div>
                   <div className="detail-row">
@@ -187,12 +171,12 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
                     <span className="detail-value">{alert.rule_name || '-'}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">{t('common.created_at', 'Ngày tạo')}</span>
-                    <span className="detail-value">{formatDate(alert.createdAt)}</span>
+                    <span className="detail-label">{t('alerts.list_table.detected_at', 'Ngày phát hiện')}</span>
+                    <span className="detail-value">{formatDate(alert.detected_at)}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">{t('common.updated_at', 'Ngày cập nhật')}</span>
-                    <span className="detail-value">{formatDate(alert.updatedAt)}</span>
+                    <span className="detail-label">{t('alerts.list_table.resolved_at', 'Ngày xử lý')}</span>
+                    <span className="detail-value">{alert.resolved_at ? formatDate(alert.resolved_at) : '-'}</span>
                   </div>
                 </div>
               )}

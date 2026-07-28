@@ -10,11 +10,14 @@ const VDialog = ({
   children, 
   footer,
   style = {},
-  className = ''
+  className = '',
+  closable = true,
+  closeOnEscape = true,
+  closeOnOutsideClick = true
 }) => {
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape' && visible) {
+      if (e.key === 'Escape' && visible && closeOnEscape) {
         onHide();
       }
     };
@@ -29,13 +32,13 @@ const VDialog = ({
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
-  }, [visible, onHide]);
+  }, [visible, onHide, closeOnEscape]);
 
   if (!visible) return null;
 
   const handleOverlayClick = (e) => {
     // Only close if clicking exactly on the overlay, not on its children
-    if (e.target.className === 'v-dialog-overlay') {
+    if (closeOnOutsideClick && e.target.className === 'v-dialog-overlay') {
       onHide();
     }
   };
@@ -46,9 +49,11 @@ const VDialog = ({
         {header && (
           <div className="v-dialog-header">
             <h3>{header}</h3>
-            <button className="v-dialog-close-btn" onClick={onHide} aria-label="Close dialog">
-              <X size={20} />
-            </button>
+            {closable && (
+              <button className="v-dialog-close-btn" onClick={onHide} aria-label="Close dialog">
+                <X size={20} />
+              </button>
+            )}
           </div>
         )}
         

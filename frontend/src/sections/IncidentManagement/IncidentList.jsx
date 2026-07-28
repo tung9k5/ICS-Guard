@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Edit2, Trash2, ShieldAlert, ChevronDown, ChevronUp, Bot } from 'lucide-react';
 import ActionMenu from '@/components/ActionMenu';
 import VNoData from '@/components/VNoData';
@@ -6,6 +6,7 @@ import VStatus from '@/components/VStatus';
 import VCheckbox from '@/components/VCheckbox';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/utils/formatDate';
+import { useExpandable } from '@/hooks/useExpandable';
 
 import { INCIDENT_STATUS, getIncidentSeverityStyle, getIncidentStatusLabel } from '@/constants/incidentConstants';
 
@@ -21,11 +22,7 @@ const IncidentList = ({
   onSelectAll
 }) => {
   const { t } = useTranslation();
-  const [expandedId, setExpandedId] = useState(null);
-
-  const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
+  const { expandedId, toggleExpand } = useExpandable();
 
 
   if (loading) {
@@ -45,7 +42,7 @@ const IncidentList = ({
         <table className="incident-table">
           <thead>
             <tr>
-              <th style={{ width: '40px', textAlign: 'center' }}>
+              <th style={{ width: '2.8571rem', textAlign: 'center' }}>
                 <VCheckbox 
                   indeterminate={selectedIds.length > 0 && selectedIds.length < incidents.length}
                   checked={allSelected}
@@ -81,7 +78,7 @@ const IncidentList = ({
                       style={{ cursor: 'pointer' }}
                     />
                   </td>
-                  <td style={{ maxWidth: '180px' }}>
+                  <td style={{ maxWidth: '12.8571rem' }}>
                     <div className="incident-title" title={incident.title}>
                       <span className="truncate-text" style={{ flex: 1, minWidth: 0 }}>{incident.title}</span>
                     </div>
@@ -99,11 +96,11 @@ const IncidentList = ({
                       label={getIncidentStatusLabel(incident.status, t)} 
                     />
                   </td>
-                  <td className="text-muted" style={{ maxWidth: '200px' }}>
+                  <td className="text-muted" style={{ maxWidth: '14.2857rem' }}>
                     <span className="truncate-text" title={incident.description}>{incident.description || '-'}</span>
                   </td>
-                  <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(incident.createdAt)}</td>
-                  <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(incident.updatedAt)}</td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(incident.createdAt)}</td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(incident.updatedAt)}</td>
                   <td className="actions-col">
                     <ActionMenu 
                       actions={actions} 
@@ -120,7 +117,7 @@ const IncidentList = ({
       {/* --- MOBILE LIST VIEW --- */}
       <div className="mobile-incident-list">
         <div className="mobile-list-header" style={{ display: 'flex', alignItems: 'center' }}>
-          <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="col-checkbox" style={{ width: '2.8571rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <VCheckbox 
               checked={allSelected} 
               indeterminate={selectedIds.length > 0 && selectedIds.length < incidents.length}
@@ -146,7 +143,7 @@ const IncidentList = ({
             <div className={`mobile-card ${isExpanded ? 'expanded' : ''} ${isSelected ? 'selected' : ''}`} key={id}>
               {/* Card Header */}
               <div className="mobile-card-header" style={{ display: 'flex', alignItems: 'center' }}>
-                <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="col-checkbox" style={{ width: '2.8571rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <VCheckbox 
                     checked={isSelected}
                     onChange={(e) => onSelect(id, e.target.checked)}

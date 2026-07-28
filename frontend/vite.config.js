@@ -46,6 +46,12 @@ export default defineConfig(({ mode }) => {
       preprocessorOptions: {
         scss: {
           api: 'modern-compiler',
+          additionalData: (content, filepath) => {
+            if (filepath.includes('base_color.scss')) {
+              return content;
+            }
+            return `@use "@/assets/base_color" as *;\n` + content;
+          },
           silenceDeprecations: [
             'legacy-js-api',
             'color-functions',

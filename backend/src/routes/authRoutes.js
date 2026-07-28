@@ -6,6 +6,8 @@ import {
   getProfile,
   register,
   googleLogin,
+  getGoogleAuthUrl,
+  googleCallback,
 } from '../controllers/authController.js';
 import { updateProfile } from '../controllers/userController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
@@ -21,6 +23,8 @@ const router = express.Router();
 
 router.post('/login', validateLogin, auditLogger('USER_LOGIN'), login);
 router.post('/google', validateGoogleLogin, auditLogger('USER_GOOGLE_LOGIN'), googleLogin);
+router.get('/google', getGoogleAuthUrl);
+router.get('/google/callback', auditLogger('USER_GOOGLE_LOGIN'), googleCallback);
 router.post('/refresh', validateRefreshToken, refreshToken);
 router.post('/logout', validateRefreshToken, auditLogger('USER_LOGOUT'), logout);
 

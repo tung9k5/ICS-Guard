@@ -115,7 +115,7 @@ const AttackSimulator = () => {
       <VHeaderPage 
         title={t('attack.page_title')}
         action={
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '0.8571rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {selectedIds.length > 0 && (
               <VButton variant="danger" onClick={() => confirmDelete('bulk')} style={{ flex: '1 1 auto', whiteSpace: 'nowrap' }}>
                 <Trash2 size={18} />

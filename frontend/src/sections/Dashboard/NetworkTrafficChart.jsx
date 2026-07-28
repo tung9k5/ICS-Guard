@@ -11,7 +11,7 @@ const NetworkTrafficChart = ({ data = [] }) => {
   const tickCount = (roundedMax / interval) + 1;
 
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: '300px' }}>
+    <div style={{ width: '100%', height: '100%', minHeight: '21.4286rem' }}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart
           data={data}
@@ -37,7 +37,7 @@ const NetworkTrafficChart = ({ data = [] }) => {
             tickCount={tickCount}
           />
           <Tooltip 
-            contentStyle={{ backgroundColor: 'var(--gray-800)', border: 'none', borderRadius: '8px', color: 'var(--white-short)' }}
+            contentStyle={{ backgroundColor: 'var(--gray-800)', border: 'none', borderRadius: '0.5714rem', color: 'var(--white-short)' }}
             itemStyle={{ color: 'var(--white-short)' }}
           />
           <Area type="monotone" name={t('dashboard.traffic.incoming', 'Incoming')} dataKey="incoming" stroke="var(--blue-500)" fillOpacity={1} fill="url(#colorIncoming)" />

@@ -3,7 +3,7 @@
     "attacker_portal": "Cổng Mô Phỏng Tấn Công",
     "welcome_ics_guard": "Chào mừng đến với ICS Guard",
     "attacker_desc": "Công cụ thử nghiệm độ ổn định và mô phỏng các kịch bản xâm nhập hạ tầng công nghiệp.",
-    "ics_guard_desc": "Nền tảng giám sát an ninh mạng thế hệ mới dành cho hệ thống điều khiển công nghiệp.",
+    "ics_guard_desc": "Giải pháp an ninh mạng thế hệ mới, cung cấp khả năng giám sát theo thời gian thực, chủ động phát hiện sớm các mối đe dọa và bảo vệ tối đa cho toàn bộ hệ thống điều khiển công nghiệp (ICS/SCADA).",
     "login": {
       "success": "Đăng nhập thành công",
       "google_fail": "Đăng nhập Google thất bại",
@@ -18,7 +18,7 @@
       "submit": "Đăng Nhập",
       "or": "Hoặc",
       "missing_env": "Vui lòng thêm VITE_GOOGLE_CLIENT_ID và VITE_GOOGLE_GSI_CLIENT_URL vào file .env",
-      "login_google": "Đăng nhập bằng Google",
+      "login_google": "ĐĂNG NHẬP VỚI GOOGLE",
       "no_account": "Chưa có tài khoản? ",
       "register_now": "Đăng ký ngay"
     },
@@ -73,6 +73,8 @@
     "newest": "Mới nhất",
     "oldest": "Cũ nhất",
     "ai_analyze": "Phân tích AI",
+    "created_at": "Ngày tạo",
+    "updated_at": "Ngày cập nhật",
     "idle_timeout": {
       "title": "Bạn còn ở đó không?",
       "description_1": "Phiên đăng nhập sẽ tự động đăng xuất sau ",
@@ -130,6 +132,8 @@
       "table_actions": "Thao tác",
       "btn_edit": "Chỉnh sửa",
       "btn_delete": "Xóa thiết bị",
+      "btn_simulate": "Mô phỏng",
+      "no_description": "Không có mô tả",
       "mobile_id": "Mã",
       "mobile_name": "Tên thiết bị"
     },
@@ -181,7 +185,7 @@
       "table_ip": "IP",
       "table_status": "Trạng thái",
       "table_details": "Chi tiết",
-      "table_username": "TÊN NGƯỜI DÙNG",
+      "table_username": "TÊN",
       "table_email": "EMAIL",
       "table_role": "VAI TRÒ"
     },
@@ -376,7 +380,9 @@
       "table_status": "Trạng thái",
       "table_detected_at": "Thời gian",
       "table_actions": "Thao tác",
-      "mobile_title": "Tiêu đề cảnh báo"
+      "mobile_title": "Tiêu đề cảnh báo",
+      "resolved_at": "Ngày xử lý",
+      "detected_at": "Ngày phát hiện"
     }
   },
   "incidents": {
@@ -477,6 +483,9 @@
     }
   },
   "sidebar": {
+    "security_group": "An ninh & Sự cố",
+    "system_group": "Hệ thống & Thiết bị",
+    "admin_group": "Quản trị hệ thống",
     "rule_management": "Quản lý Quy Tắc",
     "alert_management": "Cảnh Báo Thô"
   },
@@ -550,8 +559,92 @@
       "detail_title": "Chi tiết sự cố",
       "lbl_title": "Tiêu đề",
       "lbl_description": "Mô tả",
-      "lbl_status": "Trạng thái",
-      "lbl_created_at": "Tạo lúc"
+      "lbl_status": "Trạng thái"
+    }
+  },
+  "chatbot": {
+    "title": "Trợ lý ảo ICS-Guard",
+    "greeting": "👋 Mình là trợ lý AI sẵn sàng hỗ trợ bạn về hệ thống ICS-Guard. Bạn cần giúp gì?",
+    "minimize": "Thu nhỏ",
+    "minimize_window": "Thu nhỏ cửa sổ",
+    "maximize": "Phóng to",
+    "close": "Đóng",
+    "copy": "Sao chép",
+    "like": "Thích",
+    "heart": "Thả tim",
+    "expiration_notice": "Đoạn chat này sẽ tự động xóa sau {{timeLeft}} nếu không có tương tác mới",
+    "placeholder": "Hãy hỏi tôi bất cứ điều gì...",
+    "fallback": "Xin lỗi, tôi không thể trả lời lúc này.",
+    "error": "Đã xảy ra lỗi khi kết nối với AI: {{message}}"
+  },
+  "settings": {
+    "page_title": "Cài đặt Hệ thống",
+    "tabs": {
+      "general": "Chung",
+      "security": "Bảo mật",
+      "notifications": "Thông báo"
+    },
+    "loading": "Đang tải cài đặt...",
+    "general": {
+      "title": "Cấu hình Chung",
+      "desc": "Quản lý các tùy chọn cơ bản của hệ thống"
+    },
+    "security": {
+      "title": "Chính sách Bảo mật",
+      "desc": "Cấu hình thời hạn mật khẩu, 2FA và thời gian hết hạn phiên"
+    },
+    "notifications": {
+      "title": "Thông báo & Tích hợp",
+      "desc": "Cấu hình máy chủ SMTP và Telegram bot cho cảnh báo"
+    },
+    "fields": {
+      "system_name": "Tên Hệ thống",
+      "timezone": "Múi giờ",
+      "language": "Ngôn ngữ",
+      "session_timeout": "Thời gian chờ (phút)",
+      "password_expiry": "Thời hạn mật khẩu (ngày)",
+      "require_2fa": "Bắt buộc xác thực 2 bước (2FA)",
+      "smtp_host": "Máy chủ SMTP",
+      "smtp_port": "Cổng SMTP",
+      "telegram_bot_token": "Token Telegram Bot"
+    },
+    "save_all": "Lưu tất cả thay đổi",
+    "toasts": {
+      "load_failed": "Lỗi khi tải cài đặt",
+      "update_success": "Đã cập nhật {{key}} thành công",
+      "update_failed": "Lỗi khi cập nhật {{key}}",
+      "save_all_success": "Đã lưu tất cả cài đặt thành công",
+      "save_all_failed": "Lỗi khi lưu một số cài đặt"
+    }
+  },
+  "reports": {
+    "page_title": "Báo cáo & Phân tích Hệ thống",
+    "loading": "Đang tải dữ liệu phân tích...",
+    "total_devices": "Tổng số Thiết bị",
+    "total_alerts": "Tổng số Cảnh báo",
+    "total_incidents": "Tổng số Sự cố",
+    "trends_title": "Xu hướng Cảnh báo & Sự cố (7 ngày qua)",
+    "alerts": "Cảnh báo",
+    "severity_distribution": "Phân bổ Cảnh báo theo Mức độ",
+    "incident_status": "Trạng thái Sự cố",
+    "incidents": "Sự cố",
+    "no_data": "Không có dữ liệu để hiển thị báo cáo.",
+    "toasts": {
+      "load_failed": "Lỗi khi tải tóm tắt báo cáo"
+    },
+    "severity": {
+      "low": "Thấp",
+      "medium": "Trung bình",
+      "high": "Cao",
+      "critical": "Nghiêm trọng",
+      "info": "Thông tin"
+    },
+    "status": {
+      "open": "Đang mở",
+      "investigating": "Đang điều tra",
+      "remediated": "Đã khắc phục",
+      "closed": "Đã đóng",
+      "resolved": "Đã giải quyết"
     }
   }
 }

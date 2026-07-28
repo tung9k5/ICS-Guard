@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Info, User, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -9,10 +9,13 @@ import VCheckbox from '@/components/VCheckbox';
 import VFilterPage from '@/components/VFilterPage';
 import VSelectFilter from '@/components/VSelectFilter';
 import ActionMenu from '@/components/ActionMenu';
+import VStatus from '@/components/VStatus';
 import DeleteConfirmModal from '@/Dialog/DeleteConfirmModal';
-import { toast } from 'react-toastify';
+import { toast } from '@/utils/toast';
 import { formatDate } from '@/utils/formatDate';
 import { useLoader } from '@/hooks/useLoader';
+import { useExpandable } from '@/hooks/useExpandable';
+
 
 // Known audit actions from server (extend as needed)
 const AUDIT_ACTIONS = [
@@ -37,7 +40,33 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
   const [perPage, setPerPage] = useState(10);
   const [total, setTotal] = useState(0);
 
-  const [expandedId, setExpandedId] = useState(null);
+  const { expandedId, toggleExpand } = useExpandable();
+
+  // Sync useSelection results back to parent's selectedIds
+  const handleSelectWithSync = useCallback((id, checked) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, id]);
+    } else {
+      setSelectedIds(prev => prev.filter(item => item !== id));
+    }
+  }, [setSelectedIds]);
+
+  const handleSelectAllWithSync = useCallback((checked) => {
+    if (checked) {
+      setSelectedIds(logs.map(log => log.id || log._id));
+    } else {
+      setSelectedIds([]);
+    }
+  }, [logs, setSelectedIds]);
+
+  const getActionVariant = (act) => {
+    if (!act) return 'neutral';
+    if (act.includes('DELETE') || act.includes('BLOCK') || (act.includes('ISOLATE') && !act.includes('UNISOLATE'))) return 'danger';
+    if (act.includes('CREATE') || act.includes('UNBLOCK') || act.includes('UNISOLATE')) return 'success';
+    if (act.includes('UPDATE') || act.includes('ANALYZE')) return 'warning';
+    return 'neutral';
+  };
+
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [logToDelete, setLogToDelete] = useState(null);
 
@@ -46,26 +75,6 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
       confirmDelete('bulk');
     }
   }, [triggerBulkDelete]);
-
-  const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
-
-  const handleSelectAll = (checked) => {
-    if (checked) {
-      setSelectedIds(logs.map(log => log.id || log._id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
-  const handleSelect = (id, checked) => {
-    if (checked) {
-      setSelectedIds(prev => [...prev, id]);
-    } else {
-      setSelectedIds(prev => prev.filter(item => item !== id));
-    }
-  };
 
   const confirmDelete = (id) => {
     setLogToDelete(id);
@@ -143,10 +152,7 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
           placeholder={t('audit.all_roles', 'Tất cả vai trò')}
           options={[
             { value: 'admin', label: 'Admin' },
-            { value: 'l1_analyst', label: 'L1 Analyst' },
-            { value: 'l2_responder', label: 'L2 Responder' },
-            { value: 'l3_manager', label: 'L3 Manager' },
-            { value: 'ot_operator', label: 'OT Operator' }
+            { value: 'customer', label: 'Customer' },
           ]}
         />
         <VSelectFilter
@@ -160,7 +166,6 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
             ...AUDIT_ACTIONS.map(act => ({ value: act, label: act }))
           ]}
         />
-        {/* Order filter */}
         <VSelectFilter
           value={order}
           defaultValue="desc"
@@ -181,24 +186,23 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
           ) : logs.length === 0 ? (
             <VNoData message={t('assets.list.no_data')} />
           ) : (
-            <table className="v-table">
+            <table className="v-table" style={{ tableLayout: 'fixed', width: '100%', minWidth: '100%' }}>
               <thead>
                 <tr>
-                  <th style={{ width: '40px', textAlign: 'center' }}>
+                  <th style={{ width: '3rem', textAlign: 'center' }}>
                     <VCheckbox 
                       checked={logs.length > 0 && selectedIds.length === logs.length}
                       indeterminate={selectedIds.length > 0 && selectedIds.length < logs.length}
-                      onChange={(e) => handleSelectAll(e.target.checked)}
+                      onChange={(e) => handleSelectAllWithSync(e.target.checked)}
                     />
                   </th>
-                  <th>{t('audit.logs.table_username', 'TÊN NGƯỜI DÙNG')}</th>
-                  <th>{t('audit.logs.table_email', 'EMAIL')}</th>
-                  <th>{t('audit.logs.table_role', 'VAI TRÒ')}</th>
-                  <th>{t('audit.logs.table_action')}</th>
-                  <th>{t('audit.logs.table_ip')}</th>
-                  <th style={{ whiteSpace: 'nowrap' }}>{t('common.created_at', 'Ngày tạo')}</th>
-                  <th style={{ whiteSpace: 'nowrap' }}>{t('common.updated_at', 'Ngày cập nhật')}</th>
-                  <th className="actions-col">{t('assets.list.table_actions')}</th>
+                  <th style={{ width: '11%' }}>{t('audit.logs.table_username', 'TÊN')}</th>
+                  <th style={{ width: '15%' }}>{t('audit.logs.table_email', 'EMAIL')}</th>
+                  <th style={{ width: '8%' }}>{t('audit.logs.table_role', 'VAI TRÒ')}</th>
+                  <th style={{ width: '22%' }}>{t('audit.logs.table_action')}</th>
+                  <th style={{ width: '13%' }}>{t('common.created_at', 'Ngày tạo')}</th>
+                  <th style={{ width: '13%' }}>{t('common.updated_at', 'Ngày cập nhật')}</th>
+                  <th className="actions-col" style={{ width: '4rem' }}>{t('assets.list.table_actions')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -207,29 +211,26 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                     <td style={{ textAlign: 'center' }}>
                       <VCheckbox 
                         checked={selectedIds.includes(log.id || log._id)}
-                        onChange={(e) => handleSelect(log.id || log._id, e.target.checked)}
+                        onChange={(e) => handleSelectWithSync(log.id || log._id, e.target.checked)}
                         style={{ cursor: 'pointer' }}
                       />
                     </td>
-                    <td style={{ maxWidth: '150px' }}>
-                      <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                    <td>
+                      <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '0.5714rem', width: '100%' }}>
                         <User size={16} style={{ flexShrink: 0 }} />
                         <span className="truncate-text" style={{ flex: 1, minWidth: 0 }} title={log.username}>{log.username || 'System'}</span>
                       </div>
                     </td>
-                    <td style={{ maxWidth: '180px' }}>
-                      <div className="truncate-text" title={log.email || log.details?.body?.email || 'N/A'}>{log.email || log.details?.body?.email || 'N/A'}</div>
+                    <td>
+                      <div className="truncate-text" style={{ display: 'block', width: '100%' }} title={log.user?.email || log.details?.body?.email || 'N/A'}>{log.user?.email || log.details?.body?.email || 'N/A'}</div>
                     </td>
                     <td>
-                      <span className="truncate-text" title={log.role}>{log.role || 'System'}</span>
+                      <span className="truncate-text" style={{ display: 'block', width: '100%' }} title={log.user?.role || 'N/A'}>{log.user?.role || 'N/A'}</span>
                     </td>
                     <td>
-                      <span className="action-badge">
-                        {log.action}
-                      </span>
-                    </td>
-                    <td>
-                      {log.ipAddress || 'N/A'}
+                      <div className="truncate-text" style={{ display: 'block', width: '100%' }} title={log.action}>
+                        <VStatus status={getActionVariant(log.action)} label={log.action} />
+                      </div>
                     </td>
                     <td className="time-col">
                       {formatDate(log.createdAt)}
@@ -255,11 +256,11 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
         {!loading && logs.length > 0 && (
           <div className="mobile-list">
             <div className="mobile-list-header">
-              <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div className="col-checkbox" style={{ width: '2.8571rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <input
                   type="checkbox"
                   checked={logs.length > 0 && selectedIds.length === logs.length}
-                  onChange={(e) => handleSelectAll(e.target.checked)}
+                  onChange={(e) => handleSelectAllWithSync(e.target.checked)}
                   style={{ cursor: 'pointer' }}
                 />
               </div>
@@ -274,20 +275,20 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
               return (
                 <div className={`mobile-card ${isExpanded ? 'expanded' : ''} ${selectedIds.includes(id) ? 'selected' : ''}`} key={id}>
                   <div className="mobile-card-header" onClick={() => toggleExpand(id)}>
-                    <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
+                    <div className="col-checkbox" style={{ width: '2.8571rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={selectedIds.includes(id)}
-                        onChange={(e) => handleSelect(id, e.target.checked)}
+                        onChange={(e) => handleSelectWithSync(id, e.target.checked)}
                         style={{ cursor: 'pointer' }}
                       />
                     </div>
                     <div className="col-id">
-                      <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div className="user-info" style={{ display: 'flex', alignItems: 'center', gap: '0.5714rem' }}>
                         <User size={16} style={{ flexShrink: 0, color: 'var(--slate-400)' }} />
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <strong className="truncate-text" style={{ maxWidth: '150px' }}>{log.username || 'System'}</strong>
-                          <span style={{ fontSize: '12px', color: 'var(--slate-500)' }}>{formatDate(log.createdAt)}</span>
+                          <strong className="truncate-text" style={{ maxWidth: '10.7143rem' }}>{log.username || 'System'}</strong>
+                          <span style={{ fontSize: '0.8571rem', color: 'var(--slate-500)' }}>{formatDate(log.createdAt)}</span>
                         </div>
                       </div>
                     </div>
@@ -301,9 +302,9 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                       <div className="detail-row">
                         <span className="detail-label">{t('audit.logs.table_action')}</span>
                         <span className="detail-value">
-                          <span className="action-badge">{log.action}</span>
+                          <VStatus status={getActionVariant(log.action)} label={log.action} />
                         </span>
-                        <div className="card-action-menu" style={{ marginLeft: '12px' }}>
+                        <div className="card-action-menu" style={{ marginLeft: '0.8571rem' }}>
                           <ActionMenu
                             actions={[
                               { label: t('common.delete'), icon: Trash2, danger: true, onClick: () => confirmDelete(id) }
@@ -311,10 +312,6 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                             direction="down"
                           />
                         </div>
-                      </div>
-                      <div className="detail-row">
-                        <span className="detail-label">{t('audit.logs.table_ip')}</span>
-                        <span className="detail-value">{log.ipAddress || '-'}</span>
                       </div>
                       <div className="detail-row">
                         <span className="detail-label">{t('common.created_at', 'Ngày tạo')}</span>

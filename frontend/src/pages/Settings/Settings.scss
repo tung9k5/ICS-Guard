@@ -1,0 +1,135 @@
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  
+  .settings-container {
+    display: flex;
+    flex: 1;
+    background: var(--white);
+    margin: 1.4286rem;
+    border-radius: 0.8571rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--slate-200);
+    overflow: hidden;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      margin: 1rem;
+    }
+
+    .settings-sidebar {
+      width: 250px;
+      background: var(--slate-50);
+      border-right: 1px solid var(--slate-200);
+      display: flex;
+      flex-direction: column;
+      padding: 1.4286rem 0;
+
+      @media (max-width: 768px) {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--slate-200);
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 0;
+
+        button {
+          padding: 1rem;
+          white-space: nowrap;
+          border-left: none;
+          border-bottom: 3px solid transparent;
+
+          &.active {
+            border-bottom-color: var(--blue-500);
+          }
+        }
+      }
+
+      button {
+        padding: 1rem 1.4286rem;
+        text-align: left;
+        background: transparent;
+        border: none;
+        color: var(--slate-600);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-left: 3px solid transparent;
+
+        &:hover {
+          background: rgba(59, 130, 246, 0.05);
+          color: var(--slate-900);
+        }
+
+        &.active {
+          background: rgba(59, 130, 246, 0.1);
+          color: var(--blue-500);
+          border-left-color: var(--blue-500);
+        }
+      }
+    }
+
+    .settings-content {
+      flex: 1;
+      padding: 2.1429rem;
+      overflow-y: auto;
+
+      .settings-section {
+        max-width: 600px;
+
+        h2 {
+          font-size: 1.2857rem;
+          color: var(--slate-900);
+          margin-bottom: 0.4286rem;
+        }
+
+        .section-desc {
+          color: var(--slate-500);
+          font-size: 0.9286rem;
+          margin-bottom: 2.1429rem;
+          padding-bottom: 1.4286rem;
+          border-bottom: 1px solid var(--slate-200);
+        }
+
+        .setting-item {
+          margin-bottom: 1.4286rem;
+
+          label {
+            display: block;
+            color: var(--slate-800);
+            font-weight: 500;
+            margin-bottom: 0.5714rem;
+            font-size: 0.9286rem;
+          }
+
+          &.checkbox-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            
+            label {
+              margin-bottom: 0;
+            }
+          }
+        }
+      }
+
+      .settings-actions {
+        margin-top: 2.8571rem;
+        padding-top: 1.4286rem;
+        border-top: 1px solid var(--slate-200);
+        max-width: 600px;
+      }
+    }
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}

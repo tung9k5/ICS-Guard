@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const connectDB = async () => {
   try {
-    const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/ics_guard';
+    const mongoUri = process.env.MONGO_URI;
     console.log(`[Database] Connecting to MongoDB at: ${mongoUri.replace(/:([^:@]+)@/, ':****@')}...`);
     await mongoose.connect(mongoUri);
     console.log('[Database] MongoDB connected successfully.');

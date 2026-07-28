@@ -5,6 +5,7 @@ import VInput from '@/components/VInput';
 import ApiDevice from '@/api/device';
 import DeviceList from '@/sections/DeviceManagement/DeviceList';
 import DeviceForm from '@/sections/DeviceManagement/DeviceForm';
+import SimulatorModal from '@/sections/DeviceManagement/SimulatorModal';
 import DeleteConfirmModal from '@/Dialog/DeleteConfirmModal';
 import VPagination from '@/components/VPagination';
 import VHeaderPage from '@/components/VHeaderPage';
@@ -14,7 +15,6 @@ import { toast } from '@/utils/toast';
 import { useTranslation } from 'react-i18next';
 import { useSelection } from '@/hooks/useSelection';
 import { useFetchList } from '@/hooks/useFetchList';
-import { DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
 import './DeviceManagement.scss';
  
 const DeviceManagement = () => {
@@ -42,6 +42,7 @@ const DeviceManagement = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingDevice, setEditingDevice] = useState(null);
+  const [simulatorDevice, setSimulatorDevice] = useState(null);
   const { selectedIds, handleSelect, handleSelectAll, clearSelection } = useSelection(devices, 'id', '_id');
   
   // Clear selection when data changes
@@ -77,6 +78,10 @@ const DeviceManagement = () => {
 
   const handleViewDevice = (device) => {
     toast.info(t('assets.view_details', { name: device.name, ip: device.ip_address }));
+  };
+
+  const handleSimulateDevice = (device) => {
+    setSimulatorDevice(device);
   };
 
   const handleBulkDelete = () => {
@@ -125,7 +130,7 @@ const DeviceManagement = () => {
       <VHeaderPage 
         title={t('assets.page_title')}
         action={
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '0.8571rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {selectedIds.length > 0 && (
               <VButton variant="danger" onClick={handleBulkDelete} style={{ flex: '1 1 auto', whiteSpace: 'nowrap' }}>
                 <Trash2 size={18} />
@@ -151,7 +156,7 @@ const DeviceManagement = () => {
               className="v-filter-select" 
               value={filters.type} 
               onChange={(e) => handleFilterChange('type', e.target.value)}
-              style={{ paddingRight: filters.type ? '28px' : undefined }}
+              style={{ paddingRight: filters.type ? '2rem' : undefined }}
             >
               <option value="">{t('assets.filter_type_all')}</option>
               {DEVICE_TYPES.map(t => (
@@ -172,7 +177,7 @@ const DeviceManagement = () => {
               className="v-filter-select" 
               value={filters.status} 
               onChange={(e) => handleFilterChange('status', e.target.value)}
-              style={{ paddingRight: filters.status ? '28px' : undefined }}
+              style={{ paddingRight: filters.status ? '2rem' : undefined }}
             >
               <option value="">{t('assets.filter_status_all')}</option>
               <option value="active">{t('assets.filter_status_active')}</option>
@@ -206,6 +211,7 @@ const DeviceManagement = () => {
           onEdit={handleEditDevice}
           onDelete={handleDeleteDevice}
           onView={handleViewDevice}
+          onSimulate={handleSimulateDevice}
           selectedIds={selectedIds}
           onSelect={handleSelect}
           onSelectAll={handleSelectAll}
@@ -232,6 +238,13 @@ const DeviceManagement = () => {
           device={editingDevice} 
           onClose={() => setIsFormOpen(false)} 
           onSuccess={handleFormSuccess}
+        />
+      )}
+
+      {simulatorDevice && (
+        <SimulatorModal 
+          device={simulatorDevice}
+          onClose={() => setSimulatorDevice(null)}
         />
       )}
 

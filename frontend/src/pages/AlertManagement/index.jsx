@@ -96,7 +96,7 @@ const AlertManagement = () => {
       <VHeaderPage 
         title={t('alerts.title', 'Quản lý Cảnh báo')}
         action={
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: '0.8571rem', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {selectedIds.length > 0 && (
               <VButton variant="danger" onClick={handleBulkDeleteClick} style={{ flex: '1 1 auto', whiteSpace: 'nowrap' }}>
                 <Trash2 size={18} />
@@ -118,7 +118,7 @@ const AlertManagement = () => {
               className="v-filter-select" 
               value={filters.severity} 
               onChange={(e) => handleFilterChange('severity', e.target.value)}
-              style={{ paddingRight: filters.severity ? '28px' : undefined }}
+              style={{ paddingRight: filters.severity ? '2rem' : undefined }}
             >
               <option value="">{t('alerts.filter_severity', 'Tất cả mức độ')}</option>
               {ALERT_SEVERITIES.map(sev => (
@@ -139,7 +139,7 @@ const AlertManagement = () => {
               className="v-filter-select" 
               value={filters.status} 
               onChange={(e) => handleFilterChange('status', e.target.value)}
-              style={{ paddingRight: filters.status ? '28px' : undefined }}
+              style={{ paddingRight: filters.status ? '2rem' : undefined }}
             >
               <option value="">{t('alerts.filter_status', 'Tất cả trạng thái')}</option>
               {ALERT_STATUSES.map(stat => (

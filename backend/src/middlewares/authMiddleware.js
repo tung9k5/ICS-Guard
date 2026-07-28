@@ -1,9 +1,10 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../models/index.js';
+import { AUTH_CONSTANTS } from '../constants/index.js';
 
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-  let token = req.cookies?.access_token;
+  let token = req.cookies?.[AUTH_CONSTANTS.ACCESS_TOKEN_COOKIE];
 
   if (!token && authHeader && authHeader.startsWith('Bearer ')) {
     token = authHeader.split(' ')[1];

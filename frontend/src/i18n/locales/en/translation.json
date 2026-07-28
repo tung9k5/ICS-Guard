@@ -3,7 +3,7 @@
     "attacker_portal": "Attacker Simulation Portal",
     "welcome_ics_guard": "Welcome to ICS Guard",
     "attacker_desc": "Tool for testing stability and simulating industrial infrastructure intrusion scenarios.",
-    "ics_guard_desc": "Next-generation cybersecurity monitoring platform for industrial control systems.",
+    "ics_guard_desc": "A next-generation cybersecurity solution providing real-time monitoring, proactive early threat detection, and maximum protection for your entire Industrial Control Systems (ICS/SCADA).",
     "login": {
       "success": "Login successful",
       "google_fail": "Google login failed",
@@ -18,7 +18,7 @@
       "submit": "Login",
       "or": "Or",
       "missing_env": "Please add VITE_GOOGLE_CLIENT_ID and VITE_GOOGLE_GSI_CLIENT_URL to .env file",
-      "login_google": "Login with Google",
+      "login_google": "LOGIN WITH GOOGLE",
       "no_account": "Don't have an account? ",
       "register_now": "Register now"
     },
@@ -72,6 +72,8 @@
     "newest": "Newest",
     "oldest": "Oldest",
     "ai_analyze": "AI Analysis",
+    "created_at": "Created At",
+    "updated_at": "Updated At",
     "idle_timeout": {
       "title": "Are you still there?",
       "description_1": "Your session will automatically log out in ",
@@ -129,6 +131,8 @@
       "table_actions": "Actions",
       "btn_edit": "Edit",
       "btn_delete": "Delete Device",
+      "btn_simulate": "Simulate",
+      "no_description": "No description",
       "mobile_id": "Code",
       "mobile_name": "Device Name"
     },
@@ -375,7 +379,9 @@
       "table_status": "Status",
       "table_detected_at": "Detected At",
       "table_actions": "Actions",
-      "mobile_title": "Alert title"
+      "mobile_title": "Alert title",
+      "resolved_at": "Resolved At",
+      "detected_at":"Detected At"
     }
   },
   "incidents": {
@@ -467,15 +473,15 @@
       "mobile_username": "Username",
       "mobile_fullname": "Full Name",
       "role_admin": "Administrator",
-      "role_l1": "L1 Analyst",
-      "role_l2": "L2 Responder",
-      "role_l3": "L3 Manager",
-      "role_ot": "OT Operator",
+      "role_customer": "Customer",
       "status_active": "Active",
       "status_inactive": "Inactive"
     }
   },
   "sidebar": {
+    "security_group": "Security & Incidents",
+    "system_group": "System & Devices",
+    "admin_group": "System Administration",
     "rule_management": "Rule Management",
     "alert_management": "Raw Alerts"
   },
@@ -549,8 +555,92 @@
       "detail_title": "Incident Details",
       "lbl_title": "Title",
       "lbl_description": "Description",
-      "lbl_status": "Status",
-      "lbl_created_at": "Created At"
+      "lbl_status": "Status"
+    }
+  },
+  "chatbot": {
+    "title": "ICS-Guard AI Assistant",
+    "greeting": "👋 I am an AI assistant ready to help you with the ICS-Guard system. How can I help you?",
+    "minimize": "Minimize",
+    "minimize_window": "Minimize window",
+    "maximize": "Maximize",
+    "close": "Close",
+    "copy": "Copy",
+    "like": "Like",
+    "heart": "Heart",
+    "expiration_notice": "This chat will be automatically deleted in {{timeLeft}} if there is no new interaction",
+    "placeholder": "Ask me anything...",
+    "fallback": "Sorry, I cannot answer right now.",
+    "error": "An error occurred while connecting to AI: {{message}}"
+  },
+  "settings": {
+    "page_title": "System Settings",
+    "tabs": {
+      "general": "General",
+      "security": "Security",
+      "notifications": "Notifications"
+    },
+    "loading": "Loading settings...",
+    "general": {
+      "title": "General Configuration",
+      "desc": "Manage your basic system preferences"
+    },
+    "security": {
+      "title": "Security Policies",
+      "desc": "Configure password expiry, 2FA, and session timeouts"
+    },
+    "notifications": {
+      "title": "Notifications & Integrations",
+      "desc": "Configure SMTP and Telegram endpoints for alerts"
+    },
+    "fields": {
+      "system_name": "System Name",
+      "timezone": "Timezone",
+      "language": "Language",
+      "session_timeout": "Session Timeout (minutes)",
+      "password_expiry": "Password Expiry (days)",
+      "require_2fa": "Require Two-Factor Authentication",
+      "smtp_host": "SMTP Host",
+      "smtp_port": "SMTP Port",
+      "telegram_bot_token": "Telegram Bot Token"
+    },
+    "save_all": "Save All Changes",
+    "toasts": {
+      "load_failed": "Failed to load settings",
+      "update_success": "Updated {{key}} successfully",
+      "update_failed": "Failed to update {{key}}",
+      "save_all_success": "All settings saved successfully",
+      "save_all_failed": "Failed to save some settings"
+    }
+  },
+  "reports": {
+    "page_title": "System Reports & Analytics",
+    "loading": "Loading analytics data...",
+    "total_devices": "Total Devices",
+    "total_alerts": "Total Alerts",
+    "total_incidents": "Total Incidents",
+    "trends_title": "Alert & Incident Trends (Last 7 Days)",
+    "alerts": "Alerts",
+    "severity_distribution": "Alert Severity Distribution",
+    "incident_status": "Incident Status",
+    "incidents": "Incidents",
+    "no_data": "No data available to display reports.",
+    "toasts": {
+      "load_failed": "Failed to load report summary"
+    },
+    "severity": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical",
+      "info": "Info"
+    },
+    "status": {
+      "open": "Open",
+      "investigating": "Investigating",
+      "remediated": "Remediated",
+      "closed": "Closed",
+      "resolved": "Resolved"
     }
   }
 }

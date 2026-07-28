@@ -63,7 +63,7 @@ const UserForm = ({ user, onClose, onSuccess }) => {
       visible={true}
       onHide={onClose}
       header={isEdit ? 'Cập nhật người dùng' : 'Thêm người dùng mới'}
-      style={{ maxWidth: '600px' }}
+      style={{ maxWidth: '42.8571rem' }}
     >
       <form onSubmit={handleSubmit} className="user-form">
         
@@ -121,14 +121,14 @@ const UserForm = ({ user, onClose, onSuccess }) => {
           <div className="v-input-wrapper mb-0">
             <label className="v-input-label">
               Vai trò
-              <span style={{ color: 'var(--red-500)', marginLeft: '4px' }}>*</span>
+              <span style={{ color: 'var(--red-500)', marginLeft: '0.2857rem' }}>*</span>
             </label>
             <select 
               name="role" 
               value={formData.role} 
               onChange={handleChange}
               className="v-input"
-              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '1px solid var(--slate-300)' }}
+              style={{ width: '100%', padding: '0.7143rem 1rem', borderRadius: '0.5714rem', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '0.0714rem solid var(--slate-300)' }}
             >
               <option value="admin">Quản trị viên</option>
               <option value="l1_analyst">Nhà phân tích (L1)</option>
@@ -141,14 +141,14 @@ const UserForm = ({ user, onClose, onSuccess }) => {
           <div className="v-input-wrapper mb-0">
             <label className="v-input-label">
               Trạng thái
-              <span style={{ color: 'var(--red-500)', marginLeft: '4px' }}>*</span>
+              <span style={{ color: 'var(--red-500)', marginLeft: '0.2857rem' }}>*</span>
             </label>
             <select 
               name="is_active" 
               value={formData.is_active} 
               onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.value === 'true' }))}
               className="v-input"
-              style={{ width: '100%', padding: '10px 14px', borderRadius: '8px', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '1px solid var(--slate-300)' }}
+              style={{ width: '100%', padding: '0.7143rem 1rem', borderRadius: '0.5714rem', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '0.0714rem solid var(--slate-300)' }}
             >
               <option value="true">Hoạt động</option>
               <option value="false">Không hoạt động</option>
@@ -156,7 +156,7 @@ const UserForm = ({ user, onClose, onSuccess }) => {
           </div>
         </div>
 
-        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+        <div style={{ marginTop: '1.7143rem', display: 'flex', justifyContent: 'flex-end', gap: '0.8571rem' }}>
           <VButton type="button" variant="outline" onClick={onClose}>
             Hủy bỏ
           </VButton>

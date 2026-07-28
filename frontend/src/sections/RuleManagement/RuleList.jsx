@@ -1,19 +1,18 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Edit2, Trash2, ShieldAlert, ChevronDown, ChevronUp } from 'lucide-react';
 import ActionMenu from '@/components/ActionMenu';
 import VCheckbox from '@/components/VCheckbox';
 import VNoData from '@/components/VNoData';
+import VStatus from '@/components/VStatus';
 import { RULE_SEVERITIES, RULE_STATUSES } from '@/constants/ruleConstants';
 import { formatDate } from '@/utils/formatDate';
+import { useExpandable } from '@/hooks/useExpandable';
+import { getSeverityVariant } from '@/utils/statusHelpers';
 
 const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], onSelect, onSelectAll }) => {
   const { t } = useTranslation();
-  const [expandedId, setExpandedId] = useState(null);
-
-  const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
+  const { expandedId, toggleExpand } = useExpandable();
 
   if (!rules || rules.length === 0) {
     return <VNoData message={t('rules.no_data', 'Không có quy tắc nào')} />;
@@ -24,14 +23,6 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], onSelect, onSelec
     return sev ? sev.label : val;
   };
 
-  const getSeverityClass = (severity) => {
-    switch (severity) {
-      case 'CRITICAL': return 'badge-danger';
-      case 'HIGH': return 'badge-warning';
-      case 'MEDIUM': return 'badge-info';
-      default: return 'badge-success';
-    }
-  };
 
   const allSelected = rules.length > 0 && rules.every(r => selectedIds.includes(r._id));
   const someSelected = rules.length > 0 && rules.some(r => selectedIds.includes(r._id)) && !allSelected;
@@ -48,7 +39,7 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], onSelect, onSelec
         <table className="rule-table">
           <thead>
             <tr>
-              <th style={{ width: '40px', textAlign: 'center' }}>
+              <th style={{ width: '2.8571rem', textAlign: 'center' }}>
                 <VCheckbox
                   checked={allSelected}
                   indeterminate={someSelected}
@@ -75,23 +66,19 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], onSelect, onSelec
                     style={{ cursor: 'pointer' }}
                   />
                 </td>
-                <td style={{ maxWidth: '180px' }}>
+                <td style={{ maxWidth: '12.8571rem' }}>
                   <div className="truncate-text font-medium text-primary" title={rule.rule_name}>{rule.rule_name}</div>
                 </td>
                 <td>
-                  <span className={`badge ${getSeverityClass(rule.severity)}`}>
-                    {getSeverityLabel(rule.severity)}
-                  </span>
+                  <VStatus status={getSeverityVariant(rule.severity)} label={getSeverityLabel(rule.severity)} showDot />
                 </td>
                 <td>
-                  <span className={`badge ${rule.is_active ? 'badge-success' : 'badge-secondary'}`}>
-                    {rule.is_active ? t('rules.status_active', 'Đang hoạt động') : t('rules.status_inactive', 'Tạm dừng')}
-                  </span>
+                  <VStatus status={rule.is_active ? 'active' : 'inactive'} label={rule.is_active ? t('rules.status_active', 'Đang hoạt động') : t('rules.status_inactive', 'Tạm dừng')} showDot />
                 </td>
                 <td>{rule.time_window_seconds}s</td>
                 <td>{rule.trigger_count}</td>
-                <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(rule.createdAt)}</td>
-                <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(rule.updatedAt)}</td>
+                <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(rule.createdAt)}</td>
+                <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(rule.updatedAt)}</td>
                 <td className="actions-col">
                   <ActionMenu 
                     actions={getActions(rule)}
@@ -107,7 +94,7 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], onSelect, onSelec
       {/* --- MOBILE LIST VIEW --- */}
       <div className="mobile-rule-list">
         <div className="mobile-list-header" style={{ display: 'flex', alignItems: 'center' }}>
-          <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="col-checkbox" style={{ width: '2.8571rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <VCheckbox
               checked={allSelected}
               indeterminate={someSelected}
@@ -125,7 +112,7 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], onSelect, onSelec
           return (
             <div className={`mobile-card ${isExpanded ? 'expanded' : ''} ${isSelected ? 'selected' : ''}`} key={rule._id}>
               <div className="mobile-card-header" style={{ display: 'flex', alignItems: 'center' }}>
-                <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                <div className="col-checkbox" style={{ width: '2.8571rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   onClick={(e) => e.stopPropagation()}>
                   <VCheckbox 
                     checked={isSelected}
@@ -146,9 +133,7 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], onSelect, onSelec
                   <div className="detail-row">
                     <span className="detail-label">{t('rules.list_table.table_severity', 'Mức độ')}</span>
                     <span className="detail-value">
-                      <span className={`badge ${getSeverityClass(rule.severity)}`}>
-                        {getSeverityLabel(rule.severity)}
-                      </span>
+                      <VStatus status={getSeverityVariant(rule.severity)} label={getSeverityLabel(rule.severity)} showDot />
                     </span>
                     <div className="card-action-menu">
                       <ActionMenu actions={getActions(rule)} direction="down" />
@@ -157,9 +142,7 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], onSelect, onSelec
                   <div className="detail-row">
                     <span className="detail-label">{t('rules.list_table.table_status', 'Trạng thái')}</span>
                     <span className="detail-value">
-                      <span className={`badge ${rule.is_active ? 'badge-success' : 'badge-secondary'}`}>
-                        {rule.is_active ? t('rules.status_active') : t('rules.status_inactive')}
-                      </span>
+                      <VStatus status={rule.is_active ? 'active' : 'inactive'} label={rule.is_active ? t('rules.status_active') : t('rules.status_inactive')} showDot />
                     </span>
                   </div>
                   <div className="detail-row">

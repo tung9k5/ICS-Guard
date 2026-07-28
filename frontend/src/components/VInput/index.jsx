@@ -30,7 +30,7 @@ const VInput = ({
       {label && (
         <label htmlFor={id || name} className="v-input-label">
           {label}
-          {required && <span style={{ color: 'var(--red-500)', marginLeft: '4px' }}>*</span>}
+          {required && <span style={{ color: 'var(--red-500)', marginLeft: '0.2857rem' }}>*</span>}
         </label>
       )}
       <div className="v-input-container">

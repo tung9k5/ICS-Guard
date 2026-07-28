@@ -1,9 +1,8 @@
 import './MainLayout.scss';
 import React, { useState } from 'react';
-import { Outlet, Navigate, useNavigate, useLocation, Link } from 'react-router-dom';
-import { AlertOctagon } from 'lucide-react';
-import authApi from '@/api/auth';
-import http from '@/http/clients/api';
+import { Outlet, Navigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { setUser } from '@/store/slices/authSlice';
 import Sidebar from '@/sections/Layout/Sidebar';
 import Header from '@/sections/Layout/Header';
 import GlobalLoading from '@/components/GlobalLoading';
@@ -11,40 +10,17 @@ import Profile from '@/sections/Profile';
 import DraggableChatbot from '@/components/DraggableChatbot';
 
 const MainLayout = () => {
-  const token = localStorage.getItem('access_token');
-  const navigate = useNavigate();
-  const location = useLocation();
-  const [emergencyAlert, setEmergencyAlert] = useState(null);
-  const [quarantineLoading, setQuarantineLoading] = useState(false);
+  const dispatch = useDispatch();
+  const { isInitialized, isAuthenticated, user } = useSelector(state => state.auth);
+  
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [user, setUser] = useState(() => {
-    const cached = sessionStorage.getItem('cached_user');
-    return cached ? JSON.parse(cached) : null;
-  });
 
-  React.useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const token = localStorage.getItem('access_token');
-        if (!token) return;
-        
-        // Fetch current user info
-        const res = await authApi.getProfile();
-        const userData = res.data?.user || res.data || res.user;
-        if (userData) {
-          sessionStorage.setItem('cached_user', JSON.stringify(userData));
-          setUser(userData);
-        }
-      } catch (err) {
-        console.error('Failed to fetch user:', err);
-      }
-    };
+  if (!isInitialized) {
+    return <GlobalLoading />; // Show loading while App.jsx checks auth
+  }
 
-    fetchUser();
-  }, []);
-
-  if (!token) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
@@ -58,8 +34,7 @@ const MainLayout = () => {
   };
 
   const handleUpdateUser = (updatedUser) => {
-    setUser(updatedUser);
-    sessionStorage.setItem('cached_user', JSON.stringify(updatedUser));
+    dispatch(setUser(updatedUser));
   };
 
   return (
@@ -74,7 +49,7 @@ const MainLayout = () => {
         </main>
       </div>
       <GlobalLoading />
-      <DraggableChatbot />
+      <DraggableChatbot key={user?.id || user?._id || 'guest'} user={user} />
       {isProfileOpen && (
         <Profile
           user={user} 

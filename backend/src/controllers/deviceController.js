@@ -1,5 +1,6 @@
 import { successResponse, paginatedResponse } from '../utils/response.js';
 import deviceService from '../services/deviceService.js';
+import { getClientIp, getActor } from '../utils/ipHelper.js';
 
 export const getAllDevices = async (req, res, next) => {
   try {
@@ -57,10 +58,9 @@ export const bulkDeleteDevices = async (req, res, next) => {
 
 export const isolateDevice = async (req, res, next) => {
   try {
-    const rawIp = req.ip || req.connection.remoteAddress;
-    const ipAddress = rawIp.replace(/^::ffff:/, '');
-    const actor = req.user ? req.user.username : 'API';
-    
+    const ipAddress = getClientIp(req);
+    const actor = getActor(req);
+
     const device = await deviceService.isolate(req.params.id, actor, ipAddress);
     return successResponse(res, device, 'Device isolated successfully');
   } catch (error) {
@@ -70,10 +70,9 @@ export const isolateDevice = async (req, res, next) => {
 
 export const unisolateDevice = async (req, res, next) => {
   try {
-    const rawIp = req.ip || req.connection.remoteAddress;
-    const ipAddress = rawIp.replace(/^::ffff:/, '');
-    const actor = req.user ? req.user.username : 'API';
-    
+    const ipAddress = getClientIp(req);
+    const actor = getActor(req);
+
     const device = await deviceService.unisolate(req.params.id, actor, ipAddress);
     return successResponse(res, device, 'Device unisolated successfully');
   } catch (error) {
@@ -83,9 +82,8 @@ export const unisolateDevice = async (req, res, next) => {
 
 export const rollbackDevice = async (req, res, next) => {
   try {
-    const rawIp = req.ip || req.connection.remoteAddress;
-    const ipAddress = rawIp.replace(/^::ffff:/, '');
-    const actor = req.user ? req.user.username : 'API';
+    const ipAddress = getClientIp(req);
+    const actor = getActor(req);
 
     const device = await deviceService.rollback(req.params.id, actor, ipAddress);
     return successResponse(res, device, 'Device logic rolled back successfully');

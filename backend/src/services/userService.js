@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import userRepository from '../repositories/userRepository.js';
 import AppError from '../utils/AppError.js';
+import { parsePagination, buildSortOption } from '../utils/pagination.js';
 
 class UserService {
   async getAll(queryParams, currentUserId) {
@@ -8,7 +9,7 @@ class UserService {
 
     let query = {};
     if (currentUserId) query._id = { $ne: currentUserId };
-    
+
     if (search) {
       const searchRegex = new RegExp(search, 'i');
       query.$or = [
@@ -23,11 +24,8 @@ class UserService {
     }
     if (role) query.role = role;
 
-    const sortOption = order === 'asc' ? { createdAt: 1 } : { createdAt: -1 };
-    
-    const pageNumber = parseInt(page, 10);
-    const limitNumber = parseInt(per_page, 10);
-    const skip = (pageNumber - 1) * limitNumber;
+    const sortOption = buildSortOption(order);
+    const { pageNumber, limitNumber, skip } = parsePagination(page, per_page);
 
     const total = await userRepository.countAll(query);
     const users = await userRepository.findAll(query, sortOption, skip, limitNumber);

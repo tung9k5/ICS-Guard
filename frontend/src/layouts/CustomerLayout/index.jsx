@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
-import authApi from '@/api/auth';
+import { useSelector, useDispatch } from 'react-redux';
+import { setUser } from '@/store/slices/authSlice';
 import CustomerSidebar from '@/sections/Layout/Customer/Sidebar';
 import CustomerHeader from '@/sections/Layout/Customer/Header';
 import GlobalLoading from '@/components/GlobalLoading';
@@ -8,33 +9,17 @@ import Profile from '@/sections/Profile';
 import DraggableChatbot from '@/components/DraggableChatbot';
 
 const CustomerLayout = () => {
-  const token = localStorage.getItem('access_token');
+  const dispatch = useDispatch();
+  const { isInitialized, isAuthenticated, user } = useSelector(state => state.auth);
+  
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [user, setUser] = useState(() => {
-    const cached = sessionStorage.getItem('cached_user');
-    return cached ? JSON.parse(cached) : null;
-  });
 
-  React.useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const t = localStorage.getItem('access_token');
-        if (!t) return;
-        const res = await authApi.getProfile();
-        const userData = res.data?.user || res.data || res.user;
-        if (userData) {
-          sessionStorage.setItem('cached_user', JSON.stringify(userData));
-          setUser(userData);
-        }
-      } catch (err) {
-        console.error('Failed to fetch user:', err);
-      }
-    };
-    fetchUser();
-  }, []);
+  if (!isInitialized) {
+    return <GlobalLoading />; // Show loading while App.jsx checks auth
+  }
 
-  if (!token) {
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
@@ -44,8 +29,7 @@ const CustomerLayout = () => {
   }
 
   const handleUpdateUser = (updatedUser) => {
-    setUser(updatedUser);
-    sessionStorage.setItem('cached_user', JSON.stringify(updatedUser));
+    dispatch(setUser(updatedUser));
   };
 
   return (
@@ -65,7 +49,7 @@ const CustomerLayout = () => {
         </main>
       </div>
       <GlobalLoading />
-      <DraggableChatbot />
+      <DraggableChatbot key={user?.id || user?._id || 'guest'} user={user} />
       {isProfileOpen && (
         <Profile
           user={user}

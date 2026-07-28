@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.85); /* dark slate with opacity */
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(0.2857rem);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -13,18 +13,18 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 1.4286rem;
 
     .icon-container {
-      width: 90px;
-      height: 90px;
+      width: 6.4286rem;
+      height: 6.4286rem;
       display: flex;
       justify-content: center;
       align-items: center;
       background: rgba(255, 255, 255, 0.1);
       border-radius: 50%;
-      border: 2px solid var(--primary-color);
-      box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+      border: 0.1429rem solid var(--primary-color);
+      box-shadow: 0 0 1.4286rem rgba(59, 130, 246, 0.5);
 
       .loading-icon-wrapper {
         width: 100%;
@@ -43,9 +43,9 @@
 
     p {
       color: var(--white);
-      font-size: 16px;
+      font-size: 1.1429rem;
       font-weight: 500;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.0357rem;
       animation: globalLoadingBlink 1.2s linear infinite;
     }
   }

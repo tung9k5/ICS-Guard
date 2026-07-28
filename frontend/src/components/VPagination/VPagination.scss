@@ -1,13 +1,13 @@
 .v-pagination-wrapper {
-  padding: 16px 24px;
+  padding: 1.1429rem 1.7143rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-top: 1px solid var(--slate-200);
+  border-top: 0.0714rem solid var(--slate-200);
   background: var(--slate-50);
 
   .pagination-info {
-    font-size: 14px;
+    font-size: 1rem;
     color: var(--slate-500);
     
     strong {
@@ -18,37 +18,37 @@
   .pagination-controls {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 1.1429rem;
 
     .per-page-select {
-      padding: 6px 28px 6px 12px;
-      border-radius: 6px;
-      border: 1px solid var(--slate-300);
+      padding: 0.4286rem 2rem 0.4286rem 0.8571rem;
+      border-radius: 0.4286rem;
+      border: 0.0714rem solid var(--slate-300);
       background-color: var(--white);
       color: var(--slate-700);
-      font-size: 13px;
+      font-size: 0.9286rem;
       outline: none;
       appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
       background-repeat: no-repeat;
-      background-position: right 8px center;
+      background-position: right 0.5714rem center;
 
       &:focus {
         border-color: var(--blue-500);
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        box-shadow: 0 0 0 0.1429rem rgba(59, 130, 246, 0.2);
       }
     }
 
     .page-buttons {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 0.8571rem;
 
       .current-page {
-        font-size: 14px;
+        font-size: 1rem;
         font-weight: 500;
         color: var(--slate-700);
-        min-width: 60px;
+        min-width: 4.2857rem;
         text-align: center;
       }
 
@@ -56,10 +56,10 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 32px;
-        height: 32px;
-        border-radius: 6px;
-        border: 1px solid var(--slate-300);
+        width: 2.2857rem;
+        height: 2.2857rem;
+        border-radius: 0.4286rem;
+        border: 0.0714rem solid var(--slate-300);
         background-color: var(--white);
         color: var(--slate-600);
         cursor: pointer;
@@ -81,10 +81,10 @@
   }
 
   /* Responsive styling for mobile: split into 2 rows */
-  @media (max-width: 640px) {
+  @media (max-width: 45.7143rem) {
     flex-direction: column;
     align-items: flex-start;
-    gap: 16px;
+    gap: 1.1429rem;
 
     .pagination-controls {
       width: 100%;

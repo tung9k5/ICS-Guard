@@ -44,6 +44,7 @@ const RuleManagement = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedRule, setSelectedRule] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [ruleToDelete, setRuleToDelete] = useState(null);
@@ -68,6 +69,7 @@ const RuleManagement = () => {
 
   const handleSubmit = async (data) => {
     try {
+      setIsSubmitting(true);
       if (selectedRule) {
         await rulesApi.updateRule(selectedRule._id, data);
         toast.success(t('rules.update_success', 'Cập nhật thành công'));
@@ -79,6 +81,8 @@ const RuleManagement = () => {
       fetchRules();
     } catch (error) {
       toast.error(error.response?.data?.message || t('error_general', 'Có lỗi xảy ra'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -120,7 +124,7 @@ const RuleManagement = () => {
       <VHeaderPage
         title={t('rules.title', 'Quản lý Quy tắc')}
         action={
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.8571rem', alignItems: 'center' }}>
             {selectedRuleIds.length > 0 && (
               <VButton variant="danger" onClick={() => setIsBulkDeleteModalOpen(true)}>
                 <Trash2 size={18} />
@@ -141,6 +145,7 @@ const RuleManagement = () => {
             initialData={selectedRule}
             onSubmit={handleSubmit}
             onCancel={() => setIsFormOpen(false)}
+            loading={isSubmitting}
           />
         )}
         <VFilterPage
@@ -153,7 +158,7 @@ const RuleManagement = () => {
               className="v-filter-select" 
               value={filters.severity} 
               onChange={(e) => handleFilterChange('severity', e.target.value)}
-              style={{ paddingRight: filters.severity ? '28px' : undefined }}
+              style={{ paddingRight: filters.severity ? '2rem' : undefined }}
             >
               <option value="">{t('rules.filter_severity', 'Tất cả mức độ')}</option>
               {RULE_SEVERITIES.map(sev => (
@@ -174,7 +179,7 @@ const RuleManagement = () => {
               className="v-filter-select" 
               value={filters.is_active} 
               onChange={(e) => handleFilterChange('is_active', e.target.value)}
-              style={{ paddingRight: filters.is_active ? '28px' : undefined }}
+              style={{ paddingRight: filters.is_active ? '2rem' : undefined }}
             >
               <option value="">{t('rules.filter_status', 'Tất cả trạng thái')}</option>
               {RULE_STATUSES.map(stat => (

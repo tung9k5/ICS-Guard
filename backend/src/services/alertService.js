@@ -2,8 +2,8 @@ import alertRepository from '../repositories/alertRepository.js';
 import auditRepository from '../repositories/auditRepository.js';
 import deviceRepository from '../repositories/deviceRepository.js';
 import AppError from '../utils/AppError.js';
-import { Severity } from '../shared/constants/severity.js';
 import { ROLES, ALERT_STATUSES, AUDIT_STATUSES, AUDIT_ACTIONS } from '../constants/index.js';
+import { parsePagination, buildSortOption } from '../utils/pagination.js';
 
 class AlertService {
   async getAll(queryParams, user) {
@@ -33,11 +33,9 @@ class AlertService {
     if (rule_name) query.rule_name = rule_name;
     if (device_id) query.device_id = device_id;
 
-    const sortOption = order === 'asc' ? { detected_at: 1 } : { detected_at: -1 };
-    
-    const pageNumber = parseInt(page, 10);
-    const limitNumber = parseInt(per_page, 10);
-    const skip = (pageNumber - 1) * limitNumber;
+    // Alert sorts by detected_at, not createdAt
+    const sortOption = buildSortOption(order, 'detected_at');
+    const { pageNumber, limitNumber, skip } = parsePagination(page, per_page);
 
     const total = await alertRepository.countAll(query);
     const alerts = await alertRepository.findAll(query, sortOption, skip, limitNumber);

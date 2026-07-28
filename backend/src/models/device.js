@@ -75,6 +75,38 @@ const deviceSchema = new mongoose.Schema({
     type: String,
     default: 'Cpu',
   },
+  location: {
+    type: String,
+  },
+  manufacturer: {
+    type: String,
+  },
+  serial_number: {
+    type: String,
+  },
+  uptime: {
+    type: Number,
+  },
+  battery_level: {
+    type: Number,
+  },
+  network_interfaces: {
+    type: mongoose.Schema.Types.Mixed,
+  },
+  tags: [{
+    type: String,
+  }],
+  configuration: {
+    type: mongoose.Schema.Types.Mixed,
+  },
+  current_scenario: {
+    type: String,
+    default: 'NORMAL',
+  },
+  scenario_start_time: {
+    type: Date,
+    default: null,
+  },
   lastSeen: {
     type: Date,
     default: Date.now,

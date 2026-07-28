@@ -41,25 +41,55 @@ export const initInflux = async () => {
 export const writeTelemetry = async (data) => {
   if (!isInfluxAvailable) return;
 
-  const { device_id, zone, device_type, metrics } = data;
+  const { device_id, zone, device_type, metrics, metadata, timestamp } = data;
   if (!device_id || !metrics) return;
-
-  const { temperature, cpu_usage, bytes_per_second } = metrics;
   
   // Format tags and fields for Line Protocol
   const measurement = 'device_metrics';
-  const tags = `device_id=${device_id},zone=${zone || 'unknown'},device_type=${device_type || 'unknown'}`;
+  const tags = [`device_id=${device_id}`, `zone=${zone || 'unknown'}`, `device_type=${device_type || 'unknown'}`];
   
   const fieldsList = [];
-  if (temperature !== undefined) fieldsList.push(`temperature=${temperature}`);
-  if (cpu_usage !== undefined) fieldsList.push(`cpu_usage=${cpu_usage}`);
-  if (bytes_per_second !== undefined) fieldsList.push(`bytes_per_second=${bytes_per_second}`);
+  
+  // Parse metrics
+  for (const [key, value] of Object.entries(metrics)) {
+    if (typeof value === 'number') {
+      fieldsList.push(`${key}=${value}`);
+    } else if (typeof value === 'string') {
+      fieldsList.push(`${key}="${value.replace(/"/g, '\\"')}"`);
+    } else if (typeof value === 'boolean') {
+      fieldsList.push(`${key}=${value ? 'true' : 'false'}`);
+    }
+  }
+
+  // Parse metadata
+  if (metadata && typeof metadata === 'object') {
+    for (const [key, value] of Object.entries(metadata)) {
+      if (typeof value === 'number') {
+        fieldsList.push(`meta_${key}=${value}`);
+      } else if (typeof value === 'string') {
+        fieldsList.push(`meta_${key}="${value.replace(/"/g, '\\"')}"`);
+      } else if (typeof value === 'boolean') {
+        fieldsList.push(`meta_${key}=${value ? 'true' : 'false'}`);
+      }
+    }
+  }
   
   if (fieldsList.length === 0) return;
-  const fields = fieldsList.join(',');
+  
+  const tagsStr = tags.join(',');
+  const fieldsStr = fieldsList.join(',');
 
   // Write payload
-  const line = `${measurement},${tags} ${fields}`;
+  let line = `${measurement},${tagsStr} ${fieldsStr}`;
+  
+  // Append timestamp if provided (InfluxDB expects nanoseconds by default if not specified in precision param,
+  // but if timestamp is provided from python as seconds/ms, we should format it.
+  // We'll let influx generate the server timestamp if no timestamp is sent)
+  if (timestamp) {
+    // timestamp from python is usually seconds, convert to nanoseconds
+    const tsNano = Math.floor(timestamp * 1e9);
+    line += ` ${tsNano}`;
+  }
 
   try {
     const writeUrl = `${INFLUXDB_URL}/write?db=${DB_NAME}`;

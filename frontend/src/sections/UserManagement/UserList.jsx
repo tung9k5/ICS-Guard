@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Edit2, Trash2, User, ChevronDown, ChevronUp } from 'lucide-react';
 import ActionMenu from '@/components/ActionMenu';
 import VNoData from '@/components/VNoData';
@@ -6,6 +6,7 @@ import VStatus from '@/components/VStatus';
 import VCheckbox from '@/components/VCheckbox';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/utils/formatDate';
+import { useExpandable } from '@/hooks/useExpandable';
 
 const UserList = ({ 
   users, 
@@ -17,19 +18,12 @@ const UserList = ({
   onSelectAll
 }) => {
   const { t } = useTranslation();
-  const [expandedId, setExpandedId] = useState(null);
-
-  const toggleExpand = (id) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
+  const { expandedId, toggleExpand } = useExpandable();
 
   const getRoleLabel = (role) => {
     switch (role) {
       case 'admin': return t('users.list.role_admin');
-      case 'l1_analyst': return t('users.list.role_l1');
-      case 'l2_responder': return t('users.list.role_l2');
-      case 'l3_manager': return t('users.list.role_l3');
-      case 'ot_operator': return t('users.list.role_ot');
+      case 'customer': return t('users.list.role_customer');
       default: return role;
     }
   };
@@ -51,7 +45,7 @@ const UserList = ({
         <table className="user-table">
           <thead>
             <tr>
-              <th style={{ width: '40px', textAlign: 'center' }}>
+              <th style={{ width: '2.8571rem', textAlign: 'center' }}>
                 <VCheckbox 
                   checked={allSelected} 
                   indeterminate={selectedIds.length > 0 && selectedIds.length < users.length}
@@ -86,10 +80,10 @@ const UserList = ({
                       style={{ cursor: 'pointer' }}
                     />
                   </td>
-                  <td style={{ maxWidth: '150px' }}>
+                  <td style={{ maxWidth: '10.7143rem' }}>
                     <div className="truncate-text" title={user.full_name}>{user.full_name || 'N/A'}</div>
                   </td>
-                  <td style={{ maxWidth: '180px' }}>
+                  <td style={{ maxWidth: '12.8571rem' }}>
                     <div className="truncate-text" title={user.email}>{user.email || 'N/A'}</div>
                   </td>
                   <td>
@@ -104,8 +98,8 @@ const UserList = ({
                       label={user.is_active ? t('users.list.status_active') : t('users.list.status_inactive')} 
                     />
                   </td>
-                  <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(user.createdAt)}</td>
-                  <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(user.updatedAt)}</td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(user.createdAt)}</td>
+                  <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(user.updatedAt)}</td>
                   <td className="actions-col">
                     <ActionMenu 
                       actions={actions} 
@@ -122,7 +116,7 @@ const UserList = ({
       {/* --- MOBILE LIST VIEW --- */}
       <div className="mobile-user-list">
         <div className="mobile-list-header" style={{ display: 'flex', alignItems: 'center' }}>
-          <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="col-checkbox" style={{ width: '2.8571rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <VCheckbox 
               checked={allSelected} 
               indeterminate={selectedIds.length > 0 && selectedIds.length < users.length}
@@ -147,7 +141,7 @@ const UserList = ({
             <div className={`mobile-card ${isExpanded ? 'expanded' : ''} ${isSelected ? 'selected' : ''}`} key={id}>
               {/* Card Header */}
               <div className="mobile-card-header" style={{ display: 'flex', alignItems: 'center' }}>
-                <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="col-checkbox" style={{ width: '2.8571rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <VCheckbox 
                     checked={isSelected}
                     onChange={(e) => onSelect(id, e.target.checked)}

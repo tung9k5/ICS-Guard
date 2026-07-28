@@ -3,14 +3,16 @@ import incidentRepository from '../repositories/incidentRepository.js';
 import incidentTimelineRepository from '../repositories/incidentTimelineRepository.js';
 import AppError from '../utils/AppError.js';
 import { ROLES, INCIDENT_STATUSES, SEVERITY_LEVELS, INCIDENT_TIMELINE_TYPES } from '../constants/index.js';
-import { analyzeIncident } from '../../../ai-gemini/index.js';
+import { analyzeIncident } from '../../../ai-services/index.js';
+import { parsePagination, buildSortOption } from '../utils/pagination.js';
 
 class IncidentService {
   async getAll(queryParams, user) {
     const { search, status, severity, order, page = 1, per_page = 10 } = queryParams;
 
     let query = {};
-    if (user && user.id && user.role !== ROLES.ADMIN && user.role !== 'Admin') {
+    // Normalize role check to lowercase for consistency
+    if (user && user.id && user.role?.toLowerCase() !== ROLES.ADMIN) {
       query.assigned_to = user.id;
     }
 
@@ -21,11 +23,8 @@ class IncidentService {
     if (status) query.status = status;
     if (severity) query.severity = severity;
 
-    const sortOption = order === 'asc' ? { createdAt: 1 } : { createdAt: -1 };
-    
-    const pageNumber = parseInt(page, 10);
-    const limitNumber = parseInt(per_page, 10);
-    const skip = (pageNumber - 1) * limitNumber;
+    const sortOption = buildSortOption(order);
+    const { pageNumber, limitNumber, skip } = parsePagination(page, per_page);
 
     const total = await incidentRepository.countAll(query);
     const incidents = await incidentRepository.findAll(query, sortOption, skip, limitNumber);
@@ -43,7 +42,7 @@ class IncidentService {
 
   async create(data, user) {
     const { title, description, severity, status, alert_ids } = data;
-    
+
     const incident = await incidentRepository.create({
       title,
       description,
@@ -160,15 +159,16 @@ class IncidentService {
 
       console.log(`[IncidentService] AI Analysis completed successfully for incident ${incidentId}`);
 
-      await incidentRepository.updateById(incidentId, { status: 'investigated' });
+      // Mark as investigated (distinct from investigating — AI has completed its analysis)
+      await incidentRepository.updateById(incidentId, { status: INCIDENT_STATUSES.INVESTIGATED });
 
       let mitreMappingsStr = '';
       if (aiReport.mitre_attack_mappings && aiReport.mitre_attack_mappings.length > 0) {
-        mitreMappingsStr = '\n\n*Ánh xạ MITRE ATT&CK:*\n' + 
+        mitreMappingsStr = '\n\n*Ánh xạ MITRE ATT&CK:*\n' +
           aiReport.mitre_attack_mappings.map(m => `- ${m.tactic}: ${m.technique_name} (${m.technique_id})`).join('\n');
       }
 
-      const timelineDescription = 
+      const timelineDescription =
         `🤖 **Báo cáo Phân tích Sự cố từ AI Security Assistant**\n\n` +
         `*Mô hình sử dụng:* \`${aiReport.model_used}\`\n\n` +
         `*Tóm tắt sự kiện:* ${aiReport.log_summary}\n\n` +

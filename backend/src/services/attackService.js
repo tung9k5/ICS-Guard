@@ -1,13 +1,15 @@
 import deviceRepository from '../repositories/deviceRepository.js';
 import { publishMqtt } from './mqttService.js';
 import AppError from '../utils/AppError.js';
+import { DEVICE_STATUSES } from '../constants/index.js';
+import { parsePagination, buildSortOption } from '../utils/pagination.js';
 
 class AttackService {
   async launch(deviceId, attackType) {
     const device = await deviceRepository.findById(deviceId);
     if (!device) throw new AppError('Device not found', 404);
 
-    if (device.status === 'isolated') {
+    if (device.status === DEVICE_STATUSES.ISOLATED) {
       throw new AppError('Cannot launch attack on an isolated device.', 400);
     }
 
@@ -30,11 +32,8 @@ class AttackService {
     }
     if (status) query.status = status;
 
-    const sortOption = order === 'asc' ? { createdAt: 1 } : { createdAt: -1 };
-    
-    const pageNumber = parseInt(page, 10);
-    const limitNumber = parseInt(per_page, 10);
-    const skip = (pageNumber - 1) * limitNumber;
+    const sortOption = buildSortOption(order);
+    const { pageNumber, limitNumber, skip } = parsePagination(page, per_page);
 
     const total = await deviceRepository.countAll(query);
     const devices = await deviceRepository.findAll(query, sortOption, skip, limitNumber);

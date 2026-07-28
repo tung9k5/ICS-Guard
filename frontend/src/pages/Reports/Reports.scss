@@ -1,0 +1,92 @@
+.reports-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  
+  .reports-content {
+    flex: 1;
+    padding: 1.4286rem;
+    overflow-y: auto;
+
+  .dashboard-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4286rem;
+
+    .card {
+      background: var(--white);
+      border-radius: 0.8571rem;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      padding: 1.4286rem;
+      border: 1px solid var(--slate-200);
+
+      h3 {
+        font-size: 1.1429rem;
+        color: var(--slate-800);
+        margin-bottom: 1.4286rem;
+        font-weight: 600;
+      }
+    }
+
+      .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+        gap: 1.4286rem;
+
+        .stat-card {
+          display: flex;
+          align-items: center;
+          gap: 1.4286rem;
+          padding: 1.7143rem;
+
+          .stat-icon {
+            width: 3.4286rem;
+            height: 3.4286rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            &.server { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+            &.alert { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+            &.incident { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+          }
+
+          .stat-details {
+            display: flex;
+            flex-direction: column;
+
+            .stat-label {
+              font-size: 0.9286rem;
+              color: var(--slate-500);
+              margin-bottom: 0.2857rem;
+            }
+
+            .stat-value {
+              font-size: 1.7143rem;
+              font-weight: 700;
+              color: var(--slate-900);
+            }
+          }
+        }
+      }
+
+      .chart-wrapper {
+        height: 300px;
+        width: 100%;
+      }
+
+      .charts-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+        gap: 1.4286rem;
+      }
+      
+      @media (max-width: 768px) {
+        .chart-wrapper {
+          height: 250px;
+        }
+      }
+    }
+  }
+}

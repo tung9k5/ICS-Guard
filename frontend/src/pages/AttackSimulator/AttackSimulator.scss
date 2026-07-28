@@ -1,8 +1,8 @@
 .assets-page {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  min-height: calc(100vh - 118px);
+  gap: 1.7143rem;
+  min-height: calc(100vh - 8.4286rem);
   animation: fadeIn 0.3s ease-out;
 
   .assets-content {
@@ -10,9 +10,9 @@
     display: flex;
     flex-direction: column;
     background: var(--white);
-    border-radius: 12px;
-    border: 1px solid var(--slate-200);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    border-radius: 0.8571rem;
+    border: 0.0714rem solid var(--slate-200);
+    box-shadow: 0 0.2857rem 0.4286rem -0.0714rem rgba(0, 0, 0, 0.05), 0 0.1429rem 0.2857rem -0.0714rem rgba(0, 0, 0, 0.03);
     overflow: hidden;
   }
 
@@ -21,12 +21,12 @@
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
-    font-size: 14px;
+    font-size: 1rem;
 
     th, td {
-      padding: 14px 20px;
+      padding: 1rem 1.4286rem;
       text-align: left;
-      border-bottom: 1px solid var(--slate-200);
+      border-bottom: 0.0714rem solid var(--slate-200);
     }
 
     th {
@@ -34,9 +34,9 @@
       color: var(--slate-800);
       background: var(--slate-50);
       white-space: nowrap;
-      font-size: 13px;
+      font-size: 0.9286rem;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.0357rem;
     }
 
     td {
@@ -44,7 +44,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 200px;
+      max-width: 14.2857rem;
     }
 
     tr:last-child td {
@@ -57,7 +57,7 @@
 
     .truncate-text {
       display: inline-block;
-      max-width: 180px;
+      max-width: 12.8571rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -67,7 +67,7 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(0.5714rem); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
@@ -83,27 +83,27 @@
   }
 
   .loading-state {
-    padding: 60px 20px;
+    padding: 4.2857rem 1.4286rem;
     text-align: center;
     color: var(--slate-500);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 16px;
+    gap: 1.1429rem;
     justify-content: center;
   }
 
   .v-table {
     width: 100%;
-    min-width: 800px;
+    min-width: 57.1429rem;
     border-collapse: separate;
     border-spacing: 0;
-    font-size: 14px;
+    font-size: 1rem;
 
     th, td {
-      padding: 16px 24px;
+      padding: 1.1429rem 1.7143rem;
       text-align: left;
-      border-bottom: 1px solid var(--slate-200);
+      border-bottom: 0.0714rem solid var(--slate-200);
     }
 
     th {
@@ -111,9 +111,9 @@
       color: var(--slate-800);
       background: var(--slate-50);
       white-space: nowrap;
-      font-size: 13px;
+      font-size: 0.9286rem;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.0357rem;
     }
 
     td {
@@ -131,15 +131,15 @@
     .device-info {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 0.8571rem;
 
       .icon-wrapper {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
+        width: 2.5714rem;
+        height: 2.5714rem;
+        border-radius: 0.5714rem;
         background: var(--slate-100);
         color: var(--slate-600);
         flex-shrink: 0;
@@ -148,16 +148,16 @@
       .name-details {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 0.1429rem;
 
         .device-name {
           font-weight: 500;
           color: var(--slate-900);
-          font-size: 14px;
+          font-size: 1rem;
         }
 
         .device-id {
-          font-size: 12px;
+          font-size: 0.8571rem;
           color: var(--slate-500);
           font-family: monospace;
         }
@@ -167,36 +167,36 @@
     .v-badge {
       display: inline-flex;
       align-items: center;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 12px;
+      padding: 0.2857rem 0.5714rem;
+      border-radius: 0.2857rem;
+      font-size: 0.8571rem;
       font-weight: 600;
-      border: 1px solid var(--slate-300);
+      border: 0.0714rem solid var(--slate-300);
       color: var(--slate-800);
       background: var(--white);
       white-space: nowrap;
 
       &--success {
         background: var(--green-100, rgba(220, 252, 231, 0.8));
-        color: var(--green-800, #166534);
-        border-color: var(--green-200, #bbf7d0);
+        color: var(--green-800, $green-800);
+        border-color: var(--green-200, $green-200);
       }
 
       &--danger {
         background: var(--red-100, rgba(254, 226, 226, 0.8));
-        color: var(--red-800, #991b1b);
-        border-color: var(--red-200, #fecaca);
+        color: var(--red-800, $apple-red-dark);
+        border-color: var(--red-200, $red-200);
       }
     }
 
     .actions-col {
-      width: 140px;
+      width: 10rem;
       text-align: right;
     }
 
     .truncate-text {
       display: inline-block;
-      max-width: 180px;
+      max-width: 12.8571rem;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -218,10 +218,10 @@
 
     .mobile-list {
       display: none;
-      padding: 0 16px 16px;
+      padding: 0 1.1429rem 1.1429rem;
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 54.8571rem) {
       .table-wrapper {
         display: none;
       }
@@ -232,30 +232,30 @@
         .mobile-list-header {
           display: flex;
           align-items: center;
-          padding: 16px;
+          padding: 1.1429rem;
           background: var(--slate-50);
-          border-radius: 8px 8px 0 0;
-          border: 1px solid var(--slate-200);
+          border-radius: 0.5714rem 0.5714rem 0 0;
+          border: 0.0714rem solid var(--slate-200);
           border-bottom: none;
           font-weight: 600;
           color: var(--slate-800);
-          font-size: 13px;
+          font-size: 0.9286rem;
           text-transform: uppercase;
 
-          .col-checkbox { width: 40px; display: flex; align-items: center; justify-content: center; }
+          .col-checkbox { width: 2.8571rem; display: flex; align-items: center; justify-content: center; }
           .col-id { flex: 1; }
-          .col-action { width: 32px; text-align: right; }
+          .col-action { width: 2.2857rem; text-align: right; }
         }
 
         .mobile-card {
-          border: 1px solid var(--slate-200);
+          border: 0.0714rem solid var(--slate-200);
           border-bottom: none;
           background: var(--white);
           transition: all 0.2s ease;
 
           &:last-child {
-            border-bottom: 1px solid var(--slate-200);
-            border-radius: 0 0 8px 8px;
+            border-bottom: 0.0714rem solid var(--slate-200);
+            border-radius: 0 0 0.5714rem 0.5714rem;
           }
 
           &.expanded {
@@ -265,9 +265,9 @@
           .mobile-card-header {
             display: flex;
             align-items: center;
-            padding: 16px;
+            padding: 1.1429rem;
             cursor: pointer;
-            border-bottom: 1px solid transparent;
+            border-bottom: 0.0714rem solid transparent;
 
             &:hover {
               background: var(--slate-100);
@@ -277,13 +277,13 @@
               flex: 1;
               font-weight: 500;
               color: var(--slate-900);
-              padding-right: 12px;
+              padding-right: 0.8571rem;
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
             }
             .col-action {
-              width: 32px;
+              width: 2.2857rem;
               display: flex;
               justify-content: flex-end;
               color: var(--slate-400);
@@ -296,26 +296,26 @@
           }
 
           .mobile-card-body {
-            padding: 16px;
+            padding: 1.1429rem;
             background: var(--white);
-            font-size: 14px;
-            border-bottom: 1px solid var(--slate-200);
+            font-size: 1rem;
+            border-bottom: 0.0714rem solid var(--slate-200);
 
             .detail-row {
               display: flex;
               justify-content: space-between;
               align-items: center;
-              padding: 10px 0;
+              padding: 0.7143rem 0;
               position: relative;
 
               &:not(:last-child) {
-                border-bottom: 1px dashed var(--slate-200);
+                border-bottom: 0.0714rem dashed var(--slate-200);
               }
 
               .detail-label {
                 color: var(--slate-500);
                 font-weight: 500;
-                width: 110px;
+                width: 7.8571rem;
                 flex-shrink: 0;
               }
 
@@ -328,7 +328,7 @@
               }
 
               .card-action-menu {
-                margin-left: 12px;
+                margin-left: 0.8571rem;
               }
             }
           }
@@ -342,52 +342,52 @@
 .attack-modal-content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 1.4286rem;
 
   .target-info {
     background: var(--slate-50);
-    border: 1px solid var(--slate-200);
-    border-radius: 8px;
-    padding: 12px 16px;
+    border: 0.0714rem solid var(--slate-200);
+    border-radius: 0.5714rem;
+    padding: 0.8571rem 1.1429rem;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 0.4286rem;
 
     p {
       margin: 0;
-      font-size: 14px;
+      font-size: 1rem;
       color: var(--slate-700);
 
       strong {
         color: var(--slate-900);
         font-weight: 600;
-        margin-right: 6px;
+        margin-right: 0.4286rem;
       }
     }
   }
 
   .section-label {
     display: block;
-    font-size: 13px;
+    font-size: 0.9286rem;
     font-weight: 600;
     color: var(--slate-700);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 12px;
+    letter-spacing: 0.0357rem;
+    margin-bottom: 0.8571rem;
   }
 
   .options-grid {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 0.7143rem;
 
     .attack-card {
       display: flex;
       align-items: flex-start;
-      gap: 14px;
-      padding: 14px 16px;
-      border-radius: 8px;
-      border: 1px solid var(--slate-200);
+      gap: 1rem;
+      padding: 1rem 1.1429rem;
+      border-radius: 0.5714rem;
+      border: 0.0714rem solid var(--slate-200);
       background: var(--white);
       cursor: pointer;
       transition: all 0.2s ease;
@@ -398,38 +398,38 @@
       }
 
       &.selected {
-        border-color: var(--red-400, #f87171);
+        border-color: var(--red-400, $red-400);
         background: var(--red-50, rgba(254, 242, 242, 0.8));
 
         .radio-circle {
-          border-color: var(--red-500, #ef4444);
+          border-color: var(--red-500, $red-500);
 
           .inner-dot {
-            background: var(--red-500, #ef4444);
+            background: var(--red-500, $red-500);
             transform: scale(1);
           }
         }
 
         .attack-details h4 {
-          color: var(--red-700, #b91c1c);
+          color: var(--red-700, $red-700);
         }
       }
 
       .radio-circle {
-        width: 18px;
-        height: 18px;
+        width: 1.2857rem;
+        height: 1.2857rem;
         border-radius: 50%;
-        border: 2px solid var(--slate-300);
+        border: 0.1429rem solid var(--slate-300);
         display: flex;
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        margin-top: 2px;
+        margin-top: 0.1429rem;
         transition: border-color 0.2s ease;
 
         .inner-dot {
-          width: 8px;
-          height: 8px;
+          width: 0.5714rem;
+          height: 0.5714rem;
           border-radius: 50%;
           background: transparent;
           transform: scale(0);
@@ -441,15 +441,15 @@
         flex: 1;
 
         h4 {
-          margin: 0 0 4px;
-          font-size: 14px;
+          margin: 0 0 0.2857rem;
+          font-size: 1rem;
           font-weight: 600;
           color: var(--slate-900);
         }
 
         p {
           margin: 0;
-          font-size: 13px;
+          font-size: 0.9286rem;
           color: var(--slate-500);
           line-height: 1.5;
         }
