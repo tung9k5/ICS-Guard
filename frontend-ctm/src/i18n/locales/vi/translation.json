@@ -37,6 +37,42 @@
       "login_now": "Đăng Nhập"
     }
   },
+  "notifications": {
+    "title": "Thông báo",
+    "markAllAsRead": "Đánh dấu tất cả đã đọc",
+    "viewAll": "XEM TẤT CẢ",
+    "noNewNotifications": "Không có thông báo mới",
+    "timeAgo": {
+      "seconds": "{{count}} giây trước",
+      "minutes": "{{count}} phút trước",
+      "hours": "{{count}} giờ trước",
+      "days": "{{count}} ngày trước"
+    },
+    "scenarios": {
+      "OVERHEAT": "Quá nhiệt (Overheat)",
+      "OFFLINE": "Mất kết nối (Offline)",
+      "FLOOD": "Tấn công ngập lụt (Flood)",
+      "ATTACK": "Bị tấn công (Attack)"
+    },
+    "simulations": {
+      "title": "Mô phỏng: {{scenario}}",
+      "message": "Lệnh kích hoạt {{scenario}} tới thiết bị {{device}}."
+    },
+    "alerts": {
+      "trafficSpike": {
+        "title": "Lưu lượng bất thường trên {{device}}",
+        "message": "Phát hiện Mạng tăng đột biến, vượt ngưỡng cho phép."
+      },
+      "flood": {
+        "title": "Ngập lụt mạng trên {{device}}",
+        "message": "Lưu lượng mạng vượt quá mức quy định (DDoS/Flood)."
+      },
+      "fire": {
+        "title": "Phát hiện cháy ở {{device}}",
+        "message": "Cảm biến ghi nhận nhiệt độ cao bất thường."
+      }
+    }
+  },
   "layout": {
     "sidebar": {
       "overview": "Tổng quan",
@@ -247,6 +283,21 @@
     "network_traffic": "Lưu lượng mạng",
     "threat_activity": "Mức độ cảnh báo an ninh",
     "system_health": "Trạng thái hệ thống",
+    "common": {
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "delete": "Xóa",
+      "edit": "Sửa",
+      "add": "Thêm mới",
+      "search": "Tìm kiếm...",
+      "actions": "Thao tác",
+      "no_data": "Không có dữ liệu",
+      "loading": "Đang tải...",
+      "success": "Thành công",
+      "error": "Lỗi",
+      "sort_desc": "Mới nhất",
+      "sort_asc": "Cũ nhất"
+    },
     "days": {
       "mon": "T2",
       "tue": "T3",
@@ -470,9 +521,11 @@
       "btn_delete": "Xóa",
       "btn_ai_analyze": "Phân tích AI",
       "mobile_name": "Tên sự cố",
-      "status_open": "Mở",
+      "status_open": "Đang mở",
       "status_investigating": "Đang điều tra",
+      "status_investigated": "Đã điều tra",
       "status_remediated": "Đã khắc phục",
+      "status_resolved": "Đã xử lý",
       "status_closed": "Đã đóng"
     },
     "create": {
@@ -622,12 +675,13 @@
     }
   },
   "simulator": {
-    "scenario_normal": "Thực tế",
+    "scenario_normal": "Bình thường",
     "scenario_fire": "Cháy nổ",
     "scenario_flood": "Ngập lụt",
-    "scenario_traffic_spike": "Bất thường lưu lượng",
+    "scenario_traffic_spike": "Lưu lượng",
     "scenario_overheat": "Quá nhiệt",
     "scenario_offline": "Mất kết nối",
+    "filter_scenario_all": "Tất cả mô phỏng",
     "title": "Mô phỏng IoT (Simulator)",
     "sending": "Đang gửi...",
     "apply_btn": "Lưu kịch bản",
@@ -651,7 +705,7 @@
   "customer": {
     "sidebar": {
       "dashboard": "Trang chủ",
-      "devices": "Thiết bị của tôi",
+      "devices": "Thiết bị",
       "alerts": "Cảnh báo",
       "incidents": "Sự cố"
     },

@@ -6,6 +6,7 @@ import { ROLES } from '../constants/index.js';
 import { Device, Alert, Incident, IncidentTimeline } from '../models/index.js';
 import idGeneratorService from '../services/idGeneratorService.js';
 import socketService from '../services/socketService.js';
+import notificationService from '../services/notification.service.js';
 import { ALERT_STATUSES, INCIDENT_STATUSES, SEVERITY_LEVELS, INCIDENT_TIMELINE_TYPES } from '../constants/index.js';
 
 const router = express.Router();
@@ -78,7 +79,8 @@ router.post('/scenario', authMiddleware, authorize([ROLES.ADMIN, ROLES.CUSTOMER]
           description: `Hệ thống ghi nhận mất kết nối hoàn toàn với thiết bị ${device_id} tại vùng ${device.zone || 'unknown'}. Có thể do mất điện, hỏng hóc vật lý hoặc tấn công cắt đứt mạng.`,
           severity,
           status: INCIDENT_STATUSES.INVESTIGATING,
-          alert_ids: [alert._id]
+          alert_ids: [alert._id],
+          assigned_to: device.userId || null
         });
 
         alert.incident_id = incident._id;
@@ -100,6 +102,23 @@ router.post('/scenario', authMiddleware, authorize([ROLES.ADMIN, ROLES.CUSTOMER]
     }
   }
   
+  try {
+    if (scenario !== 'NORMAL') {
+      await notificationService.createNotification({
+        title: `Cảnh báo mô phỏng: ${scenario}`,
+        message: `Đã kích hoạt kịch bản sự cố/tấn công ${scenario} trên thiết bị ${device_id}`,
+        type: 'ALERT',
+        severity: severity || 'HIGH',
+        deviceId: device_id,
+        userId: req.user.id
+      });
+      // Phát sự kiện reload
+      socketService.getIo()?.emit('NEW_ALERT', { title: 'New Simulation' });
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
   res.json({ success: true, message: `Scenario ${scenario} requested for ${device_id}` });
 });
 

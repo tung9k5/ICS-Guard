@@ -3,6 +3,7 @@ import incidentRepository from '../repositories/incidentRepository.js';
 import incidentTimelineRepository from '../repositories/incidentTimelineRepository.js';
 import deviceRepository from '../repositories/deviceRepository.js';
 import alertRepository from '../repositories/alertRepository.js';
+import notificationService from './notification.service.js';
 import AppError from '../utils/AppError.js';
 import { ROLES, INCIDENT_STATUSES, SEVERITY_LEVELS, INCIDENT_TIMELINE_TYPES } from '../constants/index.js';
 import { analyzeIncident } from '../../../ai-services/index.js';
@@ -81,6 +82,14 @@ class IncidentService {
       description: `Sự cố được tạo thủ công bởi ${user ? user.username : 'system'}.`
     });
 
+    await notificationService.createNotification({
+      title: `Incident Created: ${title}`,
+      message: description || `A new incident has been reported manually.`,
+      type: 'SYSTEM',
+      severity: severity || SEVERITY_LEVELS.MEDIUM,
+      userId: null,
+    });
+
     return incident;
   }
 
@@ -97,15 +106,47 @@ class IncidentService {
     return incidentRepository.updateById(id, updateData);
   }
 
-  async remove(id) {
+  async remove(id, user) {
     const incident = await incidentRepository.findById(id);
     if (!incident) throw new AppError('Incident not found', 404);
+
+    if (user && user.role?.toLowerCase() !== ROLES.ADMIN) {
+      const userDevices = await deviceRepository.findAll({ userId: user.id }, {}, 0, 10000, '_id');
+      const userDeviceIds = userDevices.map(d => d._id);
+      const userAlerts = await alertRepository.findAll({ device_id: { $in: userDeviceIds } }, {}, 0, 100000);
+      const userAlertIds = userAlerts.map(a => a._id.toString());
+
+      const isAssignedToUser = incident.assigned_to?.toString() === user.id.toString();
+      const hasUserAlerts = incident.alert_ids && incident.alert_ids.some(alertId => userAlertIds.includes(alertId.toString()));
+      
+      if (!isAssignedToUser && !hasUserAlerts) {
+        throw new AppError('Forbidden: You can only delete incidents associated with your devices or assigned to you', 403);
+      }
+    }
 
     await incidentTimelineRepository.deleteByIncidentId(id);
     await incidentRepository.deleteById(id);
   }
 
-  async removeMany(ids) {
+  async removeMany(ids, user) {
+    if (user && user.role?.toLowerCase() !== ROLES.ADMIN) {
+      const userDevices = await deviceRepository.findAll({ userId: user.id }, {}, 0, 10000, '_id');
+      const userDeviceIds = userDevices.map(d => d._id);
+      const userAlerts = await alertRepository.findAll({ device_id: { $in: userDeviceIds } }, {}, 0, 100000);
+      const userAlertIds = userAlerts.map(a => a._id.toString());
+
+      const incidents = await incidentRepository.findAll({ _id: { $in: ids } }, {}, 0, ids.length);
+      const invalidIncidents = incidents.filter(incident => {
+        const isAssignedToUser = incident.assigned_to?.toString() === user.id.toString();
+        const hasUserAlerts = incident.alert_ids && incident.alert_ids.some(alertId => userAlertIds.includes(alertId.toString()));
+        return !isAssignedToUser && !hasUserAlerts;
+      });
+
+      if (invalidIncidents.length > 0) {
+        throw new AppError('Forbidden: Some incidents do not belong to you', 403);
+      }
+    }
+
     await incidentTimelineRepository.deleteByIncidentIds(ids);
     return incidentRepository.deleteMany(ids);
   }

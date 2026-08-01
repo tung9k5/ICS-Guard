@@ -28,6 +28,9 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const anomalyThrottles = {};
+const ANOMALY_THROTTLE_MS = 60000 * 5; // 5 minutes
+
 let MQTT_URL = process.env.MQTT_URL;
 
 let mqttClient = null;
@@ -189,9 +192,11 @@ const checkTelemetryAnomalies = async (payload) => {
   if (!device_id || !metrics) return;
 
   let deviceSeverity = SEVERITY_LEVELS.HIGH;
+  let deviceUserId = null;
   try {
     const device = await Device.findById(device_id);
     if (device) {
+      deviceUserId = device.userId;
       if (device.status === DEVICE_STATUSES.ISOLATED || device.status === DEVICE_STATUSES.QUARANTINED) {
         return;
       }
@@ -209,9 +214,16 @@ const checkTelemetryAnomalies = async (payload) => {
   const { bytes_per_second, temperature, smoke, water_level } = metrics;
   const now = Date.now();
 
+  const isThrottled = (devId, rule) => {
+    const key = `${devId}_${rule}`;
+    if (anomalyThrottles[key] && (now - anomalyThrottles[key] < ANOMALY_THROTTLE_MS)) return true;
+    anomalyThrottles[key] = now;
+    return false;
+  };
+
   // A. Check Traffic Spike
   if (bytes_per_second && bytes_per_second > THRESHOLDS.TRAFFIC_SPIKE_BPS) {
-    if (true) {
+    if (!isThrottled(device_id, "ABNORMAL_TRAFFIC_SPIKE")) {
       logger.warn(
         `[Anomaly Detection] Traffic Spike detected on ${device_id}: ${bytes_per_second} Bps`,
       );
@@ -222,7 +234,7 @@ const checkTelemetryAnomalies = async (payload) => {
         rule_name: "ABNORMAL_TRAFFIC_SPIKE",
         device_id,
         title: `Lưu lượng tăng đột biến trên ${device_id}`,
-        description: `Lưu lượng mạng vọt lên ${bytes_per_second} Bps (vượt ngưỡng cho phép ${THRESHOLDS.TRAFFIC_SPIKE_BPS.toLocaleString()} Bps).`,
+        description: `Lưu lượng mạng lên ${Math.round(bytes_per_second).toLocaleString()} Bps (vượt ngưỡng cho phép ${THRESHOLDS.TRAFFIC_SPIKE_BPS.toLocaleString()} Bps).`,
         severity: deviceSeverity,
         status: ALERT_STATUSES.NEW,
         detected_at: new Date(),
@@ -236,6 +248,7 @@ const checkTelemetryAnomalies = async (payload) => {
         severity: deviceSeverity,
         status: INCIDENT_STATUSES.INVESTIGATING,
         alert_ids: [alert._id],
+        assigned_to: deviceUserId || null,
       });
 
       alert.incident_id = incident._id;
@@ -283,7 +296,7 @@ const checkTelemetryAnomalies = async (payload) => {
 
   // B. Check Critical Temperature
   if (temperature && temperature > THRESHOLDS.CRITICAL_TEMPERATURE_C) {
-    if (true) {
+    if (!isThrottled(device_id, "CRITICAL_OVERHEAT")) {
       logger.warn(
         `[Anomaly Detection] Critical overheat detected on ${device_id}: ${temperature} °C`,
       );
@@ -308,6 +321,7 @@ const checkTelemetryAnomalies = async (payload) => {
         severity: deviceSeverity,
         status: INCIDENT_STATUSES.INVESTIGATING,
         alert_ids: [alert._id],
+        assigned_to: deviceUserId || null,
       });
 
       alert.incident_id = incident._id;
@@ -355,7 +369,7 @@ const checkTelemetryAnomalies = async (payload) => {
 
   // C. Check Fire (Smoke)
   if (smoke && smoke > 400) {
-    if (true) {
+    if (!isThrottled(device_id, "FIRE_ALARM")) {
       logger.warn(
         `[Anomaly Detection] Fire (Smoke) detected on ${device_id}: ${smoke} ppm`,
       );
@@ -380,6 +394,7 @@ const checkTelemetryAnomalies = async (payload) => {
         severity: deviceSeverity,
         status: INCIDENT_STATUSES.INVESTIGATING,
         alert_ids: [alert._id],
+        assigned_to: deviceUserId || null,
       });
 
       alert.incident_id = incident._id;
@@ -415,7 +430,7 @@ const checkTelemetryAnomalies = async (payload) => {
 
   // D. Check Flood (Water Level)
   if (water_level && water_level > 70) {
-    if (true) {
+    if (!isThrottled(device_id, "FLOOD_WARNING")) {
       logger.warn(
         `[Anomaly Detection] Flood (Water Level) detected on ${device_id}: ${water_level}%`,
       );
@@ -440,6 +455,7 @@ const checkTelemetryAnomalies = async (payload) => {
         severity: deviceSeverity,
         status: INCIDENT_STATUSES.INVESTIGATING,
         alert_ids: [alert._id],
+        assigned_to: deviceUserId || null,
       });
 
       alert.incident_id = incident._id;
@@ -545,7 +561,15 @@ const processStructuredLogs = async (payload) => {
       severity = deviceSeverityOverride;
     }
 
-    if (true) {
+    const now = Date.now();
+    const isThrottled = (devId, rule) => {
+      const key = `${devId}_${rule}`;
+      if (anomalyThrottles[key] && (now - anomalyThrottles[key] < ANOMALY_THROTTLE_MS)) return true;
+      anomalyThrottles[key] = now;
+      return false;
+    };
+
+    if (!isThrottled(device_id, rule_name)) {
       logger.warn(
         `[Anomaly Log Detection] Raised ${rule_name} on ${device_id}: ${message}`,
       );
@@ -571,6 +595,7 @@ const processStructuredLogs = async (payload) => {
         severity,
         status: INCIDENT_STATUSES.INVESTIGATING,
         alert_ids: [alert._id],
+        assigned_to: deviceUserId || null,
       });
 
       alert.incident_id = incident._id;

@@ -546,7 +546,7 @@
   "customer": {
     "sidebar": {
       "dashboard": "Bảng điều khiển",
-      "devices": "Thiết bị của tôi",
+      "devices": "Thiết bị",
       "alerts": "Cảnh báo",
       "incidents": "Sự cố"
     },
@@ -595,7 +595,7 @@
     },
     "devices": {
       "fetch_error": "Không thể tải danh sách thiết bị",
-      "title": "Thiết bị của tôi",
+      "title": "Thiết bị",
       "no_data": "Chưa có thiết bị nào",
       "col_name": "Tên thiết bị",
       "col_ip": "IP",

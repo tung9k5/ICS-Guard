@@ -69,9 +69,9 @@
     }
 
     .notification-btn {
-      background: none;
+      background-color: rgba(255, 255, 255, 0.1);
       border: none;
-      color: var(--slate-400);
+      color: var(--slate-50);
       position: relative;
       cursor: pointer;
       padding: 0.5714rem;
@@ -79,10 +79,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: background-color 0.2s;
 
       &:hover {
-        background-color: rgba(255, 255, 255, 0.05);
-        color: var(--slate-50);
+        background-color: rgba(255, 255, 255, 0.2);
       }
 
       .notification-dot {

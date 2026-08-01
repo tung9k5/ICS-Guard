@@ -30,7 +30,24 @@ class AlertService {
     }
     if (status) query.status = status;
     if (severity) query.severity = severity;
-    if (rule_name) query.rule_name = rule_name;
+    if (rule_name) {
+      const scenarioMap = {
+        'FIRE': 'FIRE_ALARM',
+        'OVERHEAT': 'CRITICAL_OVERHEAT',
+        'TRAFFIC_SPIKE': 'ABNORMAL_TRAFFIC_SPIKE',
+        'FLOOD': 'FLOOD_WARNING'
+      };
+      
+      if (scenarioMap[rule_name]) {
+        query.rule_name = scenarioMap[rule_name];
+      } else if (rule_name === 'NORMAL') {
+        query.rule_name = { $nin: Object.values(scenarioMap) };
+      } else if (rule_name === 'OFFLINE') {
+        query.rule_name = 'DEVICE_OFFLINE'; // Assuming OFFLINE maps to this
+      } else {
+        query.rule_name = rule_name;
+      }
+    }
     if (device_id) query.device_id = device_id;
 
     // Alert sorts by detected_at, not createdAt
@@ -75,13 +92,33 @@ class AlertService {
     return updatedAlert;
   }
 
-  async remove(id) {
+  async remove(id, user) {
     const alert = await alertRepository.findById(id);
     if (!alert) throw new AppError('Alert not found', 404);
+
+    if (user && user.role?.toLowerCase() !== ROLES.ADMIN) {
+      const userDevices = await deviceRepository.findAll({ userId: user.id }, {}, 0, 10000, '_id');
+      const userDeviceIds = userDevices.map(d => d._id.toString());
+      if (alert.device_id && !userDeviceIds.includes(alert.device_id._id?.toString() || alert.device_id.toString())) {
+        throw new AppError('Forbidden: You can only delete alerts associated with your devices', 403);
+      }
+    }
+
     await alertRepository.deleteById(id);
   }
 
-  async removeMany(ids) {
+  async removeMany(ids, user) {
+    if (user && user.role?.toLowerCase() !== ROLES.ADMIN) {
+      const userDevices = await deviceRepository.findAll({ userId: user.id }, {}, 0, 10000, '_id');
+      const userDeviceIds = userDevices.map(d => d._id.toString());
+      
+      const alerts = await alertRepository.findAll({ _id: { $in: ids } }, {}, 0, ids.length);
+      const invalidAlerts = alerts.filter(alert => alert.device_id && !userDeviceIds.includes(alert.device_id._id?.toString() || alert.device_id.toString()));
+      if (invalidAlerts.length > 0) {
+        throw new AppError('Forbidden: Some alerts do not belong to your devices', 403);
+      }
+    }
+
     return alertRepository.deleteMany(ids);
   }
 }

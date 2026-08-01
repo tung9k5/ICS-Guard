@@ -75,7 +75,7 @@ export const getIncidentStatusProps = (status, t) => {
 
 export const getScenarioProps = (scenario, t) => {
   if (!scenario || scenario === 'NORMAL') {
-    return { label: t('simulator.scenario_normal', 'Thực tế'), status: 'neutral' };
+    return { label: t('simulator.scenario_normal', 'Bình thường'), status: 'neutral' };
   }
   
   const normalized = scenario.toUpperCase();

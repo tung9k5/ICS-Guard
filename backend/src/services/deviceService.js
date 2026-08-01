@@ -15,7 +15,7 @@ const DEVICE_PROJECTION = '_id name type zone ipAddress ip_address macAddress ma
 
 class DeviceService {
   async getAll(queryParams, user) {
-    const { search, status, type, order, page = 1, per_page = 10 } = queryParams;
+    const { search, status, type, order, page = 1, per_page = 10, current_scenario } = queryParams;
 
     let query = {};
     if (user && user.id) {
@@ -35,6 +35,13 @@ class DeviceService {
     }
     if (status) query.status = status;
     if (type) query.type = type;
+    if (current_scenario) {
+      if (current_scenario === 'NORMAL') {
+        query.current_scenario = { $in: ['NORMAL', null, ''] };
+      } else {
+        query.current_scenario = current_scenario;
+      }
+    }
 
     const sortOption = buildSortOption(order);
     const { pageNumber, limitNumber, skip } = parsePagination(page, per_page);

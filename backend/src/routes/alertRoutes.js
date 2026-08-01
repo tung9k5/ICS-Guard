@@ -18,11 +18,11 @@ const router = express.Router();
 router.use(authMiddleware);
 
 router.get('/', validatePagination, getAllAlerts);
-router.post('/generate', authorize(['admin']), generateFakeAlerts);
-router.post('/bulk-delete', authorize(['admin']), validateBulkIds, auditLogger('ALERT_BULK_DELETE'), bulkDeleteAlerts);
+router.post('/generate', authorize(['admin', 'customer']), generateFakeAlerts);
+router.post('/bulk-delete', authorize(['admin', 'customer']), validateBulkIds, auditLogger('ALERT_BULK_DELETE'), bulkDeleteAlerts);
 
 router.get('/:id', validateMongoId, getAlertById);
 router.put('/:id/status', authorize(['admin', 'customer']), validateMongoId, validateUpdateAlertStatus, auditLogger('ALERT_STATUS_UPDATE'), updateAlertStatus);
-router.delete('/:id', authorize(['admin']), validateMongoId, auditLogger('ALERT_DELETE'), deleteAlert);
+router.delete('/:id', authorize(['admin', 'customer']), validateMongoId, auditLogger('ALERT_DELETE'), deleteAlert);
 
 export default router;

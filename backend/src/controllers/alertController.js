@@ -2,7 +2,7 @@ import { successResponse, paginatedResponse } from '../utils/response.js';
 import alertService from '../services/alertService.js';
 import Alert from '../models/alert.js';
 import Device from '../models/device.js';
-import { ALERT_STATUSES, SEVERITY_LEVELS } from '../constants/index.js';
+import { ALERT_STATUSES, SEVERITY_LEVELS, ROLES } from '../constants/index.js';
 
 export const getAllAlerts = async (req, res, next) => {
   try {
@@ -33,7 +33,7 @@ export const updateAlertStatus = async (req, res, next) => {
 
 export const deleteAlert = async (req, res, next) => {
   try {
-    await alertService.remove(req.params.id);
+    await alertService.remove(req.params.id, req.user);
     return successResponse(res, null, 'Alert deleted successfully');
   } catch (error) {
     next(error);
@@ -42,7 +42,7 @@ export const deleteAlert = async (req, res, next) => {
 
 export const bulkDeleteAlerts = async (req, res, next) => {
   try {
-    const result = await alertService.removeMany(req.body.ids);
+    const result = await alertService.removeMany(req.body.ids, req.user);
     return successResponse(res, { deletedCount: result.deletedCount }, `Successfully deleted ${result.deletedCount} alerts`);
   } catch (error) {
     next(error);
@@ -52,7 +52,11 @@ export const bulkDeleteAlerts = async (req, res, next) => {
 export const generateFakeAlerts = async (req, res, next) => {
   try {
     const { count = 10 } = req.body;
-    const devices = await Device.find();
+    let query = {};
+    if (req.user && req.user.role?.toLowerCase() !== ROLES.ADMIN) {
+      query.userId = req.user.id;
+    }
+    const devices = await Device.find(query);
     
     // Create at least one dummy device if none exists
     const deviceList = devices.length > 0 ? devices : [{ _id: 'dummy_device_1', name: 'Dummy Device' }];

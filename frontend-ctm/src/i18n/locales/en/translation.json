@@ -37,6 +37,43 @@
       "login_now": "Login Now"
     }
   },
+
+  "notifications": {
+    "title": "Notifications",
+    "markAllAsRead": "Mark all as read",
+    "viewAll": "VIEW ALL",
+    "noNewNotifications": "No new notifications",
+    "timeAgo": {
+      "seconds": "{{count}} seconds ago",
+      "minutes": "{{count}} minutes ago",
+      "hours": "{{count}} hours ago",
+      "days": "{{count}} days ago"
+    },
+    "scenarios": {
+      "OVERHEAT": "Overheat",
+      "OFFLINE": "Offline",
+      "FLOOD": "Flood Attack",
+      "ATTACK": "Attack"
+    },
+    "simulations": {
+      "title": "Simulation: {{scenario}}",
+      "message": "Command {{scenario}} sent to device {{device}}."
+    },
+    "alerts": {
+      "trafficSpike": {
+        "title": "Traffic Spike on {{device}}",
+        "message": "Abnormal network traffic detected."
+      },
+      "flood": {
+        "title": "Network Flood on {{device}}",
+        "message": "Network traffic exceeds limits (DDoS/Flood)."
+      },
+      "fire": {
+        "title": "Fire detected at {{device}}",
+        "message": "Sensor recorded abnormal high temperatures."
+      }
+    }
+  },
   "layout": {
     "sidebar": {
       "overview": "Overview",
@@ -59,18 +96,19 @@
     }
   },
   "common": {
-    "toast_success_title": "Success",
-    "toast_error_title": "Error",
-    "toast_info_title": "Info",
-    "processing_data": "Processing data...",
-    "loading": "Loading data...",
-    "no_data": "No data available",
+    "save": "Save",
+    "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
+    "add": "Add New",
+    "search": "Search...",
     "actions": "Actions",
-    "back": "Go back",
-    "newest": "Newest",
-    "oldest": "Oldest",
+    "no_data": "No data available",
+    "loading": "Loading...",
+    "success": "Success",
+    "error": "Error",
+    "sort_desc": "Newest first",
+    "sort_asc": "Oldest first",
     "ai_analyze": "AI Analysis",
     "created_at": "Created At",
     "updated_at": "Updated At",
@@ -471,7 +509,9 @@
       "mobile_name": "Incident name",
       "status_open": "Open",
       "status_investigating": "Investigating",
+      "status_investigated": "Investigated",
       "status_remediated": "Remediated",
+      "status_resolved": "Resolved",
       "status_closed": "Closed"
     },
     "create": {
@@ -624,6 +664,7 @@
     "scenario_traffic_spike": "Traffic Spike",
     "scenario_overheat": "Overheat",
     "scenario_offline": "Offline",
+    "filter_scenario_all": "All Scenarios",
     "title": "IoT Simulator",
     "sending": "Sending...",
     "apply_btn": "Apply Scenario",

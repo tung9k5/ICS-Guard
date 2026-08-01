@@ -7,6 +7,7 @@ import { publishMqtt } from './mqttService.js';
 import socketService from './socketService.js';
 import { DEVICE_STATUSES, ALERT_STATUSES, INCIDENT_STATUSES, INCIDENT_TIMELINE_TYPES, ATTACK_TYPES } from '../constants/index.js';
 import { writePoint } from './influxService.js';
+import notificationService from './notification.service.js';
 import AppError from '../utils/AppError.js';
 
 const INFLUX_MEASUREMENT = 'device_telemetry';

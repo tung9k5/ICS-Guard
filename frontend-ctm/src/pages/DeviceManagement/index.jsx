@@ -11,6 +11,7 @@ import VPagination from '@/components/VPagination';
 import VHeaderPage from '@/components/VHeaderPage';
 import VFilterPage from '@/components/VFilterPage';
 import { DEVICE_TYPES } from '@/constants/deviceConstants';
+import { SIMULATOR_OPTIONS, SORT_OPTIONS } from '@/constants/filterConstants';
 import { toast } from '@/utils/toast';
 import { useTranslation } from 'react-i18next';
 import { useSelection } from '@/hooks/useSelection';
@@ -36,7 +37,7 @@ const CustomerDevices = () => {
     fetchData: fetchDevices
   } = useFetchList({
     fetchFn: deviceApi.getAll,
-    initialFilters: { status: '', type: '' },
+    initialFilters: { status: '', type: '', current_scenario: '' },
     errorMessageKey: 'customer.devices.fetch_error'
   });
 
@@ -193,6 +194,27 @@ const CustomerDevices = () => {
             )}
           </div>
 
+          <div className="filter-select-wrapper">
+            <select 
+              className="v-filter-select" 
+              value={filters.current_scenario} 
+              onChange={(e) => handleFilterChange('current_scenario', e.target.value)}
+              style={{ paddingRight: filters.current_scenario ? '2rem' : undefined }}
+            >
+              <option value="">{t('simulator.filter_scenario_all', 'Tất cả mô phỏng')}</option>
+              {SIMULATOR_OPTIONS.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            {filters.current_scenario && (
+              <X 
+                size={14} 
+                className="clear-icon"
+                onClick={() => handleFilterChange('current_scenario', '')}
+              />
+            )}
+          </div>
+
           <select 
             className="v-filter-select" 
             value={order} 
@@ -201,8 +223,9 @@ const CustomerDevices = () => {
               setPage(1);
             }}
           >
-            <option value="desc">{t('assets.filter_order_desc', 'Mới nhất')}</option>
-            <option value="asc">{t('assets.filter_order_asc', 'Cũ nhất')}</option>
+            {SORT_OPTIONS.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
           </select>
         </VFilterPage>
 

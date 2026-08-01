@@ -73,16 +73,16 @@ export const getDeviceTypeStyle = (value) => {
 };
 
 export const SCENARIOS = [
-  { value: 'NORMAL', get label() { return i18n.t('simulator.scenario_normal', 'Thực tế'); } },
+  { value: 'NORMAL', get label() { return i18n.t('simulator.scenario_normal', 'Bình thường'); } },
   { value: 'FIRE', get label() { return i18n.t('simulator.scenario_fire', 'Cháy nổ'); } },
   { value: 'FLOOD', get label() { return i18n.t('simulator.scenario_flood', 'Ngập lụt'); } },
-  { value: 'TRAFFIC_SPIKE', get label() { return i18n.t('simulator.scenario_traffic_spike', 'Bất thường lưu lượng'); } },
+  { value: 'TRAFFIC_SPIKE', get label() { return i18n.t('simulator.scenario_traffic_spike', 'Lưu lượng'); } },
   { value: 'OVERHEAT', get label() { return i18n.t('simulator.scenario_overheat', 'Quá nhiệt'); } },
   { value: 'OFFLINE', get label() { return i18n.t('simulator.scenario_offline', 'Mất kết nối'); } }
 ];
 
 export const getScenarioLabel = (value) => {
-  if (!value) return i18n.t('simulator.scenario_normal', 'Thực tế');
+  if (!value) return i18n.t('simulator.scenario_normal', 'Bình thường');
   const scenario = SCENARIOS.find(s => s.value === value);
   return scenario ? scenario.label : value;
 };

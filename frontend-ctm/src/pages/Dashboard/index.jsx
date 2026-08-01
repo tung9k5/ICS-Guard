@@ -94,19 +94,23 @@ const CustomerDashboard = () => {
           <StatCard icon={ShieldAlert} label={t('customer.dashboard.incidents')} value={stats.incidents} color="var(--purple-500)" loading={loading} onClick={() => navigate('/incidents')} />
         </div>
 
-        <div style={{
-          background: 'var(--white)', borderRadius: '0.8571rem',
-          border: '0.0714rem solid var(--slate-200)', overflow: 'hidden',
-          boxShadow: '0 0.2857rem 0.4286rem -0.0714rem rgba(0, 0, 0, 0.05)',
-        }}>
-          <div style={{ padding: '1.1429rem 1.7143rem', borderBottom: '0.0714rem solid var(--slate-200)', display: 'flex', alignItems: 'center', gap: '0.5714rem' }}>
-            <h3 style={{ margin: 0, fontSize: '1.1429rem', fontWeight: '600', color: 'var(--slate-900)' }}>{t('customer.dashboard.recent_alerts')}</h3>
+        <div className="recent-alerts-card-premium">
+          <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3>{t('customer.dashboard.recent_alerts')}</h3>
+            <a 
+              href="#" 
+              onClick={(e) => { e.preventDefault(); navigate('/alerts'); }}
+              style={{ color: '#1877f2', textDecoration: 'none', fontWeight: '600', fontSize: '0.9rem' }}
+              className="view-all-link"
+            >
+              {t('notifications.viewAll')}
+            </a>
           </div>
           <div style={{ padding: '0' }}>
             {loading ? (
               <p style={{ padding: '1.4286rem 1.7143rem', color: 'var(--slate-500)', fontSize: '1rem', textAlign: 'center' }}>{t('customer.common.loading')}</p>
             ) : recentAlerts.length === 0 ? (
-              <VNoData title={t('customer.alerts.no_data')} />
+              <VNoData message={t('customer.alerts.no_data')} />
             ) : recentAlerts.map((alert, i) => {
               const id = alert._id || i;
               const isExpanded = expandedId === id;
@@ -146,7 +150,7 @@ const CustomerDashboard = () => {
                       </div>
                     </div>
                     
-                    <div style={{ flex: 1, display: 'flex', justifyContent: 'center', minWidth: '200px' }}>
+                    <div className="severity-stepper-container">
                       <SeverityStepper severity={alert.severity} t={t} compact={true} />
                     </div>
 

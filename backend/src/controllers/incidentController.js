@@ -39,7 +39,7 @@ export const updateIncident = async (req, res, next) => {
 
 export const deleteIncident = async (req, res, next) => {
   try {
-    await incidentService.remove(req.params.id);
+    await incidentService.remove(req.params.id, req.user);
     return successResponse(res, null, 'Incident deleted successfully');
   } catch (error) {
     next(error);
@@ -48,7 +48,7 @@ export const deleteIncident = async (req, res, next) => {
 
 export const bulkDeleteIncidents = async (req, res, next) => {
   try {
-    const result = await incidentService.removeMany(req.body.ids);
+    const result = await incidentService.removeMany(req.body.ids, req.user);
     return successResponse(res, { deletedCount: result.deletedCount }, `Successfully deleted ${result.deletedCount} incidents`);
   } catch (error) {
     next(error);

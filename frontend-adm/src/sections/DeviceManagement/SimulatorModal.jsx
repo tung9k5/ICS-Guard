@@ -16,7 +16,7 @@ const SimulatorModal = ({ device, onClose }) => {
     { value: 'NORMAL', label: t('simulator.scenario_normal', 'Bình thường') },
     { value: 'FIRE', label: t('simulator.scenario_fire', 'Cháy nổ') },
     { value: 'FLOOD', label: t('simulator.scenario_flood', 'Ngập lụt') },
-    { value: 'TRAFFIC_SPIKE', label: t('simulator.scenario_traffic_spike', 'Bất thường lưu lượng') },
+    { value: 'TRAFFIC_SPIKE', label: t('simulator.scenario_traffic_spike', 'Lưu lượng') },
     { value: 'OVERHEAT', label: t('simulator.scenario_overheat', 'Quá nhiệt') },
     { value: 'OFFLINE', label: t('simulator.scenario_offline', 'Mất kết nối') }
   ];

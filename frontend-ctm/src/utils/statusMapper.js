@@ -57,17 +57,21 @@ export const getIncidentStatusProps = (status, t) => {
   const normalized = status?.toLowerCase();
   switch (normalized) {
     case 'open':
-      return { label: t('customer.status.open', 'Mở'), status: 'danger' };
+      return { label: t('incidents.status_open', 'Đang mở'), status: 'danger' };
     case 'investigating':
       return { 
-        label: t('customer.status.investigating', 'Đang điều tra'), 
+        label: t('incidents.status_investigating', 'Đang điều tra'), 
         style: { backgroundColor: '#fff7ed', color: 'var(--orange-500)', borderColor: 'var(--orange-500)' } 
       };
+    case 'investigated':
+      return { 
+        label: t('incidents.status_investigated', 'Đã điều tra'), 
+        style: { backgroundColor: 'var(--blue-50)', color: 'var(--blue-600)', borderColor: 'var(--blue-300)' } 
+      };
     case 'remediated':
-    case 'resolved':
-      return { label: t('customer.status.resolved', 'Đã giải quyết'), status: 'success' };
+      return { label: t('incidents.status_remediated', 'Đã khắc phục'), status: 'success' };
     case 'closed':
-      return { label: t('customer.status.closed', 'Đóng'), status: 'neutral' };
+      return { label: t('incidents.status_closed', 'Đóng'), status: 'neutral' };
     default:
       return { label: status || 'N/A', status: 'neutral' };
   }
@@ -75,7 +79,7 @@ export const getIncidentStatusProps = (status, t) => {
 
 export const getScenarioProps = (scenario, t) => {
   if (!scenario || scenario === 'NORMAL') {
-    return { label: t('simulator.scenario_normal', 'Thực tế'), status: 'neutral' };
+    return { label: t('simulator.scenario_normal', 'Bình thường'), status: 'neutral' };
   }
   
   const normalized = scenario.toUpperCase();
@@ -93,4 +97,16 @@ export const getScenarioProps = (scenario, t) => {
     label: t(labelKey, scenario), 
     style: { backgroundColor: '#fff7ed', color: 'var(--orange-500)', borderColor: 'var(--orange-500)' } 
   };
+};
+
+export const getScenarioFromRule = (rule_name) => {
+  if (!rule_name) return 'NORMAL';
+  switch (rule_name.toUpperCase()) {
+    case 'FIRE_ALARM': return 'FIRE';
+    case 'CRITICAL_OVERHEAT': return 'OVERHEAT';
+    case 'ABNORMAL_TRAFFIC_SPIKE': return 'TRAFFIC_SPIKE';
+    case 'FLOOD_WARNING': return 'FLOOD';
+    case 'DEVICE_OFFLINE': return 'OFFLINE';
+    default: return 'NORMAL';
+  }
 };

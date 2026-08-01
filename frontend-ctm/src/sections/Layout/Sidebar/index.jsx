@@ -43,7 +43,7 @@ const CustomerSidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
 
   const navItems = [
     { to: '/dashboard', icon: LayoutDashboard, label: t('customer.sidebar.dashboard', 'Dashboard') },
-    { to: '/devices', icon: Server, label: t('customer.sidebar.devices', 'Thiết bị của tôi') },
+    { to: '/devices', icon: Server, label: t('customer.sidebar.devices', 'Thiết bị') },
     { to: '/alerts', icon: Bell, label: t('customer.sidebar.alerts', 'Cảnh báo') },
     { to: '/incidents', icon: ShieldAlert, label: t('customer.sidebar.incidents', 'Sự cố') },
   ];

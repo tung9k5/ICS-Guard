@@ -23,11 +23,11 @@ router.use(authMiddleware);
 
 router.get('/', validatePagination, getAllIncidents);
 router.post('/', authorize(['admin', 'customer']), validateCreateIncident, auditLogger('INCIDENT_CREATE'), createIncident);
-router.post('/bulk-delete', authorize(['admin']), validateBulkIds, auditLogger('INCIDENT_BULK_DELETE'), bulkDeleteIncidents);
+router.post('/bulk-delete', authorize(['admin', 'customer']), validateBulkIds, auditLogger('INCIDENT_BULK_DELETE'), bulkDeleteIncidents);
 
 router.get('/:id', validateMongoId, getIncidentById);
 router.put('/:id', authorize(['admin', 'customer']), validateMongoId, validateUpdateIncident, auditLogger('INCIDENT_UPDATE'), updateIncident);
-router.delete('/:id', authorize(['admin',]), validateMongoId, auditLogger('INCIDENT_DELETE'), deleteIncident);
+router.delete('/:id', authorize(['admin', 'customer']), validateMongoId, auditLogger('INCIDENT_DELETE'), deleteIncident);
 
 router.post('/:id/ai-analyze', authorize(['admin']), validateMongoId, auditLogger('INCIDENT_AI_ANALYSIS'), triggerAiAnalysis);
 
