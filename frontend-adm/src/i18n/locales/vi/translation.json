@@ -718,5 +718,17 @@
       "critical": "Nghiêm trọng (Critical)"
     },
     "severity_label": "Mức độ (Severity)"
+  },
+  "notifications": {
+    "title": "Nhật ký hệ thống",
+    "markAllAsRead": "Đánh dấu tất cả đã đọc",
+    "noNewNotifications": "Không có thông báo mới",
+    "viewAll": "Xem tất cả hoạt động",
+    "timeAgo": {
+      "seconds": "{{count}}s trước",
+      "minutes": "{{count}} phút trước",
+      "hours": "{{count}} giờ trước",
+      "days": "{{count}} ngày trước"
+    }
   }
 }

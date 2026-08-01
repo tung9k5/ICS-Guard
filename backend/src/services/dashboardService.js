@@ -100,15 +100,15 @@ class DashboardService {
             day: { $dayOfMonth: "$createdAt" }
           },
           low: {
-            $sum: { $cond: [{ $eq: ["$severity", "INFO"] }, 1, 0] }
+            $sum: { $cond: [{ $in: ["$severity", ["LOW", "INFO", "low", "info"]] }, 1, 0] }
           },
           medium: {
-            $sum: { $cond: [{ $eq: ["$severity", "MEDIUM"] }, 1, 0] }
+            $sum: { $cond: [{ $in: ["$severity", ["MEDIUM", "medium"]] }, 1, 0] }
           },
           high: {
             $sum: {
               $cond: [
-                { $in: ["$severity", ["HIGH", "CRITICAL"]] }, 1, 0
+                { $in: ["$severity", ["HIGH", "CRITICAL", "high", "critical"]] }, 1, 0
               ]
             }
           }

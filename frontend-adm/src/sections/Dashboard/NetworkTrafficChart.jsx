@@ -1,11 +1,21 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import VNoData from '@/components/VNoData';
 
 const NetworkTrafficChart = ({ data = [] }) => {
   const { t } = useTranslation();
 
   const maxVal = data.reduce((max, item) => Math.max(max, item.incoming || 0, item.outgoing || 0), 0);
+  
+  if (maxVal === 0) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', minHeight: '21.4286rem' }}>
+        <VNoData />
+      </div>
+    );
+  }
+
   const interval = maxVal >= 10000 ? 2000 : 1000;
   const roundedMax = Math.max(Math.ceil(maxVal / interval) * interval, interval);
   const tickCount = (roundedMax / interval) + 1;

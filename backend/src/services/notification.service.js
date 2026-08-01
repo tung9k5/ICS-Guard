@@ -1,4 +1,5 @@
 import notificationRepository from '../repositories/notification.repository.js';
+import AuditLog from '../models/auditLog.js';
 
 class NotificationService {
   async createNotification(data) {
@@ -36,6 +37,49 @@ class NotificationService {
 
   async deleteNotification(id) {
     return await notificationRepository.delete(id);
+  }
+
+  async getAdminLogNotifications(query) {
+    const { page = 1, limit = 100 } = query;
+    const skip = (page - 1) * limit;
+
+    const logs = await AuditLog.find({})
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await AuditLog.countDocuments({});
+
+    const formattedLogs = logs.map(log => ({
+      _id: log._id,
+      title: log.action,
+      message: log.target_resource || log.details?.message || 'System Action',
+      createdAt: log.createdAt,
+      isRead: log.isRead === true, // System logs are unread by default unless explicitly marked
+      severity: log.status === 'success' ? 'info' : 'warning',
+      username: log.username,
+      ipAddress: log.ipAddress
+    }));
+
+    return {
+      notifications: formattedLogs,
+      total,
+      page: parseInt(page),
+      limit: parseInt(limit)
+    };
+  }
+
+  async getAdminLogUnreadCount() {
+    return await AuditLog.countDocuments({ isRead: { $ne: true } });
+  }
+
+  async markAdminLogAsRead(id) {
+    return await AuditLog.findByIdAndUpdate(id, { isRead: true }, { new: true });
+  }
+
+  async markAdminLogAllAsRead() {
+    await AuditLog.updateMany({ isRead: { $ne: true } }, { $set: { isRead: true } });
+    return true;
   }
 }
 

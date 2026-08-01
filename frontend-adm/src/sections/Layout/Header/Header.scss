@@ -87,12 +87,19 @@
 
       .notification-dot {
         position: absolute;
-        top: 0.4286rem;
-        right: 0.5714rem;
-        width: 0.5714rem;
-        height: 0.5714rem;
-        background-color: var(--danger-color);
-        border-radius: 50%;
+        top: -2px;
+        right: -2px;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 4px;
+        background-color: var(--danger-color, #ff4d4f);
+        border-radius: 9px;
+        color: white;
+        font-size: 10px;
+        font-weight: bold;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
     }
 

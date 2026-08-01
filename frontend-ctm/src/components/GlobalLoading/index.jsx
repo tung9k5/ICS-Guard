@@ -64,9 +64,9 @@ const GlobalLoading = ({ forceShow = false }) => {
   if (!isLoading) return null;
 
   const icons = [
-    <Shield size={48} color="var(--primary-color)" />,
-    <Server size={48} color="var(--primary-color)" />,
-    <Activity size={48} color="var(--primary-color)" />
+    <img src="/loading1.png" alt="loading 1" style={{ width: 128, height: 128, objectFit: 'contain' }} />,
+    <img src="/loading2.png" alt="loading 2" style={{ width: 128, height: 128, objectFit: 'contain' }} />,
+    <img src="/loading3.png" alt="loading 3" style={{ width: 128, height: 128, objectFit: 'contain' }} />
   ];
 
   return (

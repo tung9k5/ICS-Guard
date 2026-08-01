@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import VNoData from '@/components/VNoData';
 
 const ThreatActivityChart = ({ rawData = [] }) => {
   const { t } = useTranslation();
@@ -11,6 +12,14 @@ const ThreatActivityChart = ({ rawData = [] }) => {
   }));
 
   const maxVal = data.reduce((max, item) => Math.max(max, (item.low || 0) + (item.medium || 0) + (item.high || 0)), 0);
+
+  if (maxVal === 0) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', minHeight: '21.4286rem' }}>
+        <VNoData />
+      </div>
+    );
+  }
 
   const roundedMax = Math.max(Math.ceil(maxVal / 5) * 5, 5); // Minimum scale of 5 to show small spikes clearly
 

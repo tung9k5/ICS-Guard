@@ -11,6 +11,43 @@ export const getNotifications = async (req, res, next) => {
   }
 };
 
+export const getAdminLogNotifications = async (req, res, next) => {
+  try {
+    const result = await notificationService.getAdminLogNotifications(req.query);
+    return successResponse(res, result, 'Fetched admin log notifications successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAdminLogUnreadCount = async (req, res, next) => {
+  try {
+    const count = await notificationService.getAdminLogUnreadCount();
+    return successResponse(res, { count }, 'Fetched admin log unread count successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const markAdminLogAsRead = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await notificationService.markAdminLogAsRead(id);
+    return successResponse(res, null, 'Admin log marked as read');
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const markAdminLogAllAsRead = async (req, res, next) => {
+  try {
+    await notificationService.markAdminLogAllAsRead();
+    return successResponse(res, null, 'All admin logs marked as read');
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getUnreadCount = async (req, res, next) => {
   try {
     const userId = req.user.id;

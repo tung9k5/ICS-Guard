@@ -46,6 +46,7 @@ const CustomerHeader = ({ toggleSidebar, user, onOpenProfile }) => {
           <button 
             className="notification-btn" 
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            style={{ position: 'relative' }}
           >
             <Bell size={20} />
             {unreadCount > 0 && (

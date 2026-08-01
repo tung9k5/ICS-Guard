@@ -714,5 +714,17 @@
       "critical": "Critical"
     },
     "severity_label": "Severity"
+  },
+  "notifications": {
+    "title": "System Logs",
+    "markAllAsRead": "Mark all as read",
+    "noNewNotifications": "No new notifications",
+    "viewAll": "View All Activity",
+    "timeAgo": {
+      "seconds": "{{count}}s ago",
+      "minutes": "{{count}}m ago",
+      "hours": "{{count}}h ago",
+      "days": "{{count}}d ago"
+    }
   }
 }

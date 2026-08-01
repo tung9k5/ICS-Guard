@@ -86,10 +86,10 @@ const IncidentForm = ({ incident, onClose, onSuccess }) => {
               className="v-input"
               style={{ width: '100%', padding: '0.7143rem 1rem', borderRadius: '0.5714rem', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '0.0714rem solid var(--slate-300)' }}
             >
-              <option value="LOW">Thấp (Low)</option>
-              <option value="MEDIUM">Trung bình (Medium)</option>
-              <option value="HIGH">Cao (High)</option>
-              <option value="CRITICAL">Nghiêm trọng (Critical)</option>
+              <option value="LOW">Thấp</option>
+              <option value="MEDIUM">Trung bình</option>
+              <option value="HIGH">Cao</option>
+              <option value="CRITICAL">Nghiêm trọng</option>
             </select>
           </div>
 
