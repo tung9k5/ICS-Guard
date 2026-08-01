@@ -50,6 +50,19 @@ export class BaseDevice {
       metrics.bytes_per_second = TRAFFIC.BASE + Math.random() * TRAFFIC.VARIANCE;
     }
 
+    // Explicitly inject extreme metrics for scenarios to guarantee backend alert triggers
+    // even if the device doesn't officially have these sensors.
+    if (this.scenario === SCENARIOS.OVERHEAT) {
+      metrics.temperature = 95.0 + Math.random() * 5; // > 85.0
+    }
+    if (this.scenario === SCENARIOS.FIRE) {
+      metrics.smoke = 600 + Math.random() * 100; // > 400
+      metrics.temperature = 90.0 + Math.random() * 10;
+    }
+    if (this.scenario === SCENARIOS.FLOOD) {
+      metrics.water_level = 90 + Math.random() * 10; // > 70
+    }
+
     // Call subclass specific metrics
     metrics = this.generateSpecificMetrics(metrics);
 

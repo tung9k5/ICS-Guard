@@ -5,6 +5,7 @@ import deviceApi from '@/api/device';
 import DeviceList from './components/DeviceList';
 import DeviceForm from './components/DeviceForm';
 import SimulatorModal from './components/SimulatorModal';
+import DeviceDetailModal from './components/DeviceDetailModal';
 import DeleteConfirmModal from '@/components/DeleteConfirmModal';
 import VPagination from '@/components/VPagination';
 import VHeaderPage from '@/components/VHeaderPage';
@@ -42,6 +43,7 @@ const CustomerDevices = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingDevice, setEditingDevice] = useState(null);
   const [simulatorDevice, setSimulatorDevice] = useState(null);
+  const [viewingDevice, setViewingDevice] = useState(null);
   const { selectedIds, handleSelect, handleSelectAll, clearSelection } = useSelection(devices, 'id', '_id');
   
   // Clear selection when data changes
@@ -76,7 +78,7 @@ const CustomerDevices = () => {
   };
 
   const handleViewDevice = (device) => {
-    toast.info(t('assets.view_details', { name: device.name, ip: device.ip_address || device.ipAddress }));
+    setViewingDevice(device);
   };
 
   const handleSimulateDevice = (device) => {
@@ -254,6 +256,13 @@ const CustomerDevices = () => {
         onClose={() => setDeleteModalState(prev => ({ ...prev, isOpen: false }))}
         onConfirm={handleConfirmDelete}
       />
+
+      {viewingDevice && (
+        <DeviceDetailModal
+          device={viewingDevice}
+          onClose={() => setViewingDevice(null)}
+        />
+      )}
     </div>
   );
 };

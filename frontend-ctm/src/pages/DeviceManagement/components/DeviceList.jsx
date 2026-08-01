@@ -1,10 +1,11 @@
 import React from 'react';
-import { Edit2, Trash2, Activity, ChevronDown, ChevronUp } from 'lucide-react';
+import { Edit2, Trash2, Activity, ChevronDown, ChevronUp, Eye } from 'lucide-react';
 import ActionMenu from '@/components/ActionMenu';
 import VNoData from '@/components/VNoData';
 import VStatus from '@/components/VStatus';
 import VCheckbox from '@/components/VCheckbox';
 import { getDeviceTypeLabel, getDeviceTypeStyle } from '@/constants/deviceConstants';
+import { getScenarioProps } from '@/utils/statusMapper';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/utils/formatDate';
 import { useExpandable } from '@/hooks/useExpandable';
@@ -40,7 +41,7 @@ const DeviceList = ({
         <table className="device-table">
           <thead>
             <tr>
-              <th style={{ width: '2.8571rem', textAlign: 'center' }}>
+              <th style={{ width: '4%', textAlign: 'center' }}>
                 <VCheckbox 
                   indeterminate={selectedIds.length > 0 && selectedIds.length < devices.length}
                   checked={allSelected} 
@@ -48,15 +49,14 @@ const DeviceList = ({
                   style={{ cursor: 'pointer' }}
                 />
               </th>
-              <th>{t('assets.list.table_id')}</th>
-              <th>{t('assets.list.table_name')}</th>
-              <th>{t('assets.list.table_type')}</th>
-              <th>{t('assets.list.table_ip')}</th>
-              <th>{t('assets.list.table_status')}</th>
-              <th>{t('assets.list.table_desc')}</th>
-              <th>{t('common.created_at')}</th>
-              <th>{t('common.updated_at')}</th>
-              <th className="actions-col">{t('assets.list.table_actions')}</th>
+              <th style={{ width: '8%' }}>{t('assets.list.table_id')}</th>
+              <th style={{ width: '15%' }}>{t('assets.list.table_name')}</th>
+              <th style={{ width: '10%', textAlign: 'center' }}>{t('assets.list.table_type')}</th>
+              <th style={{ width: '13%' }}>{t('assets.list.table_ip')}</th>
+              <th style={{ width: '12%', textAlign: 'center' }}>{t('assets.list.table_status')}</th>
+              <th style={{ width: '15%', textAlign: 'center' }}>{t('customer.alerts.col_simulation', 'Mô phỏng')}</th>
+              <th style={{ width: '15%' }}>{t('common.created_at')}</th>
+              <th className="actions-col" style={{ width: '8%', textAlign: 'center' }}>{t('assets.list.table_actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -64,8 +64,13 @@ const DeviceList = ({
               const id = device.id || device._id;
               const isSelected = selectedIds.includes(id);
               const actions = [
+                { label: t('assets.list.btn_view', 'Xem chi tiết'), icon: Eye, onClick: () => onView(device) },
                 { label: t('assets.list.btn_edit'), icon: Edit2, onClick: () => onEdit(device) },
-                { label: t('assets.list.btn_simulate'), icon: Activity, onClick: () => onSimulate && onSimulate(device) },
+                { 
+                  label: t('assets.list.btn_simulate'), 
+                  icon: Activity, 
+                  onClick: () => onSimulate && onSimulate(device)
+                },
                 { label: t('assets.list.btn_delete'), icon: Trash2, danger: true, onClick: () => onDelete(id) }
               ];
 
@@ -85,7 +90,7 @@ const DeviceList = ({
                       <span className="truncate-text" style={{ flex: 1, minWidth: 0 }}>{device.name}</span>
                     </div>
                   </td>
-                  <td>
+                  <td style={{ textAlign: 'center' }}>
                     <VStatus 
                       label={getDeviceTypeLabel(device.type) || 'N/A'}
                       style={getDeviceTypeStyle(device.type)}
@@ -94,18 +99,17 @@ const DeviceList = ({
                   </td>
                   <td>{device.ip_address || device.ipAddress || 'N/A'}</td>
 
-                  <td>
+                  <td style={{ textAlign: 'center' }}>
                     <VStatus 
                       status={device.status} 
                       label={device.status === 'active' ? t('assets.filter_status_active') : t('assets.filter_status_inactive')} 
                     />
                   </td>
-                  <td className="text-muted" style={{ maxWidth: '14.2857rem' }}>
-                    <div className="truncate-text" title={device.description}>{device.description || t('assets.list.no_description')}</div>
+                  <td style={{ textAlign: 'center' }}>
+                    <VStatus {...getScenarioProps(device.current_scenario, t)} />
                   </td>
                   <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(device.createdAt)}</td>
-                  <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(device.updatedAt)}</td>
-                  <td className="actions-col">
+                  <td className="actions-col" style={{ textAlign: 'center' }}>
                     <ActionMenu 
                       actions={actions} 
                       direction={index >= devices.length - 2 && devices.length > 2 ? 'up' : 'down'} 
@@ -139,6 +143,7 @@ const DeviceList = ({
           const isExpanded = expandedId === id;
           const isSelected = selectedIds.includes(id);
           const actions = [
+            { label: t('assets.list.btn_view', 'Xem chi tiết'), icon: Eye, onClick: () => onView(device) },
             { label: t('assets.list.btn_edit'), icon: Edit2, onClick: () => onEdit(device) },
             { label: t('assets.list.btn_simulate'), icon: Activity, onClick: () => onSimulate && onSimulate(device) },
             { label: t('assets.list.btn_delete'), icon: Trash2, danger: true, onClick: () => onDelete(id) }
@@ -192,8 +197,10 @@ const DeviceList = ({
                     </span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">{t('assets.list.table_desc')}</span>
-                    <span className="detail-value text-muted">{device.description || '-'}</span>
+                    <span className="detail-label">{t('customer.alerts.col_simulation', 'Mô phỏng')}</span>
+                    <span className="detail-value">
+                      <VStatus {...getScenarioProps(device.current_scenario, t)} />
+                    </span>
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">{t('common.created_at')}</span>

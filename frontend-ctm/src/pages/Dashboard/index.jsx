@@ -8,9 +8,11 @@ import VButton from '@/components/VButton';
 import Viewlogo from '@/components/Viewlogo';
 import VStatus from '@/components/VStatus';
 import { getSeverityProps, getScenarioProps, getSeverityColor } from '@/utils/statusMapper';
-import { formatDate } from '@/utils/formatDate';
+import { getAlertIconAndStyle, getAlertScenarioBadge } from '@/utils/alertMapper';
+import { formatDate, getTimeAgo } from '@/utils/formatDate';
 import { useLoader } from '@/hooks/useLoader';
 import { useExpandable } from '@/hooks/useExpandable';
+import SeverityStepper from '@/components/SeverityStepper';
 import './Dashboard.scss';
 import '../index.scss';
 
@@ -108,20 +110,22 @@ const CustomerDashboard = () => {
             ) : recentAlerts.map((alert, i) => {
               const id = alert._id || i;
               const isExpanded = expandedId === id;
+              const iconAndStyle = getAlertIconAndStyle(alert.rule_name);
+              const AlertIcon = iconAndStyle.icon;
+              const scenarioBadge = getAlertScenarioBadge(alert.rule_name, t);
               
               return (
-                <div key={id} className={`recent-alert-item ${isExpanded ? 'expanded' : ''}`}>
-                  <div className="recent-alert-header" onClick={() => { if (window.innerWidth <= 877) toggleExpand(id); }}>
-                    <div className="alert-info">
-                      <div className="alert-indicator" style={{ background: getSeverityColor(alert.severity) }} />
+                <div key={id} className={`recent-alert-item`}>
+                  <div className="recent-alert-header">
+                    <div className="alert-info desktop-fixed-width">
+                      <div className="alert-icon-container" style={iconAndStyle.style}>
+                        <AlertIcon size={24} />
+                      </div>
                       <div className="alert-details">
                         <div className="alert-title-row">
-                          <span className="alert-title" title={alert.title || alert.rule_name || t('customer.alerts.default_alert')}>
-                            {alert.title || alert.rule_name || t('customer.alerts.default_alert')}
+                          <span className="alert-title" title={t(`alerts.rules.${alert.rule_name}.title`, { device: alert.device_id?.name || alert.device_id || 'Unknown', defaultValue: alert.title || alert.rule_name || t('customer.alerts.default_alert') })}>
+                            {t(`alerts.rules.${alert.rule_name}.title`, { device: alert.device_id?.name || alert.device_id || 'Unknown', defaultValue: alert.title || alert.rule_name || t('customer.alerts.default_alert') })}
                           </span>
-                          {alert.device_id?.current_scenario && alert.device_id.current_scenario !== 'NORMAL' && (
-                            <VStatus {...getScenarioProps(alert.device_id.current_scenario, t)} />
-                          )}
                         </div>
                         <div className="alert-meta-row">
                           <p className="alert-source" title={alert.device_id?.name || alert.device_name || alert.source_ip || ''}>
@@ -130,32 +134,30 @@ const CustomerDashboard = () => {
                           {alert.createdAt && (
                             <>
                               <span className="alert-separator">•</span>
-                              <span className="alert-time">{formatDate(alert.createdAt)}</span>
+                              <span className="alert-time" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                {formatDate(alert.createdAt)}
+                                <span style={{ color: 'var(--primary-color, #3b82f6)', fontWeight: 500 }}>
+                                  ({getTimeAgo(alert.createdAt, t)})
+                                </span>
+                              </span>
                             </>
                           )}
                         </div>
                       </div>
                     </div>
-                    <div className="alert-status-col">
-                      <VStatus {...getSeverityProps(alert.severity, t)} className="uppercase" />
+                    
+                    <div style={{ flex: 1, display: 'flex', justifyContent: 'center', minWidth: '200px' }}>
+                      <SeverityStepper severity={alert.severity} t={t} compact={true} />
                     </div>
-                    <div className="expand-btn">
-                      {isExpanded ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+
+                    <div className="alert-status-col" style={{ width: '120px', justifyContent: 'flex-end' }}>
+                      <div className="alert-badges" style={{ display: 'flex', gap: '0.8571rem', alignItems: 'center' }}>
+                        {scenarioBadge && (
+                          <VStatus label={scenarioBadge.label} style={scenarioBadge.style} />
+                        )}
+                      </div>
                     </div>
                   </div>
-                  
-                  {isExpanded && (
-                    <div className="recent-alert-body">
-                      <div className="detail-row">
-                        <span className="detail-label">{t('customer.alerts.col_severity', 'Mức độ')}</span>
-                        <VStatus {...getSeverityProps(alert.severity, t)} className="uppercase" />
-                      </div>
-                      <div className="detail-row">
-                        <span className="detail-label">{t('customer.alerts.col_status', 'Trạng thái')}</span>
-                        <span className="detail-value" style={{ textTransform: 'capitalize' }}>{alert.status || '-'}</span>
-                      </div>
-                    </div>
-                  )}
                 </div>
               );
             })}

@@ -11,7 +11,10 @@ import VStatus from '@/components/VStatus';
 import { getSeverityProps, getIncidentStatusProps } from '@/utils/statusMapper';
 import { formatDate } from '@/utils/formatDate';
 import { useExpandable } from '@/hooks/useExpandable';
+import ActionMenu from '@/components/ActionMenu';
 import IncidentForm from '@/sections/IncidentManagement/IncidentForm';
+import IncidentDetailModal from './components/IncidentDetailModal';
+import { Info } from 'lucide-react';
 import '../index.scss';
 import '../DeviceManagement/DeviceManagement.scss';
 const CustomerIncidents = () => {
@@ -23,6 +26,7 @@ const CustomerIncidents = () => {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(15);
   const [total, setTotal] = useState(0);
+  const [selectedIncident, setSelectedIncident] = useState(null);
   const { expandedId, toggleExpand } = useExpandable();
 
   const fetchIncidents = async () => {
@@ -77,6 +81,7 @@ const CustomerIncidents = () => {
                       t('customer.incidents.col_severity'),
                       t('customer.incidents.col_status'),
                       t('customer.incidents.col_time'),
+                      t('customer.incidents.col_action', 'Thao tác'),
                     ].map((h, i) => <th key={i}>{h}</th>)}
                   </tr>
                 </thead>
@@ -104,6 +109,18 @@ const CustomerIncidents = () => {
                       </td>
                       <td className="text-muted" style={{ fontSize: '0.8571rem' }}>
                         {incident.createdAt ? formatDate(incident.createdAt) : '—'}
+                      </td>
+                      <td>
+                        {(() => {
+                          const actions = [
+                            {
+                              label: t('common.btn_view_details', 'Xem chi tiết'),
+                              icon: Info,
+                              onClick: () => setSelectedIncident(incident),
+                            }
+                          ];
+                          return <ActionMenu actions={actions} direction="down" />;
+                        })()}
                       </td>
                     </tr>
                   ))}
@@ -159,6 +176,18 @@ const CustomerIncidents = () => {
                           <span className="detail-label">{t('customer.incidents.col_time')}</span>
                           <span className="detail-value">{incident.createdAt ? formatDate(incident.createdAt) : '—'}</span>
                         </div>
+                        <div className="detail-row" style={{ marginTop: '1rem', justifyContent: 'flex-end', display: 'flex' }}>
+                          {(() => {
+                            const actions = [
+                              {
+                                label: t('common.btn_view_details', 'Xem chi tiết'),
+                                icon: Info,
+                                onClick: () => setSelectedIncident(incident),
+                              }
+                            ];
+                            return <ActionMenu actions={actions} direction="up" />;
+                          })()}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -187,6 +216,11 @@ const CustomerIncidents = () => {
           onSuccess={() => { setIsFormOpen(false); fetchIncidents(); }}
         />
       )}
+
+      <IncidentDetailModal 
+        incident={selectedIncident} 
+        onClose={() => setSelectedIncident(null)} 
+      />
     </div>
   );
 };

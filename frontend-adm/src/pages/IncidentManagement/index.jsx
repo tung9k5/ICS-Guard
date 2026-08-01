@@ -4,6 +4,7 @@ import VButton from '@/components/VButton';
 import ApiIncident from '@/api/incidents';
 import IncidentList from '@/sections/IncidentManagement/IncidentList';
 import IncidentForm from '@/sections/IncidentManagement/IncidentForm';
+import IncidentDetailModal from '@/sections/IncidentManagement/IncidentDetailModal';
 import DeleteConfirmModal from '@/Dialog/DeleteConfirmModal';
 import VPagination from '@/components/VPagination';
 import VHeaderPage from '@/components/VHeaderPage';
@@ -40,6 +41,7 @@ const IncidentManagement = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingIncident, setEditingIncident] = useState(null);
+  const [selectedIncident, setSelectedIncident] = useState(null);
   const { selectedIds, handleSelect, handleSelectAll, clearSelection } = useSelection(incidents, 'id', '_id');
   
   // Clear selection when data changes
@@ -217,6 +219,7 @@ const IncidentManagement = () => {
           selectedIds={selectedIds}
           onSelect={handleSelect}
           onSelectAll={handleSelectAll}
+          onViewDetail={(incident) => setSelectedIncident(incident)}
         />
 
         {incidents && incidents.length > 0 && (
@@ -249,6 +252,11 @@ const IncidentManagement = () => {
         loading={deleteModalState.loading}
         onClose={() => setDeleteModalState(prev => ({ ...prev, isOpen: false }))}
         onConfirm={handleConfirmDelete}
+      />
+
+      <IncidentDetailModal 
+        incident={selectedIncident} 
+        onClose={() => setSelectedIncident(null)} 
       />
     </div>
   );

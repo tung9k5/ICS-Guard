@@ -9,11 +9,11 @@ export default {
     });
   },
 
-  setDeviceScenario(deviceId, scenario, options = {}) {
+  setDeviceScenario(deviceId, scenario, severity, options = {}) {
     return http({
       url: '/simulator/scenario',
       method: 'POST',
-      data: { device_id: deviceId, scenario },
+      data: { device_id: deviceId, scenario, severity },
       ...options
     });
   }

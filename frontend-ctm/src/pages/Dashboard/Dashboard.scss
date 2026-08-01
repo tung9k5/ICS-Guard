@@ -444,43 +444,52 @@
 
   .recent-alert-header {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
-    gap: 1rem;
+    gap: 1.1429rem;
 
     .alert-info {
       display: flex;
-      align-items: flex-start;
-      gap: 1rem;
+      align-items: center;
+      gap: 1.1429rem;
       min-width: 0;
       flex: 1;
+
+      @media (min-width: 54.8572rem) {
+        &.desktop-fixed-width {
+          flex: 0 0 320px;
+        }
+      }
       
-      .alert-indicator {
-        width: 0.5714rem;
-        height: 0.5714rem;
-        border-radius: 50%;
+      .alert-icon-container {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 0.7143rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         flex-shrink: 0;
-        margin-top: 0.4286rem;
       }
       
       .alert-details {
         min-width: 0;
         flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
 
         .alert-title-row {
-          margin: 0;
+          margin: 0 0 0.2857rem 0;
           font-size: 1.05rem;
-          color: var(--slate-800);
+          color: var(--slate-900);
           font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 0.7143rem;
           line-height: 1.4;
           
           .alert-title {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            display: block;
           }
         }
         
@@ -488,24 +497,24 @@
           display: flex;
           gap: 0.5714rem;
           align-items: center;
-          margin-top: 0.1429rem;
           
           .alert-source {
             margin: 0;
-            font-size: 0.8571rem;
+            font-size: 0.9rem;
             color: var(--slate-500);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            font-weight: 500;
           }
           
           .alert-separator {
             color: var(--slate-300);
-            font-size: 0.8571rem;
+            font-size: 0.9rem;
           }
 
           .alert-time {
-            font-size: 0.8571rem;
+            font-size: 0.9rem;
             color: var(--slate-400);
             white-space: nowrap;
             flex-shrink: 0;
@@ -516,6 +525,9 @@
 
     .alert-status-col {
       flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.8571rem;
     }
 
     .expand-btn {
@@ -553,6 +565,7 @@
     
     .recent-alert-header {
       cursor: pointer;
+      align-items: flex-start;
       
       .alert-status-col {
         display: none;
@@ -560,6 +573,7 @@
       
       .expand-btn {
         display: block;
+        margin-top: 0.4286rem;
       }
     }
 

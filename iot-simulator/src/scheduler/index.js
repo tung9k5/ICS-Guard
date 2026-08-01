@@ -52,17 +52,25 @@ class SimulatorManager {
     const mqttClient = getClient();
     if (mqttClient) {
       mqttClient.on('message', (topic, message) => {
+        logger.info(`[DEBUG] scheduler received message on ${topic}`);
         if (topic.startsWith(`${config.mqtt.controlTopic}/`)) {
+          logger.info(`[DEBUG] topic starts with controlTopic/`);
           try {
             const data = decryptPayload(message.toString());
+            logger.info(`[DEBUG] decrypted data: ${JSON.stringify(data)}`);
             // Assume format: { device_id, attack_type } or { device_id, scenario }
             const deviceId = data.device_id;
-            if (this.devices.has(deviceId)) {
-               const device = this.devices.get(deviceId);
-               if (data.scenario) {
-                  device.setScenario(data.scenario);
-                  logger.info(`Set scenario ${data.scenario} for ${deviceId}`);
-               }
+            if (!this.devices.has(deviceId)) {
+              logger.info(`Device ${deviceId} not found in simulator. Creating dynamically...`);
+              const deviceType = data.device_type || 'SENSOR';
+              const newDevice = DeviceFactory.createDevice(deviceType.toUpperCase(), deviceId, `Dynamic ${deviceType} ${deviceId}`, 'Zone-Dynamic');
+              this.devices.set(deviceId, newDevice);
+            }
+
+            const device = this.devices.get(deviceId);
+            if (data.scenario) {
+              device.setScenario(data.scenario);
+              logger.info(`Set scenario ${data.scenario} for ${deviceId}`);
             }
           } catch (e) {
             logger.error(`Error parsing control message: ${e.message}`);

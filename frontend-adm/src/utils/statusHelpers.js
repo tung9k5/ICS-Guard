@@ -3,8 +3,10 @@ export const getSeverityVariant = (severity) => {
     CRITICAL: 'danger',
     HIGH: 'warning',
     MEDIUM: 'neutral',
+    LOW: 'success',
+    INFO: 'info'
   };
-  return map[severity] || 'success';
+  return map[severity] || 'neutral';
 };
 
 export const getSelectionState = (items = [], selectedIds = []) => ({

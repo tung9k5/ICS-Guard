@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, CheckCircle, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { RefreshCw, CheckCircle, XCircle, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import alertsApi from '@/api/alerts';
 import { toast } from '@/utils/toast';
@@ -13,6 +13,7 @@ import VStatus from '@/components/VStatus';
 import { getSeverityProps, getAlertStatusProps, getScenarioProps } from '@/utils/statusMapper';
 import { formatDate } from '@/utils/formatDate';
 import { useExpandable } from '@/hooks/useExpandable';
+import AlertDetailModal from './components/AlertDetailModal';
 import '../index.scss';
 import '../DeviceManagement/DeviceManagement.scss';
 
@@ -25,6 +26,7 @@ const CustomerAlerts = () => {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(15);
   const [total, setTotal] = useState(0);
+  const [selectedAlert, setSelectedAlert] = useState(null);
   const { expandedId, toggleExpand } = useExpandable();
 
   const fetchAlerts = async () => {
@@ -121,6 +123,11 @@ const CustomerAlerts = () => {
                         {(() => {
                           const actions = [
                             {
+                              label: t('common.btn_view_details', 'Xem chi tiết'),
+                              icon: Info,
+                              onClick: () => setSelectedAlert(alert),
+                            },
+                            {
                               label: t('customer.alerts.btn_ack'),
                               icon: CheckCircle,
                               onClick: () => handleUpdateStatus(alert._id, 'acknowledged'),
@@ -200,6 +207,11 @@ const CustomerAlerts = () => {
                           {(() => {
                             const actions = [
                               {
+                                label: t('common.btn_view_details', 'Xem chi tiết'),
+                                icon: Info,
+                                onClick: () => setSelectedAlert(alert),
+                              },
+                              {
                                 label: t('customer.alerts.btn_ack'),
                                 icon: CheckCircle,
                                 onClick: () => handleUpdateStatus(alert._id, 'acknowledged'),
@@ -238,6 +250,11 @@ const CustomerAlerts = () => {
           />
         )}
       </div>
+
+      <AlertDetailModal 
+        alert={selectedAlert} 
+        onClose={() => setSelectedAlert(null)} 
+      />
     </div>
   );
 };

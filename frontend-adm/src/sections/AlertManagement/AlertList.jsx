@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle, XCircle, Trash2, ShieldAlert, ChevronDown, ChevronUp } from 'lucide-react';
+import { CheckCircle, XCircle, Trash2, ShieldAlert, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import ActionMenu from '@/components/ActionMenu';
 import VCheckbox from '@/components/VCheckbox';
 import VNoData from '@/components/VNoData';
@@ -10,7 +10,7 @@ import { formatDate } from '@/utils/formatDate';
 import { useExpandable } from '@/hooks/useExpandable';
 import { getSeverityVariant } from '@/utils/statusHelpers';
 
-const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, onSelectAll }) => {
+const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, onSelectAll, onViewDetail }) => {
   const { t } = useTranslation();
   const { expandedId, toggleExpand } = useExpandable();
 
@@ -32,21 +32,33 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
 
   const getStatusVariant = (status) => {
     switch (status) {
+      case 'new': return 'danger';
+      case 'acknowledged': return 'warning';
       case 'resolved': return 'success';
       case 'false_positive': return 'neutral';
-      default: return 'danger';
+      default: return 'neutral';
     }
   };
 
   const allSelected = alerts.length > 0 && selectedIds.length === alerts.length;
 
-  const getActions = (alert) => [
-    ...(alert.status !== 'resolved' && alert.status !== 'false_positive' ? [
-      { icon: CheckCircle, label: t('alerts.mark_resolved'), onClick: () => onUpdateStatus(alert, 'resolved') },
-      { icon: XCircle, label: t('alerts.mark_fp'), onClick: () => onUpdateStatus(alert, 'false_positive') }
-    ] : []),
-    { icon: Trash2, label: t('common.delete'), onClick: () => onDelete(alert), danger: true }
-  ];
+  const getActions = (alert) => {
+    const actions = [
+      { icon: Info, label: t('common.btn_view_details', 'Xem chi tiết'), onClick: () => onViewDetail && onViewDetail(alert) }
+    ];
+    
+    if (alert.status !== 'resolved' && alert.status !== 'false_positive') {
+      if (alert.status === 'new') {
+        actions.push({ icon: CheckCircle, label: t('alerts.mark_ack', 'Tiếp nhận'), onClick: () => onUpdateStatus && onUpdateStatus(alert, 'acknowledged') });
+      }
+      actions.push({ icon: CheckCircle, label: t('alerts.mark_resolved', 'Đã giải quyết'), onClick: () => onUpdateStatus && onUpdateStatus(alert, 'resolved') });
+      actions.push({ icon: XCircle, label: t('alerts.mark_fp', 'Báo động giả'), onClick: () => onUpdateStatus && onUpdateStatus(alert, 'false_positive') });
+    }
+
+    actions.push({ icon: Trash2, label: t('common.delete'), onClick: () => onDelete(alert), danger: true });
+    
+    return actions;
+  };
 
   return (
     <div className="alert-list-container">

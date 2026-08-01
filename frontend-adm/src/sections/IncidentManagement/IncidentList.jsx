@@ -1,5 +1,5 @@
 import React from 'react';
-import { Edit2, Trash2, ShieldAlert, ChevronDown, ChevronUp, Bot } from 'lucide-react';
+import { Edit2, Trash2, ShieldAlert, ChevronDown, ChevronUp, Bot, Info } from 'lucide-react';
 import ActionMenu from '@/components/ActionMenu';
 import VNoData from '@/components/VNoData';
 import VStatus from '@/components/VStatus';
@@ -19,7 +19,8 @@ const IncidentList = ({
   onAiAnalyze,
   selectedIds = [],
   onSelect,
-  onSelectAll
+  onSelectAll,
+  onViewDetail
 }) => {
   const { t } = useTranslation();
   const { expandedId, toggleExpand } = useExpandable();
@@ -64,9 +65,10 @@ const IncidentList = ({
               const id = incident.id || incident._id;
               const isSelected = selectedIds.includes(id);
               const actions = [
-                { label: t('incidents.list.btn_ai_analyze'), icon: Bot, onClick: () => onAiAnalyze(id) },
-                { label: t('incidents.list.btn_edit'), icon: Edit2, onClick: () => onEdit(incident) },
-                { label: t('incidents.list.btn_delete'), icon: Trash2, danger: true, onClick: () => onDelete(id) }
+                { icon: Info, label: t('common.btn_view_details', 'Xem chi tiết'), onClick: () => onViewDetail && onViewDetail(incident) },
+                { label: t('incidents.list.btn_ai_analyze', 'AI Phân tích'), icon: Bot, onClick: () => onAiAnalyze(id) },
+                { label: t('incidents.list.btn_edit', 'Chỉnh sửa'), icon: Edit2, onClick: () => onEdit(incident) },
+                { label: t('incidents.list.btn_delete', 'Xóa'), icon: Trash2, danger: true, onClick: () => onDelete(id) }
               ];
 
               return (
@@ -103,7 +105,7 @@ const IncidentList = ({
                   <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(incident.updatedAt)}</td>
                   <td className="actions-col">
                     <ActionMenu 
-                      actions={actions} 
+                      actions={actions}
                       direction={index >= incidents.length - 2 && incidents.length > 2 ? 'up' : 'down'} 
                     />
                   </td>

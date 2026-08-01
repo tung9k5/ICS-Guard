@@ -82,6 +82,15 @@
     }
   },
   "assets": {
+    "detail": {
+      "basic_info": "Basic Information",
+      "id": "ID",
+      "network_location": "Network & Location",
+      "mac_address": "MAC Address",
+      "zone": "Zone",
+      "operation_status": "Operation Status",
+      "time_info": "Time Information"
+    },
     "device_type_plc": "Programmable Logic Controller",
     "device_type_sensor": "Sensor",
     "device_type_actuator": "Actuator (relay, motor, valve...)",
@@ -382,6 +391,44 @@
       "mobile_title": "Alert title",
       "resolved_at": "Resolved At",
       "detected_at": "Detected At"
+    },
+    "rules": {
+      "FIRE_ALARM": {
+        "title": "Fire/Smoke detected on {{device}}"
+      },
+      "CRITICAL_OVERHEAT": {
+        "title": "Critical overheat on {{device}}"
+      },
+      "ABNORMAL_TRAFFIC_SPIKE": {
+        "title": "Traffic spike on {{device}}"
+      },
+      "FLOOD_ALARM": {
+        "title": "Flood detected on {{device}}"
+      },
+      "MALICIOUS_OTA_UPDATE": {
+        "title": "Malicious OTA update detected"
+      },
+      "SENSOR_DATA_SPOOFING": {
+        "title": "Sensor data spoofing detected"
+      },
+      "UNAUTHORIZED_ACTUATOR_COMMAND": {
+        "title": "Unauthorized actuator command"
+      },
+      "PLC_LOGIC_TAMPERING": {
+        "title": "PLC logic tampering"
+      },
+      "GATEWAY_ROUTE_POISONING": {
+        "title": "Gateway route poisoning"
+      },
+      "GATEWAY_WAN_DOS": {
+        "title": "Gateway WAN DoS"
+      }
+    },
+    "scenarios": {
+      "fire": "Fire",
+      "overheat": "Overheat",
+      "ddos": "DDoS",
+      "flood": "Flood"
     }
   },
   "incidents": {
@@ -588,7 +635,14 @@
     "scenario_label": "New Scenario",
     "success_msg": "Activated scenario {{scenario}} for device {{id}}",
     "error_msg": "Error activating scenario",
-    "time_format": "{{m}} min {{s}} sec"
+    "time_format": "{{m}} min {{s}} sec",
+    "severity": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical"
+    },
+    "severity_label": "Severity"
   },
   "customer": {
     "sidebar": {
@@ -635,7 +689,14 @@
       "btn_ack": "Acknowledge",
       "btn_ack_title": "Mark as Acknowledged",
       "btn_resolve": "Resolve",
-      "btn_resolve_title": "Mark as Resolved"
+      "btn_resolve_title": "Mark as Resolved",
+      "detail": {
+        "title": "Alert Details",
+        "basic_info": "Basic Information",
+        "classification": "Classification",
+        "source": "Source",
+        "description": "Description"
+      }
     },
     "dashboard": {
       "devices": "Devices",
@@ -676,7 +737,16 @@
       "col_severity": "Severity",
       "col_status": "Status",
       "col_time": "Created at",
-      "col_action": "Action"
+      "col_action": "Action",
+      "detail": {
+        "title": "Incident Details",
+        "basic_info": "Basic Information",
+        "classification": "Classification",
+        "description": "Description",
+        "related_info": "Related Information",
+        "alerts_count": "Linked Alerts Count",
+        "alerts": "alerts"
+      }
     },
     "severity": {
       "critical": "CRITICAL",

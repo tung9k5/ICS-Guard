@@ -61,6 +61,10 @@ class AlertService {
 
     const updatedAlert = await alertRepository.updateStatusById(id, updateData);
 
+    if (alert.device_id && [ALERT_STATUSES.RESOLVED, ALERT_STATUSES.FALSE_POSITIVE].includes(status)) {
+      await deviceRepository.updateById(alert.device_id._id, { current_scenario: 'NORMAL' });
+    }
+
     await auditRepository.create({
       action: AUDIT_ACTIONS.ALERT_STATUS_UPDATED,
       username: user.username,

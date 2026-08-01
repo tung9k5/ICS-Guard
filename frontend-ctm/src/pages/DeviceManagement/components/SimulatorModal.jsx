@@ -10,6 +10,7 @@ import { SCENARIOS } from '@/constants/deviceConstants';
 const SimulatorModal = ({ device, onClose }) => {
   const { t } = useTranslation();
   const [scenario, setScenario] = useState('NORMAL');
+  const [severity, setSeverity] = useState('HIGH');
   const [loading, setLoading] = useState(false);
 
   const [duration, setDuration] = useState('');
@@ -24,9 +25,14 @@ const SimulatorModal = ({ device, onClose }) => {
         const diff = Math.floor((now - start) / 1000);
         if (diff < 0) return;
         
-        const m = Math.floor(diff / 60);
+        const h = Math.floor(diff / 3600);
+        const m = Math.floor((diff % 3600) / 60);
         const s = diff % 60;
-        setDuration(t('simulator.time_format', '{{m}} phút {{s}} giây', { m, s }));
+        if (h > 0) {
+          setDuration(t('simulator.time_format_hours', '{{h}} giờ {{m}} phút {{s}} giây', { h, m, s }));
+        } else {
+          setDuration(t('simulator.time_format', '{{m}} phút {{s}} giây', { m, s }));
+        }
       };
       
       updateDuration();
@@ -44,7 +50,7 @@ const SimulatorModal = ({ device, onClose }) => {
     setLoading(true);
     try {
       const id = device.id || device._id;
-      await ApiSimulator.setDeviceScenario(id, scenario);
+      await ApiSimulator.setDeviceScenario(id, scenario, severity);
       toast.success(t('simulator.success_msg', 'Đã kích hoạt kịch bản {{scenario}} cho thiết bị {{id}}', { scenario, id }));
       onClose(true); // pass true to refresh list
     } catch (error) {
@@ -92,6 +98,12 @@ const SimulatorModal = ({ device, onClose }) => {
           </h4>
           <div style={{ fontSize: '0.9rem', color: '#7f1d1d' }}>
             <div><strong>{t('simulator.type', 'Loại:')}</strong> {currentScenarioLabel}</div>
+            {device.current_severity && (
+              <div>
+                <strong>{t('simulator.severity_label', 'Mức độ (Severity):').replace(/\s*\(.*\)/, '')}</strong>{' '}
+                {t(`simulator.severity.${device.current_severity.toLowerCase()}`, device.current_severity)}
+              </div>
+            )}
             <div><strong>{t('simulator.start_time', 'Bắt đầu:')}</strong> {new Date(device.scenario_start_time).toLocaleString(t('common.locale', 'vi-VN'))}</div>
             <div><strong>{t('simulator.duration', 'Đã chạy:')}</strong> {duration}</div>
           </div>
@@ -140,6 +152,47 @@ const SimulatorModal = ({ device, onClose }) => {
             {SCENARIOS.map(s => (
               <option key={s.value} value={s.value}>{s.label}</option>
             ))}
+          </select>
+        </div>
+
+        <div className="v-input-wrapper" style={{ marginBottom: '1.5rem' }}>
+          <label className="v-label" style={{ fontWeight: '500', marginBottom: '0.5rem', display: 'block', color: '#374151' }}>
+            {t('simulator.severity_label', 'Mức độ (Severity)')}
+          </label>
+          <select 
+            className="v-input" 
+            value={severity} 
+            onChange={e => setSeverity(e.target.value)}
+            style={{ 
+              width: '100%', 
+              padding: '0.75rem 2.5rem 0.75rem 1rem', 
+              borderRadius: '8px',
+              border: '1px solid #d1d5db',
+              backgroundColor: '#f9fafb',
+              color: '#1f2937',
+              fontSize: '0.95rem',
+              outline: 'none',
+              cursor: 'pointer',
+              appearance: 'none',
+              backgroundImage: `url('data:image/svg+xml;charset=US-ASCII,<svg xmlns="http://www.w3.org/2000/svg" width="292.4" height="292.4"><path fill="%236b7280" d="M287 69.4a17.6 17.6 0 0 0-13-5.4H18.4c-5 0-9.3 1.8-12.9 5.4A17.6 17.6 0 0 0 0 82.2c0 5 1.8 9.3 5.4 12.9l128 127.9c3.6 3.6 7.8 5.4 12.8 5.4s9.2-1.8 12.8-5.4L287 95c3.5-3.5 5.4-7.8 5.4-12.8 0-5-1.9-9.2-5.5-12.8z"/></svg>')`,
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'right 1rem top 50%',
+              backgroundSize: '0.65rem auto',
+              transition: 'border-color 0.2s, box-shadow 0.2s'
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = 'var(--primary-color, #3b82f6)';
+              e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = '#d1d5db';
+              e.target.style.boxShadow = 'none';
+            }}
+          >
+            <option value="LOW">{t('simulator.severity.low')}</option>
+            <option value="MEDIUM">{t('simulator.severity.medium')}</option>
+            <option value="HIGH">{t('simulator.severity.high')}</option>
+            <option value="CRITICAL">{t('simulator.severity.critical')}</option>
           </select>
         </div>
       </form>

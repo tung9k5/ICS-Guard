@@ -83,7 +83,16 @@
     }
   },
   "assets": {
-    "device_type_plc": "Bộ điều khiển",
+    "detail": {
+      "basic_info": "Thông tin cơ bản",
+      "id": "ID",
+      "network_location": "Mạng & Vị trí",
+      "mac_address": "MAC Address",
+      "zone": "Khu vực (Zone)",
+      "operation_status": "Trạng thái hoạt động",
+      "time_info": "Thời gian"
+    },
+    "device_type_plc": "Bộ điều khiển logic khả trình (PLC)",
     "device_type_sensor": "Cảm biến",
     "device_type_actuator": "Thiết bị chấp hành (relay, motor, valve...)",
     "device_type_gateway": "Gateway/ESP32/Raspberry Pi",
@@ -359,6 +368,13 @@
     "mark_ack": "Acknowledge",
     "mark_resolved": "Đã giải quyết",
     "mark_fp": "Báo động giả",
+    "detail": {
+      "title": "Chi tiết cảnh báo",
+      "basic_info": "Thông tin cơ bản",
+      "classification": "Phân loại",
+      "source": "Nguồn phát sinh",
+      "description": "Mô tả chi tiết"
+    },
     "update_success": "Cập nhật trạng thái thành công",
     "delete_success": "Xóa cảnh báo thành công",
     "search_placeholder": "Tìm kiếm tiêu đề, mô tả...",
@@ -383,6 +399,44 @@
       "mobile_title": "Tiêu đề cảnh báo",
       "resolved_at": "Ngày xử lý",
       "detected_at": "Ngày phát hiện"
+    },
+    "rules": {
+      "FIRE_ALARM": {
+        "title": "Phát hiện khói/cháy nổ trên thiết bị {{device}}"
+      },
+      "CRITICAL_OVERHEAT": {
+        "title": "Nhiệt độ cực hạn trên thiết bị {{device}}"
+      },
+      "ABNORMAL_TRAFFIC_SPIKE": {
+        "title": "Lưu lượng mạng tăng đột biến trên {{device}}"
+      },
+      "FLOOD_ALARM": {
+        "title": "Phát hiện ngập nước trên thiết bị {{device}}"
+      },
+      "MALICIOUS_OTA_UPDATE": {
+        "title": "Phát hiện cập nhật OTA giả mạo"
+      },
+      "SENSOR_DATA_SPOOFING": {
+        "title": "Phát hiện dữ liệu cảm biến bị giả mạo"
+      },
+      "UNAUTHORIZED_ACTUATOR_COMMAND": {
+        "title": "Lệnh điều khiển trái phép"
+      },
+      "PLC_LOGIC_TAMPERING": {
+        "title": "Thay đổi logic PLC bất hợp pháp"
+      },
+      "GATEWAY_ROUTE_POISONING": {
+        "title": "Đầu độc định tuyến Gateway"
+      },
+      "GATEWAY_WAN_DOS": {
+        "title": "Tấn công từ chối dịch vụ Gateway"
+      }
+    },
+    "scenarios": {
+      "fire": "Cháy nổ",
+      "overheat": "Quá nhiệt",
+      "ddos": "DDoS",
+      "flood": "Ngập lụt"
     }
   },
   "incidents": {
@@ -559,7 +613,16 @@
       "detail_title": "Chi tiết sự cố",
       "lbl_title": "Tiêu đề",
       "lbl_description": "Mô tả",
-      "lbl_status": "Trạng thái"
+      "lbl_status": "Trạng thái",
+      "detail": {
+        "title": "Chi tiết sự cố",
+        "basic_info": "Thông tin cơ bản",
+        "classification": "Phân loại",
+        "description": "Mô tả chi tiết",
+        "related_info": "Thông tin liên quan",
+        "alerts_count": "Số lượng cảnh báo liên kết",
+        "alerts": "cảnh báo"
+      }
     }
   },
   "chatbot": {
@@ -646,5 +709,14 @@
       "closed": "Đã đóng",
       "resolved": "Đã giải quyết"
     }
+  },
+  "simulator": {
+    "severity": {
+      "low": "Thấp (Low)",
+      "medium": "Trung bình (Medium)",
+      "high": "Cao (High)",
+      "critical": "Nghiêm trọng (Critical)"
+    },
+    "severity_label": "Mức độ (Severity)"
   }
 }

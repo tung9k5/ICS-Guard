@@ -82,6 +82,15 @@
     }
   },
   "assets": {
+    "detail": {
+      "basic_info": "Basic Information",
+      "id": "ID",
+      "network_location": "Network & Location",
+      "mac_address": "MAC Address",
+      "zone": "Zone",
+      "operation_status": "Operation Status",
+      "time_info": "Time Information"
+    },
     "device_type_plc": "Programmable Logic Controller",
     "device_type_sensor": "Sensor",
     "device_type_actuator": "Actuator (relay, motor, valve...)",
@@ -358,6 +367,13 @@
     "mark_ack": "Acknowledge",
     "mark_resolved": "Resolved",
     "mark_fp": "False Positive",
+    "detail": {
+      "title": "Alert Details",
+      "basic_info": "Basic Information",
+      "classification": "Classification",
+      "source": "Source",
+      "description": "Description"
+    },
     "update_success": "Alert status updated successfully",
     "delete_success": "Alert deleted successfully",
     "search_placeholder": "Search title, description...",
@@ -381,7 +397,45 @@
       "table_actions": "Actions",
       "mobile_title": "Alert title",
       "resolved_at": "Resolved At",
-      "detected_at":"Detected At"
+      "detected_at": "Detected At"
+    },
+    "rules": {
+      "FIRE_ALARM": {
+        "title": "Fire/Smoke detected on {{device}}"
+      },
+      "CRITICAL_OVERHEAT": {
+        "title": "Critical overheat on {{device}}"
+      },
+      "ABNORMAL_TRAFFIC_SPIKE": {
+        "title": "Traffic spike on {{device}}"
+      },
+      "FLOOD_ALARM": {
+        "title": "Flood detected on {{device}}"
+      },
+      "MALICIOUS_OTA_UPDATE": {
+        "title": "Malicious OTA update detected"
+      },
+      "SENSOR_DATA_SPOOFING": {
+        "title": "Sensor data spoofing detected"
+      },
+      "UNAUTHORIZED_ACTUATOR_COMMAND": {
+        "title": "Unauthorized actuator command"
+      },
+      "PLC_LOGIC_TAMPERING": {
+        "title": "PLC logic tampering"
+      },
+      "GATEWAY_ROUTE_POISONING": {
+        "title": "Gateway route poisoning"
+      },
+      "GATEWAY_WAN_DOS": {
+        "title": "Gateway WAN DoS"
+      }
+    },
+    "scenarios": {
+      "fire": "Fire",
+      "overheat": "Overheat",
+      "ddos": "DDoS",
+      "flood": "Flood"
     }
   },
   "incidents": {
@@ -555,7 +609,16 @@
       "detail_title": "Incident Details",
       "lbl_title": "Title",
       "lbl_description": "Description",
-      "lbl_status": "Status"
+      "lbl_status": "Status",
+      "detail": {
+        "title": "Incident Details",
+        "basic_info": "Basic Information",
+        "classification": "Classification",
+        "description": "Description",
+        "related_info": "Related Information",
+        "alerts_count": "Linked Alerts Count",
+        "alerts": "alerts"
+      }
     }
   },
   "chatbot": {
@@ -642,5 +705,14 @@
       "closed": "Closed",
       "resolved": "Resolved"
     }
+  },
+  "simulator": {
+    "severity": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "critical": "Critical"
+    },
+    "severity_label": "Severity"
   }
 }

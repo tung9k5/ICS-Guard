@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Search } from 'lucide-react';
 import alertsApi from '@/api/alerts';
 import AlertList from '@/sections/AlertManagement/AlertList';
+import AlertDetailModal from '@/sections/AlertManagement/AlertDetailModal';
 import DeleteConfirmModal from '@/Dialog/DeleteConfirmModal';
 import VPagination from '@/components/VPagination';
 import VHeaderPage from '@/components/VHeaderPage';
@@ -49,6 +50,7 @@ const AlertManagement = () => {
   
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [alertToDelete, setAlertToDelete] = useState(null);
+  const [selectedAlert, setSelectedAlert] = useState(null);
   const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   const confirmDelete = (alert) => {
@@ -178,6 +180,7 @@ const AlertManagement = () => {
             selectedIds={selectedIds}
             onSelect={handleSelect}
             onSelectAll={handleSelectAll}
+            onViewDetail={(alert) => setSelectedAlert(alert)}
           />
         )}
         
@@ -205,6 +208,11 @@ const AlertManagement = () => {
         message={isBulkDelete 
           ? t('alerts.confirm_bulk_delete_msg', `Bạn có chắc chắn muốn xóa ${selectedIds.length} cảnh báo đã chọn?`)
           : t('alerts.confirm_delete_msg', 'Bạn có chắc chắn muốn xóa cảnh báo này?')}
+      />
+
+      <AlertDetailModal 
+        alert={selectedAlert} 
+        onClose={() => setSelectedAlert(null)} 
       />
     </div>
   );
