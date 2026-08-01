@@ -106,9 +106,9 @@ class TelemetryService {
 
       try {
         await sendTelegramAlert(
-          `🚨 *CRITICAL SECURITY INCIDENT*\n\n*Type:* Brute Force Attack\n*Device:* ${device ? device.name : device_id}\n*Source IP:* ${source_ip}\n*Target User:* ${username}\n*Incident ID:* ${newIncident._id}\n\nPlease review immediately in the ICS-Guard dashboard.`,
+          ` *CRITICAL SECURITY INCIDENT*\n\n*Type:* Brute Force Attack\n*Device:* ${device ? device.name : device_id}\n*Source IP:* ${source_ip}\n*Target User:* ${username}\n*Incident ID:* ${newIncident._id}\n\nPlease review immediately in the ICS-Guard dashboard.`,
           [
-            { text: "View Incident", url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/incidents/${newIncident._id}` },
+            { text: "View Incident", url: `${process.env.FRONTEND_ADM_URL}/incidents/${newIncident._id}` },
             { text: `Isolate ${device_id}`, callback_data: `isolate_${device_id}` }
           ]
         );

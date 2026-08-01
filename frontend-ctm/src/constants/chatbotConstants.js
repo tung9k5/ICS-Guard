@@ -1,0 +1,1 @@
+export const CHATBOT_MAX_INPUT_LENGTH = 500;

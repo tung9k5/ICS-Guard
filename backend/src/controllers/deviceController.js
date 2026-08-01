@@ -31,7 +31,7 @@ export const createDevice = async (req, res, next) => {
 
 export const updateDevice = async (req, res, next) => {
   try {
-    const device = await deviceService.update(req.params.id, req.body);
+    const device = await deviceService.update(req.params.id, req.body, req.user);
     return successResponse(res, device, 'Device updated successfully');
   } catch (error) {
     next(error);
@@ -40,7 +40,7 @@ export const updateDevice = async (req, res, next) => {
 
 export const deleteDevice = async (req, res, next) => {
   try {
-    await deviceService.remove(req.params.id);
+    await deviceService.remove(req.params.id, req.user);
     return successResponse(res, null, 'Device deleted successfully');
   } catch (error) {
     next(error);
@@ -49,7 +49,7 @@ export const deleteDevice = async (req, res, next) => {
 
 export const bulkDeleteDevices = async (req, res, next) => {
   try {
-    const result = await deviceService.removeMany(req.body.ids);
+    const result = await deviceService.removeMany(req.body.ids, req.user);
     return successResponse(res, { deletedCount: result.deletedCount }, `Successfully deleted ${result.deletedCount} devices`);
   } catch (error) {
     next(error);

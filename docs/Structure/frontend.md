@@ -75,11 +75,6 @@ frontend/
 │   │   ├── AlertManagement/      # Trang quản lý cảnh báo.
 │   │   ├── AttackSimulator/      # Trang giả lập tấn công.
 │   │   ├── AuditManagement/      # Trang quản lý nhật ký hệ thống.
-│   │   ├── Customer/             # Các trang dành riêng cho tài khoản Customer.
-│   │   │   ├── AlertManagement/  # Trang cảnh báo của Customer.
-│   │   │   ├── Dashboard/        # Dashboard của Customer.
-│   │   │   ├── DeviceManagement/ # Trang thiết bị của Customer.
-│   │   │   └── IncidentManagement/# Trang sự cố của Customer.
 │   │   ├── Dashboard/            # Trang chủ hệ thống chung (Dashboard).
 │   │   ├── DeviceManagement/     # Trang quản lý thiết bị.
 │   │   └── IncidentManagement/   # Trang quản lý sự cố.
@@ -99,9 +94,6 @@ frontend/
 │   │   ├── DeviceManagement/     # Các section của thiết bị.
 │   │   └── IncidentManagement/   # Các section sự cố.
 │   │   ├── Layout/               # Các block giao diện cho Layout (Header, Sidebar).
-│   │   │   ├── Customer/         # Sidebar, header của customer.
-│   │   │   │   ├── Header/
-│   │   │   │   └── Sidebar/
 │   │   │   ├── Header/           # Header chính.
 │   │   │   └── Sidebar/          # Sidebar chính.
 │   │   ├── Profile/              # Section hồ sơ cá nhân.

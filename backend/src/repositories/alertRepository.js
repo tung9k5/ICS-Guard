@@ -1,9 +1,11 @@
 import { Alert } from '../models/index.js';
+import idGeneratorService from '../services/idGeneratorService.js';
 
 class AlertRepository {
   async findAll(query, sort, skip, limit) {
     return Alert.find(query)
       .populate('incident_id', 'title status severity')
+      .populate('device_id', 'name ip_address current_scenario type')
       .sort(sort)
       .skip(skip)
       .limit(limit);
@@ -14,10 +16,15 @@ class AlertRepository {
   }
 
   async findById(id) {
-    return Alert.findById(id).populate('incident_id', 'title status severity');
+    return Alert.findById(id)
+      .populate('incident_id', 'title status severity')
+      .populate('device_id', 'name ip_address current_scenario type');
   }
 
   async create(data) {
+    if (!data.alert_code) {
+      data.alert_code = await idGeneratorService.generate('alerts');
+    }
     return Alert.create(data);
   }
 

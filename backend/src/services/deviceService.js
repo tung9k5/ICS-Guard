@@ -9,8 +9,8 @@ import { ROLES, DEVICE_STATUSES, ATTACK_TYPES, AUDIT_STATUSES, AUDIT_ACTIONS, DE
 import AppError from '../utils/AppError.js';
 import socketService from './socketService.js';
 import { parsePagination, buildSortOption } from '../utils/pagination.js';
+import idGeneratorService from './idGeneratorService.js';
 
-// Projection for device list/detail queries — avoids repeating the same field string
 const DEVICE_PROJECTION = '_id name type zone ipAddress ip_address macAddress mac_address description status location manufacturer serial_number uptime battery_level tags configuration current_scenario scenario_start_time createdAt updatedAt';
 
 class DeviceService {
@@ -68,17 +68,7 @@ class DeviceService {
       if (macAddress) {
         customId = macAddress.replace(/:/g, '').toLowerCase();
       } else {
-        try {
-          const lastDevice = await deviceRepository.findLastByPattern(/^D-\d{3,}$/);
-          if (lastDevice && lastDevice._id) {
-            const lastNumber = parseInt(lastDevice._id.split('-')[1], 10);
-            customId = `D-${(lastNumber + 1).toString().padStart(3, '0')}`;
-          } else {
-            customId = 'D-001';
-          }
-        } catch (err) {
-          customId = `D-${Math.floor(Math.random() * 1000)}`;
-        }
+        customId = await idGeneratorService.generate('devices');
       }
     }
 
@@ -136,10 +126,11 @@ class DeviceService {
     };
   }
 
-  async update(id, data) {
+  async update(id, data, user) {
     const { name, type, ipAddress, ip_address, macAddress, description, status, location, manufacturer, serial_number, uptime, battery_level, tags, configuration } = data;
     const device = await deviceRepository.findById(id);
     if (!device) throw new AppError('Device not found', 404);
+    if (user && user.role !== ROLES.ADMIN && device.userId?.toString() !== user.id) throw new AppError('Forbidden: Device does not belong to you', 403);
 
     const updateData = {};
     if (name !== undefined) updateData.name = name;
@@ -185,13 +176,21 @@ class DeviceService {
     return cleanDevice;
   }
 
-  async remove(id) {
+  async remove(id, user) {
     const device = await deviceRepository.findById(id);
     if (!device) throw new AppError('Device not found', 404);
+    if (user && user.role !== ROLES.ADMIN && device.userId?.toString() !== user.id) {
+      throw new AppError('Forbidden: Device does not belong to you', 403);
+    }
     await deviceRepository.deleteById(id);
   }
 
-  async removeMany(ids) {
+  async removeMany(ids, user) {
+    if (user && user.role !== ROLES.ADMIN) {
+      const devices = await deviceRepository.findAll({ _id: { $in: ids } });
+      const notOwned = devices.some(d => d.userId?.toString() !== user.id);
+      if (notOwned) throw new AppError('Forbidden: Some devices do not belong to you', 403);
+    }
     return deviceRepository.deleteMany(ids);
   }
 

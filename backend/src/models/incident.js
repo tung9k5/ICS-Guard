@@ -2,6 +2,11 @@ import mongoose from 'mongoose';
 import { INCIDENT_STATUSES, SEVERITY_LEVELS } from '../constants/index.js';
 
 const incidentSchema = new mongoose.Schema({
+  incident_code: {
+    type: String,
+    unique: true,
+    index: true,
+  },
   title: {
     type: String,
     required: true,

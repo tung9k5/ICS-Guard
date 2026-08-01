@@ -25,12 +25,12 @@ const router = express.Router();
 router.use(authMiddleware);
 
 router.get('/', validatePagination, getAllDevices);
-router.post('/', authorize(['admin']), validateCreateDevice, auditLogger('DEVICE_CREATE'), createDevice);
-router.post('/bulk-delete', authorize(['admin']), validateBulkIds, auditLogger('DEVICE_BULK_DELETE'), bulkDeleteDevices);
+router.post('/', authorize(['admin', 'customer']), validateCreateDevice, auditLogger('DEVICE_CREATE'), createDevice);
+router.post('/bulk-delete', authorize(['admin', 'customer']), validateBulkIds, auditLogger('DEVICE_BULK_DELETE'), bulkDeleteDevices);
 
 router.get('/:id', validateDeviceId, getDeviceById);
-router.put('/:id', authorize(['admin']), validateDeviceId, validateUpdateDevice, auditLogger('DEVICE_UPDATE'), updateDevice);
-router.delete('/:id', authorize(['admin']), validateDeviceId, auditLogger('DEVICE_DELETE'), deleteDevice);
+router.put('/:id', authorize(['admin', 'customer']), validateDeviceId, validateUpdateDevice, auditLogger('DEVICE_UPDATE'), updateDevice);
+router.delete('/:id', authorize(['admin', 'customer']), validateDeviceId, auditLogger('DEVICE_DELETE'), deleteDevice);
 
 router.post('/:id/isolate', authorize(['admin' ]), validateDeviceId, auditLogger('DEVICE_ISOLATE'), isolateDevice);
 router.post('/:id/unisolate', authorize(['admin' ]), validateDeviceId, auditLogger('DEVICE_UNISOLATE'), unisolateDevice);

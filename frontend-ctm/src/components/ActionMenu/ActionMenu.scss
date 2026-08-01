@@ -1,0 +1,95 @@
+.action-menu-container {
+  position: relative;
+  display: inline-block;
+
+  .action-menu-trigger {
+    background: transparent;
+    border: none;
+    color: var(--slate-500);
+    cursor: pointer;
+    padding: 0.4286rem;
+    border-radius: 0.4286rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: var(--slate-100);
+      color: var(--slate-900);
+    }
+  }
+
+  .action-menu-dropdown {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 0.2857rem;
+    background: var(--white);
+    border: 0.0714rem solid var(--slate-200);
+    border-radius: 0.5714rem;
+    box-shadow: 0 0.7143rem 1.0714rem -0.2143rem rgba(0, 0, 0, 0.1), 0 0.2857rem 0.4286rem -0.1429rem rgba(0, 0, 0, 0.05);
+    min-width: 11.4286rem;
+    padding: 0.5714rem 0;
+    z-index: 50;
+    animation: dropdownFadeIn 0.2s ease-out;
+
+    &.direction-up {
+      top: auto;
+      bottom: 100%;
+      margin-top: 0;
+      margin-bottom: 0.2857rem;
+      animation: dropdownFadeInUp 0.2s ease-out;
+    }
+
+    .action-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 0.7143rem;
+      width: 100%;
+      padding: 0.7143rem 1.1429rem;
+      background: transparent;
+      border: none;
+      color: var(--slate-700);
+      font-size: 1rem;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: var(--slate-50);
+        color: var(--slate-900);
+      }
+
+      &.text-danger {
+        color: var(--red-500);
+        
+        &:hover {
+          background: var(--red-50);
+        }
+      }
+    }
+  }
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5714rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dropdownFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(0.5714rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

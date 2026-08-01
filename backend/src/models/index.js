@@ -10,6 +10,7 @@ import Alert from './alert.js';
 import Incident from './incident.js';
 import IncidentTimeline from './incidentTimeline.js';
 import Setting from './Setting.js';
+import IdSequence from './IdSequence.js';
 
 const db = {
   connectDB,
@@ -24,6 +25,7 @@ const db = {
   Incident,
   IncidentTimeline,
   Setting,
+  IdSequence,
 };
 
 export {
@@ -39,6 +41,7 @@ export {
   Incident,
   IncidentTimeline,
   Setting,
+  IdSequence,
 };
 
 export default db;

@@ -8,7 +8,7 @@ import Device from '../models/device.js';
 const router = express.Router();
 
 // Get simulator status
-router.get('/status', authMiddleware, authorize(ROLES.ADMIN), (req, res) => {
+router.get('/status', authMiddleware, authorize([ROLES.ADMIN, ROLES.CUSTOMER]), (req, res) => {
   res.json({
     status: 'online',
     message: 'IoT Simulator is running.'
@@ -16,10 +16,18 @@ router.get('/status', authMiddleware, authorize(ROLES.ADMIN), (req, res) => {
 });
 
 // Change scenario for a device
-router.post('/scenario', authMiddleware, authorize(ROLES.ADMIN), async (req, res) => {
+router.post('/scenario', authMiddleware, authorize([ROLES.ADMIN, ROLES.CUSTOMER]), async (req, res) => {
   const { device_id, scenario } = req.body;
   if (!device_id || !scenario) {
     return res.status(400).json({ error: 'device_id and scenario are required' });
+  }
+
+  // Validate ownership if user is a customer
+  if (req.user.role !== ROLES.ADMIN) {
+    const device = await Device.findById(device_id);
+    if (!device || String(device.userId) !== String(req.user.id)) {
+      return res.status(403).json({ error: 'Forbidden: Device does not belong to you' });
+    }
   }
 
   // Publish to control topic which simulator listens to

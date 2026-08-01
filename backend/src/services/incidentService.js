@@ -1,6 +1,8 @@
 import axios from 'axios';
 import incidentRepository from '../repositories/incidentRepository.js';
 import incidentTimelineRepository from '../repositories/incidentTimelineRepository.js';
+import deviceRepository from '../repositories/deviceRepository.js';
+import alertRepository from '../repositories/alertRepository.js';
 import AppError from '../utils/AppError.js';
 import { ROLES, INCIDENT_STATUSES, SEVERITY_LEVELS, INCIDENT_TIMELINE_TYPES } from '../constants/index.js';
 import { analyzeIncident } from '../../../ai-services/index.js';
@@ -11,15 +13,35 @@ class IncidentService {
     const { search, status, severity, order, page = 1, per_page = 10 } = queryParams;
 
     let query = {};
+    let conditions = [];
+
     // Normalize role check to lowercase for consistency
     if (user && user.id && user.role?.toLowerCase() !== ROLES.ADMIN) {
-      query.assigned_to = user.id;
+      const userDevices = await deviceRepository.findAll({ userId: user.id }, {}, 0, 10000, '_id');
+      const userDeviceIds = userDevices.map(d => d._id);
+      
+      const userAlerts = await alertRepository.findAll({ device_id: { $in: userDeviceIds } }, {}, 0, 100000);
+      const userAlertIds = userAlerts.map(a => a._id);
+
+      conditions.push({
+        $or: [
+          { assigned_to: user.id },
+          { alert_ids: { $in: userAlertIds } }
+        ]
+      });
     }
 
     if (search) {
       const searchRegex = new RegExp(search, 'i');
-      query.$or = [{ title: searchRegex }, { description: searchRegex }];
+      conditions.push({
+        $or: [{ title: searchRegex }, { description: searchRegex }]
+      });
     }
+
+    if (conditions.length > 0) {
+      query.$and = conditions;
+    }
+
     if (status) query.status = status;
     if (severity) query.severity = severity;
 

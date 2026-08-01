@@ -3,13 +3,54 @@ import alertRepository from '../repositories/alertRepository.js';
 import incidentRepository from '../repositories/incidentRepository.js';
 import { Alert } from '../models/index.js';
 import axios from 'axios';
+import { ROLES } from '../constants/index.js';
 
 class DashboardService {
-  async getSystemHealth() {
-    const totalDevices = await deviceRepository.countAll({});
-    const activeDevices = await deviceRepository.countAll({ status: 'active' });
-    const isolatedDevices = await deviceRepository.countAll({ status: 'isolated' });
-    const offlineDevices = await deviceRepository.countAll({ status: 'offline' });
+  async getCustomerSummary(user) {
+    // Determine devices for this user
+    let deviceQuery = {};
+    if (user && user.role !== ROLES.ADMIN) {
+      deviceQuery.userId = user.id;
+    }
+    const totalDevices = await deviceRepository.countAll(deviceQuery);
+
+    let alertMatch = {};
+    if (user && user.role !== ROLES.ADMIN) {
+      const userDevices = await deviceRepository.findAll(deviceQuery, {}, 0, 10000, '_id');
+      const userDeviceIds = userDevices.map(d => d._id.toString());
+      alertMatch = { device_id: { $in: userDeviceIds } };
+    }
+
+    const totalAlerts = await alertRepository.countAll(alertMatch);
+    const activeAlerts = await alertRepository.countAll({ ...alertMatch, status: { $in: ['new', 'acknowledged'] } });
+
+    // Recent 5 alerts
+    const recentAlerts = await alertRepository.findAll(alertMatch, { detected_at: -1 }, 0, 5);
+
+    let incidentMatch = {};
+    if (user && user.role !== ROLES.ADMIN) {
+      incidentMatch.assigned_to = user.id;
+    }
+    const totalIncidents = await incidentRepository.countAll(incidentMatch);
+
+    return {
+      devices: totalDevices,
+      alerts: totalAlerts,
+      activeAlerts: activeAlerts,
+      incidents: totalIncidents,
+      recentAlerts: recentAlerts
+    };
+  }
+  async getSystemHealth(user) {
+    let query = {};
+    if (user && user.role !== ROLES.ADMIN) {
+      query.userId = user.id;
+    }
+
+    const totalDevices = await deviceRepository.countAll(query);
+    const activeDevices = await deviceRepository.countAll({ ...query, status: 'active' });
+    const isolatedDevices = await deviceRepository.countAll({ ...query, status: 'isolated' });
+    const offlineDevices = await deviceRepository.countAll({ ...query, status: 'offline' });
 
     return [
       { key: 'active', value: activeDevices },
@@ -18,17 +59,25 @@ class DashboardService {
     ];
   }
 
-  async getThreatActivity() {
+  async getThreatActivity(user) {
     const today = new Date();
     today.setHours(23, 59, 59, 999);
     const sevenDaysAgo = new Date(today);
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
+    let deviceMatch = {};
+    if (user && user.role !== ROLES.ADMIN) {
+      const userDevices = await deviceRepository.findAll({ userId: user.id }, {}, 0, 10000, '_id');
+      const userDeviceIds = userDevices.map(d => d._id.toString());
+      deviceMatch = { device_id: { $in: userDeviceIds } };
+    }
+
     const pipeline = [
       {
         $match: {
-          createdAt: { $gte: sevenDaysAgo, $lte: today }
+          createdAt: { $gte: sevenDaysAgo, $lte: today },
+          ...deviceMatch
         }
       },
       {
@@ -77,13 +126,24 @@ class DashboardService {
     return threatData;
   }
 
-  async getNetworkTraffic() {
+  async getNetworkTraffic(user) {
     const INFLUXDB_URL = process.env.INFLUXDB_URL;
     const DB_NAME = process.env.INFLUXDB_DB;
     const queryUrl = `${INFLUXDB_URL}/query`;
     
+    let deviceFilter = '';
+    if (user && user.role !== ROLES.ADMIN) {
+      const userDevices = await deviceRepository.findAll({ userId: user.id }, {}, 0, 10000, '_id');
+      const userDeviceIds = userDevices.map(d => d._id.toString());
+      if (userDeviceIds.length > 0) {
+        deviceFilter = ` AND (${userDeviceIds.map(id => "device_id = '" + id + "'").join(' OR ')})`;
+      } else {
+        deviceFilter = ` AND device_id = 'NONE'`;
+      }
+    }
+
     // Group by 3h for the last 24h
-    const query = encodeURIComponent(`SELECT SUM(bytes_per_second) as bytes FROM device_metrics WHERE time > now() - 24h GROUP BY time(3h)`);
+    const query = encodeURIComponent(`SELECT SUM(bytes_per_second) as bytes FROM device_metrics WHERE time > now() - 24h${deviceFilter} GROUP BY time(3h)`);
     
     const trafficData = [];
     const now = new Date();

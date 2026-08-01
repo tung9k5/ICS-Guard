@@ -1,0 +1,53 @@
+.status-layout {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, var(--blue-900) 0%, var(--slate-900) 100%);
+  padding: 1.7143rem;
+  
+  .status-container {
+    background: rgba(30, 54, 112, 0.6);
+    backdrop-filter: blur(0.8571rem);
+    border-radius: 1.1429rem;
+    padding: 3.4286rem 2.2857rem;
+    box-shadow: 0 1.0714rem 2.5rem rgba(0,0,0,0.3);
+    max-width: 35.7143rem;
+    width: 100%;
+    text-align: center;
+    border: 0.0714rem solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+    
+    
+    
+    
+    h1 {
+      font-size: 2rem;
+      color: var(--slate-50);
+      margin-bottom: 0.8571rem;
+      font-weight: 700;
+    }
+    
+    p {
+      color: var(--slate-400);
+      margin-bottom: 2.2857rem;
+      line-height: 1.6;
+      font-size: 1.1429rem;
+    }
+    
+    .status-actions {
+      display: flex;
+      justify-content: center;
+      gap: 1.1429rem;
+      
+      @media (max-width: 34.2857rem) {
+        flex-direction: column;
+        
+        button {
+          width: 100%;
+        }
+      }
+    }
+  }
+}

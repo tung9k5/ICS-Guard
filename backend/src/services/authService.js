@@ -35,7 +35,7 @@ class AuthService {
     );
   }
 
-  async login(username, password, ipAddress) {
+  async login(username, password, ipAddress, expectedRole) {
     const user = await userRepository.findByUsername(username);
     
     if (user) {
@@ -53,6 +53,10 @@ class AuthService {
       if (user) await handleFailedLogin(user, ipAddress);
       await registerFailedIpAttempt(ipAddress);
       throw new AppError('Invalid username or password.', 401);
+    }
+
+    if (expectedRole && user.role !== expectedRole && user.role !== ROLES.ADMIN) {
+      throw new AppError('Unauthorized access for this role.', 403);
     }
 
     await handleSuccessfulLogin(user);
@@ -95,8 +99,14 @@ class AuthService {
 
     if (!dbToken || dbToken.revoked || new Date(dbToken.expiresAt) < new Date()) {
       if (dbToken && dbToken.revoked) {
-        console.warn(`[Security Alert] Revoked refresh token reuse detected for userId ${decoded.id}.`);
-        await authRepository.revokeAllUserTokens(decoded.id);
+        const revokedTime = new Date(dbToken.updatedAt || Date.now()).getTime();
+        const nowTime = Date.now();
+        const gracePeriod = 30 * 1000;
+
+        if (nowTime - revokedTime > gracePeriod) {
+          console.warn(`[Security Alert] Revoked refresh token reuse detected for userId ${decoded.id}.`);
+          await authRepository.revokeAllUserTokens(decoded.id);
+        }
       }
       throw new AppError('Refresh token is invalid, revoked, or expired.', 401);
     }
@@ -149,7 +159,7 @@ class AuthService {
     return user;
   }
 
-  async register({ username, email, password, full_name }) {
+  async register({ username, email, password, full_name, role }) {
     const [existingUser, existingUsername] = await Promise.all([
       userRepository.findByEmailOrUsername(email),
       userRepository.findByUsername(username),
@@ -165,7 +175,7 @@ class AuthService {
       email,
       password_hash,
       full_name: full_name || '',
-      role: ROLES.ADMIN,
+      role: role || ROLES.CUSTOMER,
       isFirstLogin: false
     });
 
@@ -194,7 +204,7 @@ class AuthService {
     };
   }
 
-  async googleLogin(idToken) {
+  async googleLogin(idToken, expectedRole) {
     let response;
     try {
       const url = process.env.GOOGLE_OAUTH_TOKENINFO_URL;
@@ -219,7 +229,7 @@ class AuthService {
         email,
         full_name: name,
         password_hash,
-        role: ROLES.ADMIN,
+        role: expectedRole || ROLES.CUSTOMER,
         isFirstLogin: false,
         provider_type: AUTH_PROVIDERS.GOOGLE,
         provider_id: sub
@@ -237,6 +247,10 @@ class AuthService {
     if (user.login_failures && user.login_failures.lockout_until && user.login_failures.lockout_until > now) {
       const waitTimeMin = Math.ceil((user.login_failures.lockout_until - now) / 60000);
       throw new AppError(`Account is locked. Please try again after ${waitTimeMin} minute(s).`, 403);
+    }
+
+    if (expectedRole && user.role !== expectedRole && user.role !== ROLES.ADMIN) {
+      throw new AppError('Unauthorized access for this role.', 403);
     }
 
     await handleSuccessfulLogin(user);
@@ -266,7 +280,7 @@ class AuthService {
     };
   }
 
-  getGoogleAuthUrl() {
+  getGoogleAuthUrl(role) {
     const rootUrl = process.env.GOOGLE_OAUTH_AUTH_URL;
     const options = {
       redirect_uri: process.env.GOOGLE_REDIRECT_URI,
@@ -274,6 +288,7 @@ class AuthService {
       access_type: 'offline',
       response_type: 'code',
       prompt: 'consent',
+      state: role,
       scope: [
         'https://www.googleapis.com/auth/userinfo.profile',
         'https://www.googleapis.com/auth/userinfo.email',
@@ -283,7 +298,7 @@ class AuthService {
     return `${rootUrl}?${qs.toString()}`;
   }
 
-  async googleCallback(code) {
+  async googleCallback(code, expectedRole) {
     const url = process.env.GOOGLE_OAUTH_TOKEN_URL;
     const values = {
       code,
@@ -334,7 +349,7 @@ class AuthService {
         email,
         full_name: name,
         password_hash,
-        role: ROLES.ADMIN,
+        role: expectedRole || ROLES.CUSTOMER,
         isFirstLogin: false,
         provider_type: AUTH_PROVIDERS.GOOGLE,
         provider_id: sub
@@ -352,6 +367,10 @@ class AuthService {
     if (user.login_failures && user.login_failures.lockout_until && user.login_failures.lockout_until > now) {
       const waitTimeMin = Math.ceil((user.login_failures.lockout_until - now) / 60000);
       throw new AppError(`Account is locked. Please try again after ${waitTimeMin} minute(s).`, 403);
+    }
+
+    if (expectedRole && user.role !== expectedRole && user.role !== ROLES.ADMIN) {
+      throw new AppError('Unauthorized access for this role.', 403);
     }
 
     await handleSuccessfulLogin(user);

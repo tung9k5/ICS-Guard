@@ -1,0 +1,129 @@
+.v-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+  width: 100%;
+
+  .v-input-label, .v-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--slate-900);
+    margin-bottom: 0.5rem;
+  }
+
+  .v-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    .v-input-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      width: 1.25rem;
+      height: 1.25rem;
+      pointer-events: none;
+
+      .icon-svg {
+        width: 1.25rem;
+        height: 1.25rem;
+        color: var(--slate-400); 
+      }
+    }
+
+    .v-input-field {
+      width: 100%;
+      background-color: var(--white);
+      border: 0.0714rem solid var(--slate-300);
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+      color: var(--slate-900);
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      outline: none;
+      box-shadow: 0 0.0714rem 0.1429rem 0 rgba(0, 0, 0, 0.05);
+
+      &:hover {
+        border-color: var(--slate-400);
+      }
+
+      &:focus {
+        border-color: var(--blue-500);
+        box-shadow: 0 0 0 0.2143rem rgba(59, 130, 246, 0.15);
+      }
+
+      &::placeholder {
+        color: var(--slate-400);
+      }
+
+      &:-webkit-autofill,
+      &:-webkit-autofill:hover, 
+      &:-webkit-autofill:focus, 
+      &:-webkit-autofill:active {
+        -webkit-box-shadow: 0 0 0 1000px var(--white) inset !important;
+        -webkit-text-fill-color: var(--slate-900) !important;
+        transition: background-color 5000s ease-in-out 0s;
+      }
+
+      &:disabled {
+        background-color: var(--slate-50); 
+        color: var(--slate-400);
+        cursor: not-allowed;
+      }
+
+      &.has-icon {
+        padding-left: 2.5rem;
+      }
+
+      &.has-password-toggle {
+        padding-right: 2.5rem;
+      }
+
+      &.has-error {
+        border-color: var(--danger-color);
+        &:hover {
+          box-shadow: var(--shadow-md);
+        }
+        &:focus {
+          box-shadow: 0 0 0 0.2143rem rgba(239, 68, 68, 0.2), var(--shadow-lg);
+        }
+      }
+    }
+
+    .v-input-toggle-password {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--slate-400); 
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      transition: color 0.2s ease;
+
+      &:hover, &:focus {
+        color: var(--slate-800);
+        outline: none;
+      }
+
+      .icon-svg {
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+    }
+  }
+
+  .v-input-error-msg {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--danger-color);
+  }
+}

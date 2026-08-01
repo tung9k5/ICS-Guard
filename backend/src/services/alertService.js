@@ -12,7 +12,7 @@ class AlertService {
     let query = {};
     if (user && user.id && user.role?.toLowerCase() !== ROLES.ADMIN) {
       const userDevices = await deviceRepository.findAll({ userId: user.id }, {}, 0, 10000, '_id');
-      const userDeviceIds = userDevices.map(d => d._id);
+      const userDeviceIds = userDevices.map(d => d._id.toString());
       if (device_id && userDeviceIds.includes(device_id)) {
         query.device_id = device_id;
       } else if (device_id) {
