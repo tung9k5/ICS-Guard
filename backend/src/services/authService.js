@@ -55,8 +55,8 @@ class AuthService {
       throw new AppError('Invalid username or password.', 401);
     }
 
-    if (expectedRole && user.role !== expectedRole && user.role !== ROLES.ADMIN) {
-      throw new AppError('Unauthorized access for this role.', 403);
+    if (expectedRole && user.role !== expectedRole) {
+      throw new AppError('Bạn không có quyền đăng nhập role này.', 403);
     }
 
     await handleSuccessfulLogin(user);
@@ -249,8 +249,8 @@ class AuthService {
       throw new AppError(`Account is locked. Please try again after ${waitTimeMin} minute(s).`, 403);
     }
 
-    if (expectedRole && user.role !== expectedRole && user.role !== ROLES.ADMIN) {
-      throw new AppError('Unauthorized access for this role.', 403);
+    if (expectedRole && user.role !== expectedRole) {
+      throw new AppError('Bạn không có quyền đăng nhập role này.', 403);
     }
 
     await handleSuccessfulLogin(user);
@@ -369,8 +369,8 @@ class AuthService {
       throw new AppError(`Account is locked. Please try again after ${waitTimeMin} minute(s).`, 403);
     }
 
-    if (expectedRole && user.role !== expectedRole && user.role !== ROLES.ADMIN) {
-      throw new AppError('Unauthorized access for this role.', 403);
+    if (expectedRole && user.role !== expectedRole) {
+      throw new AppError('Bạn không có quyền đăng nhập role này.', 403);
     }
 
     await handleSuccessfulLogin(user);

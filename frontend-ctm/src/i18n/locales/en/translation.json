@@ -381,7 +381,7 @@
       "table_actions": "Actions",
       "mobile_title": "Alert title",
       "resolved_at": "Resolved At",
-      "detected_at":"Detected At"
+      "detected_at": "Detected At"
     }
   },
   "incidents": {
@@ -485,79 +485,6 @@
     "rule_management": "Rule Management",
     "alert_management": "Raw Alerts"
   },
-  "customer": {
-    "sidebar": {
-      "dashboard": "Dashboard",
-      "devices": "My Devices",
-      "alerts": "Alerts",
-      "incidents": "Incidents"
-    },
-    "common": {
-      "refresh": "Refresh",
-      "loading": "Loading...",
-      "unknown": "unknown"
-    },
-    "status": {
-      "new": "New",
-      "acknowledged": "Acknowledged",
-      "resolved": "Resolved",
-      "false_positive": "False Positive",
-      "open": "Open",
-      "investigating": "Investigating",
-      "closed": "Closed",
-      "online": "Online",
-      "offline": "Offline",
-      "quarantined": "Quarantined"
-    },
-    "alerts": {
-      "fetch_error": "Failed to fetch alerts",
-      "update_success": "Status updated successfully",
-      "update_error": "Failed to update status",
-      "title": "Alerts",
-      "no_data": "No alerts found",
-      "col_title": "Title",
-      "col_source": "Source",
-      "col_severity": "Severity",
-      "col_status": "Status",
-      "col_time": "Time",
-      "col_action": "Action",
-      "item_name": "alert",
-      "default_alert": "Alert",
-      "btn_ack_title": "Acknowledge",
-      "btn_ack": "ACK",
-      "btn_resolve_title": "Resolve",
-      "btn_resolve": "Resolve"
-    },
-    "dashboard": {
-      "devices": "Devices",
-      "total_alerts": "Total Alerts",
-      "active_alerts": "Active Alerts",
-      "incidents": "Incidents",
-      "recent_alerts": "Recent Alerts"
-    },
-    "devices": {
-      "fetch_error": "Failed to fetch devices",
-      "title": "My Devices",
-      "no_data": "No devices found",
-      "col_name": "Device Name",
-      "col_ip": "IP Address",
-      "col_mac": "MAC Address",
-      "col_zone": "Zone",
-      "col_status": "Status",
-      "col_risk_score": "Risk Score",
-      "item_name": "device"
-    },
-    "incidents": {
-      "fetch_error": "Failed to fetch incidents",
-      "title": "Incidents",
-      "no_data": "No incidents found",
-      "item_name": "incident",
-      "detail_title": "Incident Details",
-      "lbl_title": "Title",
-      "lbl_description": "Description",
-      "lbl_status": "Status"
-    }
-  },
   "chatbot": {
     "title": "ICS-Guard AI Assistant",
     "greeting": "👋 I am an AI assistant ready to help you with the ICS-Guard system. How can I help you?",
@@ -643,21 +570,32 @@
       "resolved": "Resolved"
     }
   },
+  "simulator": {
+    "scenario_normal": "Real",
+    "scenario_fire": "Fire",
+    "scenario_flood": "Flood",
+    "scenario_traffic_spike": "Traffic Spike",
+    "scenario_overheat": "Overheat",
+    "scenario_offline": "Offline",
+    "title": "IoT Simulator",
+    "sending": "Sending...",
+    "apply_btn": "Apply Scenario",
+    "running_scenario": "Running Scenario",
+    "type": "Type:",
+    "start_time": "Start Time:",
+    "duration": "Duration:",
+    "description": "Select a simulation scenario to apply to device",
+    "scenario_label": "New Scenario",
+    "success_msg": "Activated scenario {{scenario}} for device {{id}}",
+    "error_msg": "Error activating scenario",
+    "time_format": "{{m}} min {{s}} sec"
+  },
   "customer": {
-    "dashboard": {
-      "devices": "Devices",
-      "total_alerts": "Total Alerts",
-      "active_alerts": "Active Alerts",
-      "incidents": "Incidents",
-      "recent_alerts": "Recent Alerts",
-      "banner_title": "Protect your ICS Guard system!",
-      "banner_subtitle": "24/7 continuous monitoring, early detection of all risks and prevention of attacks on your industrial infrastructure.",
-      "btn_upgrade": "ACTIVATE ADVANCED PROTECTION",
-      "btn_report": "CONNECT NEW SYSTEM"
-    },
-    "devices": {
-      "item_name": "devices",
-      "title":"Devices"
+    "sidebar": {
+      "dashboard": "Dashboard",
+      "devices": "My Devices",
+      "alerts": "Alerts",
+      "incidents": "Incidents"
     },
     "common": {
       "refresh": "Refresh",
@@ -675,14 +613,10 @@
       "false_positive": "False Positive",
       "open": "Open",
       "investigating": "Investigating",
-      "closed": "Closed"
-    },
-    "severity": {
-      "critical": "CRITICAL",
-      "high": "HIGH",
-      "medium": "MEDIUM",
-      "low": "LOW",
-      "info": "INFO"
+      "closed": "Closed",
+      "online": "Online",
+      "offline": "Offline",
+      "quarantined": "Quarantined"
     },
     "alerts": {
       "item_name": "alerts",
@@ -701,8 +635,30 @@
       "btn_ack": "Acknowledge",
       "btn_ack_title": "Mark as Acknowledged",
       "btn_resolve": "Resolve",
-      "btn_resolve_title": "Mark as Resolved",
-      "item_name": "alerts"
+      "btn_resolve_title": "Mark as Resolved"
+    },
+    "dashboard": {
+      "devices": "Devices",
+      "total_alerts": "Total Alerts",
+      "active_alerts": "Active Alerts",
+      "incidents": "Incidents",
+      "recent_alerts": "Recent Alerts",
+      "banner_title": "Protect your ICS Guard system!",
+      "banner_subtitle": "24/7 continuous monitoring, early detection of all risks and prevention of attacks on your industrial infrastructure.",
+      "btn_upgrade": "ACTIVATE ADVANCED PROTECTION",
+      "btn_report": "CONNECT NEW SYSTEM"
+    },
+    "devices": {
+      "item_name": "devices",
+      "title": "Devices",
+      "fetch_error": "Failed to fetch devices",
+      "no_data": "No devices found",
+      "col_name": "Device Name",
+      "col_ip": "IP Address",
+      "col_mac": "MAC Address",
+      "col_zone": "Zone",
+      "col_status": "Status",
+      "col_risk_score": "Risk Score"
     },
     "incidents": {
       "title": "Security Incidents",
@@ -713,27 +669,21 @@
       "lbl_description": "Description",
       "lbl_status": "Status",
       "lbl_created_at": "Created At",
-      "item_name": "incidents"
+      "item_name": "incidents",
+      "col_id": "ID",
+      "col_title": "Title",
+      "col_description": "Description",
+      "col_severity": "Severity",
+      "col_status": "Status",
+      "col_time": "Created at",
+      "col_action": "Action"
+    },
+    "severity": {
+      "critical": "CRITICAL",
+      "high": "HIGH",
+      "medium": "MEDIUM",
+      "low": "LOW",
+      "info": "INFO"
     }
-  },
-  "simulator": {
-      "scenario_normal": "Real",
-      "scenario_fire": "Fire",
-      "scenario_flood": "Flood",
-      "scenario_traffic_spike": "Traffic Spike",
-      "scenario_overheat": "Overheat",
-      "scenario_offline": "Offline",
-      "title": "IoT Simulator",
-      "sending": "Sending...",
-      "apply_btn": "Apply Scenario",
-      "running_scenario": "Running Scenario",
-      "type": "Type:",
-      "start_time": "Start Time:",
-      "duration": "Duration:",
-      "description": "Select a simulation scenario to apply to device",
-      "scenario_label": "New Scenario",
-      "success_msg": "Activated scenario {{scenario}} for device {{id}}",
-      "error_msg": "Error activating scenario",
-      "time_format": "{{m}} min {{s}} sec"
-    }
+  }
 }

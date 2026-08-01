@@ -7,36 +7,15 @@ import VHeaderPage from '@/components/VHeaderPage';
 import VNoData from '@/components/VNoData';
 import VPagination from '@/components/VPagination';
 import VButton from '@/components/VButton';
+import VStatus from '@/components/VStatus';
+import { getSeverityProps, getIncidentStatusProps } from '@/utils/statusMapper';
 import { formatDate } from '@/utils/formatDate';
 import { useExpandable } from '@/hooks/useExpandable';
 import IncidentForm from '@/sections/IncidentManagement/IncidentForm';
 import '../index.scss';
 import '../DeviceManagement/DeviceManagement.scss';
-
-const severityColor = {
-  critical: 'var(--red-500)',
-  high: 'var(--orange-500)',
-  medium: 'var(--yellow-500)',
-  low: 'var(--green-500)',
-  info: 'var(--blue-500)',
-};
-
-const statusColor = {
-  open: 'var(--red-500)',
-  investigating: 'var(--orange-500)',
-  resolved: 'var(--green-500)',
-  closed: 'var(--custom-color-14)',
-};
-
 const CustomerIncidents = () => {
   const { t } = useTranslation();
-
-  const statusLabel = {
-    open: t('customer.status.open'),
-    investigating: t('customer.status.investigating'),
-    resolved: t('customer.status.resolved'),
-    closed: t('customer.status.closed'),
-  };
 
   const [incidents, setIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +30,7 @@ const CustomerIncidents = () => {
     try {
       const res = await incidentsApi.getAll({ page, limit: perPage });
       setIncidents(res.data || res.incidents || []);
-      setTotal(res.total || 0);
+      setTotal(res.pagination?.total || res.total || 0);
     } catch {
       toast.error(t('customer.incidents.fetch_error'));
     } finally {
@@ -94,6 +73,7 @@ const CustomerIncidents = () => {
                     {[
                       t('customer.incidents.col_id', 'ID'),
                       t('customer.incidents.col_title'),
+                      t('customer.incidents.col_description'),
                       t('customer.incidents.col_severity'),
                       t('customer.incidents.col_status'),
                       t('customer.incidents.col_time'),
@@ -104,40 +84,23 @@ const CustomerIncidents = () => {
                   {incidents.map((incident) => (
                     <tr key={incident._id}>
                       <td><strong>{incident.incident_code || `${incident._id.substring(0, 8)}...`}</strong></td>
-                      <td style={{ maxWidth: '20rem' }}>
+                      <td style={{ maxWidth: '15rem' }}>
                         <div className="truncate-text" style={{ fontWeight: 500, color: 'var(--slate-900)' }} title={incident.title}>
                           {incident.title}
                         </div>
+                      </td>
+                      <td style={{ maxWidth: '20rem' }}>
                         {incident.description && (
-                          <div className="truncate-text" style={{ fontSize: '0.8571rem', color: 'var(--slate-500)', marginTop: '0.2857rem' }} title={incident.description}>
+                          <div className="truncate-text" style={{ fontSize: '0.8571rem', color: 'var(--slate-500)' }} title={incident.description}>
                             {incident.description}
                           </div>
                         )}
                       </td>
                       <td>
-                        <span style={{
-                          padding: '0.2143rem 0.7143rem',
-                          borderRadius: '1.4286rem',
-                          fontSize: '0.7857rem',
-                          fontWeight: 600,
-                          background: `${severityColor[incident.severity?.toLowerCase()] || 'var(--custom-color-14)'}22`,
-                          color: severityColor[incident.severity?.toLowerCase()] || 'var(--custom-color-14)',
-                          textTransform: 'uppercase',
-                        }}>
-                          {t(`customer.severity.${incident.severity?.toLowerCase()}`, incident.severity)}
-                        </span>
+                        <VStatus {...getSeverityProps(incident.severity, t)} className="uppercase" />
                       </td>
                       <td>
-                        <span style={{
-                          padding: '0.2143rem 0.7143rem',
-                          borderRadius: '1.4286rem',
-                          fontSize: '0.7857rem',
-                          fontWeight: 600,
-                          background: `${statusColor[incident.status] || 'var(--custom-color-14)'}22`,
-                          color: statusColor[incident.status] || 'var(--custom-color-14)',
-                        }}>
-                          {statusLabel[incident.status] || incident.status}
-                        </span>
+                        <VStatus {...getIncidentStatusProps(incident.status, t)} />
                       </td>
                       <td className="text-muted" style={{ fontSize: '0.8571rem' }}>
                         {incident.createdAt ? formatDate(incident.createdAt) : '—'}
@@ -175,40 +138,21 @@ const CustomerIncidents = () => {
                     {isExpanded && (
                       <div className="mobile-card-body">
                         {incident.description && (
-                          <div className="detail-row" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-                            <span className="detail-label" style={{ marginBottom: '0.2857rem' }}>{t('customer.incidents.lbl_description')}</span>
-                            <span className="detail-value" style={{ textAlign: 'left', lineHeight: '1.4' }}>{incident.description}</span>
+                          <div className="detail-row">
+                            <span className="detail-label">{t('customer.incidents.lbl_description')}</span>
+                            <span className="detail-value" style={{ textAlign: 'right' }}>{incident.description}</span>
                           </div>
                         )}
                         <div className="detail-row">
                           <span className="detail-label">{t('customer.incidents.col_severity')}</span>
                           <span className="detail-value">
-                            <span style={{
-                              padding: '0.2143rem 0.7143rem',
-                              borderRadius: '1.4286rem',
-                              fontSize: '0.7857rem',
-                              fontWeight: 600,
-                              background: `${severityColor[incident.severity?.toLowerCase()] || 'var(--custom-color-14)'}22`,
-                              color: severityColor[incident.severity?.toLowerCase()] || 'var(--custom-color-14)',
-                              textTransform: 'uppercase',
-                            }}>
-                              {t(`customer.severity.${incident.severity?.toLowerCase()}`, incident.severity)}
-                            </span>
+                            <VStatus {...getSeverityProps(incident.severity, t)} className="uppercase" />
                           </span>
                         </div>
                         <div className="detail-row">
                           <span className="detail-label">{t('customer.incidents.col_status')}</span>
                           <span className="detail-value">
-                            <span style={{
-                              padding: '0.2143rem 0.7143rem',
-                              borderRadius: '1.4286rem',
-                              fontSize: '0.7857rem',
-                              fontWeight: 600,
-                              background: `${statusColor[incident.status] || 'var(--custom-color-14)'}22`,
-                              color: statusColor[incident.status] || 'var(--custom-color-14)',
-                            }}>
-                              {statusLabel[incident.status] || incident.status}
-                            </span>
+                            <VStatus {...getIncidentStatusProps(incident.status, t)} />
                           </span>
                         </div>
                         <div className="detail-row">

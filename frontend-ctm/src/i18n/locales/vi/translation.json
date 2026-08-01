@@ -489,79 +489,6 @@
     "rule_management": "Quản lý Quy Tắc",
     "alert_management": "Cảnh Báo Thô"
   },
-  "customer": {
-    "sidebar": {
-      "dashboard": "Bảng điều khiển",
-      "devices": "Thiết bị của tôi",
-      "alerts": "Cảnh báo",
-      "incidents": "Sự cố"
-    },
-    "common": {
-      "refresh": "Làm mới",
-      "loading": "Đang tải...",
-      "unknown": "Không xác định"
-    },
-    "status": {
-      "new": "Mới",
-      "acknowledged": "Đã xem",
-      "resolved": "Đã xử lý",
-      "false_positive": "Sai",
-      "open": "Đang mở",
-      "investigating": "Điều tra",
-      "closed": "Đóng",
-      "online": "Online",
-      "offline": "Offline",
-      "quarantined": "Cách ly"
-    },
-    "alerts": {
-      "fetch_error": "Không thể tải danh sách cảnh báo",
-      "update_success": "Cập nhật trạng thái thành công",
-      "update_error": "Lỗi cập nhật trạng thái",
-      "title": "Cảnh báo",
-      "no_data": "Không có cảnh báo nào",
-      "col_title": "Tiêu đề",
-      "col_source": "Nguồn",
-      "col_severity": "Mức độ",
-      "col_status": "Trạng thái",
-      "col_time": "Thời gian",
-      "col_action": "Hành động",
-      "item_name": "cảnh báo",
-      "default_alert": "Cảnh báo",
-      "btn_ack_title": "Xác nhận (ACK)",
-      "btn_ack": "ACK",
-      "btn_resolve_title": "Đã xử lý (Resolve)",
-      "btn_resolve": "Xử lý"
-    },
-    "dashboard": {
-      "devices": "Thiết bị",
-      "total_alerts": "Tổng cảnh báo",
-      "active_alerts": "Cảnh báo đang mở",
-      "incidents": "Sự cố",
-      "recent_alerts": "Cảnh báo gần đây"
-    },
-    "devices": {
-      "fetch_error": "Không thể tải danh sách thiết bị",
-      "title": "Thiết bị của tôi",
-      "no_data": "Chưa có thiết bị nào",
-      "col_name": "Tên thiết bị",
-      "col_ip": "IP",
-      "col_mac": "MAC",
-      "col_zone": "Vùng",
-      "col_status": "Trạng thái",
-      "col_risk_score": "Mức độ rủi ro",
-      "item_name": "thiết bị"
-    },
-    "incidents": {
-      "fetch_error": "Không thể tải danh sách sự cố",
-      "title": "Sự cố",
-      "no_data": "Không có sự cố nào",
-      "item_name": "sự cố",
-      "detail_title": "Chi tiết sự cố",
-      "lbl_title": "Tiêu đề",
-      "lbl_description": "Mô tả",
-      "lbl_status": "Trạng thái"
-    }
-  },
   "chatbot": {
     "title": "Trợ lý ảo ICS-Guard",
     "greeting": "👋 Mình là trợ lý AI sẵn sàng hỗ trợ bạn về hệ thống ICS-Guard. Bạn cần giúp gì?",
@@ -647,21 +574,32 @@
       "resolved": "Đã giải quyết"
     }
   },
+  "simulator": {
+    "scenario_normal": "Thực tế",
+    "scenario_fire": "Cháy nổ",
+    "scenario_flood": "Ngập lụt",
+    "scenario_traffic_spike": "Bất thường lưu lượng",
+    "scenario_overheat": "Quá nhiệt",
+    "scenario_offline": "Mất kết nối",
+    "title": "Mô phỏng IoT (Simulator)",
+    "sending": "Đang gửi...",
+    "apply_btn": "Lưu kịch bản",
+    "running_scenario": "Đang chạy kịch bản",
+    "type": "Loại:",
+    "start_time": "Bắt đầu:",
+    "duration": "Đã chạy:",
+    "description": "Chọn kịch bản mô phỏng để áp dụng lên thiết bị",
+    "scenario_label": "Kịch bản mới (Scenario)",
+    "success_msg": "Đã kích hoạt kịch bản {{scenario}} cho thiết bị {{id}}",
+    "error_msg": "Gặp lỗi khi kích hoạt kịch bản",
+    "time_format": "{{m}} phút {{s}} giây"
+  },
   "customer": {
-    "dashboard": {
-      "devices": "Thiết bị",
-      "total_alerts": "Tổng cảnh báo",
-      "active_alerts": "Cảnh báo đang mở",
-      "incidents": "Sự cố",
-      "recent_alerts": "Cảnh báo gần đây",
-      "banner_title": "Bảo vệ hệ thống ICS Guard!",
-      "banner_subtitle": "Giám sát liên tục 24/7, phát hiện sớm mọi rủi ro và ngăn chặn tấn công vào hạ tầng công nghiệp của bạn.",
-      "btn_upgrade": "KÍCH HOẠT BẢO VỆ NÂNG CAO",
-      "btn_report": "KẾT NỐI HỆ THỐNG MỚI"
-    },
-    "devices": {
-      "item_name": "thiết bị",
-      "title":"Thiết bị"
+    "sidebar": {
+      "dashboard": "Trang chủ",
+      "devices": "Thiết bị của tôi",
+      "alerts": "Cảnh báo",
+      "incidents": "Sự cố"
     },
     "common": {
       "refresh": "Làm mới",
@@ -679,14 +617,10 @@
       "false_positive": "Cảnh báo giả",
       "open": "Mở",
       "investigating": "Đang điều tra",
-      "closed": "Đã đóng"
-    },
-    "severity": {
-      "critical": "NGHIÊM TRỌNG",
-      "high": "CAO",
-      "medium": "TRUNG BÌNH",
-      "low": "THẤP",
-      "info": "THÔNG TIN"
+      "closed": "Đã đóng",
+      "online": "Online",
+      "offline": "Offline",
+      "quarantined": "Cách ly"
     },
     "alerts": {
       "item_name": "cảnh báo",
@@ -705,8 +639,30 @@
       "btn_ack": "Tiếp nhận",
       "btn_ack_title": "Đánh dấu đã tiếp nhận",
       "btn_resolve": "Giải quyết",
-      "btn_resolve_title": "Đánh dấu đã giải quyết",
-      "item_name": "cảnh báo"
+      "btn_resolve_title": "Đánh dấu đã giải quyết"
+    },
+    "dashboard": {
+      "devices": "Thiết bị",
+      "total_alerts": "Tổng cảnh báo",
+      "active_alerts": "Cảnh báo đang mở",
+      "incidents": "Sự cố",
+      "recent_alerts": "Cảnh báo gần đây",
+      "banner_title": "Bảo vệ hệ thống ICS Guard!",
+      "banner_subtitle": "Giám sát liên tục 24/7, phát hiện sớm mọi rủi ro và ngăn chặn tấn công vào hạ tầng công nghiệp của bạn.",
+      "btn_upgrade": "KÍCH HOẠT BẢO VỆ NÂNG CAO",
+      "btn_report": "KẾT NỐI HỆ THỐNG MỚI"
+    },
+    "devices": {
+      "item_name": "thiết bị",
+      "title": "Thiết bị",
+      "fetch_error": "Không thể tải danh sách thiết bị",
+      "no_data": "Chưa có thiết bị nào",
+      "col_name": "Tên thiết bị",
+      "col_ip": "IP",
+      "col_mac": "MAC",
+      "col_zone": "Vùng",
+      "col_status": "Trạng thái",
+      "col_risk_score": "Mức độ rủi ro"
     },
     "incidents": {
       "title": "Sự cố an ninh",
@@ -720,30 +676,18 @@
       "item_name": "sự cố",
       "col_id": "ID",
       "col_title": "Tiêu đề",
+      "col_description": "Mô tả",
       "col_severity": "Mức độ",
       "col_status": "Trạng thái",
       "col_time": "Thời gian tạo",
       "col_action": "Hành động"
+    },
+    "severity": {
+      "critical": "NGHIÊM TRỌNG",
+      "high": "CAO",
+      "medium": "TRUNG BÌNH",
+      "low": "THẤP",
+      "info": "THÔNG TIN"
     }
-  },
-  "simulator": {
-      "scenario_normal": "Thực tế",
-      "scenario_fire": "Cháy nổ",
-      "scenario_flood": "Ngập lụt",
-      "scenario_traffic_spike": "Bất thường lưu lượng",
-      "scenario_overheat": "Quá nhiệt",
-      "scenario_offline": "Mất kết nối",
-      "title": "Mô phỏng IoT (Simulator)",
-      "sending": "Đang gửi...",
-      "apply_btn": "Lưu kịch bản",
-      "running_scenario": "Đang chạy kịch bản",
-      "type": "Loại:",
-      "start_time": "Bắt đầu:",
-      "duration": "Đã chạy:",
-      "description": "Chọn kịch bản mô phỏng để áp dụng lên thiết bị",
-      "scenario_label": "Kịch bản mới (Scenario)",
-      "success_msg": "Đã kích hoạt kịch bản {{scenario}} cho thiết bị {{id}}",
-      "error_msg": "Gặp lỗi khi kích hoạt kịch bản",
-      "time_format": "{{m}} phút {{s}} giây"
-    }
+  }
 }

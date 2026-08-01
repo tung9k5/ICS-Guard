@@ -55,7 +55,14 @@ const CustomerSidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
         onClick={() => setIsSidebarOpen(false)}
       />
 
-      <aside className={'sidebar ' + (isSidebarOpen ? 'mobile-open' : 'collapsed')}>
+      <aside 
+        className={'sidebar ' + (isSidebarOpen ? 'mobile-open' : 'collapsed')}
+        onClick={() => {
+          if (!isSidebarOpen) {
+            setIsSidebarOpen(true);
+          }
+        }}
+      >
         <div className="sidebar-logo flex-logo-container">
           <div className="logo-wrapper">
             <Viewlogo

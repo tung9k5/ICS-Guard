@@ -68,6 +68,16 @@
           background: var(--red-50);
         }
       }
+
+      &.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: transparent !important;
+        
+        &:hover {
+          background: transparent !important;
+        }
+      }
     }
   }
 }

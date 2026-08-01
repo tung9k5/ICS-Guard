@@ -1,10 +1,16 @@
 import jwt from 'jsonwebtoken';
 import { User } from '../models/index.js';
-import { AUTH_CONSTANTS } from '../constants/index.js';
+import { AUTH_CONSTANTS, ROLES } from '../constants/index.js';
 
 const authMiddleware = async (req, res, next) => {
   const authHeader = req.headers.authorization;
-  let token = req.cookies?.[AUTH_CONSTANTS.ACCESS_TOKEN_COOKIE];
+  const origin = req.headers.origin || req.headers.referer || '';
+  let role = ROLES.CUSTOMER;
+  if (process.env.FRONTEND_ADM_URL && origin.startsWith(process.env.FRONTEND_ADM_URL)) {
+    role = ROLES.ADMIN;
+  }
+  
+  let token = req.cookies?.[`${AUTH_CONSTANTS.ACCESS_TOKEN_COOKIE}_${role}`] || req.cookies?.[AUTH_CONSTANTS.ACCESS_TOKEN_COOKIE];
 
   if (!token && authHeader && authHeader.startsWith('Bearer ')) {
     token = authHeader.split(' ')[1];
@@ -35,6 +41,13 @@ const authMiddleware = async (req, res, next) => {
       return res.status(403).json({
         error: 'Forbidden',
         message: 'Your account has been locked due to too many failed login attempts.',
+      });
+    }
+
+    if (user.role !== role) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Your role is not authorized to access this portal.',
       });
     }
 

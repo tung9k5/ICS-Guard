@@ -1,6 +1,6 @@
 import { errorResponse } from '../utils/response.js';
 import { EMAIL_REGEX } from '../utils/regex.js';
-import { AUTH_CONSTANTS } from '../constants/index.js';
+import { AUTH_CONSTANTS, ROLES } from '../constants/index.js';
 
 export const validateLogin = (req, res, next) => {
   const { username, password } = req.body;
@@ -28,9 +28,14 @@ export const validateRegister = (req, res, next) => {
 };
 
 export const validateRefreshToken = (req, res, next) => {
-  const refreshToken = req.cookies?.[AUTH_CONSTANTS.REFRESH_TOKEN_COOKIE] || req.body.refreshToken || req.body.refresh_token;
+  const origin = req.headers.origin || req.headers.referer || '';
+  let role = ROLES.CUSTOMER;
+  if (process.env.FRONTEND_ADM_URL && origin.startsWith(process.env.FRONTEND_ADM_URL)) {
+    role = ROLES.ADMIN;
+  }
+  const refreshToken = req.cookies?.[`${AUTH_CONSTANTS.REFRESH_TOKEN_COOKIE}_${role}`] || req.cookies?.[AUTH_CONSTANTS.REFRESH_TOKEN_COOKIE] || req.body.refreshToken || req.body.refresh_token;
   if (!refreshToken) {
-    return errorResponse(res, 'Refresh token is required', null, 400);
+    return errorResponse(res, 'Refresh token is required', null, 401);
   }
   next();
 };

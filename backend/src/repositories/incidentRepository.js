@@ -1,4 +1,5 @@
 import { Incident } from '../models/index.js';
+import idGeneratorService from '../services/idGeneratorService.js';
 
 class IncidentRepository {
   async findAll(query, sort, skip, limit) {
@@ -14,6 +15,9 @@ class IncidentRepository {
   }
 
   async create(data) {
+    if (!data.incident_code) {
+      data.incident_code = await idGeneratorService.generate('incidents');
+    }
     return Incident.create(data);
   }
 

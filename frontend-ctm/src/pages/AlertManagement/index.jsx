@@ -8,34 +8,16 @@ import VNoData from '@/components/VNoData';
 import { getScenarioLabel } from '@/constants/deviceConstants';
 import VPagination from '@/components/VPagination';
 import VButton from '@/components/VButton';
+import ActionMenu from '@/components/ActionMenu';
+import VStatus from '@/components/VStatus';
+import { getSeverityProps, getAlertStatusProps, getScenarioProps } from '@/utils/statusMapper';
 import { formatDate } from '@/utils/formatDate';
 import { useExpandable } from '@/hooks/useExpandable';
 import '../index.scss';
 import '../DeviceManagement/DeviceManagement.scss';
 
-const severityColor = {
-  critical: 'var(--red-500)',
-  high: 'var(--orange-500)',
-  medium: 'var(--yellow-500)',
-  low: 'var(--green-500)',
-  info: 'var(--blue-500)',
-};
-const statusColor = {
-  new: 'var(--red-500)',
-  acknowledged: 'var(--orange-500)',
-  resolved: 'var(--green-500)',
-  false_positive: 'var(--custom-color-14)',
-};
-
 const CustomerAlerts = () => {
   const { t } = useTranslation();
-
-  const statusLabel = {
-    new: t('customer.status.new'),
-    acknowledged: t('customer.status.acknowledged'),
-    resolved: t('customer.status.resolved'),
-    false_positive: t('customer.status.false_positive'),
-  };
 
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +32,7 @@ const CustomerAlerts = () => {
     try {
       const res = await alertsApi.getAllAlerts({ page, limit: perPage });
       setAlerts(res.data || res.alerts || []);
-      setTotal(res.total || 0);
+      setTotal(res.pagination?.total || res.total || 0);
     } catch {
       toast.error(t('customer.alerts.fetch_error'));
     } finally {
@@ -124,71 +106,37 @@ const CustomerAlerts = () => {
                         </div>
                       </td>
                       <td>
-                        <span style={{
-                          padding: '0.2143rem 0.7143rem',
-                          borderRadius: '1.4286rem',
-                          fontSize: '0.7857rem',
-                          fontWeight: 600,
-                          background: `${severityColor[alert.severity?.toLowerCase()] || 'var(--custom-color-14)'}22`,
-                          color: severityColor[alert.severity?.toLowerCase()] || 'var(--custom-color-14)',
-                          textTransform: 'uppercase',
-                        }}>
-                          {t(`customer.severity.${alert.severity?.toLowerCase()}`, alert.severity)}
-                        </span>
+                        <VStatus {...getSeverityProps(alert.severity, t)} className="uppercase" />
                       </td>
                       <td>
-                        {alert.device_id?.current_scenario && alert.device_id.current_scenario !== 'NORMAL' ? (
-                          <span style={{ padding: '0.2143rem 0.7143rem', borderRadius: '1.4286rem', fontSize: '0.7857rem', fontWeight: 600, background: 'var(--orange-100)', color: 'var(--orange-600)' }}>
-                            {getScenarioLabel(alert.device_id.current_scenario)}
-                          </span>
-                        ) : (
-                          <span style={{ padding: '0.2143rem 0.7143rem', borderRadius: '1.4286rem', fontSize: '0.7857rem', fontWeight: 600, background: 'var(--slate-100)', color: 'var(--slate-500)' }}>
-                            {getScenarioLabel('NORMAL')}
-                          </span>
-                        )}
+                        <VStatus {...getScenarioProps(alert.device_id?.current_scenario, t)} />
                       </td>
                       <td>
-                        <span style={{
-                          padding: '0.2143rem 0.7143rem',
-                          borderRadius: '1.4286rem',
-                          fontSize: '0.7857rem',
-                          fontWeight: 600,
-                          background: `${statusColor[alert.status] || 'var(--custom-color-14)'}22`,
-                          color: statusColor[alert.status] || 'var(--custom-color-14)',
-                        }}>
-                          {statusLabel[alert.status] || alert.status}
-                        </span>
+                        <VStatus {...getAlertStatusProps(alert.status, t)} />
                       </td>
                       <td className="text-muted" style={{ fontSize: '0.8571rem' }}>
                         {alert.createdAt ? formatDate(alert.createdAt) : '—'}
                       </td>
                       <td>
-                        <div style={{ display: 'flex', gap: '0.4286rem' }}>
-                          {alert.status === 'new' && (
-                            <VButton
-                              variant="ghost"
-                              size="sm"
-                              icon={CheckCircle}
-                              onClick={() => handleUpdateStatus(alert._id, 'acknowledged')}
-                              disabled={updating === alert._id}
-                              title={t('customer.alerts.btn_ack_title')}
-                            >
-                              {t('customer.alerts.btn_ack')}
-                            </VButton>
-                          )}
-                          {(alert.status === 'new' || alert.status === 'acknowledged') && (
-                            <VButton
-                              variant="ghost"
-                              size="sm"
-                              icon={XCircle}
-                              onClick={() => handleUpdateStatus(alert._id, 'resolved')}
-                              disabled={updating === alert._id}
-                              title={t('customer.alerts.btn_resolve_title')}
-                            >
-                              {t('customer.alerts.btn_resolve')}
-                            </VButton>
-                          )}
-                        </div>
+                        {(() => {
+                          const actions = [
+                            {
+                              label: t('customer.alerts.btn_ack'),
+                              icon: CheckCircle,
+                              onClick: () => handleUpdateStatus(alert._id, 'acknowledged'),
+                              disabled: alert.status !== 'new',
+                              style: alert.status === 'new' ? { color: 'var(--blue-600)' } : {}
+                            },
+                            {
+                              label: t('customer.alerts.btn_resolve'),
+                              icon: XCircle,
+                              onClick: () => handleUpdateStatus(alert._id, 'resolved'),
+                              disabled: !(alert.status === 'new' || alert.status === 'acknowledged'),
+                              style: (alert.status === 'new' || alert.status === 'acknowledged') ? { color: 'var(--green-600)' } : {}
+                            }
+                          ];
+                          return <ActionMenu actions={actions} direction="down" />;
+                        })()}
                       </td>
                     </tr>
                   ))}
@@ -229,46 +177,19 @@ const CustomerAlerts = () => {
                         <div className="detail-row">
                           <span className="detail-label">{t('customer.alerts.col_severity')}</span>
                           <span className="detail-value">
-                            <span style={{
-                              padding: '0.2143rem 0.7143rem',
-                              borderRadius: '1.4286rem',
-                              fontSize: '0.7857rem',
-                              fontWeight: 600,
-                              background: `${severityColor[alert.severity?.toLowerCase()] || 'var(--custom-color-14)'}22`,
-                              color: severityColor[alert.severity?.toLowerCase()] || 'var(--custom-color-14)',
-                              textTransform: 'uppercase',
-                            }}>
-                              {t(`customer.severity.${alert.severity?.toLowerCase()}`, alert.severity)}
-                            </span>
+                            <VStatus {...getSeverityProps(alert.severity, t)} className="uppercase" />
                           </span>
                         </div>
                         <div className="detail-row">
                           <span className="detail-label">{t('customer.alerts.col_simulation', 'Mô phỏng')}</span>
                           <span className="detail-value">
-                            {alert.device_id?.current_scenario && alert.device_id.current_scenario !== 'NORMAL' ? (
-                              <span style={{ padding: '0.2143rem 0.7143rem', borderRadius: '1.4286rem', fontSize: '0.7857rem', fontWeight: 600, background: 'var(--orange-100)', color: 'var(--orange-600)' }}>
-                                {getScenarioLabel(alert.device_id.current_scenario)}
-                              </span>
-                            ) : (
-                              <span style={{ padding: '0.2143rem 0.7143rem', borderRadius: '1.4286rem', fontSize: '0.7857rem', fontWeight: 600, background: 'var(--slate-100)', color: 'var(--slate-500)' }}>
-                                {getScenarioLabel('NORMAL')}
-                              </span>
-                            )}
+                            <VStatus {...getScenarioProps(alert.device_id?.current_scenario, t)} />
                           </span>
                         </div>
                         <div className="detail-row">
                           <span className="detail-label">{t('customer.alerts.col_status')}</span>
                           <span className="detail-value">
-                            <span style={{
-                              padding: '0.2143rem 0.7143rem',
-                              borderRadius: '1.4286rem',
-                              fontSize: '0.7857rem',
-                              fontWeight: 600,
-                              background: `${statusColor[alert.status] || 'var(--custom-color-14)'}22`,
-                              color: statusColor[alert.status] || 'var(--custom-color-14)',
-                            }}>
-                              {statusLabel[alert.status] || alert.status}
-                            </span>
+                            <VStatus {...getAlertStatusProps(alert.status, t)} />
                           </span>
                         </div>
                         <div className="detail-row">
@@ -276,30 +197,25 @@ const CustomerAlerts = () => {
                           <span className="detail-value">{alert.createdAt ? formatDate(alert.createdAt) : '—'}</span>
                         </div>
                         <div className="detail-row" style={{ marginTop: '1rem', justifyContent: 'flex-end', gap: '0.5rem', display: 'flex' }}>
-                          {alert.status === 'new' && (
-                            <VButton
-                              variant="ghost"
-                              size="sm"
-                              icon={CheckCircle}
-                              onClick={() => handleUpdateStatus(alert._id, 'acknowledged')}
-                              disabled={updating === alert._id}
-                              title={t('customer.alerts.btn_ack_title')}
-                            >
-                              {t('customer.alerts.btn_ack')}
-                            </VButton>
-                          )}
-                          {(alert.status === 'new' || alert.status === 'acknowledged') && (
-                            <VButton
-                              variant="ghost"
-                              size="sm"
-                              icon={XCircle}
-                              onClick={() => handleUpdateStatus(alert._id, 'resolved')}
-                              disabled={updating === alert._id}
-                              title={t('customer.alerts.btn_resolve_title')}
-                            >
-                              {t('customer.alerts.btn_resolve')}
-                            </VButton>
-                          )}
+                          {(() => {
+                            const actions = [
+                              {
+                                label: t('customer.alerts.btn_ack'),
+                                icon: CheckCircle,
+                                onClick: () => handleUpdateStatus(alert._id, 'acknowledged'),
+                                disabled: alert.status !== 'new',
+                                style: alert.status === 'new' ? { color: 'var(--blue-600)' } : {}
+                              },
+                              {
+                                label: t('customer.alerts.btn_resolve'),
+                                icon: XCircle,
+                                onClick: () => handleUpdateStatus(alert._id, 'resolved'),
+                                disabled: !(alert.status === 'new' || alert.status === 'acknowledged'),
+                                style: (alert.status === 'new' || alert.status === 'acknowledged') ? { color: 'var(--green-600)' } : {}
+                              }
+                            ];
+                            return <ActionMenu actions={actions} direction="up" />;
+                          })()}
                         </div>
                       </div>
                     )}

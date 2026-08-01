@@ -8,16 +8,18 @@ import { ROLES } from '../constants/index.js';
 class DashboardService {
   async getCustomerSummary(user) {
     // Determine devices for this user
+    const isCustomer = user && user.role?.toLowerCase() !== ROLES.ADMIN;
     let deviceQuery = {};
-    if (user && user.role !== ROLES.ADMIN) {
-      deviceQuery.userId = user.id;
+    if (isCustomer) {
+      deviceQuery.userId = user._id;
     }
     const totalDevices = await deviceRepository.countAll(deviceQuery);
 
     let alertMatch = {};
-    if (user && user.role !== ROLES.ADMIN) {
+    let userDeviceIds = [];
+    if (isCustomer) {
       const userDevices = await deviceRepository.findAll(deviceQuery, {}, 0, 10000, '_id');
-      const userDeviceIds = userDevices.map(d => d._id.toString());
+      userDeviceIds = userDevices.map(d => d._id.toString());
       alertMatch = { device_id: { $in: userDeviceIds } };
     }
 
@@ -28,8 +30,16 @@ class DashboardService {
     const recentAlerts = await alertRepository.findAll(alertMatch, { detected_at: -1 }, 0, 5);
 
     let incidentMatch = {};
-    if (user && user.role !== ROLES.ADMIN) {
-      incidentMatch.assigned_to = user.id;
+    if (isCustomer) {
+      const userAlerts = await alertRepository.findAll(alertMatch, {}, 0, 100000);
+      const userAlertIds = userAlerts.map(a => a._id);
+      
+      incidentMatch = {
+        $or: [
+          { assigned_to: user._id },
+          { alert_ids: { $in: userAlertIds } }
+        ]
+      };
     }
     const totalIncidents = await incidentRepository.countAll(incidentMatch);
 
@@ -42,9 +52,10 @@ class DashboardService {
     };
   }
   async getSystemHealth(user) {
+    const isCustomer = user && user.role?.toLowerCase() !== ROLES.ADMIN;
     let query = {};
-    if (user && user.role !== ROLES.ADMIN) {
-      query.userId = user.id;
+    if (isCustomer) {
+      query.userId = user._id;
     }
 
     const totalDevices = await deviceRepository.countAll(query);
@@ -66,9 +77,10 @@ class DashboardService {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
+    const isCustomer = user && user.role?.toLowerCase() !== ROLES.ADMIN;
     let deviceMatch = {};
-    if (user && user.role !== ROLES.ADMIN) {
-      const userDevices = await deviceRepository.findAll({ userId: user.id }, {}, 0, 10000, '_id');
+    if (isCustomer) {
+      const userDevices = await deviceRepository.findAll({ userId: user._id }, {}, 0, 10000, '_id');
       const userDeviceIds = userDevices.map(d => d._id.toString());
       deviceMatch = { device_id: { $in: userDeviceIds } };
     }
@@ -131,9 +143,10 @@ class DashboardService {
     const DB_NAME = process.env.INFLUXDB_DB;
     const queryUrl = `${INFLUXDB_URL}/query`;
     
+    const isCustomer = user && user.role?.toLowerCase() !== ROLES.ADMIN;
     let deviceFilter = '';
-    if (user && user.role !== ROLES.ADMIN) {
-      const userDevices = await deviceRepository.findAll({ userId: user.id }, {}, 0, 10000, '_id');
+    if (isCustomer) {
+      const userDevices = await deviceRepository.findAll({ userId: user._id }, {}, 0, 10000, '_id');
       const userDeviceIds = userDevices.map(d => d._id.toString());
       if (userDeviceIds.length > 0) {
         deviceFilter = ` AND (${userDeviceIds.map(id => "device_id = '" + id + "'").join(' OR ')})`;

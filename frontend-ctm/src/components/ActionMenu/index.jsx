@@ -34,9 +34,12 @@ const ActionMenu = ({ actions, direction = 'down' }) => {
             return (
               <button
                 key={index}
-                className={`action-menu-item ${action.danger ? 'text-danger' : ''}`}
+                className={`action-menu-item ${action.danger ? 'text-danger' : ''} ${action.disabled ? 'disabled' : ''}`}
+                style={action.style || {}}
+                disabled={action.disabled}
                 onClick={() => {
-                  action.onClick();
+                  if (action.disabled) return;
+                  if (action.onClick) action.onClick();
                   setIsOpen(false);
                 }}
               >
