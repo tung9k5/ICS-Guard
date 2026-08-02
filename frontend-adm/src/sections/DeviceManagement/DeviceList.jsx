@@ -143,7 +143,7 @@ const DeviceList = ({
           const actions = [
             { label: t('assets.list.btn_view', 'Xem chi tiết'), icon: Eye, onClick: () => onView(device) },
             { label: t('assets.list.btn_edit'), icon: Edit2, onClick: () => onEdit(device) },
-            { label: t('assets.list.btn_simulate'), icon: Activity, onClick: () => onSimulate && onSimulate(device) },
+            // { label: t('assets.list.btn_simulate'), icon: Activity, onClick: () => onSimulate && onSimulate(device) },
             { label: t('assets.list.btn_delete'), icon: Trash2, danger: true, onClick: () => onDelete(id) }
           ];
 

@@ -52,7 +52,6 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
         actions.push({ icon: CheckCircle, label: t('alerts.mark_ack', 'Tiếp nhận'), onClick: () => onUpdateStatus && onUpdateStatus(alert, 'acknowledged') });
       }
       actions.push({ icon: CheckCircle, label: t('alerts.mark_resolved', 'Đã giải quyết'), onClick: () => onUpdateStatus && onUpdateStatus(alert, 'resolved') });
-      actions.push({ icon: XCircle, label: t('alerts.mark_fp', 'Báo động giả'), onClick: () => onUpdateStatus && onUpdateStatus(alert, 'false_positive') });
     }
 
     actions.push({ icon: Trash2, label: t('common.delete'), onClick: () => onDelete(alert), danger: true });

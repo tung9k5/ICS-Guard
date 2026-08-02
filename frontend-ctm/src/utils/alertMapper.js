@@ -4,22 +4,22 @@ import { Flame, ThermometerSun, Network, Droplets, ShieldAlert, AlertTriangle } 
 export const getAlertIconAndStyle = (rule_name) => {
   switch (rule_name) {
     case 'FIRE_ALARM':
-      return { icon: Flame, style: { color: 'var(--red-500)' } };
+      return { icon: Flame, style: { color: 'var(--red-500)', backgroundColor: '#fef2f2' } };
     case 'CRITICAL_OVERHEAT':
-      return { icon: ThermometerSun, style: { color: 'var(--orange-500)' } };
+      return { icon: ThermometerSun, style: { color: 'var(--orange-500)', backgroundColor: '#fff7ed' } };
     case 'ABNORMAL_TRAFFIC_SPIKE':
     case 'GATEWAY_WAN_DOS':
-      return { icon: Network, style: { color: '#8b5cf6' } }; // Purple
+      return { icon: Network, style: { color: '#8b5cf6', backgroundColor: '#f5f3ff' } }; // Purple
     case 'FLOOD_ALARM':
-      return { icon: Droplets, style: { color: 'var(--blue-500)' } };
+      return { icon: Droplets, style: { color: 'var(--blue-500)', backgroundColor: '#eff6ff' } };
     case 'MALICIOUS_OTA_UPDATE':
     case 'SENSOR_DATA_SPOOFING':
     case 'UNAUTHORIZED_ACTUATOR_COMMAND':
     case 'PLC_LOGIC_TAMPERING':
     case 'GATEWAY_ROUTE_POISONING':
-      return { icon: ShieldAlert, style: { color: 'var(--red-500)' } };
+      return { icon: ShieldAlert, style: { color: 'var(--red-500)', backgroundColor: '#fef2f2' } };
     default:
-      return { icon: AlertTriangle, style: { color: 'var(--amber-500)' } };
+      return { icon: AlertTriangle, style: { color: 'var(--amber-500)', backgroundColor: '#fffbeb' } };
   }
 };
 

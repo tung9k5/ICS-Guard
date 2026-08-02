@@ -219,7 +219,15 @@ const IncidentManagement = () => {
           selectedIds={selectedIds}
           onSelect={handleSelect}
           onSelectAll={handleSelectAll}
-          onViewDetail={(incident) => setSelectedIncident(incident)}
+          onViewDetail={async (incident) => {
+            try {
+              const res = await api.getById(incident._id || incident.id);
+              setSelectedIncident(res.data.data || res.data); // Support both structures
+            } catch (err) {
+              console.error('Failed to fetch incident details:', err);
+              setSelectedIncident(incident); // fallback
+            }
+          }}
         />
 
         {incidents && incidents.length > 0 && (
@@ -254,10 +262,23 @@ const IncidentManagement = () => {
         onConfirm={handleConfirmDelete}
       />
 
-      <IncidentDetailModal 
-        incident={selectedIncident} 
-        onClose={() => setSelectedIncident(null)} 
-      />
+      {selectedIncident && (
+        <IncidentDetailModal 
+          incident={selectedIncident} 
+          onClose={() => setSelectedIncident(null)} 
+          onAiAnalyze={(id) => {
+            handleAiAnalyze(id);
+          }}
+          onRefresh={async (id) => {
+            try {
+              const res = await api.getById(id, { hideLoading: true });
+              setSelectedIncident(res.data.data || res.data);
+            } catch (err) {
+              console.error('Failed to refresh incident details:', err);
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

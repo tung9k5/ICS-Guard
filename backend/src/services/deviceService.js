@@ -61,7 +61,15 @@ class DeviceService {
   async getById(id) {
     const device = await deviceRepository.findById(id, DEVICE_PROJECTION);
     if (!device) throw new AppError('Device not found', 404);
-    return device;
+
+    const alertRepository = (await import('../repositories/alertRepository.js')).default;
+    const history = await alertRepository.findAll(
+      { device_id: id },
+      { detected_at: -1 },
+      0, 100
+    );
+
+    return { device, history };
   }
 
 

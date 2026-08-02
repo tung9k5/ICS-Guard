@@ -78,8 +78,14 @@ const DeviceManagement = () => {
     });
   };
 
-  const handleViewDevice = (device) => {
-    setViewingDevice(device);
+  const handleViewDevice = async (device) => {
+    try {
+      const res = await api.getById(device.id || device._id);
+      setViewingDevice(res.data.data || res.data);
+    } catch (err) {
+      console.error('Failed to fetch device details:', err);
+      setViewingDevice(device);
+    }
   };
 
   const handleSimulateDevice = (device) => {

@@ -7,9 +7,12 @@ import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/utils/formatDate';
 import { Hash, Monitor, Server, Globe, Network, Activity, MapPin, AlignLeft, Calendar, Clock } from 'lucide-react';
 
-const DeviceDetailModal = ({ device, onClose }) => {
+const DeviceDetailModal = ({ device: deviceData, onClose }) => {
   const { t } = useTranslation();
-  if (!device) return null;
+  if (!deviceData) return null;
+
+  const device = deviceData.device || deviceData;
+  const history = deviceData.history || [];
 
   return (
     <VDialog
@@ -137,6 +140,36 @@ const DeviceDetailModal = ({ device, onClose }) => {
           </div>
 
         </div>
+
+        {/* Row 3: Simulation History */}
+        {history.length > 0 && (
+          <div style={{ background: 'var(--white)', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid var(--slate-200)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <h4 style={{ margin: '0 0 1rem 0', fontSize: '1rem', color: 'var(--slate-800)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Activity size={18} className="text-primary" />
+              Lịch sử Mô phỏng (Simulation History)
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {history.map((sim, index) => (
+                <div key={sim._id || index} style={{ padding: '1rem', backgroundColor: 'var(--slate-50)', border: '1px solid var(--slate-200)', borderRadius: '0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <div>
+                      <strong style={{ color: 'var(--slate-800)', display: 'block' }}>{sim.title}</strong>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--slate-500)' }}>{sim.rule_name} • Mô phỏng lần {history.length - index}</span>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <VStatus label={sim.severity} className="badge-outline uppercase" />
+                      <div style={{ fontSize: '0.8rem', color: 'var(--slate-500)', marginTop: '0.25rem' }}>{formatDate(sim.detected_at)}</div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--slate-700)', backgroundColor: 'white', padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid var(--slate-200)' }}>
+                    <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Log cảnh báo:</div>
+                    <div style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{sim.description}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
       </div>
     </VDialog>

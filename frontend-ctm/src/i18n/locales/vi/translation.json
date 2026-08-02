@@ -803,7 +803,34 @@
         "description": "Mô tả chi tiết",
         "related_info": "Thông tin liên quan",
         "alerts_count": "Số lượng cảnh báo liên kết",
-        "alerts": "cảnh báo"
+        "alerts": "cảnh báo",
+        "device_alert_history": "Lịch sử cảnh báo thiết bị",
+        "simulation_history": "Lịch sử mô phỏng",
+        "timeline": "Tiến trình xử lý",
+        "close_btn": "Đóng"
+      },
+      "list": {
+        "status_open": "Mở",
+        "status_investigating": "Đang điều tra",
+        "status_investigated": "Đã điều tra",
+        "status_remediated": "Đã khắc phục",
+        "status_closed": "Đã đóng"
+      },
+      "ai": {
+        "status_idle": "Chưa phân tích",
+        "status_processing": "Đang phân tích...",
+        "status_completed": "Đã phân tích",
+        "status_failed": "Lỗi phân tích",
+        "result_title": "Kết quả Phân tích AI",
+        "log_summary": "Tóm tắt sự kiện",
+        "attack_reasoning": "Nguyên nhân tấn công",
+        "remediation_advice": "Khuyến nghị xử lý",
+        "mitre_attack": "MITRE ATT&CK",
+        "risk_level": "Mức rủi ro",
+        "priority": "ƯU tiên",
+        "analyzing_msg": "Kết quả sẽ hiển thị ngay khi AI hoàn thành.",
+        "failed_msg": "Phân tích AI thất bại. Vui lòng thử lại sau.",
+        "not_yet_msg": "Chưa có kết quả phân tích AI."
       }
     },
     "severity": {

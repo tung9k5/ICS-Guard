@@ -58,7 +58,24 @@ export const bulkDeleteIncidents = async (req, res, next) => {
 export const triggerAiAnalysis = async (req, res, next) => {
   try {
     const incident = await incidentService.triggerAiAnalysis(req.params.id, req.user);
-    return successResponse(res, { status: incident.status }, 'AI Analysis triggered successfully in the background');
+    // Use 202 Accepted for async job
+    return res.status(202).json({
+      status: 'success',
+      message: 'AI Analysis triggered successfully in the background',
+      data: { status: incident.status, ai_status: incident.ai_status || 'processing' }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAiAnalysisStatus = async (req, res, next) => {
+  try {
+    const incidentData = await incidentService.getById(req.params.id);
+    return successResponse(res, {
+      ai_status: incidentData.incident.ai_status,
+      ai_result: incidentData.incident.ai_result
+    }, 'AI Status retrieved');
   } catch (error) {
     next(error);
   }

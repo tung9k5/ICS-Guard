@@ -10,6 +10,10 @@ class IncidentRepository {
     return Incident.countDocuments(query);
   }
 
+  async aggregate(pipeline) {
+    return Incident.aggregate(pipeline);
+  }
+
   async findById(id) {
     return Incident.findById(id).populate('alert_ids');
   }

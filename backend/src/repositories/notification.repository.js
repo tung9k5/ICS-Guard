@@ -6,7 +6,7 @@ class NotificationRepository {
   }
 
   async find(query = {}, options = {}) {
-    const { page = 1, limit = 10, sort = 'createdAt', order = 'desc' } = options;
+    const { page = 1, limit = 999, sort = 'createdAt', order = 'desc' } = options;
     const skip = (page - 1) * limit;
     
     const sortObj = {};

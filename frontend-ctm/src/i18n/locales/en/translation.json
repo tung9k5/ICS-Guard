@@ -786,7 +786,34 @@
         "description": "Description",
         "related_info": "Related Information",
         "alerts_count": "Linked Alerts Count",
-        "alerts": "alerts"
+        "alerts": "alerts",
+        "device_alert_history": "Device Alert History",
+        "simulation_history": "Simulation History",
+        "timeline": "Processing Timeline",
+        "close_btn": "Close"
+      },
+      "list": {
+        "status_open": "Open",
+        "status_investigating": "Investigating",
+        "status_investigated": "Investigated",
+        "status_remediated": "Remediated",
+        "status_closed": "Closed"
+      },
+      "ai": {
+        "status_idle": "Not Analyzed",
+        "status_processing": "Analyzing...",
+        "status_completed": "Analysis Complete",
+        "status_failed": "Analysis Failed",
+        "result_title": "AI Analysis Results",
+        "log_summary": "Event Summary",
+        "attack_reasoning": "Attack Root Cause",
+        "remediation_advice": "Remediation Advice",
+        "mitre_attack": "MITRE ATT&CK",
+        "risk_level": "Risk Level",
+        "priority": "Priority",
+        "analyzing_msg": "Results will be shown as soon as AI completes.",
+        "failed_msg": "AI analysis failed. Please try again later.",
+        "not_yet_msg": "No AI analysis results yet."
       }
     },
     "severity": {

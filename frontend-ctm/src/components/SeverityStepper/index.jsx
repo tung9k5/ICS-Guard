@@ -1,5 +1,4 @@
 import React from 'react';
-import { Eye, TrendingUp, AlertTriangle, ShieldAlert } from 'lucide-react';
 
 const SeverityStepper = ({ severity, t, compact = false }) => {
   const levels = ['low', 'medium', 'high', 'critical'];
@@ -9,53 +8,68 @@ const SeverityStepper = ({ severity, t, compact = false }) => {
     t('severity.stepper.high', 'Cao'),
     t('severity.stepper.critical', 'Nghiêm trọng')
   ];
-  const icons = [Eye, TrendingUp, AlertTriangle, ShieldAlert];
   
   const currentIdx = levels.indexOf(severity?.toLowerCase());
+  const activeLabel = currentIdx >= 0 ? labels[currentIdx] : labels[0];
   
   // Sizes based on compact mode
-  const circleSize = compact ? '24px' : '36px';
-  const iconSize = compact ? 12 : 18;
-  const fontSize = compact ? '0.65rem' : '0.75rem';
-  const minWidth = compact ? '45px' : '70px';
-  const margin = compact ? '0 1rem' : '1rem 0';
-  const gap = compact ? '0.25rem' : '0.5rem';
-  const marginTop = compact ? '-16px' : '-22px';
+  const containerWidth = compact ? '160px' : '100%';
+  const barHeight = compact ? '8px' : '12px';
+  const fontSize = compact ? '0.85rem' : '1.05rem';
+  const margin = compact ? '0' : '1rem 0';
+  
+  // Use system primary color to maintain UI consistency
+  const activeColor = 'var(--blue-500, #3b82f6)';
   
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', margin: margin, width: compact ? 'auto' : '100%', padding: compact ? '0' : '0 10px', flex: compact ? 1 : 'unset' }}>
-      {levels.map((lvl, idx) => {
-        const isActive = idx <= currentIdx;
-        const color = isActive ? 'var(--danger-color, #ef4444)' : '#cbd5e1'; // Active Red vs Inactive Grey
-        const Icon = icons[idx];
-        return (
-          <React.Fragment key={lvl}>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: gap, zIndex: 1, minWidth: minWidth }}>
-              <div style={{
-                width: circleSize, height: circleSize, borderRadius: '50%',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                border: `1.5px solid ${color}`,
-                backgroundColor: isActive ? '#fef2f2' : '#f8fafc',
-                color: color
-              }}>
-                <Icon size={iconSize} />
-              </div>
-              <span style={{ fontSize: fontSize, fontWeight: isActive ? 600 : 500, color: color, textAlign: 'center', whiteSpace: 'nowrap' }}>
-                {labels[idx]}
-              </span>
-            </div>
-            {idx < levels.length - 1 && (
-              <div style={{ 
+    <div style={{ 
+      display: 'flex', 
+      alignItems: 'center', 
+      gap: '12px', 
+      width: containerWidth, 
+      margin: margin,
+      flex: compact ? 1 : 'unset',
+      justifyContent: compact ? 'flex-start' : 'center'
+    }}>
+      <span style={{ 
+        fontSize: fontSize, 
+        fontWeight: 600, 
+        color: activeColor, 
+        width: compact ? '85px' : '110px',
+        flexShrink: 0,
+        textAlign: 'left'
+      }}>
+        {activeLabel}
+      </span>
+      <div style={{ display: 'flex', gap: '4px', flex: 1, maxWidth: compact ? 'unset' : '300px', alignItems: 'center' }}>
+        {levels.map((lvl, idx) => {
+          const isActive = idx <= currentIdx;
+          const bg = isActive ? activeColor : '#e2e8f0';
+          return (
+            <div 
+              key={lvl} 
+              style={{ 
                 flex: 1, 
-                height: '1px', 
-                borderTop: `1.5px dashed ${idx < currentIdx ? 'var(--danger-color, #ef4444)' : '#cbd5e1'}`, 
-                marginTop: marginTop,
-                minWidth: compact ? '15px' : '20px'
-              }} />
-            )}
-          </React.Fragment>
-        );
-      })}
+                height: barHeight, 
+                backgroundColor: bg, 
+                borderRadius: '4px',
+                transition: 'background-color 0.3s ease',
+                boxShadow: isActive ? `0 0 6px rgba(59, 130, 246, 0.4)` : 'none',
+                opacity: isActive ? 1 : 0.8
+              }} 
+            />
+          );
+        })}
+        <span style={{ 
+          fontSize: compact ? '0.75rem' : '0.85rem', 
+          color: activeColor,
+          fontWeight: 700,
+          marginLeft: '8px',
+          minWidth: '35px'
+        }}>
+          {(currentIdx + 1) * 25}%
+        </span>
+      </div>
     </div>
   );
 };

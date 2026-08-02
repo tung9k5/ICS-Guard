@@ -23,8 +23,19 @@ class DashboardService {
       alertMatch = { device_id: { $in: userDeviceIds } };
     }
 
-    const totalAlerts = await alertRepository.countAll(alertMatch);
-    const activeAlerts = await alertRepository.countAll({ ...alertMatch, status: { $in: ['new', 'acknowledged'] } });
+    const groupedAlertsRes = await alertRepository.aggregate([
+      { $match: alertMatch },
+      { $group: { _id: { device_id: '$device_id', rule_name: '$rule_name' } } },
+      { $count: 'total' }
+    ]);
+    const totalAlerts = groupedAlertsRes.length > 0 ? groupedAlertsRes[0].total : 0;
+
+    const activeGroupedAlertsRes = await alertRepository.aggregate([
+      { $match: { ...alertMatch, status: { $in: ['new', 'acknowledged'] } } },
+      { $group: { _id: { device_id: '$device_id', rule_name: '$rule_name' } } },
+      { $count: 'total' }
+    ]);
+    const activeAlerts = activeGroupedAlertsRes.length > 0 ? activeGroupedAlertsRes[0].total : 0;
 
     // Recent 5 alerts
     const recentAlerts = await alertRepository.findAll(alertMatch, { detected_at: -1 }, 0, 5);
@@ -41,7 +52,12 @@ class DashboardService {
         ]
       };
     }
-    const totalIncidents = await incidentRepository.countAll(incidentMatch);
+    const groupedIncidentsRes = await incidentRepository.aggregate([
+      { $match: incidentMatch },
+      { $group: { _id: { title: '$title' } } },
+      { $count: 'total' }
+    ]);
+    const totalIncidents = groupedIncidentsRes.length > 0 ? groupedIncidentsRes[0].total : 0;
 
     return {
       devices: totalDevices,

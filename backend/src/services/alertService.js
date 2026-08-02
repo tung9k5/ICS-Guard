@@ -54,8 +54,50 @@ class AlertService {
     const sortOption = buildSortOption(order, 'detected_at');
     const { pageNumber, limitNumber, skip } = parsePagination(page, per_page);
 
-    const total = await alertRepository.countAll(query);
-    const alerts = await alertRepository.findAll(query, sortOption, skip, limitNumber);
+    // Group by device_id and rule_name
+    const sortDef = sortOption && Object.keys(sortOption).length ? sortOption : { detected_at: -1 };
+    
+    const pipeline = [
+      { $match: query },
+      { $sort: sortDef },
+      { $group: {
+          _id: { device_id: '$device_id', rule_name: '$rule_name' },
+          latest_alert: { $first: '$$ROOT' },
+          occurrences_count: { $sum: 1 }
+      }},
+      { $replaceRoot: { newRoot: { $mergeObjects: ['$latest_alert', { occurrences_count: '$occurrences_count' }] } } },
+      { $sort: sortDef }
+    ];
+
+    const totalPipeline = [...pipeline, { $count: 'total' }];
+    const totalRes = await alertRepository.aggregate(totalPipeline);
+    const total = totalRes.length > 0 ? totalRes[0].total : 0;
+
+    const alertsPipeline = [
+      ...pipeline,
+      { $skip: skip },
+      { $limit: limitNumber },
+      {
+        $lookup: {
+          from: 'devices',
+          localField: 'device_id',
+          foreignField: '_id',
+          as: 'device_id'
+        }
+      },
+      { $unwind: { path: '$device_id', preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: 'incidents',
+          localField: 'incident_id',
+          foreignField: '_id',
+          as: 'incident_id'
+        }
+      },
+      { $unwind: { path: '$incident_id', preserveNullAndEmptyArrays: true } }
+    ];
+
+    const alerts = await alertRepository.aggregate(alertsPipeline);
 
     return { alerts, total, pageNumber, limitNumber };
   }
@@ -63,7 +105,14 @@ class AlertService {
   async getById(id) {
     const alert = await alertRepository.findById(id);
     if (!alert) throw new AppError('Alert not found', 404);
-    return alert;
+
+    const history = await alertRepository.findAll(
+      { device_id: alert.device_id?._id || alert.device_id, rule_name: alert.rule_name },
+      { detected_at: -1 },
+      0, 100 // Get up to 100 occurrences
+    );
+
+    return { alert, history };
   }
 
   async updateStatus(id, status, user) {
@@ -104,22 +153,36 @@ class AlertService {
       }
     }
 
-    await alertRepository.deleteById(id);
+    const deviceIdVal = alert.device_id?._id || alert.device_id;
+    if (deviceIdVal) {
+      await alertRepository.deleteManyByQuery({ device_id: deviceIdVal, rule_name: alert.rule_name });
+    } else {
+      await alertRepository.deleteById(id);
+    }
   }
 
   async removeMany(ids, user) {
+    const alerts = await alertRepository.findAll({ _id: { $in: ids } }, {}, 0, ids.length);
     if (user && user.role?.toLowerCase() !== ROLES.ADMIN) {
       const userDevices = await deviceRepository.findAll({ userId: user.id }, {}, 0, 10000, '_id');
       const userDeviceIds = userDevices.map(d => d._id.toString());
       
-      const alerts = await alertRepository.findAll({ _id: { $in: ids } }, {}, 0, ids.length);
       const invalidAlerts = alerts.filter(alert => alert.device_id && !userDeviceIds.includes(alert.device_id._id?.toString() || alert.device_id.toString()));
       if (invalidAlerts.length > 0) {
         throw new AppError('Forbidden: Some alerts do not belong to your devices', 403);
       }
     }
 
-    return alertRepository.deleteMany(ids);
+    const orQueries = alerts.map(alert => ({
+      device_id: alert.device_id?._id || alert.device_id,
+      rule_name: alert.rule_name
+    })).filter(q => q.device_id);
+
+    if (orQueries.length > 0) {
+      return alertRepository.deleteManyByQuery({ $or: orQueries });
+    } else {
+      return alertRepository.deleteMany(ids);
+    }
   }
 }
 

@@ -15,6 +15,10 @@ class AlertRepository {
     return Alert.countDocuments(query);
   }
 
+  async aggregate(pipeline) {
+    return Alert.aggregate(pipeline);
+  }
+
   async findById(id) {
     return Alert.findById(id)
       .populate('incident_id', 'title status severity')
@@ -38,6 +42,10 @@ class AlertRepository {
 
   async deleteMany(ids) {
     return Alert.deleteMany({ _id: { $in: ids } });
+  }
+
+  async deleteManyByQuery(query) {
+    return Alert.deleteMany(query);
   }
 }
 

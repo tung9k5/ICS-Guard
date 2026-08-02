@@ -23,10 +23,12 @@ const getScenarioVariant = (scenario) => {
   return 'danger';
 };
 
-const AlertDetailModal = ({ alert, onClose }) => {
+const AlertDetailModal = ({ alert: alertData, onClose }) => {
   const { t } = useTranslation();
 
-  if (!alert) return null;
+  if (!alertData) return null;
+  const alert = alertData.alert || alertData;
+  const history = alertData.history || [];
 
   const header = (
     <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -139,6 +141,33 @@ const AlertDetailModal = ({ alert, onClose }) => {
             </div>
           </div>
         </div>
+
+        {/* Alert History */}
+        {history.length > 0 && (
+          <div style={{ backgroundColor: 'var(--slate-50)', padding: '1.25rem', borderRadius: '0.5rem', border: '1px solid var(--slate-200)' }}>
+            <h4 style={{ margin: '0 0 1rem 0', color: 'var(--slate-800)', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1rem' }}>
+              <Tag size={18} className="text-primary" />
+              Lịch sử các lần mô phỏng
+            </h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {history.map((h, index) => (
+                <div key={h._id || index} style={{ padding: '1rem', backgroundColor: 'white', border: '1px solid var(--slate-200)', borderRadius: '0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <span style={{ fontWeight: 600, color: 'var(--slate-800)' }}>
+                      Mô phỏng lần {history.length - index}
+                    </span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--slate-500)' }}>{formatDate(h.detected_at)}</span>
+                  </div>
+                  <div style={{ fontSize: '0.9rem', color: 'var(--slate-700)', backgroundColor: 'var(--slate-50)', padding: '0.75rem', borderRadius: '0.375rem', border: '1px solid var(--slate-200)' }}>
+                    <div style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Log cảnh báo:</div>
+                    <div style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>{h.description}</div>
+                  </div>
+                  {/* Note: AI Analysis can be added here if fetched from IncidentTimeline */}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
       </div>
     </VDialog>

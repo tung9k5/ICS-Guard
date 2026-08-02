@@ -180,7 +180,15 @@ const AlertManagement = () => {
             selectedIds={selectedIds}
             onSelect={handleSelect}
             onSelectAll={handleSelectAll}
-            onViewDetail={(alert) => setSelectedAlert(alert)}
+            onViewDetail={async (alert) => {
+              try {
+                const res = await api.getById(alert._id || alert.id);
+                setSelectedAlert(res.data.data || res.data);
+              } catch (err) {
+                console.error('Failed to fetch alert details:', err);
+                setSelectedAlert(alert);
+              }
+            }}
           />
         )}
         

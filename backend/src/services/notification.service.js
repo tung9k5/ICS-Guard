@@ -40,7 +40,7 @@ class NotificationService {
   }
 
   async getAdminLogNotifications(query) {
-    const { page = 1, limit = 100 } = query;
+    const { page = 1, limit = 999 } = query;
     const skip = (page - 1) * limit;
 
     const logs = await AuditLog.find({})

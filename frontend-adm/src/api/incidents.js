@@ -59,5 +59,13 @@ export default {
       method: 'POST',
       ...options
     });
+  },
+
+  getAiAnalysisStatus(id, options = {}) {
+    return http({
+      url: `/incidents/${id}/ai-status`,
+      method: 'GET',
+      ...options
+    });
   }
 };

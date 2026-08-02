@@ -31,6 +31,84 @@ const __dirname = path.dirname(__filename);
 const anomalyThrottles = {};
 const ANOMALY_THROTTLE_MS = 60000 * 5; // 5 minutes
 
+/**
+ * Find or create an alert+incident pair for a given device/rule.
+ * If an open (status='new') alert already exists for the same device+rule_name,
+ * we just update its description/severity and return it — no duplicate is created.
+ */
+const findOrCreateAlertAndIncident = async ({
+  rule_name,
+  device_id,
+  title,
+  description,
+  severity,
+  deviceUserId,
+  zone,
+  incidentTitle,
+  incidentDescription,
+  timelineDescription,
+  metadata = {}
+}) => {
+  // --- DB-level dedup: check for an existing open alert with same device + rule ---
+  const existingAlert = await Alert.findOne({
+    device_id,
+    rule_name,
+    status: ALERT_STATUSES.NEW
+  }).lean();
+
+  if (existingAlert) {
+    // Already an open alert for this device+rule → update description & severity, don't create duplicate
+    await Alert.findByIdAndUpdate(existingAlert._id, {
+      description,
+      severity,
+      detected_at: new Date()
+    });
+    logger.info(`[AnomalyDedup] Skipped duplicate alert creation for ${device_id}/${rule_name}. Updated existing alert ${existingAlert._id}.`);
+    return { alert: existingAlert, incident: null, isDuplicate: true };
+  }
+
+  // --- Create new alert ---
+  const alert_code = await idGeneratorService.generate('alerts');
+  const alert = await Alert.create({
+    alert_code,
+    rule_name,
+    device_id,
+    title,
+    description,
+    severity,
+    status: ALERT_STATUSES.NEW,
+    detected_at: new Date()
+  });
+
+  // --- Create associated incident ---
+  const incident_code = await idGeneratorService.generate('incidents');
+  const incident = await Incident.create({
+    incident_code,
+    title: incidentTitle,
+    description: incidentDescription,
+    severity,
+    status: INCIDENT_STATUSES.INVESTIGATING,
+    alert_ids: [alert._id],
+    assigned_to: deviceUserId || null
+  });
+
+  alert.incident_id = incident._id;
+  await alert.save();
+
+  await IncidentTimeline.create({
+    incident_id: incident._id,
+    actor: 'Rule Engine Ingest',
+    action_type: INCIDENT_TIMELINE_TYPES.INCIDENT_CREATED,
+    description: timelineDescription,
+    metadata
+  });
+
+  socketService.emitNewAlert(alert);
+  socketService.emitNewIncident(incident);
+
+  return { alert, incident, isDuplicate: false };
+};
+
 let MQTT_URL = process.env.MQTT_URL;
 
 let mqttClient = null;
@@ -193,10 +271,12 @@ const checkTelemetryAnomalies = async (payload) => {
 
   let deviceSeverity = SEVERITY_LEVELS.HIGH;
   let deviceUserId = null;
+  let deviceCurrentScenario = 'NORMAL'; // Track the intended scenario to avoid cross-trigger
   try {
     const device = await Device.findById(device_id);
     if (device) {
       deviceUserId = device.userId;
+      deviceCurrentScenario = device.current_scenario || 'NORMAL';
       if (device.status === DEVICE_STATUSES.ISOLATED || device.status === DEVICE_STATUSES.QUARANTINED) {
         return;
       }
@@ -214,6 +294,27 @@ const checkTelemetryAnomalies = async (payload) => {
   const { bytes_per_second, temperature, smoke, water_level } = metrics;
   const now = Date.now();
 
+  /**
+   * Scenario-to-Rule whitelist: only allow the primary rule for the active scenario.
+   * If the device is in FIRE mode, injected temperature should NOT trigger CRITICAL_OVERHEAT.
+   * If the device is in OVERHEAT mode, we should NOT trigger FIRE_ALARM.
+   * This prevents 2 records from 1 simulation.
+   */
+  const SCENARIO_PRIMARY_RULE = {
+    FIRE: 'FIRE_ALARM',
+    OVERHEAT: 'CRITICAL_OVERHEAT',
+    FLOOD: 'FLOOD_WARNING',
+    TRAFFIC_SPIKE: 'ABNORMAL_TRAFFIC_SPIKE',
+    NORMAL: null // all rules can fire for organic anomalies
+  };
+  const primaryRule = SCENARIO_PRIMARY_RULE[deviceCurrentScenario] ?? null;
+
+  // Helper: should this rule fire given the active scenario?
+  const isAllowedRule = (rule) => {
+    if (!primaryRule) return true; // NORMAL - all organic anomalies allowed
+    return rule === primaryRule; // only the intended rule fires
+  };
+
   const isThrottled = (devId, rule) => {
     const key = `${devId}_${rule}`;
     if (anomalyThrottles[key] && (now - anomalyThrottles[key] < ANOMALY_THROTTLE_MS)) return true;
@@ -222,269 +323,158 @@ const checkTelemetryAnomalies = async (payload) => {
   };
 
   // A. Check Traffic Spike
-  if (bytes_per_second && bytes_per_second > THRESHOLDS.TRAFFIC_SPIKE_BPS) {
+  if (bytes_per_second && bytes_per_second > THRESHOLDS.TRAFFIC_SPIKE_BPS && isAllowedRule('ABNORMAL_TRAFFIC_SPIKE')) {
     if (!isThrottled(device_id, "ABNORMAL_TRAFFIC_SPIKE")) {
-      logger.warn(
-        `[Anomaly Detection] Traffic Spike detected on ${device_id}: ${bytes_per_second} Bps`,
-      );
+      logger.warn(`[Anomaly Detection] Traffic Spike detected on ${device_id}: ${bytes_per_second} Bps`);
 
-      const alert_code = await idGeneratorService.generate("alerts");
-      const alert = await Alert.create({
-        alert_code,
-        rule_name: "ABNORMAL_TRAFFIC_SPIKE",
+      const { isDuplicate } = await findOrCreateAlertAndIncident({
+        rule_name: 'ABNORMAL_TRAFFIC_SPIKE',
         device_id,
         title: `Lưu lượng tăng đột biến trên ${device_id}`,
         description: `Lưu lượng mạng lên ${Math.round(bytes_per_second).toLocaleString()} Bps (vượt ngưỡng cho phép ${THRESHOLDS.TRAFFIC_SPIKE_BPS.toLocaleString()} Bps).`,
         severity: deviceSeverity,
-        status: ALERT_STATUSES.NEW,
-        detected_at: new Date(),
+        deviceUserId,
+        zone,
+        incidentTitle: `Sự cố: Lưu lượng mạng tăng đột biến trên ${device_id}`,
+        incidentDescription: `Hệ thống phát hiện thiết bị ${device_id} tại vùng ${zone || 'unknown'} gửi nhận dữ liệu với băng thông bất thường (${bytes_per_second} Bps). Nghi ngờ tấn công DDoS hoặc rò rỉ dữ liệu.`,
+        timelineDescription: `Phát hiện lưu lượng bất thường: ${bytes_per_second} Bps. Tự động cảnh báo và tạo sự cố.`,
+        metadata: { bytes_per_second }
       });
 
-      const incident_code = await idGeneratorService.generate("incidents");
-      const incident = await Incident.create({
-        incident_code,
-        title: `Sự cố: Lưu lượng mạng tăng đột biến trên ${device_id}`,
-        description: `Hệ thống phát hiện thiết bị ${device_id} tại vùng ${zone || "unknown"} gửi nhận dữ liệu với băng thông bất thường (${bytes_per_second} Bps). Nghi ngờ tấn công DDoS hoặc rò rỉ dữ liệu.`,
-        severity: deviceSeverity,
-        status: INCIDENT_STATUSES.INVESTIGATING,
-        alert_ids: [alert._id],
-        assigned_to: deviceUserId || null,
-      });
-
-      alert.incident_id = incident._id;
-      await alert.save();
-
-      await IncidentTimeline.create({
-        incident_id: incident._id,
-        actor: "Rule Engine Ingest",
-        action_type: INCIDENT_TIMELINE_TYPES.INCIDENT_CREATED,
-        description: `Phát hiện lưu lượng bất thường: ${bytes_per_second} Bps. Tự động cảnh báo và tạo sự cố.`,
-        metadata: { bytes_per_second },
-      });
-
-      // Phát sự kiện WebSocket
-      socketService.emitNewAlert(alert);
-      socketService.emitNewIncident(incident);
-
-      // Smart Alert Routing
-      const activeAdmins = getActiveAdminSessions();
-      if (activeAdmins.length > 0) {
-        logger.info(
-          `[AlertRouter] Active Admins online: ${activeAdmins.join(", ")}. Suppressing email/Telegram, adding to Emergency Queue.`,
-        );
-        addEmergencyAlert({
-          device_id,
-          attack_type: ATTACK_TYPES.TRAFFIC_SPIKE,
-          message: `Đang có thiết bị [${device_id}] bị tấn công DDoS (Traffic Spike) và có người dùng Admin [${activeAdmins.join(", ")}] đang đăng nhập!`,
-          admin_users: activeAdmins,
-        });
-      } else {
-        logger.info(
-          "[AlertRouter] No active Admins online. Sending notifications via Email and Telegram.",
-        );
-        const alertText = `🚨 *SECURITY ALERT: TRAFFIC SPIKE*\n\nDevice: *${device_id}*\nZone: *${zone || "unknown"}*\nTraffic: *${bytes_per_second.toLocaleString()} Bps*\nSeverity: *HIGH*`;
-        await sendTelegramAlert(alertText);
-        await sendEmailAlert({
-          subject: `[ICS-GUARD ALERT] Traffic Spike on ${device_id}`,
-          text: `Security Alert: Device ${device_id} in ${zone} is transmitting abnormally high traffic (${bytes_per_second} Bps).`,
-          html: `<p><strong>Security Alert:</strong> Device <strong>${device_id}</strong> in <strong>${zone}</strong> is transmitting abnormally high traffic (<code>${bytes_per_second.toLocaleString()} Bps</code>).</p>
-                 <p>Recommended Action: Investigate device processes and rate limit network ports.</p>`,
-        });
+      if (!isDuplicate) {
+        // Smart Alert Routing (only for new alerts)
+        const activeAdmins = getActiveAdminSessions();
+        if (activeAdmins.length > 0) {
+          addEmergencyAlert({
+            device_id,
+            attack_type: ATTACK_TYPES.TRAFFIC_SPIKE,
+            message: `Đang có thiết bị [${device_id}] bị tấn công DDoS (Traffic Spike) và có người dùng Admin [${activeAdmins.join(', ')}] đang đăng nhập!`,
+            admin_users: activeAdmins,
+          });
+        } else {
+          const alertText = `*SECURITY ALERT: TRAFFIC SPIKE*\n\nDevice: *${device_id}*\nZone: *${zone || 'unknown'}*\nTraffic: *${bytes_per_second.toLocaleString()} Bps*\nSeverity: *HIGH*`;
+          await sendTelegramAlert(alertText);
+          await sendEmailAlert({
+            subject: `[ICS-GUARD ALERT] Traffic Spike on ${device_id}`,
+            text: `Security Alert: Device ${device_id} in ${zone} is transmitting abnormally high traffic (${bytes_per_second} Bps).`,
+            html: `<p><strong>Security Alert:</strong> Device <strong>${device_id}</strong> in <strong>${zone}</strong> is transmitting abnormally high traffic (<code>${bytes_per_second.toLocaleString()} Bps</code>).</p>
+                   <p>Recommended Action: Investigate device processes and rate limit network ports.</p>`,
+          });
+        }
       }
     }
   }
 
   // B. Check Critical Temperature
-  if (temperature && temperature > THRESHOLDS.CRITICAL_TEMPERATURE_C) {
+  if (temperature && temperature > THRESHOLDS.CRITICAL_TEMPERATURE_C && isAllowedRule('CRITICAL_OVERHEAT')) {
     if (!isThrottled(device_id, "CRITICAL_OVERHEAT")) {
-      logger.warn(
-        `[Anomaly Detection] Critical overheat detected on ${device_id}: ${temperature} °C`,
-      );
+      logger.warn(`[Anomaly Detection] Critical overheat detected on ${device_id}: ${temperature} °C`);
 
-      const alert_code = await idGeneratorService.generate("alerts");
-      const alert = await Alert.create({
-        alert_code,
-        rule_name: "CRITICAL_OVERHEAT",
+      const { isDuplicate } = await findOrCreateAlertAndIncident({
+        rule_name: 'CRITICAL_OVERHEAT',
         device_id,
         title: `Nhiệt độ cực hạn trên thiết bị ${device_id}`,
         description: `Nhiệt độ thiết bị vọt lên ${temperature} °C (vượt ngưỡng an toàn ${THRESHOLDS.CRITICAL_TEMPERATURE_C} °C).`,
         severity: deviceSeverity,
-        status: ALERT_STATUSES.NEW,
-        detected_at: new Date(),
+        deviceUserId,
+        zone,
+        incidentTitle: `Sự cố: Nhiệt độ quá hạn cực nghiêm trọng trên ${device_id}`,
+        incidentDescription: `Cảm biến ghi nhận nhiệt độ thiết bị ${device_id} tại vùng ${zone || 'unknown'} vượt ngưỡng an toàn nghiêm trọng (${temperature} °C). Nguy cơ cháy nổ vật lý hoặc phá hỏng thiết bị điều khiển.`,
+        timelineDescription: `Phát hiện nhiệt độ bất thường: ${temperature} °C. Tự động cảnh báo và tạo sự cố.`,
+        metadata: { temperature }
       });
 
-      const incident_code = await idGeneratorService.generate("incidents");
-      const incident = await Incident.create({
-        incident_code,
-        title: `Sự cố: Nhiệt độ quá hạn cực nghiêm trọng trên ${device_id}`,
-        description: `Cảm biến ghi nhận nhiệt độ thiết bị ${device_id} tại vùng ${zone || "unknown"} vượt ngưỡng an toàn nghiêm trọng (${temperature} °C). Nguy cơ cháy nổ vật lý hoặc phá hỏng thiết bị điều khiển.`,
-        severity: deviceSeverity,
-        status: INCIDENT_STATUSES.INVESTIGATING,
-        alert_ids: [alert._id],
-        assigned_to: deviceUserId || null,
-      });
-
-      alert.incident_id = incident._id;
-      await alert.save();
-
-      await IncidentTimeline.create({
-        incident_id: incident._id,
-        actor: "Rule Engine Ingest",
-        action_type: INCIDENT_TIMELINE_TYPES.INCIDENT_CREATED,
-        description: `Phát hiện nhiệt độ bất thường: ${temperature} °C. Tự động cảnh báo và tạo sự cố.`,
-        metadata: { temperature },
-      });
-
-      // Phát sự kiện WebSocket
-      socketService.emitNewAlert(alert);
-      socketService.emitNewIncident(incident);
-
-      // Smart Alert Routing
-      const activeAdmins = getActiveAdminSessions();
-      if (activeAdmins.length > 0) {
-        logger.info(
-          `[AlertRouter] Active Admins online: ${activeAdmins.join(", ")}. Suppressing email/Telegram, adding to Emergency Queue.`,
-        );
-        addEmergencyAlert({
-          device_id,
-          attack_type: ATTACK_TYPES.OVERHEAT,
-          message: `Đang có thiết bị [${device_id}] bị quá nhiệt (Critical Overheat) và có người dùng Admin [${activeAdmins.join(", ")}] đang đăng nhập!`,
-          admin_users: activeAdmins,
-        });
-      } else {
-        logger.info(
-          "[AlertRouter] No active Admins online. Sending notifications via Email and Telegram.",
-        );
-        const alertText = `*SECURITY ALERT: CRITICAL OVERHEAT*\n\nDevice: *${device_id}*\nZone: *${zone || "unknown"}*\nTemperature: *${temperature} °C*\nSeverity: *HIGH*`;
-        await sendTelegramAlert(alertText);
-        await sendEmailAlert({
-          subject: `[ICS-GUARD ALERT] Overheat Alert on ${device_id}`,
-          text: `Security Alert: Device ${device_id} in ${zone} is running at critically high temperature (${temperature} °C).`,
-          html: `<p><strong>Security Alert:</strong> Device <strong>${device_id}</strong> in <strong>${zone}</strong> is running at critically high temperature (<code>${temperature} °C</code>).</p>
-                 <p>Recommended Action: Shutdown or isolate the physical device to prevent damage.</p>`,
-        });
+      if (!isDuplicate) {
+        const activeAdmins = getActiveAdminSessions();
+        if (activeAdmins.length > 0) {
+          addEmergencyAlert({
+            device_id,
+            attack_type: ATTACK_TYPES.OVERHEAT,
+            message: `Đang có thiết bị [${device_id}] bị quá nhiệt (Critical Overheat) và có người dùng Admin [${activeAdmins.join(', ')}] đang đăng nhập!`,
+            admin_users: activeAdmins,
+          });
+        } else {
+          const alertText = `*SECURITY ALERT: CRITICAL OVERHEAT*\n\nDevice: *${device_id}*\nZone: *${zone || 'unknown'}*\nTemperature: *${temperature} °C*\nSeverity: *HIGH*`;
+          await sendTelegramAlert(alertText);
+          await sendEmailAlert({
+            subject: `[ICS-GUARD ALERT] Overheat Alert on ${device_id}`,
+            text: `Security Alert: Device ${device_id} in ${zone} is running at critically high temperature (${temperature} °C).`,
+            html: `<p><strong>Security Alert:</strong> Device <strong>${device_id}</strong> in <strong>${zone}</strong> is running at critically high temperature (<code>${temperature} °C</code>).</p>
+                   <p>Recommended Action: Shutdown or isolate the physical device to prevent damage.</p>`,
+          });
+        }
       }
     }
   }
 
   // C. Check Fire (Smoke)
-  if (smoke && smoke > 400) {
+  if (smoke && smoke > 400 && isAllowedRule('FIRE_ALARM')) {
     if (!isThrottled(device_id, "FIRE_ALARM")) {
-      logger.warn(
-        `[Anomaly Detection] Fire (Smoke) detected on ${device_id}: ${smoke} ppm`,
-      );
+      logger.warn(`[Anomaly Detection] Fire (Smoke) detected on ${device_id}: ${smoke} ppm`);
 
-      const alert_code = await idGeneratorService.generate("alerts");
-      const alert = await Alert.create({
-        alert_code,
-        rule_name: "FIRE_ALARM",
+      const { isDuplicate } = await findOrCreateAlertAndIncident({
+        rule_name: 'FIRE_ALARM',
         device_id,
         title: `Phát hiện khói/cháy nổ trên thiết bị ${device_id}`,
         description: `Nồng độ khói tăng vọt lên ${smoke} ppm (ngưỡng an toàn là 400). Nguy cơ hỏa hoạn.`,
         severity: deviceSeverity,
-        status: ALERT_STATUSES.NEW,
-        detected_at: new Date(),
+        deviceUserId,
+        zone,
+        incidentTitle: `Sự cố: Nguy cơ hỏa hoạn tại khu vực ${zone || 'unknown'} (Thiết bị ${device_id})`,
+        incidentDescription: `Cảm biến ghi nhận lượng khói dày đặc (${smoke} ppm). Cần kích hoạt hệ thống chữa cháy hoặc kiểm tra ngay lập tức để tránh cháy nổ vật lý.`,
+        timelineDescription: `Phát hiện lượng khói bất thường: ${smoke} ppm. Tự động cảnh báo hỏa hoạn.`,
+        metadata: { smoke }
       });
 
-      const incident_code = await idGeneratorService.generate("incidents");
-      const incident = await Incident.create({
-        incident_code,
-        title: `Sự cố: Nguy cơ hỏa hoạn tại khu vực ${zone || "unknown"} (Thiết bị ${device_id})`,
-        description: `Cảm biến ghi nhận lượng khói dày đặc (${smoke} ppm). Cần kích hoạt hệ thống chữa cháy hoặc kiểm tra ngay lập tức để tránh cháy nổ vật lý.`,
-        severity: deviceSeverity,
-        status: INCIDENT_STATUSES.INVESTIGATING,
-        alert_ids: [alert._id],
-        assigned_to: deviceUserId || null,
-      });
-
-      alert.incident_id = incident._id;
-      await alert.save();
-
-      await IncidentTimeline.create({
-        incident_id: incident._id,
-        actor: "Rule Engine Ingest",
-        action_type: INCIDENT_TIMELINE_TYPES.INCIDENT_CREATED,
-        description: `Phát hiện lượng khói bất thường: ${smoke} ppm. Tự động cảnh báo hỏa hoạn.`,
-        metadata: { smoke },
-      });
-
-      // Phát sự kiện WebSocket
-      socketService.emitNewAlert(alert);
-      socketService.emitNewIncident(incident);
-
-      // Smart Alert Routing
-      const activeAdmins = getActiveAdminSessions();
-      if (activeAdmins.length > 0) {
-        addEmergencyAlert({
-          device_id,
-          attack_type: "FIRE_ALARM",
-          message: `CẢNH BÁO CHÁY: Thiết bị [${device_id}] phát hiện khói dày đặc! Có người dùng Admin [${activeAdmins.join(", ")}] đang trực.`,
-          admin_users: activeAdmins,
-        });
-      } else {
-        const alertText = `🔥 *SECURITY ALERT: FIRE ALARM*\n\nDevice: *${device_id}*\nZone: *${zone || "unknown"}*\nSmoke: *${smoke} ppm*\nSeverity: *CRITICAL*`;
-        await sendTelegramAlert(alertText);
+      if (!isDuplicate) {
+        const activeAdmins = getActiveAdminSessions();
+        if (activeAdmins.length > 0) {
+          addEmergencyAlert({
+            device_id,
+            attack_type: 'FIRE_ALARM',
+            message: `CẢNH BÁO CHÁY: Thiết bị [${device_id}] phát hiện khói dày đặc! Có người dùng Admin [${activeAdmins.join(', ')}] đang trực.`,
+            admin_users: activeAdmins,
+          });
+        } else {
+          const alertText = `*SECURITY ALERT: FIRE ALARM*\n\nDevice: *${device_id}*\nZone: *${zone || 'unknown'}*\nSmoke: *${smoke} ppm*\nSeverity: *CRITICAL*`;
+          await sendTelegramAlert(alertText);
+        }
       }
     }
   }
 
   // D. Check Flood (Water Level)
-  if (water_level && water_level > 70) {
+  if (water_level && water_level > 70 && isAllowedRule('FLOOD_WARNING')) {
     if (!isThrottled(device_id, "FLOOD_WARNING")) {
-      logger.warn(
-        `[Anomaly Detection] Flood (Water Level) detected on ${device_id}: ${water_level}%`,
-      );
+      logger.warn(`[Anomaly Detection] Flood (Water Level) detected on ${device_id}: ${water_level}%`);
 
-      const alert_code = await idGeneratorService.generate("alerts");
-      const alert = await Alert.create({
-        alert_code,
-        rule_name: "FLOOD_WARNING",
+      const { isDuplicate } = await findOrCreateAlertAndIncident({
+        rule_name: 'FLOOD_WARNING',
         device_id,
         title: `Phát hiện ngập lụt tại thiết bị ${device_id}`,
         description: `Mức nước dâng cao đến ${water_level}% (ngưỡng an toàn là 70%). Nguy cơ ngập nước, đoản mạch.`,
         severity: deviceSeverity,
-        status: ALERT_STATUSES.NEW,
-        detected_at: new Date(),
+        deviceUserId,
+        zone,
+        incidentTitle: `Sự cố: Nguy cơ ngập lụt tại khu vực ${zone || 'unknown'} (Thiết bị ${device_id})`,
+        incidentDescription: `Cảm biến nước ghi nhận mức tràn ngập đạt ${water_level}%. Nguy cơ chập điện và ngắt mạch vật lý toàn hệ thống khu vực.`,
+        timelineDescription: `Phát hiện mực nước bất thường: ${water_level}%. Tự động cảnh báo ngập lụt.`,
+        metadata: { water_level }
       });
 
-      const incident_code = await idGeneratorService.generate("incidents");
-      const incident = await Incident.create({
-        incident_code,
-        title: `Sự cố: Nguy cơ ngập lụt tại khu vực ${zone || "unknown"} (Thiết bị ${device_id})`,
-        description: `Cảm biến nước ghi nhận mức tràn ngập đạt ${water_level}%. Nguy cơ chập điện và ngắt mạch vật lý toàn hệ thống khu vực.`,
-        severity: deviceSeverity,
-        status: INCIDENT_STATUSES.INVESTIGATING,
-        alert_ids: [alert._id],
-        assigned_to: deviceUserId || null,
-      });
-
-      alert.incident_id = incident._id;
-      await alert.save();
-
-      await IncidentTimeline.create({
-        incident_id: incident._id,
-        actor: "Rule Engine Ingest",
-        action_type: INCIDENT_TIMELINE_TYPES.INCIDENT_CREATED,
-        description: `Phát hiện mực nước bất thường: ${water_level}%. Tự động cảnh báo ngập lụt.`,
-        metadata: { water_level },
-      });
-
-      // Phát sự kiện WebSocket
-      socketService.emitNewAlert(alert);
-      socketService.emitNewIncident(incident);
-
-      // Smart Alert Routing
-      const activeAdmins = getActiveAdminSessions();
-      if (activeAdmins.length > 0) {
-        addEmergencyAlert({
-          device_id,
-          attack_type: "FLOOD_WARNING",
-          message: `CẢNH BÁO NGẬP LỤT: Thiết bị [${device_id}] báo mực nước tràn! Có người dùng Admin [${activeAdmins.join(", ")}] đang trực.`,
-          admin_users: activeAdmins,
-        });
-      } else {
-        const alertText = `🌊 *SECURITY ALERT: FLOOD WARNING*\n\nDevice: *${device_id}*\nZone: *${zone || "unknown"}*\nWater Level: *${water_level}%*\nSeverity: *HIGH*`;
-        await sendTelegramAlert(alertText);
+      if (!isDuplicate) {
+        const activeAdmins = getActiveAdminSessions();
+        if (activeAdmins.length > 0) {
+          addEmergencyAlert({
+            device_id,
+            attack_type: 'FLOOD_WARNING',
+            message: `CẢNH BÁO NGẬP LỤT: Thiết bị [${device_id}] báo mực nước tràn! Có người dùng Admin [${activeAdmins.join(', ')}] đang trực.`,
+            admin_users: activeAdmins,
+          });
+        } else {
+          const alertText = `*SECURITY ALERT: FLOOD WARNING*\n\nDevice: *${device_id}*\nZone: *${zone || 'unknown'}*\nWater Level: *${water_level}%*\nSeverity: *HIGH*`;
+          await sendTelegramAlert(alertText);
+        }
       }
     }
   }

@@ -35,6 +35,15 @@ const incidentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Alert',
   }],
+  ai_status: {
+    type: String,
+    enum: ['idle', 'processing', 'completed', 'failed'],
+    default: 'idle',
+  },
+  ai_result: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null,
+  }
 }, {
   timestamps: true,
 });

@@ -10,29 +10,8 @@ class SimulatorManager {
     this.intervalId = null;
   }
 
-  init(deviceCount = config.simulator.deviceCount) {
-    logger.info(`Initializing devices using Factory...`);
-    
-    const initialDevices = [
-      DeviceFactory.createDevice('PLC', 'PLC-1', 'S7-1200 Water Pump', 'Zone-A'),
-      DeviceFactory.createDevice('HMI', 'HMI-1', 'Main Control Panel', 'Zone-A'),
-      DeviceFactory.createDevice('GATEWAY', 'GATEWAY-1', 'Edge Gateway 1', 'Zone-Core')
-    ];
-
-    const types = ['PLC', 'SENSOR', 'HMI', 'GATEWAY', 'ACTUATOR', 'CAMERA', 'CONTROLLER', 'OTHER'];
-    const zones = ['Zone-A', 'Zone-B', 'Zone-C', 'Zone-D', 'Zone-E'];
-
-    for (let i = initialDevices.length + 1; i <= deviceCount; i++) {
-      const type = types[Math.floor(Math.random() * types.length)];
-      const zone = zones[Math.floor(Math.random() * zones.length)];
-      const id = `${type}-${i}`;
-      const name = `Simulated ${type} ${i}`;
-      initialDevices.push(DeviceFactory.createDevice(type, id, name, zone));
-    }
-
-    for (const device of initialDevices) {
-      this.devices.set(device.id, device);
-    }
+  init() {
+    logger.info(`Initializing simulator (Auto-generation of devices is disabled)...`);
   }
 
   start() {
