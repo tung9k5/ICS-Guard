@@ -13,27 +13,45 @@ class ReportService {
     }
 
     const [
-      totalIncidents,
-      totalAlerts,
+      totalIncidentsRes,
+      totalAlertsRes,
       totalDevices,
       incidentsByStatus,
       alertsBySeverity,
       alertsTrend,
       incidentsTrend
     ] = await Promise.all([
-      Incident.countDocuments(query),
-      Alert.countDocuments(query),
+      Incident.aggregate([
+        { $match: query },
+        { $lookup: { from: 'alerts', localField: 'alert_ids', foreignField: '_id', as: 'alerts' } },
+        { $lookup: { from: 'devices', localField: 'alerts.device_id', foreignField: '_id', as: 'devices' } },
+        { $match: { 'devices.0': { $exists: true } } },
+        { $count: 'count' }
+      ]),
+      Alert.aggregate([
+        { $match: query },
+        { $lookup: { from: 'devices', localField: 'device_id', foreignField: '_id', as: 'device' } },
+        { $match: { 'device.0': { $exists: true } } },
+        { $count: 'count' }
+      ]),
       Device.countDocuments(),
       Incident.aggregate([
         { $match: query },
+        { $lookup: { from: 'alerts', localField: 'alert_ids', foreignField: '_id', as: 'alerts' } },
+        { $lookup: { from: 'devices', localField: 'alerts.device_id', foreignField: '_id', as: 'devices' } },
+        { $match: { 'devices.0': { $exists: true } } },
         { $group: { _id: '$status', count: { $sum: 1 } } }
       ]),
       Alert.aggregate([
         { $match: query },
+        { $lookup: { from: 'devices', localField: 'device_id', foreignField: '_id', as: 'device' } },
+        { $match: { 'device.0': { $exists: true } } },
         { $group: { _id: '$severity', count: { $sum: 1 } } }
       ]),
       Alert.aggregate([
         { $match: query },
+        { $lookup: { from: 'devices', localField: 'device_id', foreignField: '_id', as: 'device' } },
+        { $match: { 'device.0': { $exists: true } } },
         {
           $group: {
             _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
@@ -44,6 +62,9 @@ class ReportService {
       ]),
       Incident.aggregate([
         { $match: query },
+        { $lookup: { from: 'alerts', localField: 'alert_ids', foreignField: '_id', as: 'alerts' } },
+        { $lookup: { from: 'devices', localField: 'alerts.device_id', foreignField: '_id', as: 'devices' } },
+        { $match: { 'devices.0': { $exists: true } } },
         {
           $group: {
             _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
@@ -53,6 +74,9 @@ class ReportService {
         { $sort: { _id: 1 } }
       ])
     ]);
+
+    const totalIncidents = totalIncidentsRes.length > 0 ? totalIncidentsRes[0].count : 0;
+    const totalAlerts = totalAlertsRes.length > 0 ? totalAlertsRes[0].count : 0;
 
     return {
       totalIncidents,

@@ -1,6 +1,5 @@
 import auditRepository from '../repositories/auditRepository.js';
 import blockedIpRepository from '../repositories/blockedIpRepository.js';
-import socketService from './socketService.js';
 import { sendEmailAlert } from './emailService.js';
 import { sendTelegramAlert } from './telegramService.js';
 import { publishMqtt } from './mqttService.js';

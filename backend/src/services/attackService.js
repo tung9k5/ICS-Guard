@@ -3,21 +3,23 @@ import { publishMqtt } from './mqttService.js';
 import AppError from '../utils/AppError.js';
 import { DEVICE_STATUSES } from '../constants/index.js';
 import { parsePagination, buildSortOption } from '../utils/pagination.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 class AttackService {
   async launch(deviceId, attackType) {
     const device = await deviceRepository.findById(deviceId);
-    if (!device) throw new AppError('Device not found', 404);
+    if (!device) throw new AppError('Device not found', HTTP_STATUS.NOT_FOUND);
 
     if (device.status === DEVICE_STATUSES.ISOLATED) {
-      throw new AppError('Cannot launch attack on an isolated device.', 400);
+      throw new AppError('Cannot launch attack on an isolated device.', HTTP_STATUS.BAD_REQUEST);
     }
 
     try {
       publishMqtt('ics/control/attack', { device_id: deviceId, attack_type: attackType });
       return { message: `Attack ${attackType} sent to ${device.name}` };
     } catch (err) {
-      throw new AppError('Failed to publish attack command via MQTT', 500);
+      throw new AppError('Failed to publish attack command via MQTT', HTTP_STATUS.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -43,7 +45,7 @@ class AttackService {
 
   async removeDevice(id) {
     const device = await deviceRepository.findById(id);
-    if (!device) throw new AppError('Device not found', 404);
+    if (!device) throw new AppError('Device not found', HTTP_STATUS.NOT_FOUND);
     await deviceRepository.deleteById(id);
   }
 

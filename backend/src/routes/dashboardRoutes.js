@@ -2,7 +2,8 @@ import express from 'express';
 import {
   getSystemHealth,
   getThreatActivity,
-  getNetworkTraffic
+  getNetworkTraffic,
+  getCustomerSummary
 } from '../controllers/dashboardController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 
@@ -11,6 +12,7 @@ const router = express.Router();
 // Apply auth middleware to all dashboard routes
 router.use(authMiddleware);
 
+router.get('/customer-summary', getCustomerSummary);
 router.get('/system-health', getSystemHealth);
 router.get('/threat-activity', getThreatActivity);
 router.get('/network-traffic', getNetworkTraffic);

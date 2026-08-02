@@ -10,7 +10,8 @@
     "dev": "node --watch src/app.js",
     "test:unit": "node --import ./tests/helpers/preload.js --test tests/**/*.test.js",
     "test": "npm run test:unit",
-    "swagger": "node swagger.js"
+    "swagger": "node swagger.js",
+    "seed:customers": "node src/scripts/seedCustomerDevices.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

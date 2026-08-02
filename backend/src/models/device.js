@@ -103,6 +103,10 @@ const deviceSchema = new mongoose.Schema({
     type: String,
     default: 'NORMAL',
   },
+  current_severity: {
+    type: String,
+    default: 'HIGH',
+  },
   scenario_start_time: {
     type: Date,
     default: null,

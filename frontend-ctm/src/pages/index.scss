@@ -1,0 +1,40 @@
+@use './DeviceManagement/DeviceManagement' as base;
+
+.customer-page-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1.7143rem;
+  min-height: calc(100vh - 8.4286rem);
+  animation: fadeIn 0.3s ease-out;
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(0.2857rem); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+}
+
+// Responsive overrides for Alerts and Incidents
+.customer-responsive-flex {
+  display: flex;
+  gap: 1.4286rem;
+  
+  @media (max-width: 992px) {
+    flex-direction: column;
+  }
+}
+
+.responsive-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  
+  table {
+    width: 100%;
+    min-width: 600px;
+  }
+}
+
+.truncate-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

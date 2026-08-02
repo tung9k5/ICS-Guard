@@ -44,6 +44,10 @@ const auditLogSchema = new mongoose.Schema({
     enum: Object.values(AUDIT_STATUSES),
     default: AUDIT_STATUSES.SUCCESS,
   },
+  isRead: {
+    type: Boolean,
+    default: false,
+  }
 }, {
   timestamps: true,
   updatedAt: false, // Audit logs are immutable, only createdAt/timestamp is needed

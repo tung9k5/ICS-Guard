@@ -1,0 +1,98 @@
+.v-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--custom-color-52);
+  backdrop-filter: blur(0.2857rem);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.4286rem;
+  animation: fadeIn 0.2s ease-out;
+
+  .v-dialog-content {
+    background-color: var(--white-100);
+    border: 0.0714rem solid var(--slate-200);
+    border-radius: 1.1429rem;
+    box-shadow: 0 1.4286rem 1.7857rem -0.3571rem var(--custom-color-31), 0 0.7143rem 0.7143rem -0.3571rem var(--custom-color-53);
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    animation: slideUp 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+
+    /* Configurable via style prop */
+    max-width: 35.7143rem;
+  }
+
+  .v-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.4286rem 1.7143rem;
+    border-bottom: 0.0714rem solid var(--slate-100);
+
+    h3 {
+      margin: 0;
+      color: $black;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .v-dialog-close-btn {
+      background: none;
+      border: none;
+      color: var(--slate-400);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.4286rem;
+      border-radius: 0.5714rem;
+      transition: all 0.2s;
+
+      &:hover {
+        background-color: var(--slate-100);
+        color: var(--slate-900);
+      }
+    }
+  }
+
+  .v-dialog-body {
+    padding: 1.7143rem;
+    color: var(--slate-700);
+    flex-grow: 1;
+    overflow-y: auto;
+  }
+
+  .v-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.8571rem;
+    padding: 1.1429rem 1.7143rem;
+    border-top: 0.0714rem solid var(--slate-100);
+    background-color: var(--slate-50);
+    border-radius: 0 0 1.1429rem 1.1429rem;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(1.4286rem) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

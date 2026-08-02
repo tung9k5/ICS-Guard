@@ -1,5 +1,7 @@
 import { successResponse, paginatedResponse } from '../utils/response.js';
 import incidentService from '../services/incidentService.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 export const getAllIncidents = async (req, res, next) => {
   try {
@@ -22,7 +24,7 @@ export const getIncidentById = async (req, res, next) => {
 export const createIncident = async (req, res, next) => {
   try {
     const incident = await incidentService.create(req.body, req.user);
-    return res.status(201).json(incident);
+    return res.status(HTTP_STATUS.CREATED).json(incident);
   } catch (error) {
     next(error);
   }
@@ -39,7 +41,7 @@ export const updateIncident = async (req, res, next) => {
 
 export const deleteIncident = async (req, res, next) => {
   try {
-    await incidentService.remove(req.params.id);
+    await incidentService.remove(req.params.id, req.user);
     return successResponse(res, null, 'Incident deleted successfully');
   } catch (error) {
     next(error);
@@ -48,7 +50,7 @@ export const deleteIncident = async (req, res, next) => {
 
 export const bulkDeleteIncidents = async (req, res, next) => {
   try {
-    const result = await incidentService.removeMany(req.body.ids);
+    const result = await incidentService.removeMany(req.body.ids, req.user);
     return successResponse(res, { deletedCount: result.deletedCount }, `Successfully deleted ${result.deletedCount} incidents`);
   } catch (error) {
     next(error);
@@ -58,7 +60,24 @@ export const bulkDeleteIncidents = async (req, res, next) => {
 export const triggerAiAnalysis = async (req, res, next) => {
   try {
     const incident = await incidentService.triggerAiAnalysis(req.params.id, req.user);
-    return successResponse(res, { status: incident.status }, 'AI Analysis triggered successfully in the background');
+    // Use 202 Accepted for async job
+    return res.status(HTTP_STATUS.ACCEPTED).json({
+      status: 'success',
+      message: 'AI Analysis triggered successfully in the background',
+      data: { status: incident.status, ai_status: incident.ai_status || 'processing' }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAiAnalysisStatus = async (req, res, next) => {
+  try {
+    const incidentData = await incidentService.getById(req.params.id);
+    return successResponse(res, {
+      ai_status: incidentData.incident.ai_status,
+      ai_result: incidentData.incident.ai_result
+    }, 'AI Status retrieved');
   } catch (error) {
     next(error);
   }

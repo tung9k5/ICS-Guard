@@ -1,0 +1,211 @@
+import React, { useState } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { LayoutDashboard, ShieldAlert, Server, FileText, Settings, X, LogOut, User, Activity, Crosshair, Bell, ClipboardList, ChevronDown, ChevronUp, Shield } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import authApi from '@/api/auth';
+import Viewlogo from '@/components/Viewlogo';
+import { toast } from '@/utils/toast';
+import { useDispatch } from 'react-redux';
+import { logout as logoutAction } from '@/store/slices/authSlice';
+import { AUTH_KEYS } from '@/constants/authConstants';
+import { APP_ROUTES } from '@/constants/routes';
+import './Sidebar.scss';
+
+const NavGroup = ({ title, icon: Icon, children, collapsed, pathPrefixes }) => {
+  const location = useLocation();
+  const isActiveGroup = pathPrefixes.some(prefix => location.pathname.startsWith(prefix));
+  const [isOpen, setIsOpen] = React.useState(isActiveGroup);
+
+  React.useEffect(() => {
+    if (isActiveGroup && !collapsed) {
+      setIsOpen(true);
+    }
+  }, [isActiveGroup, collapsed]);
+
+  return (
+    <div className={'nav-group ' + (isOpen ? 'open' : '') + (isActiveGroup ? ' active-group' : '')}>
+      <button
+        className={'nav-item nav-group-header ' + (isActiveGroup && collapsed ? 'active' : '')}
+      onClick={() => setIsOpen(!isOpen)}
+      style={{ justifyContent: 'space-between', width: '100%', background: 'transparent', border: 'none' }}
+      >
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.8571rem' }}>
+        <Icon size={20} />
+        {!collapsed && <span>{title}</span>}
+      </div>
+      {!collapsed && (
+        isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />
+      )}
+    </button>
+      {
+    (!collapsed && isOpen) && (
+      <div className="nav-group-content" style={{ paddingLeft: '2.2857rem' }}>
+        {children}
+      </div>
+    )
+  }
+    </div >
+  );
+};
+
+const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, collapsed, setCollapsed }) => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [isFullscreenLogo, setIsFullscreenLogo] = useState(false);
+
+  const dispatch = useDispatch();
+
+  const handleClose = () => {
+    if (window.innerWidth <= 768) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await authApi.logout({});
+    } catch (e) {
+      console.error('Logout failed:', e);
+    } finally {
+      localStorage.removeItem(AUTH_KEYS.ACCESS_TOKEN);
+      localStorage.removeItem(AUTH_KEYS.REFRESH_TOKEN);
+      localStorage.removeItem(AUTH_KEYS.ATTACKER_ACCESS_TOKEN);
+      localStorage.removeItem(AUTH_KEYS.ATTACKER_REFRESH_TOKEN);
+      sessionStorage.removeItem(AUTH_KEYS.CACHED_USER);
+      dispatch(logoutAction());
+      toast.success(t('auth.logout.success', 'Logged out successfully'));
+      navigate(APP_ROUTES.AUTH.LOGIN, { replace: true });
+    }
+  };
+
+  return (
+    <>
+      <div
+        className={'sidebar-overlay ' + (isSidebarOpen ? 'visible' : '')}
+        onClick={() => setIsSidebarOpen(false)}
+      />
+
+      <aside 
+        className={'sidebar ' + (isSidebarOpen ? 'mobile-open' : 'collapsed')}
+        onClick={() => {
+          if (!isSidebarOpen) {
+            setIsSidebarOpen(true);
+          }
+        }}
+      >
+        <div className="sidebar-logo flex-logo-container">
+          <div className="logo-wrapper">
+            <Viewlogo
+              animate={false}
+              className="logo-icon"
+              style={{ width: '2.8571rem', height: '2.8571rem', cursor: 'pointer', objectFit: 'cover' }}
+              onClick={() => setIsFullscreenLogo(true)}
+            />
+            <span className="logo-text">ICS Guard</span>
+          </div>
+          <button
+            className="close-sidebar-btn"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <nav className="sidebar-nav">
+          <NavLink to="/" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} end onClick={handleClose}>
+            <LayoutDashboard size={20} />
+            <span>{t('layout.sidebar.overview')}</span>
+          </NavLink>
+
+          <NavGroup title={t('sidebar.security_group', 'An ninh & Sự cố')} icon={Shield} collapsed={!isSidebarOpen} pathPrefixes={['/incident-management', '/alert-management', '/rule-management']}>
+            <NavLink to="/incident-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '0.5714rem 0.8571rem', minHeight: '2.8571rem' }}>
+              <ShieldAlert size={18} />
+              <span style={{ fontSize: '0.9286rem' }}>{t('layout.sidebar.alerts', 'Sự cố')}</span>
+            </NavLink>
+            <NavLink to="/alert-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '0.5714rem 0.8571rem', minHeight: '2.8571rem' }}>
+              <Bell size={18} />
+              <span style={{ fontSize: '0.9286rem' }}>{t('sidebar.alert_management', 'Cảnh báo thô')}</span>
+            </NavLink>
+            <NavLink to="/rule-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '0.5714rem 0.8571rem', minHeight: '2.8571rem' }}>
+              <ClipboardList size={18} />
+              <span style={{ fontSize: '0.9286rem' }}>{t('sidebar.rule_management', 'Quy tắc')}</span>
+            </NavLink>
+          </NavGroup>
+
+          <NavGroup title={t('sidebar.system_group', 'Hệ thống & Thiết bị')} icon={Server} collapsed={!isSidebarOpen} pathPrefixes={['/device-management', '/audit-management']}>
+            <NavLink to="/device-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '0.5714rem 0.8571rem', minHeight: '2.8571rem' }}>
+              <Server size={18} />
+              <span style={{ fontSize: '0.9286rem' }}>{t('layout.sidebar.assets')}</span>
+            </NavLink>
+            <NavLink to="/audit-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '0.5714rem 0.8571rem', minHeight: '2.8571rem' }}>
+              <Activity size={18} />
+              <span style={{ fontSize: '0.9286rem' }}>{t('layout.sidebar.audit')}</span>
+            </NavLink>
+          </NavGroup>
+
+          <NavGroup title={t('sidebar.admin_group', 'Quản trị hệ thống')} icon={Settings} collapsed={!isSidebarOpen} pathPrefixes={['/user-management', '/reports', '/settings']}>
+            <NavLink to="/user-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '0.5714rem 0.8571rem', minHeight: '2.8571rem' }}>
+              <User size={18} />
+              <span style={{ fontSize: '0.9286rem' }}>{t('layout.sidebar.users')}</span>
+            </NavLink>
+            <NavLink to="/reports" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '0.5714rem 0.8571rem', minHeight: '2.8571rem' }}>
+              <FileText size={18} />
+              <span style={{ fontSize: '0.9286rem', flex: 1 }}>{t('layout.sidebar.reports')}</span>
+            </NavLink>
+            <NavLink to="/settings" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '0.5714rem 0.8571rem', minHeight: '2.8571rem' }}>
+              <Settings size={18} />
+              <span style={{ fontSize: '0.9286rem', flex: 1 }}>{t('layout.sidebar.settings')}</span>
+            </NavLink>
+          </NavGroup>
+        </nav>
+
+        <div className="sidebar-footer">
+          <a
+            href="/docs/ICS-Guard-Tai-Lieu-He-Thong.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-item"
+          >
+            <FileText size={20} />
+            <span>{t('layout.sidebar.documents', 'Tài liệu')}</span>
+          </a>
+          <button className="nav-item logout-btn" onClick={handleLogout}>
+            <LogOut size={20} />
+            <span>{t('layout.sidebar.logout')}</span>
+          </button>
+        </div>
+      </aside>
+
+      {isFullscreenLogo && (
+        <div
+          className="fullscreen-logo-overlay"
+          style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            zIndex: 9999,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}
+          onClick={() => setIsFullscreenLogo(false)}
+        >
+          <button
+            style={{ position: 'absolute', top: '1.4286rem', right: '1.4286rem', background: 'transparent', border: 'none', color: 'var(--white-short)', cursor: 'pointer' }}
+            onClick={(e) => { e.stopPropagation(); setIsFullscreenLogo(false); }}
+          >
+            <X size={32} />
+          </button>
+          <Viewlogo
+            animate={false}
+            alt="Logo Fullscreen"
+            style={{ maxWidth: '90vw', maxHeight: '90vh' }}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+    </>
+  );
+};
+
+export default Sidebar;

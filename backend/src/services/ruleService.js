@@ -3,6 +3,8 @@ import auditRepository from '../repositories/auditRepository.js';
 import AppError from '../utils/AppError.js';
 import { SEVERITY_LEVELS, AUDIT_STATUSES } from '../constants/index.js';
 import { parsePagination, buildSortOption } from '../utils/pagination.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 class RuleService {
   async getAll(queryParams) {
@@ -29,7 +31,7 @@ class RuleService {
 
   async getById(id) {
     const rule = await ruleRepository.findById(id);
-    if (!rule) throw new AppError('Rule not found', 404);
+    if (!rule) throw new AppError('Rule not found', HTTP_STATUS.NOT_FOUND);
     return rule;
   }
 
@@ -37,7 +39,7 @@ class RuleService {
     const { rule_name, description, time_window_seconds, trigger_count, is_active, severity, conditions, group_by, actions } = data;
 
     const existingRule = await ruleRepository.findByName(rule_name);
-    if (existingRule) throw new AppError(`Rule with name '${rule_name}' already exists.`, 409);
+    if (existingRule) throw new AppError(`Rule with name '${rule_name}' already exists.`, HTTP_STATUS.CONFLICT);
 
     const ruleData = {
       rule_name,
@@ -67,11 +69,11 @@ class RuleService {
   async update(id, data) {
     const { rule_name } = data;
     const rule = await ruleRepository.findById(id);
-    if (!rule) throw new AppError('Rule not found', 404);
+    if (!rule) throw new AppError('Rule not found', HTTP_STATUS.NOT_FOUND);
 
     if (rule_name && rule_name !== rule.rule_name) {
       const existingRule = await ruleRepository.findByName(rule_name, id);
-      if (existingRule) throw new AppError(`Rule with name '${rule_name}' already exists.`, 409);
+      if (existingRule) throw new AppError(`Rule with name '${rule_name}' already exists.`, HTTP_STATUS.CONFLICT);
     }
 
     return ruleRepository.updateById(id, data);
@@ -79,7 +81,7 @@ class RuleService {
 
   async remove(id) {
     const rule = await ruleRepository.findById(id);
-    if (!rule) throw new AppError('Rule not found', 404);
+    if (!rule) throw new AppError('Rule not found', HTTP_STATUS.NOT_FOUND);
     await ruleRepository.deleteById(id);
   }
 

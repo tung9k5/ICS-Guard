@@ -1,0 +1,141 @@
+import React, { useState } from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import {
+  LayoutDashboard, Server, Bell, ShieldAlert, User, LogOut, X, ChevronDown, ChevronUp, FileText
+} from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import authApi from '@/api/auth';
+import { toast } from '@/utils/toast';
+import { useDispatch } from 'react-redux';
+import { logout as logoutAction } from '@/store/slices/authSlice';
+import './Sidebar.scss';
+import { AUTH_KEYS } from '@/constants/authConstants';
+import { APP_ROUTES } from '@/constants/routes';
+import Viewlogo from '@/components/Viewlogo';
+
+const CustomerSidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [isFullscreenLogo, setIsFullscreenLogo] = useState(false);
+
+  const dispatch = useDispatch();
+
+  const handleClose = () => {
+    if (window.innerWidth <= 768) {
+      setIsSidebarOpen(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await authApi.logout({});
+    } catch (e) {
+      console.error('Logout failed:', e);
+    } finally {
+      localStorage.removeItem(AUTH_KEYS.ACCESS_TOKEN);
+      localStorage.removeItem(AUTH_KEYS.REFRESH_TOKEN);
+      sessionStorage.removeItem(AUTH_KEYS.CACHED_USER);
+      dispatch(logoutAction());
+      toast.success(t('auth.logout.success', 'Logged out successfully'));
+      navigate(APP_ROUTES.AUTH.LOGIN, { replace: true });
+    }
+  };
+
+  const navItems = [
+    { to: '/dashboard', icon: LayoutDashboard, label: t('customer.sidebar.dashboard', 'Dashboard') },
+    { to: '/devices', icon: Server, label: t('customer.sidebar.devices', 'Thiết bị') },
+    { to: '/alerts', icon: Bell, label: t('customer.sidebar.alerts', 'Cảnh báo') },
+    { to: '/incidents', icon: ShieldAlert, label: t('customer.sidebar.incidents', 'Sự cố') },
+  ];
+
+  return (
+    <>
+      <div
+        className={'sidebar-overlay ' + (isSidebarOpen ? 'visible' : '')}
+        onClick={() => setIsSidebarOpen(false)}
+      />
+
+      <aside 
+        className={'sidebar ' + (isSidebarOpen ? 'mobile-open' : 'collapsed')}
+        onClick={() => {
+          if (!isSidebarOpen) {
+            setIsSidebarOpen(true);
+          }
+        }}
+      >
+        <div className="sidebar-logo flex-logo-container">
+          <div className="logo-wrapper">
+            <Viewlogo
+              animate={false}
+              className="logo-icon"
+              style={{ width: '2.8571rem', height: '2.8571rem', cursor: 'pointer', objectFit: 'cover' }}
+              onClick={() => setIsFullscreenLogo(true)}
+            />
+            <div>
+              <span className="logo-text">ICS Guard</span>
+            </div>
+          </div>
+          <button className="close-sidebar-btn" onClick={() => setIsSidebarOpen(false)}>
+            <X size={20} />
+          </button>
+        </div>
+
+        <nav className="sidebar-nav">
+          {navItems.map(({ to, icon: Icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')}
+              onClick={handleClose}
+            >
+              <Icon size={20} />
+              <span>{label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        <div className="sidebar-footer">
+          <a
+            href="/docs/ICS-Guard_Huong-dan.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-item"
+          >
+            <FileText size={20} />
+            <span>{t('layout.sidebar.documents', 'Tài liệu')}</span>
+          </a>
+          <button className="nav-item logout-btn" onClick={handleLogout}>
+            <LogOut size={20} />
+            <span>{t('layout.sidebar.logout', 'Đăng xuất')}</span>
+          </button>
+        </div>
+      </aside>
+
+      {isFullscreenLogo && (
+        <div
+          style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            backgroundColor: 'var(--custom-color-104)', zIndex: 9999,
+            display: 'flex', justifyContent: 'center', alignItems: 'center',
+          }}
+          onClick={() => setIsFullscreenLogo(false)}
+        >
+          <button
+            style={{ position: 'absolute', top: '1.4286rem', right: '1.4286rem', background: 'transparent', border: 'none', color: 'var(--white-short)', cursor: 'pointer' }}
+            onClick={(e) => { e.stopPropagation(); setIsFullscreenLogo(false); }}
+          >
+            <X size={32} />
+          </button>
+          <Viewlogo
+            animate={false}
+            alt={t('layout.sidebar.logo_fullscreen', 'Logo Fullscreen')}
+            style={{ maxWidth: '90vw', maxHeight: '90vh' }}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+    </>
+  );
+};
+
+export default CustomerSidebar;

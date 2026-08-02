@@ -9,13 +9,15 @@ import { ROLES, DEVICE_STATUSES, ATTACK_TYPES, AUDIT_STATUSES, AUDIT_ACTIONS, DE
 import AppError from '../utils/AppError.js';
 import socketService from './socketService.js';
 import { parsePagination, buildSortOption } from '../utils/pagination.js';
+import idGeneratorService from './idGeneratorService.js';
+import { HTTP_STATUS } from '../constants/index.js';
 
-// Projection for device list/detail queries — avoids repeating the same field string
+
 const DEVICE_PROJECTION = '_id name type zone ipAddress ip_address macAddress mac_address description status location manufacturer serial_number uptime battery_level tags configuration current_scenario scenario_start_time createdAt updatedAt';
 
 class DeviceService {
   async getAll(queryParams, user) {
-    const { search, status, type, order, page = 1, per_page = 10 } = queryParams;
+    const { search, status, type, order, page = 1, per_page = 10, current_scenario } = queryParams;
 
     let query = {};
     if (user && user.id) {
@@ -35,6 +37,13 @@ class DeviceService {
     }
     if (status) query.status = status;
     if (type) query.type = type;
+    if (current_scenario) {
+      if (current_scenario === 'NORMAL') {
+        query.current_scenario = { $in: ['NORMAL', null, ''] };
+      } else {
+        query.current_scenario = current_scenario;
+      }
+    }
 
     const sortOption = buildSortOption(order);
     const { pageNumber, limitNumber, skip } = parsePagination(page, per_page);
@@ -53,8 +62,16 @@ class DeviceService {
 
   async getById(id) {
     const device = await deviceRepository.findById(id, DEVICE_PROJECTION);
-    if (!device) throw new AppError('Device not found', 404);
-    return device;
+    if (!device) throw new AppError('Device not found', HTTP_STATUS.NOT_FOUND);
+
+    const alertRepository = (await import('../repositories/alertRepository.js')).default;
+    const history = await alertRepository.findAll(
+      { device_id: id },
+      { detected_at: -1 },
+      0, 100
+    );
+
+    return { device, history };
   }
 
 
@@ -68,17 +85,7 @@ class DeviceService {
       if (macAddress) {
         customId = macAddress.replace(/:/g, '').toLowerCase();
       } else {
-        try {
-          const lastDevice = await deviceRepository.findLastByPattern(/^D-\d{3,}$/);
-          if (lastDevice && lastDevice._id) {
-            const lastNumber = parseInt(lastDevice._id.split('-')[1], 10);
-            customId = `D-${(lastNumber + 1).toString().padStart(3, '0')}`;
-          } else {
-            customId = 'D-001';
-          }
-        } catch (err) {
-          customId = `D-${Math.floor(Math.random() * 1000)}`;
-        }
+        customId = await idGeneratorService.generate('devices');
       }
     }
 
@@ -93,7 +100,7 @@ class DeviceService {
     });
 
     if (!validationResult.isValid) {
-      throw new AppError(`Validation failed: ${JSON.stringify(validationResult.errors)}`, 400);
+      throw new AppError(`Validation failed: ${JSON.stringify(validationResult.errors)}`, HTTP_STATUS.BAD_REQUEST);
     }
 
     const newDevice = await deviceRepository.create({
@@ -136,10 +143,11 @@ class DeviceService {
     };
   }
 
-  async update(id, data) {
+  async update(id, data, user) {
     const { name, type, ipAddress, ip_address, macAddress, description, status, location, manufacturer, serial_number, uptime, battery_level, tags, configuration } = data;
     const device = await deviceRepository.findById(id);
-    if (!device) throw new AppError('Device not found', 404);
+    if (!device) throw new AppError('Device not found', HTTP_STATUS.NOT_FOUND);
+    if (user && user.role !== ROLES.ADMIN && device.userId?.toString() !== user.id) throw new AppError('Forbidden: Device does not belong to you', HTTP_STATUS.FORBIDDEN);
 
     const updateData = {};
     if (name !== undefined) updateData.name = name;
@@ -185,20 +193,70 @@ class DeviceService {
     return cleanDevice;
   }
 
-  async remove(id) {
+  async remove(id, user) {
     const device = await deviceRepository.findById(id);
-    if (!device) throw new AppError('Device not found', 404);
+    if (!device) throw new AppError('Device not found', HTTP_STATUS.NOT_FOUND);
+    if (user && user.role !== ROLES.ADMIN && device.userId?.toString() !== user.id) {
+      throw new AppError('Forbidden: Device does not belong to you', HTTP_STATUS.FORBIDDEN);
+    }
+
+    // CASCADE DELETE: ALERTS & INCIDENTS
+    const alertRepository = (await import('../repositories/alertRepository.js')).default;
+    const incidentRepository = (await import('../repositories/incidentRepository.js')).default;
+    const incidentTimelineRepository = (await import('../repositories/incidentTimelineRepository.js')).default;
+    
+    const deviceAlerts = await alertRepository.findAll({ device_id: id }, {}, 0, 10000);
+    const alertIds = deviceAlerts.map(a => a._id);
+    
+    if (alertIds.length > 0) {
+      const relatedIncidents = await incidentRepository.findAll({ alert_ids: { $in: alertIds } }, {}, 0, 10000);
+      const incidentIds = relatedIncidents.map(i => i._id);
+      
+      if (incidentIds.length > 0) {
+        await incidentTimelineRepository.deleteByIncidentIds(incidentIds);
+        await incidentRepository.deleteMany(incidentIds);
+      }
+      
+      await alertRepository.deleteMany(alertIds);
+    }
+
     await deviceRepository.deleteById(id);
   }
 
-  async removeMany(ids) {
+  async removeMany(ids, user) {
+    if (user && user.role !== ROLES.ADMIN) {
+      const devices = await deviceRepository.findAll({ _id: { $in: ids } });
+      const notOwned = devices.some(d => d.userId?.toString() !== user.id);
+      if (notOwned) throw new AppError('Forbidden: Some devices do not belong to you', HTTP_STATUS.FORBIDDEN);
+    }
+
+    // CASCADE DELETE: ALERTS & INCIDENTS
+    const alertRepository = (await import('../repositories/alertRepository.js')).default;
+    const incidentRepository = (await import('../repositories/incidentRepository.js')).default;
+    const incidentTimelineRepository = (await import('../repositories/incidentTimelineRepository.js')).default;
+    
+    const deviceAlerts = await alertRepository.findAll({ device_id: { $in: ids } }, {}, 0, 100000);
+    const alertIds = deviceAlerts.map(a => a._id);
+    
+    if (alertIds.length > 0) {
+      const relatedIncidents = await incidentRepository.findAll({ alert_ids: { $in: alertIds } }, {}, 0, 100000);
+      const incidentIds = relatedIncidents.map(i => i._id);
+      
+      if (incidentIds.length > 0) {
+        await incidentTimelineRepository.deleteByIncidentIds(incidentIds);
+        await incidentRepository.deleteMany(incidentIds);
+      }
+      
+      await alertRepository.deleteMany(alertIds);
+    }
+
     return deviceRepository.deleteMany(ids);
   }
 
   async isolate(id, actor, ipAddress) {
     const device = await deviceRepository.findById(id);
-    if (!device) throw new AppError('Device not found', 404);
-    if (device.status === DEVICE_STATUSES.ISOLATED) throw new AppError('Device is already isolated', 400);
+    if (!device) throw new AppError('Device not found', HTTP_STATUS.NOT_FOUND);
+    if (device.status === DEVICE_STATUSES.ISOLATED) throw new AppError('Device is already isolated', HTTP_STATUS.BAD_REQUEST);
 
     await isolateDevice(device, actor, ipAddress);
     return device;
@@ -206,8 +264,8 @@ class DeviceService {
 
   async unisolate(id, actor, ipAddress) {
     const device = await deviceRepository.findById(id);
-    if (!device) throw new AppError('Device not found', 404);
-    if (device.status === DEVICE_STATUSES.ACTIVE || device.status === DEVICE_STATUSES.ONLINE) throw new AppError('Device is already active', 400);
+    if (!device) throw new AppError('Device not found', HTTP_STATUS.NOT_FOUND);
+    if (device.status === DEVICE_STATUSES.ACTIVE || device.status === DEVICE_STATUSES.ONLINE) throw new AppError('Device is already active', HTTP_STATUS.BAD_REQUEST);
 
     const updatedDevice = await deviceRepository.updateById(id, { status: DEVICE_STATUSES.ACTIVE });
 
@@ -241,7 +299,7 @@ class DeviceService {
 
   async rollback(id, actor, ipAddress) {
     const device = await deviceRepository.findById(id);
-    if (!device) throw new AppError('Device not found', 404);
+    if (!device) throw new AppError('Device not found', HTTP_STATUS.NOT_FOUND);
 
     const updatedDevice = await deviceRepository.updateById(id, { status: DEVICE_STATUSES.ACTIVE });
     publishMqtt('ics/control/attack', { device_id: id, attack_type: ATTACK_TYPES.ROLLBACK });

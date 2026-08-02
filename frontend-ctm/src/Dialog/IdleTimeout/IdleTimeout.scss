@@ -1,0 +1,52 @@
+.idle-timeout-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--custom-color-66);
+  backdrop-filter: blur(0.2857rem);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .idle-timeout-dialog {
+    background: var(--bg-card, var(--slate-800));
+    padding: 1.7143rem;
+    border-radius: 0.8571rem;
+    box-shadow: 0 0.5714rem 2.2857rem var(--custom-color-41);
+    border: 0.0714rem solid var(--border-color, var(--slate-700));
+    max-width: 28.5714rem;
+    width: 90%;
+    text-align: center;
+
+    h3 {
+      margin-top: 0;
+      margin-bottom: 0.8571rem;
+      color: var(--text-primary, var(--slate-50));
+      font-size: 1.4286rem;
+    }
+
+    p {
+      color: var(--text-muted, var(--slate-400));
+      margin-bottom: 1.7143rem;
+      line-height: 1.5;
+
+      strong {
+        color: var(--red-500);
+        font-size: 1.2857rem;
+      }
+    }
+
+    .idle-timeout-actions {
+      display: flex;
+      gap: 0.8571rem;
+      justify-content: center;
+
+      button {
+        flex: 1;
+      }
+    }
+  }
+}

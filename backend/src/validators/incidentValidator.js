@@ -1,7 +1,7 @@
 import { errorResponse } from '../utils/response.js';
 import { INCIDENT_STATUSES, SEVERITY_LEVELS } from '../constants/index.js';
 
-const VALID_SEVERITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+const VALID_SEVERITIES = Object.values(SEVERITY_LEVELS);
 const VALID_STATUSES = Object.values(INCIDENT_STATUSES);
 
 export const validateCreateIncident = (req, res, next) => {

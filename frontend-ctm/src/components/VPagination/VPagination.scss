@@ -1,0 +1,100 @@
+.v-pagination-wrapper {
+  padding: 1.1429rem 1.7143rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 0.0714rem solid var(--slate-200);
+  background: var(--slate-50);
+
+  .pagination-info {
+    font-size: 1rem;
+    color: var(--slate-500);
+    
+    strong {
+      color: var(--slate-900);
+    }
+  }
+
+  .pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 1.1429rem;
+
+    .per-page-select {
+      padding: 0.4286rem 2rem 0.4286rem 0.8571rem;
+      border-radius: 0.4286rem;
+      border: 0.0714rem solid var(--slate-300);
+      background-color: var(--white);
+      color: var(--slate-700);
+      font-size: 0.9286rem;
+      outline: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.5714rem center;
+
+      &:focus {
+        border-color: var(--blue-500);
+        box-shadow: 0 0 0 0.1429rem var(--custom-color-55);
+      }
+    }
+
+    .page-buttons {
+      display: flex;
+      align-items: center;
+      gap: 0.8571rem;
+
+      .current-page {
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--slate-700);
+        min-width: 4.2857rem;
+        text-align: center;
+      }
+
+      .icon-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.2857rem;
+        height: 2.2857rem;
+        border-radius: 0.4286rem;
+        border: 0.0714rem solid var(--slate-300);
+        background-color: var(--white);
+        color: var(--slate-600);
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover:not(:disabled) {
+          background-color: var(--slate-100);
+          color: var(--slate-900);
+          border-color: var(--slate-400);
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+          background-color: var(--slate-50);
+        }
+      }
+    }
+  }
+
+  /* Responsive styling for mobile: split into 2 rows */
+  @media (max-width: 45.7143rem) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1.1429rem;
+
+    .pagination-controls {
+      width: 100%;
+      justify-content: space-between;
+      flex-wrap: wrap;
+
+      .page-buttons {
+        flex: 1;
+        justify-content: flex-end;
+      }
+    }
+  }
+}

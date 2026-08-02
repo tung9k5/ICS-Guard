@@ -1,3 +1,4 @@
+import { HTTP_STATUS } from '../constants/index.js';
 export const authorize = (allowedRoles = []) => {
   // Convert single string role to array
   if (typeof allowedRoles === 'string') {
@@ -9,7 +10,7 @@ export const authorize = (allowedRoles = []) => {
 
   return (req, res, next) => {
     if (!req.user) {
-      return res.status(401).json({
+      return res.status(HTTP_STATUS.UNAUTHORIZED).json({
         error: 'Unauthorized',
         message: 'Authentication is required for this resource.',
       });
@@ -18,7 +19,7 @@ export const authorize = (allowedRoles = []) => {
     const userRole = req.user.role ? req.user.role.toLowerCase() : null;
 
     if (!userRole || !normalizedAllowed.includes(userRole)) {
-      return res.status(403).json({
+      return res.status(HTTP_STATUS.FORBIDDEN).json({
         error: 'Forbidden',
         message: 'You do not have permission to access this resource.',
         requiredRoles: allowedRoles,

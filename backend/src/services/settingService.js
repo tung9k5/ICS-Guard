@@ -1,5 +1,7 @@
 import settingRepository from '../repositories/settingRepository.js';
 import AppError from '../utils/AppError.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 class SettingService {
   async getAllSettings() {
@@ -10,7 +12,7 @@ class SettingService {
   async getSettingByKey(key) {
     const setting = await settingRepository.findByKey(key);
     if (!setting) {
-      throw new AppError('Setting not found', 404);
+      throw new AppError('Setting not found', HTTP_STATUS.NOT_FOUND);
     }
     return setting;
   }
@@ -40,11 +42,11 @@ class SettingService {
         // Also update description and isSystem which updateByKey doesn't handle in upsert easily if we just pass value.
         // Let's use the Mongoose model directly for seeder to be safe.
         import('../models/index.js').then(({ Setting }) => {
-           Setting.findOneAndUpdate(
-             { key: setting.key },
-             { $set: setting },
-             { upsert: true }
-           ).exec();
+          Setting.findOneAndUpdate(
+            { key: setting.key },
+            { $set: setting },
+            { upsert: true }
+          ).exec();
         });
       }
     }

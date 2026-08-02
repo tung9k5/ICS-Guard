@@ -1,43 +1,118 @@
-import axios from 'axios';
 import incidentRepository from '../repositories/incidentRepository.js';
 import incidentTimelineRepository from '../repositories/incidentTimelineRepository.js';
+import deviceRepository from '../repositories/deviceRepository.js';
+import alertRepository from '../repositories/alertRepository.js';
+import notificationService from './notification.service.js';
 import AppError from '../utils/AppError.js';
 import { ROLES, INCIDENT_STATUSES, SEVERITY_LEVELS, INCIDENT_TIMELINE_TYPES } from '../constants/index.js';
 import { analyzeIncident } from '../../../ai-services/index.js';
 import { parsePagination, buildSortOption } from '../utils/pagination.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 class IncidentService {
   async getAll(queryParams, user) {
     const { search, status, severity, order, page = 1, per_page = 10 } = queryParams;
 
     let query = {};
+    let conditions = [];
+
     // Normalize role check to lowercase for consistency
     if (user && user.id && user.role?.toLowerCase() !== ROLES.ADMIN) {
-      query.assigned_to = user.id;
+      const userDevices = await deviceRepository.findAll({ userId: user.id }, {}, 0, 10000, '_id');
+      const userDeviceIds = userDevices.map(d => d._id);
+      
+      const userAlerts = await alertRepository.findAll({ device_id: { $in: userDeviceIds } }, {}, 0, 100000);
+      const userAlertIds = userAlerts.map(a => a._id);
+
+      conditions.push({
+        $or: [
+          { assigned_to: user.id },
+          { alert_ids: { $in: userAlertIds } }
+        ]
+      });
     }
 
     if (search) {
       const searchRegex = new RegExp(search, 'i');
-      query.$or = [{ title: searchRegex }, { description: searchRegex }];
+      conditions.push({
+        $or: [{ title: searchRegex }, { description: searchRegex }]
+      });
     }
+
+    if (conditions.length > 0) {
+      query.$and = conditions;
+    }
+
     if (status) query.status = status;
     if (severity) query.severity = severity;
 
     const sortOption = buildSortOption(order);
     const { pageNumber, limitNumber, skip } = parsePagination(page, per_page);
 
-    const total = await incidentRepository.countAll(query);
-    const incidents = await incidentRepository.findAll(query, sortOption, skip, limitNumber);
+    const sortDef = sortOption && Object.keys(sortOption).length ? sortOption : { createdAt: -1 };
+
+    const pipeline = [
+      { $match: query },
+      { $sort: sortDef },
+      { $group: {
+          _id: { title: '$title' },
+          latest_incident: { $first: '$$ROOT' },
+          occurrences_count: { $sum: 1 }
+      }},
+      { $replaceRoot: { newRoot: { $mergeObjects: ['$latest_incident', { occurrences_count: '$occurrences_count' }] } } },
+      { $sort: sortDef }
+    ];
+
+    const totalPipeline = [...pipeline, { $count: 'total' }];
+    const totalRes = await incidentRepository.aggregate(totalPipeline);
+    const total = totalRes.length > 0 ? totalRes[0].total : 0;
+
+    const incidentsPipeline = [
+      ...pipeline,
+      { $skip: skip },
+      { $limit: limitNumber },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'assigned_to',
+          foreignField: '_id',
+          as: 'assigned_to'
+        }
+      },
+      { $unwind: { path: '$assigned_to', preserveNullAndEmptyArrays: true } }
+    ];
+
+    const incidents = await incidentRepository.aggregate(incidentsPipeline);
 
     return { incidents, total, pageNumber, limitNumber };
   }
 
   async getById(id) {
     const incident = await incidentRepository.findById(id);
-    if (!incident) throw new AppError('Incident not found', 404);
+    if (!incident) throw new AppError('Incident not found', HTTP_STATUS.NOT_FOUND);
 
     const timeline = await incidentTimelineRepository.findByIncidentId(id);
-    return { incident, timeline };
+
+    let deviceAlertHistory = [];
+    if (incident.alert_ids && incident.alert_ids.length > 0) {
+      // Find the devices involved
+      const alertRepository = (await import('../repositories/alertRepository.js')).default;
+      const alerts = await alertRepository.findAll({ _id: { $in: incident.alert_ids } }, {}, 0, 1000);
+      const deviceIds = [...new Set(alerts.map(a => a.device_id?._id?.toString() || a.device_id?.toString()).filter(Boolean))];
+
+      if (deviceIds.length > 0) {
+        deviceAlertHistory = await alertRepository.findAll({ device_id: { $in: deviceIds } }, { detected_at: 1 }, 0, 100);
+      }
+    }
+
+    const history = await incidentRepository.findAll(
+      { title: incident.title },
+      { createdAt: -1 },
+      0, 100
+    );
+
+    return { incident, timeline, deviceAlertHistory, history };
   }
 
   async create(data, user) {
@@ -59,12 +134,20 @@ class IncidentService {
       description: `Sự cố được tạo thủ công bởi ${user ? user.username : 'system'}.`
     });
 
+    await notificationService.createNotification({
+      title: `Incident Created: ${title}`,
+      message: description || `A new incident has been reported manually.`,
+      type: 'SYSTEM',
+      severity: severity || SEVERITY_LEVELS.MEDIUM,
+      userId: null,
+    });
+
     return incident;
   }
 
   async update(id, data) {
     const incident = await incidentRepository.findById(id);
-    if (!incident) throw new AppError('Incident not found', 404);
+    if (!incident) throw new AppError('Incident not found', HTTP_STATUS.NOT_FOUND);
 
     const updateData = {};
     if (data.status !== undefined) updateData.status = data.status;
@@ -72,28 +155,88 @@ class IncidentService {
     if (data.title !== undefined) updateData.title = data.title;
     if (data.description !== undefined) updateData.description = data.description;
 
-    return incidentRepository.updateById(id, updateData);
+    const result = await incidentRepository.updateById(id, updateData);
+
+    if (incident.status === INCIDENT_STATUSES.INVESTIGATING && updateData.status === INCIDENT_STATUSES.INVESTIGATED) {
+      let targetUserId = null;
+      if (incident.alert_ids && incident.alert_ids.length > 0) {
+        const alerts = await alertRepository.findAll({ _id: { $in: incident.alert_ids } }, {}, 0, 1);
+        if (alerts.length > 0 && alerts[0].device_id) {
+           const device = await deviceRepository.findById(alerts[0].device_id);
+           if (device && device.userId) {
+             targetUserId = device.userId;
+           }
+        }
+      }
+
+      await notificationService.createNotification({
+        title: `Cập nhật sự cố: ${incident.title}`,
+        message: `Sự cố đã được điều tra hoàn tất`,
+        type: 'SYSTEM',
+        severity: incident.severity,
+        userId: targetUserId,
+      });
+    }
+
+    return result;
   }
 
-  async remove(id) {
+  async remove(id, user) {
     const incident = await incidentRepository.findById(id);
-    if (!incident) throw new AppError('Incident not found', 404);
+    if (!incident) throw new AppError('Incident not found', HTTP_STATUS.NOT_FOUND);
+
+    if (user && user.role?.toLowerCase() !== ROLES.ADMIN) {
+      const userDevices = await deviceRepository.findAll({ userId: user.id }, {}, 0, 10000, '_id');
+      const userDeviceIds = userDevices.map(d => d._id);
+      const userAlerts = await alertRepository.findAll({ device_id: { $in: userDeviceIds } }, {}, 0, 100000);
+      const userAlertIds = userAlerts.map(a => a._id.toString());
+
+      const isAssignedToUser = incident.assigned_to?.toString() === user.id.toString();
+      const hasUserAlerts = incident.alert_ids && incident.alert_ids.some(alertId => userAlertIds.includes(alertId.toString()));
+      
+      if (!isAssignedToUser && !hasUserAlerts) {
+        throw new AppError('Forbidden: You can only delete incidents associated with your devices or assigned to you', HTTP_STATUS.FORBIDDEN);
+      }
+    }
 
     await incidentTimelineRepository.deleteByIncidentId(id);
     await incidentRepository.deleteById(id);
   }
 
-  async removeMany(ids) {
+  async removeMany(ids, user) {
+    if (user && user.role?.toLowerCase() !== ROLES.ADMIN) {
+      const userDevices = await deviceRepository.findAll({ userId: user.id }, {}, 0, 10000, '_id');
+      const userDeviceIds = userDevices.map(d => d._id);
+      const userAlerts = await alertRepository.findAll({ device_id: { $in: userDeviceIds } }, {}, 0, 100000);
+      const userAlertIds = userAlerts.map(a => a._id.toString());
+
+      const incidents = await incidentRepository.findAll({ _id: { $in: ids } }, {}, 0, ids.length);
+      const invalidIncidents = incidents.filter(incident => {
+        const isAssignedToUser = incident.assigned_to?.toString() === user.id.toString();
+        const hasUserAlerts = incident.alert_ids && incident.alert_ids.some(alertId => userAlertIds.includes(alertId.toString()));
+        return !isAssignedToUser && !hasUserAlerts;
+      });
+
+      if (invalidIncidents.length > 0) {
+        throw new AppError('Forbidden: Some incidents do not belong to you', HTTP_STATUS.FORBIDDEN);
+      }
+    }
+
     await incidentTimelineRepository.deleteByIncidentIds(ids);
     return incidentRepository.deleteMany(ids);
   }
 
   async triggerAiAnalysis(id, user) {
-    const incident = await incidentRepository.findById(id);
-    if (!incident) throw new AppError('Incident not found', 404);
+    const incidentData = await this.getById(id);
+    const incident = incidentData.incident;
 
-    let alertsToProcess = incident.alert_ids;
-    if (alertsToProcess.length === 0) {
+    let alertsToProcess = incidentData.deviceAlertHistory;
+    
+    if (!alertsToProcess || alertsToProcess.length === 0) {
+      alertsToProcess = incident.alert_ids;
+    }
+
+    if (!alertsToProcess || alertsToProcess.length === 0) {
       alertsToProcess = [{
         _id: 'dummy-alert',
         rule_name: 'TEST_RULE',
@@ -110,7 +253,10 @@ class IncidentService {
       }];
     }
 
-    await incidentRepository.updateById(id, { status: INCIDENT_STATUSES.INVESTIGATING });
+    await incidentRepository.updateById(id, { 
+      status: INCIDENT_STATUSES.INVESTIGATING,
+      ai_status: 'processing' 
+    });
 
     await incidentTimelineRepository.create({
       incident_id: incident._id,
@@ -160,7 +306,27 @@ class IncidentService {
       console.log(`[IncidentService] AI Analysis completed successfully for incident ${incidentId}`);
 
       // Mark as investigated (distinct from investigating — AI has completed its analysis)
-      await incidentRepository.updateById(incidentId, { status: INCIDENT_STATUSES.INVESTIGATED });
+      await incidentRepository.updateById(incidentId, { 
+        status: INCIDENT_STATUSES.INVESTIGATED,
+        ai_status: 'completed',
+        ai_result: aiReport
+      });
+
+      let targetUserId = null;
+      if (alertsData && alertsData.length > 0 && alertsData[0].device_id) {
+         const device = await deviceRepository.findById(alertsData[0].device_id);
+         if (device && device.userId) {
+           targetUserId = device.userId;
+         }
+      }
+
+      await notificationService.createNotification({
+        title: `AI đã phân tích - ${incidentData.title}`,
+        message: `Hệ thống AI đã hoàn tất điều tra sự cố`,
+        type: 'SYSTEM',
+        severity: incidentData.severity,
+        userId: targetUserId,
+      });
 
       let mitreMappingsStr = '';
       if (aiReport.mitre_attack_mappings && aiReport.mitre_attack_mappings.length > 0) {
@@ -169,7 +335,7 @@ class IncidentService {
       }
 
       const timelineDescription =
-        `🤖 **Báo cáo Phân tích Sự cố từ AI Security Assistant**\n\n` +
+        `**Báo cáo Phân tích Sự cố từ AI Security Assistant**\n\n` +
         `*Mô hình sử dụng:* \`${aiReport.model_used}\`\n\n` +
         `*Tóm tắt sự kiện:* ${aiReport.log_summary}\n\n` +
         `*Phân tích chuỗi tấn công:* ${aiReport.attack_reasoning}` +
@@ -187,11 +353,15 @@ class IncidentService {
 
     } catch (error) {
       console.error(`[IncidentService] Background AI Analysis failed for incident ${incidentId}:`, error.message);
+      await incidentRepository.updateById(incidentId, { 
+        ai_status: 'failed',
+        ai_result: { error: error.message }
+      });
       await incidentTimelineRepository.create({
         incident_id: incidentId,
         actor: 'AI Security Assistant',
         action_type: INCIDENT_TIMELINE_TYPES.AI_ANALYSIS,
-        description: `❌ Lỗi khi phân tích sự cố bằng AI: ${error.message}. Vui lòng thử lại sau.`,
+        description: `Lỗi khi phân tích sự cố bằng AI: ${error.message}. Vui lòng thử lại sau.`,
         metadata: { error: error.message }
       });
     }

@@ -1,0 +1,14 @@
+export const NOTIFICATION_TYPE = {
+  ALERT: 'ALERT',
+  WARNING: 'WARNING',
+  INFO: 'INFO',
+  SYSTEM: 'SYSTEM',
+  DEVICE: 'DEVICE'
+};
+
+export const NOTIFICATION_SEVERITY = {
+  LOW: 'LOW',
+  MEDIUM: 'MEDIUM',
+  HIGH: 'HIGH',
+  CRITICAL: 'CRITICAL'
+};

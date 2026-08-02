@@ -1,0 +1,105 @@
+.draggable-chatbot {
+  position: fixed;
+  z-index: 9999;
+  user-select: none;
+  width: 4rem;
+  height: 4rem;
+
+  .chatbot-menu {
+    position: absolute;
+    bottom: 5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 1.1429rem;
+    align-items: center;
+
+    .chatbot-sub-fab {
+      width: 4rem;
+      height: 4rem;
+      border-radius: 50%;
+      background-color: var(--white);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      box-shadow: 0 0.2857rem 0.8571rem var(--custom-color-33);
+      transition: transform 0.2s, background-color 0.2s;
+      color: var(--blue-600);
+
+      &:hover {
+        transform: scale(1.1);
+        background-color: var(--slate-50);
+      }
+
+      .unread-badge {
+        position: absolute;
+        top: -0.1429rem;
+        right: -0.1429rem;
+        background-color: $red-500;
+        color: white;
+        border-radius: 50%;
+        width: 1.5714rem;
+        height: 1.5714rem;
+        font-size: 0.7857rem;
+        font-weight: bold;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 0.1429rem 0.2857rem var(--custom-color-40);
+        border: 0.1429rem solid var(--white);
+        z-index: 10;
+      }
+    }
+  }
+
+  .chatbot-fab {
+    width: 4rem;
+    height: 4rem;
+    border-radius: 50%;
+    background-color: var(--primary-color, var(--blue-600));
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: grab;
+    box-shadow: 0 0.2857rem 0.8571rem var(--custom-color-41);
+    transition: transform 0.2s, background-color 0.2s;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    &:hover {
+      background-color: var(--primary-color-hover, var(--blue-700));
+    }
+
+    &.dragging {
+      transform: scale(1.05);
+      box-shadow: 0 0.5714rem 1.4286rem var(--custom-color-42);
+    }
+
+    .unread-badge-main {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background-color: $red-500;
+      color: white;
+      border-radius: 50%;
+      width: 1.5714rem;
+      height: 1.5714rem;
+      font-size: 0.7857rem;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0.1429rem 0.2857rem var(--custom-color-40);
+      border: 0.1429rem solid var(--white);
+      z-index: 10;
+    }
+  }
+}

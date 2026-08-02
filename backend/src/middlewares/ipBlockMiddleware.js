@@ -1,4 +1,6 @@
 import { BlockedIp } from '../models/index.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 export const ipBlockMiddleware = async (req, res, next) => {
   const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
@@ -13,7 +15,7 @@ export const ipBlockMiddleware = async (req, res, next) => {
     });
 
     if (isBlocked) {
-      return res.status(403).json({ 
+      return res.status(HTTP_STATUS.FORBIDDEN).json({ 
         error: 'Forbidden', 
         message: 'Địa chỉ IP của bạn đã bị tường lửa ứng dụng chặn do phát hiện hành vi bất thường.' 
       });

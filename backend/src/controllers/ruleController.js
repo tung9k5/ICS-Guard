@@ -1,5 +1,7 @@
 import { successResponse, paginatedResponse } from '../utils/response.js';
 import ruleService from '../services/ruleService.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 export const getAllRules = async (req, res, next) => {
   try {
@@ -22,7 +24,7 @@ export const getRuleById = async (req, res, next) => {
 export const createRule = async (req, res, next) => {
   try {
     const rule = await ruleService.create(req.body, req.user);
-    return res.status(201).json({ message: 'Rule created successfully', rule });
+    return res.status(HTTP_STATUS.CREATED).json({ message: 'Rule created successfully', rule });
   } catch (error) {
     next(error);
   }

@@ -1,0 +1,146 @@
+.auth-layout {
+  position: relative;
+  display: flex;
+  min-height: 100vh;
+  font-family: 'Metropolis', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-primary);
+  justify-content: flex-end;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 2rem 0;
+}
+
+.auth-cover {
+  position: absolute;
+  inset: 0;
+  /* Dùng ảnh mạng tạm thời, bạn có thể thay bằng ảnh fingerprint của bạn bằng đường dẫn local /images/fingerprint.jpg */
+  background-image: url('https://timestech.in/wp-content/uploads/2025/02/1_Blog_Featured_Image-scaled-1.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  z-index: 0;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    /* Gradient nhẹ nhàng hơn để ảnh nền xuyên qua form rõ hơn */
+    background: linear-gradient(135deg, var(--custom-color-40) 0%, var(--custom-color-66) 100%);
+    z-index: 1;
+  }
+
+  .auth-cover-content {
+    position: absolute;
+    top: 50%;
+    left: 5vw;
+    transform: translateY(-50%);
+    z-index: 2;
+    text-align: left;
+    max-width: 42.8571rem;
+    margin-top: 4rem;
+
+    h1 {
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: var(--text-primary);
+      margin-bottom: 1.5rem;
+      text-align: center;
+      line-height: 1.2;
+      background: var(--accent-gradient-light);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0.2857rem 0.8571rem var(--custom-color-41);
+    }
+
+    p {
+      font-size: 1.25rem;
+      color: var(--custom-color-72);
+      line-height: 1.6;
+      text-shadow: 0 0.1429rem 0.2857rem var(--custom-color-73);
+    }
+  }
+}
+
+.auth-panel {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 34.2857rem;
+  background-color: var(--bg-glass); 
+  backdrop-filter: blur(1.7143rem) saturate(160%);
+  -webkit-backdrop-filter: blur(1.7143rem) saturate(160%);
+  border: 0.0714rem solid var(--border-light);
+  border-radius: 1.5rem;
+  padding: 3rem;
+  margin: auto 5vw; /* Margin auto cho phép tự động căn giữa mà không bị kẹt khi cuộn */
+  box-shadow: var(--shadow-glass);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  /* Deep CSS: Override VInput labels to white in Auth forms */
+  .v-input-wrapper {
+    .v-input-label, .v-label {
+      color: var(--white);
+    }
+  }
+}
+
+.auth-header {
+  text-align: center;
+  margin-bottom: 1.5rem; /* Giảm margin một chút để bù cho logo to ra */
+
+  .auth-logo {
+    height: 10rem; /* Phóng to logo */
+    width: auto;
+    max-width: 100%; /* Đảm bảo không bao giờ vỡ khung */
+    object-fit: contain;
+    margin: 0 auto; /* Giữ logo luôn căn giữa */
+  }
+
+  .auth-subtitle {
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    font-size: 1rem;
+  }
+}
+
+/* Responsive cho điện thoại */
+@media (max-width: 64.2857rem) {
+  .auth-layout {
+    justify-content: center;
+  }
+  
+  .auth-cover .auth-cover-content {
+    display: none; /* Ẩn text trên điện thoại cho gọn */
+  }
+  
+  .auth-panel {
+    max-width: 90%;
+    margin: 2rem auto;
+    padding: 2.5rem 1.5rem;
+  }
+}
+
+/* Theme cho Attacker Login */
+.auth-layout.attacker-theme {
+  .auth-cover {
+    filter: hue-rotate(130deg) brightness(0.55) contrast(1.15);
+  }
+
+  .auth-cover-content h1 {
+    background: linear-gradient(135deg, var(--red-500) 0%, var(--orange-500) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0.2857rem 0.8571rem var(--custom-color-74);
+  }
+
+  .auth-panel {
+    border-color: var(--custom-color-74);
+    box-shadow: 0 0.5714rem 2.2857rem 0 var(--custom-color-75);
+    
+    .auth-subtitle {
+      color: var(--red-500);
+    }
+  }
+}

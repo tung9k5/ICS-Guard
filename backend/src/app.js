@@ -41,6 +41,9 @@ import aiRoutes from './routes/aiRoutes.js';
 import settingRoutes from './routes/settingRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import simulatorRoutes from './routes/simulatorRoutes.js';
+import notificationRoutes from './routes/notification.routes.js';
+import { HTTP_STATUS } from './constants/index.js';
+
 
 const app = express();
 const server = http.createServer(app);
@@ -66,7 +69,7 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.get('/', (req, res) => {
-  res.status(200).json({
+  res.status(HTTP_STATUS.OK).json({
     name: 'ICS-Guard API',
     description: 'Industrial Control Systems Guard Security API for Critical Infrastructure Protection',
     version: '1.0.0',
@@ -89,6 +92,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/settings', settingRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/simulator', simulatorRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.use((err, req, res, next) => {
   logger.error('[Global Error]', { message: err.message, stack: err.stack });
@@ -101,7 +105,7 @@ app.use((err, req, res, next) => {
 
 const startServer = async () => {
   await connectDB();
-  
+
   import('./services/settingService.js').then(module => {
     module.default.seedDefaultSettings().catch(err => logger.error('Failed to seed settings', err));
   });
@@ -115,7 +119,7 @@ const startServer = async () => {
   } catch (err) {
     logger.warn('[Bootstrap] Queue connection warning: RabbitMQ might be starting up in Docker. Worker will try auto-reconnecting...');
   }
-  
+
   initTelegramBot();
 
   initSocket(server);

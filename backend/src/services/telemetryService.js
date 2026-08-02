@@ -8,6 +8,8 @@ import socketService from './socketService.js';
 import { DEVICE_STATUSES, ALERT_STATUSES, INCIDENT_STATUSES, INCIDENT_TIMELINE_TYPES, ATTACK_TYPES } from '../constants/index.js';
 import { writePoint } from './influxService.js';
 import AppError from '../utils/AppError.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 const INFLUX_MEASUREMENT = 'device_telemetry';
 
@@ -27,7 +29,7 @@ class TelemetryService {
 
     const device = await deviceRepository.findById(device_id);
     if (!device) {
-      throw new AppError(`Device ${device_id} not found`, 404);
+      throw new AppError(`Device ${device_id} not found`, HTTP_STATUS.NOT_FOUND);
     }
 
     device.lastSeen = new Date();
@@ -106,9 +108,9 @@ class TelemetryService {
 
       try {
         await sendTelegramAlert(
-          `🚨 *CRITICAL SECURITY INCIDENT*\n\n*Type:* Brute Force Attack\n*Device:* ${device ? device.name : device_id}\n*Source IP:* ${source_ip}\n*Target User:* ${username}\n*Incident ID:* ${newIncident._id}\n\nPlease review immediately in the ICS-Guard dashboard.`,
+          ` *CRITICAL SECURITY INCIDENT*\n\n*Type:* Brute Force Attack\n*Device:* ${device ? device.name : device_id}\n*Source IP:* ${source_ip}\n*Target User:* ${username}\n*Incident ID:* ${newIncident._id}\n\nPlease review immediately in the ICS-Guard dashboard.`,
           [
-            { text: "View Incident", url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/incidents/${newIncident._id}` },
+            { text: "View Incident", url: `${process.env.FRONTEND_ADM_URL}/incidents/${newIncident._id}` },
             { text: `Isolate ${device_id}`, callback_data: `isolate_${device_id}` }
           ]
         );
@@ -128,7 +130,7 @@ class TelemetryService {
 
   async controlAttack(deviceId, attackType) {
     const device = await deviceRepository.findById(deviceId);
-    if (!device) throw new AppError(`Device ${deviceId} not found`, 404);
+    if (!device) throw new AppError(`Device ${deviceId} not found`, HTTP_STATUS.NOT_FOUND);
 
     publishMqtt('ics/control/attack', { device_id: deviceId, attack_type: attackType });
 
@@ -143,13 +145,13 @@ class TelemetryService {
     return { success: true, message: `Attack ${attackType} sent to ${deviceId}` };
   }
 
-  async testTelegramConnection(chatId) {
-    const testMessage = "✅ Bip bop! ICS-Guard Telegram Bot connection is successful. The system is ready to send critical alerts here.";
+  async testTelegramConnection() {
+    const testMessage = "Bip bop! ICS-Guard Telegram Bot connection is successful. The system is ready to send critical alerts here.";
     try {
       await sendTelegramAlert(testMessage);
       return { success: true, message: 'Test message sent successfully' };
     } catch (error) {
-      throw new AppError('Failed to send test message: ' + error.message, 500);
+      throw new AppError('Failed to send test message: ' + error.message, HTTP_STATUS.INTERNAL_SERVER_ERROR);
     }
   }
 }

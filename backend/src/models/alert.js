@@ -2,6 +2,11 @@ import mongoose from 'mongoose';
 import { ALERT_STATUSES, SEVERITY_LEVELS } from '../constants/index.js';
 
 const alertSchema = new mongoose.Schema({
+  alert_code: {
+    type: String,
+    unique: true,
+    index: true,
+  },
   rule_name: {
     type: String,
     index: true,

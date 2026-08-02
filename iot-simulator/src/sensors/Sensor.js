@@ -42,6 +42,11 @@ export class Sensor {
     const step = (Math.random() - 0.5) * this.config.variance;
     this.currentValue += step;
 
+    // Fast recovery if scenario changed
+    if (this.currentValue < targetMin - 15 || this.currentValue > targetMax + 15) {
+      this.currentValue = (targetMin + targetMax) / 2;
+    }
+
     if (this.currentValue < targetMin) this.currentValue += Math.abs(step) * 2;
     if (this.currentValue > targetMax) this.currentValue -= Math.abs(step) * 2;
 

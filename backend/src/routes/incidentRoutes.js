@@ -6,7 +6,8 @@ import {
   updateIncident,
   deleteIncident,
   bulkDeleteIncidents,
-  triggerAiAnalysis
+  triggerAiAnalysis,
+  getAiAnalysisStatus
 } from '../controllers/incidentController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 import authorize from '../middlewares/rbacMiddleware.js';
@@ -23,12 +24,13 @@ router.use(authMiddleware);
 
 router.get('/', validatePagination, getAllIncidents);
 router.post('/', authorize(['admin', 'customer']), validateCreateIncident, auditLogger('INCIDENT_CREATE'), createIncident);
-router.post('/bulk-delete', authorize(['admin']), validateBulkIds, auditLogger('INCIDENT_BULK_DELETE'), bulkDeleteIncidents);
+router.post('/bulk-delete', authorize(['admin', 'customer']), validateBulkIds, auditLogger('INCIDENT_BULK_DELETE'), bulkDeleteIncidents);
 
 router.get('/:id', validateMongoId, getIncidentById);
 router.put('/:id', authorize(['admin', 'customer']), validateMongoId, validateUpdateIncident, auditLogger('INCIDENT_UPDATE'), updateIncident);
-router.delete('/:id', authorize(['admin',]), validateMongoId, auditLogger('INCIDENT_DELETE'), deleteIncident);
+router.delete('/:id', authorize(['admin', 'customer']), validateMongoId, auditLogger('INCIDENT_DELETE'), deleteIncident);
 
 router.post('/:id/ai-analyze', authorize(['admin']), validateMongoId, auditLogger('INCIDENT_AI_ANALYSIS'), triggerAiAnalysis);
+router.get('/:id/ai-status', validateMongoId, getAiAnalysisStatus);
 
 export default router;
