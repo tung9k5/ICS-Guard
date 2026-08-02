@@ -12,14 +12,14 @@ import { HTTP_STATUS } from '../constants/index.js';
 class AuthService {
   generateAccessToken(user) {
     return jwt.sign(
-      { 
-        id: user._id, 
-        username: user.username, 
-        role: user.role, 
-        isFirstLogin: user.isFirstLogin === undefined ? true : user.isFirstLogin 
+      {
+        id: user._id,
+        username: user.username,
+        role: user.role,
+        isFirstLogin: user.isFirstLogin === undefined ? true : user.isFirstLogin
       },
       process.env.JWT_SECRET,
-      { 
+      {
         expiresIn: process.env.ACCESS_TOKEN_EXPIRE_MINUTES ? process.env.ACCESS_TOKEN_EXPIRE_MINUTES + 'm' : AUTH_CONSTANTS.JWT_ACCESS_EXPIRY_DEFAULT,
         algorithm: process.env.JWT_ALGORITHM
       }
@@ -30,7 +30,7 @@ class AuthService {
     return jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET,
-      { 
+      {
         expiresIn: AUTH_CONSTANTS.JWT_REFRESH_EXPIRY_DEFAULT,
         algorithm: process.env.JWT_ALGORITHM
       }
@@ -39,7 +39,7 @@ class AuthService {
 
   async login(username, password, ipAddress, expectedRole) {
     const user = await userRepository.findByUsername(username);
-    
+
     if (user) {
       const now = new Date();
       if (user.login_failures && user.login_failures.lockout_until && user.login_failures.lockout_until > now) {
@@ -166,7 +166,7 @@ class AuthService {
       userRepository.findByEmailOrUsername(email),
       userRepository.findByUsername(username),
     ]);
-    
+
     if (existingUser || existingUsername) {
       throw new AppError('Username or email already exists.', HTTP_STATUS.CONFLICT);
     }
@@ -214,7 +214,7 @@ class AuthService {
     } catch (err) {
       throw new AppError('Invalid Google ID token.', HTTP_STATUS.UNAUTHORIZED);
     }
-    
+
     if (response.data.aud !== process.env.GOOGLE_CLIENT_ID) {
       throw new AppError('Invalid audience for Google ID token.', HTTP_STATUS.UNAUTHORIZED);
     }
@@ -225,7 +225,7 @@ class AuthService {
     if (!user) {
       const randomPassword = Math.random().toString(36).slice(-10);
       const password_hash = await bcrypt.hash(randomPassword, BCRYPT_SALT_ROUNDS);
-      
+
       user = await userRepository.create({
         username: email.split('@')[0] + '_' + sub.substring(0, 4),
         email,
@@ -310,7 +310,7 @@ class AuthService {
       grant_type: 'authorization_code',
     };
     const qs = new URLSearchParams(values);
-    
+
     let res;
     try {
       res = await axios.post(url, qs.toString(), {
@@ -324,7 +324,7 @@ class AuthService {
     }
 
     const { id_token, access_token } = res.data;
-    
+
     let googleUser;
     try {
       const userInfoUrl = process.env.GOOGLE_OAUTH_USERINFO_URL;
@@ -336,16 +336,16 @@ class AuthService {
       googleUser = gRes.data;
     } catch (error) {
       console.error('Google user info error', error?.response?.data || error);
-       throw new AppError('Failed to fetch user', HTTP_STATUS.UNAUTHORIZED);
+      throw new AppError('Failed to fetch user', HTTP_STATUS.UNAUTHORIZED);
     }
-    
+
     const { email, name, id: sub } = googleUser;
     let user = await userRepository.findByEmailOrUsername(email);
 
     if (!user) {
       const randomPassword = Math.random().toString(36).slice(-10);
       const password_hash = await bcrypt.hash(randomPassword, 10);
-      
+
       user = await userRepository.create({
         username: email.split('@')[0] + '_' + sub.substring(0, 4),
         email,

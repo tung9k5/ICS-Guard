@@ -86,7 +86,8 @@
       "reports": "Reports",
       "settings": "Settings",
       "logout": "Logout",
-      "logo_fullscreen": "Logo Fullscreen"
+      "logo_fullscreen": "Logo Fullscreen",
+      "documents": "Documents"
     },
     "header": {
       "hello": "Hello, {{name}}!",

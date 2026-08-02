@@ -72,7 +72,7 @@ export const sendEmailAlert = async ({ subject, text, html }) => {
   try {
     const mailTransporter = await getTransporter();
     const from = process.env.SMTP_FROM || '"ICS-Guard Alerts" <alerts@ics-guard.local>';
-    
+
     // Fetch all active Admin user emails dynamically
     let recipients = [];
     try {
@@ -98,7 +98,7 @@ export const sendEmailAlert = async ({ subject, text, html }) => {
     });
 
     console.log(`[EmailService] Email alert sent: ${info.messageId}`);
-    
+
     // If it's an Ethereal test account, print the preview URL
     const previewUrl = nodemailer.getTestMessageUrl(info);
     if (previewUrl) {

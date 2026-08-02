@@ -58,11 +58,11 @@ const Header = ({ toggleSidebar, user, onUpdateUser, onOpenProfile }) => {
             onMarkAllRead={markAllRead}
           />
         </div>
-        <div className="user-profile" onClick={onOpenProfile} style={{ cursor: 'pointer', marginLeft: '16px' }}>
+        <div className="user-profile" onClick={onOpenProfile}>
           {user?.avatar ? (
-            <img src={user.avatar} alt="Avatar" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+            <img src={user.avatar} alt="Avatar" />
           ) : (
-            <User size={16} />
+            <User size={20} />
           )}
         </div>
       </div>

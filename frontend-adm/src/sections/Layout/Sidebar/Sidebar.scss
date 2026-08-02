@@ -102,8 +102,11 @@
   .sidebar-footer {
     margin-top: auto;
     padding: 1.1429rem 0.8571rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5714rem;
 
-    .logout-btn {
+    .nav-item {
       width: 100%;
       display: flex;
       align-items: center;
@@ -118,10 +121,18 @@
       font-family: inherit;
       transition: all 0.2s ease;
       white-space: nowrap;
+      text-decoration: none;
 
       &:hover {
-        background-color: var(--danger-color-light, rgba(239, 68, 68, 0.1));
-        color: var(--danger-color, var(--red-500));
+        background-color: rgba(62, 46, 150, 0.15);
+        color: var(--slate-50);
+      }
+
+      &.logout-btn {
+        &:hover {
+          background-color: var(--danger-color-light, rgba(239, 68, 68, 0.1));
+          color: var(--danger-color, var(--red-500));
+        }
       }
     }
   }
@@ -145,14 +156,14 @@
     &.collapsed {
       width: 18.5714rem;
       
-      .sidebar-logo .logo-wrapper .logo-text, .sidebar-nav .nav-item span, .sidebar-footer .logout-btn span {
+      .sidebar-logo .logo-wrapper .logo-text, .sidebar-nav .nav-item span, .sidebar-footer .nav-item span {
         display: block;
       }
     }
   }
 
   &.collapsed {
-    .sidebar-footer .logout-btn span {
+    .sidebar-footer .nav-item span {
       display: none;
     }
   }
