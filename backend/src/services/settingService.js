@@ -42,11 +42,11 @@ class SettingService {
         // Also update description and isSystem which updateByKey doesn't handle in upsert easily if we just pass value.
         // Let's use the Mongoose model directly for seeder to be safe.
         import('../models/index.js').then(({ Setting }) => {
-           Setting.findOneAndUpdate(
-             { key: setting.key },
-             { $set: setting },
-             { upsert: true }
-           ).exec();
+          Setting.findOneAndUpdate(
+            { key: setting.key },
+            { $set: setting },
+            { upsert: true }
+          ).exec();
         });
       }
     }

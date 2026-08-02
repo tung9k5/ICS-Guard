@@ -74,7 +74,9 @@
       color: var(--slate-50);
       position: relative;
       cursor: pointer;
-      padding: 0.5714rem;
+      width: 2.3857rem;
+      height: 2.3857rem;
+      padding: 0;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -104,49 +106,28 @@
     }
 
     .user-profile {
+      background-color: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: var(--slate-50);
+      cursor: pointer;
+      width: 2.3857rem;
+      height: 2.3857rem;
+      padding: 0;
+      border-radius: 50%;
       display: flex;
       align-items: center;
-      gap: 0.8571rem;
-      color: var(--slate-400);
-      cursor: pointer;
-      border-radius: 0.5714rem;
+      justify-content: center;
       transition: background-color 0.2s;
-      border: 0.1429rem solid rgba(255, 255, 255, 0.05);
-      border-radius: 50%;
 
       &:hover {
-        background-color: rgba(255, 255, 255, 0.05);
+        background-color: rgba(255, 255, 255, 0.2);
       }
 
-      .avatar {
-        width: 2.2857rem;
-        height: 2.2857rem;
-        background-color: rgba(255, 255, 255, 0.1);
+      img {
+        width: 100%;
+        height: 100%;
         border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--slate-50);
-      }
-      
-      .user-info {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-
-        .user-name {
-          font-size: 1rem;
-          font-weight: 500;
-          color: var(--slate-50);
-          line-height: 1.2;
-        }
-
-        .user-role {
-          font-size: 0.7857rem;
-          font-weight: 400;
-          color: var(--slate-400);
-          text-transform: capitalize;
-        }
+        object-fit: cover;
       }
     }
   }

@@ -105,7 +105,7 @@ app.use((err, req, res, next) => {
 
 const startServer = async () => {
   await connectDB();
-  
+
   import('./services/settingService.js').then(module => {
     module.default.seedDefaultSettings().catch(err => logger.error('Failed to seed settings', err));
   });
@@ -119,7 +119,7 @@ const startServer = async () => {
   } catch (err) {
     logger.warn('[Bootstrap] Queue connection warning: RabbitMQ might be starting up in Docker. Worker will try auto-reconnecting...');
   }
-  
+
   initTelegramBot();
 
   initSocket(server);

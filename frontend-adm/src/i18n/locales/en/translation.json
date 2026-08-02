@@ -49,7 +49,8 @@
       "reports": "Reports",
       "settings": "Settings",
       "logout": "Logout",
-      "logo_fullscreen": "Logo Fullscreen"
+      "logo_fullscreen": "Logo Fullscreen",
+      "documents": "Documents"
     },
     "header": {
       "hello": "Hello, {{name}}!",
@@ -784,7 +785,7 @@
     "title": "System Logs",
     "markAllAsRead": "Mark all as read",
     "noNewNotifications": "No new notifications",
-    "viewAll": "View All Activity",
+    "viewAll": "VIEW ALL",
     "timeAgo": {
       "seconds": "{{count}}s ago",
       "minutes": "{{count}}m ago",

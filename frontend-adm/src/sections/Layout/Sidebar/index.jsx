@@ -160,6 +160,15 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, collapsed, setCollapsed }) =
         </nav>
 
         <div className="sidebar-footer">
+          <a
+            href="/docs/ICS-Guard-Tai-Lieu-He-Thong.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-item"
+          >
+            <FileText size={20} />
+            <span>{t('layout.sidebar.documents', 'Tài liệu')}</span>
+          </a>
           <button className="nav-item logout-btn" onClick={handleLogout}>
             <LogOut size={20} />
             <span>{t('layout.sidebar.logout')}</span>

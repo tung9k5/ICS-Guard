@@ -72,15 +72,11 @@ const CustomerHeader = ({ toggleSidebar, user, onOpenProfile }) => {
             onMarkAllRead={markAllRead}
           />
         </div>
-        <div className="user-profile" onClick={onOpenProfile} style={{ cursor: 'pointer' }}>
+        <div className="user-profile" onClick={onOpenProfile}>
           {user?.avatar ? (
-            <img
-              src={user.avatar}
-              alt={t('layout.header.avatar', 'Avatar')}
-              style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }}
-            />
+            <img src={user.avatar} alt={t('layout.header.avatar', 'Avatar')} />
           ) : (
-            <User size={16} />
+            <User size={20} />
           )}
         </div>
       </div>

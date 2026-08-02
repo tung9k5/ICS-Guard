@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Server, Bell, ShieldAlert, User, LogOut, X, ChevronDown, ChevronUp,
+  LayoutDashboard, Server, Bell, ShieldAlert, User, LogOut, X, ChevronDown, ChevronUp, FileText
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import authApi from '@/api/auth';
@@ -95,6 +95,15 @@ const CustomerSidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
         </nav>
 
         <div className="sidebar-footer">
+          <a
+            href="/docs/ICS-Guard_Huong-dan.pdf"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="nav-item"
+          >
+            <FileText size={20} />
+            <span>{t('layout.sidebar.documents', 'Tài liệu')}</span>
+          </a>
           <button className="nav-item logout-btn" onClick={handleLogout}>
             <LogOut size={20} />
             <span>{t('layout.sidebar.logout', 'Đăng xuất')}</span>

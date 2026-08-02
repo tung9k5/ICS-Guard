@@ -50,7 +50,8 @@
       "settings": "Cài đặt",
       "logout": "Đăng xuất",
       "coming_soon": "Sắp diễn ra",
-      "logo_fullscreen": "Logo toàn màn hình"
+      "logo_fullscreen": "Logo toàn màn hình",
+      "documents": "Tài liệu"
     },
     "header": {
       "hello": "Xin chào, {{name}}!",
@@ -788,7 +789,7 @@
     "title": "Nhật ký hệ thống",
     "markAllAsRead": "Đánh dấu tất cả đã đọc",
     "noNewNotifications": "Không có thông báo mới",
-    "viewAll": "Xem tất cả hoạt động",
+    "viewAll": "XEM TẤT CẢ",
     "timeAgo": {
       "seconds": "{{count}}s trước",
       "minutes": "{{count}} phút trước",
