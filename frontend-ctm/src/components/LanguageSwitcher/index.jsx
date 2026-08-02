@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { APP_CONFIG } from '@/constants/common';
 
 const LanguageSwitcher = () => {
   const { i18n } = useTranslation();
@@ -7,7 +8,7 @@ const LanguageSwitcher = () => {
 
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng);
-    localStorage.setItem('language', lng);
+    localStorage.setItem(APP_CONFIG.LANGUAGE_KEY, lng);
     setIsOpen(false);
   };
 
@@ -26,7 +27,7 @@ const LanguageSwitcher = () => {
       </div>
       
       {isOpen && (
-        <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '0.2857rem', backgroundColor: 'var(--bg-primary, var(--white-short))', border: '0.0714rem solid var(--border-light, var(--gray-light))', borderRadius: '0.2857rem', boxShadow: '0 0.1429rem 0.5714rem rgba(0,0,0,0.1)', zIndex: 100, minWidth: '8.9286rem' }}>
+        <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: '0.2857rem', backgroundColor: 'var(--bg-primary, var(--white-short))', border: '0.0714rem solid var(--border-light, var(--gray-light))', borderRadius: '0.2857rem', boxShadow: '0 0.1429rem 0.5714rem var(--custom-color-31)', zIndex: 100, minWidth: '8.9286rem' }}>
           <div 
             onClick={() => changeLanguage('vi')}
             style={{ display: 'flex', alignItems: 'center', padding: '0.5714rem 0.8571rem', cursor: 'pointer', backgroundColor: currentLang.code === 'vi' ? 'var(--bg-secondary, var(--apple-gray-1))' : 'transparent' }}

@@ -8,8 +8,6 @@ import { formatDate } from '@/utils/formatDate';
 import {
   AI_STATUS,
   INCIDENT_STATUS,
-  getIncidentSeverityStyle,
-  getIncidentStatusLabel,
   getAiStatusLabel,
   getAiResult
 } from '@/constants/incidentConstants';
@@ -286,18 +284,14 @@ const IncidentDetailModal = ({ incident: incidentData, onClose, onAiAnalyze, onR
               <div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--slate-500)', fontWeight: 600, marginBottom: '0.375rem' }}>{t('incidents.col_severity', 'Mức độ ảnh hưởng')}</div>
                 <VStatus
-                  label={t(`severity.${incident.severity?.toLowerCase()}`, incident.severity)}
-                  style={getIncidentSeverityStyle(incident.severity)}
+                  status={incident.severity} type="severity"
                   className="uppercase badge-outline"
                 />
               </div>
 
               <div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--slate-500)', fontWeight: 600, marginBottom: '0.375rem' }}>{t('incidents.col_status', 'Trạng thái xử lý')}</div>
-                <VStatus
-                  label={getIncidentStatusLabel(incident.status, t)}
-                  status={incident.status === INCIDENT_STATUS.OPEN ? 'inactive' : incident.status === INCIDENT_STATUS.CLOSED ? 'active' : 'default'}
-                />
+                <VStatus status={incident.status} type="status" />
               </div>
 
               <div>
@@ -349,7 +343,7 @@ const IncidentDetailModal = ({ incident: incidentData, onClose, onAiAnalyze, onR
                     <div style={{ fontSize: '0.8rem', color: 'var(--slate-500)' }}>{alert.rule_name} • {alert.device_id}</div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <VStatus label={alert.severity} style={getIncidentSeverityStyle(alert.severity)} className="badge-outline" />
+                    <VStatus status={alert.severity} type="severity" className="badge-outline" />
                     <div style={{ fontSize: '0.75rem', color: 'var(--slate-500)', marginTop: '0.25rem' }}>{formatDate(alert.detected_at)}</div>
                   </div>
                 </div>

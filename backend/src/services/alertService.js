@@ -4,6 +4,8 @@ import deviceRepository from '../repositories/deviceRepository.js';
 import AppError from '../utils/AppError.js';
 import { ROLES, ALERT_STATUSES, AUDIT_STATUSES, AUDIT_ACTIONS } from '../constants/index.js';
 import { parsePagination, buildSortOption } from '../utils/pagination.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 class AlertService {
   async getAll(queryParams, user) {
@@ -104,7 +106,7 @@ class AlertService {
 
   async getById(id) {
     const alert = await alertRepository.findById(id);
-    if (!alert) throw new AppError('Alert not found', 404);
+    if (!alert) throw new AppError('Alert not found', HTTP_STATUS.NOT_FOUND);
 
     const history = await alertRepository.findAll(
       { device_id: alert.device_id?._id || alert.device_id, rule_name: alert.rule_name },
@@ -117,7 +119,7 @@ class AlertService {
 
   async updateStatus(id, status, user) {
     const alert = await alertRepository.findById(id);
-    if (!alert) throw new AppError('Alert not found', 404);
+    if (!alert) throw new AppError('Alert not found', HTTP_STATUS.NOT_FOUND);
 
     const updateData = { status };
     if ([ALERT_STATUSES.RESOLVED, ALERT_STATUSES.FALSE_POSITIVE].includes(status)) {
@@ -143,13 +145,13 @@ class AlertService {
 
   async remove(id, user) {
     const alert = await alertRepository.findById(id);
-    if (!alert) throw new AppError('Alert not found', 404);
+    if (!alert) throw new AppError('Alert not found', HTTP_STATUS.NOT_FOUND);
 
     if (user && user.role?.toLowerCase() !== ROLES.ADMIN) {
       const userDevices = await deviceRepository.findAll({ userId: user.id }, {}, 0, 10000, '_id');
       const userDeviceIds = userDevices.map(d => d._id.toString());
       if (alert.device_id && !userDeviceIds.includes(alert.device_id._id?.toString() || alert.device_id.toString())) {
-        throw new AppError('Forbidden: You can only delete alerts associated with your devices', 403);
+        throw new AppError('Forbidden: You can only delete alerts associated with your devices', HTTP_STATUS.FORBIDDEN);
       }
     }
 
@@ -169,7 +171,7 @@ class AlertService {
       
       const invalidAlerts = alerts.filter(alert => alert.device_id && !userDeviceIds.includes(alert.device_id._id?.toString() || alert.device_id.toString()));
       if (invalidAlerts.length > 0) {
-        throw new AppError('Forbidden: Some alerts do not belong to your devices', 403);
+        throw new AppError('Forbidden: Some alerts do not belong to your devices', HTTP_STATUS.FORBIDDEN);
       }
     }
 
@@ -183,6 +185,47 @@ class AlertService {
     } else {
       return alertRepository.deleteMany(ids);
     }
+  }
+
+  async generateFakeAlerts(count, user) {
+    let query = {};
+    if (user && user.role?.toLowerCase() !== ROLES.ADMIN) {
+      query.userId = user.id;
+    }
+    const devices = await deviceRepository.findAll(query, {}, 0, 10000);
+    
+    const deviceList = devices.length > 0 ? devices : [{ _id: 'dummy_device_1', name: 'Dummy Device' }];
+
+    const alerts = [];
+    const statuses = Object.values(ALERT_STATUSES);
+    const severities = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']; // Assuming SEVERITY_LEVELS isn't imported here
+
+    for (let i = 0; i < count; i++) {
+      const device = deviceList[Math.floor(Math.random() * deviceList.length)];
+      const status = statuses[Math.floor(Math.random() * statuses.length)];
+      const severity = severities[Math.floor(Math.random() * severities.length)];
+      
+      const detected_at = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000); // within last 30 days
+      let resolved_at = null;
+      
+      if (status === ALERT_STATUSES.RESOLVED || status === ALERT_STATUSES.FALSE_POSITIVE) {
+        resolved_at = new Date(detected_at.getTime() + Math.random() * 7 * 24 * 60 * 60 * 1000);
+      }
+
+      alerts.push({
+        rule_name: `Rule-${Math.floor(Math.random() * 10)}`,
+        device_id: device._id,
+        title: `Generated Alert ${i + 1}`,
+        description: `This is a generated alert for device ${device.name || 'Unknown'}.`,
+        severity,
+        status,
+        detected_at,
+        resolved_at,
+        resolved_by: resolved_at ? 'system' : null,
+      });
+    }
+
+    await alertRepository.insertMany(alerts);
   }
 }
 

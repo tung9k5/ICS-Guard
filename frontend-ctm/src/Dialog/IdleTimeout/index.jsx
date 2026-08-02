@@ -135,10 +135,10 @@ const IdleTimeout = () => {
     } catch (e) {
       console.error('Logout error', e);
     } finally {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('attacker_access_token');
-      localStorage.removeItem('attacker_refresh_token');
+      localStorage.removeItem(AUTH_KEYS.ACCESS_TOKEN);
+      localStorage.removeItem(AUTH_KEYS.REFRESH_TOKEN);
+      localStorage.removeItem(AUTH_KEYS.ATTACKER_ACCESS_TOKEN);
+      localStorage.removeItem(AUTH_KEYS.ATTACKER_REFRESH_TOKEN);
       dispatch(logoutAction());
       navigate('/login', { replace: true });
     }

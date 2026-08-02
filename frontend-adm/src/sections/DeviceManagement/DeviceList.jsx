@@ -4,8 +4,7 @@ import ActionMenu from '@/components/ActionMenu';
 import VNoData from '@/components/VNoData';
 import VStatus from '@/components/VStatus';
 import VCheckbox from '@/components/VCheckbox';
-import { getDeviceTypeLabel, getDeviceTypeStyle } from '@/constants/deviceConstants';
-import { getScenarioProps } from '@/utils/statusMapper';
+import { getScenarioConfig } from '@/utils/statusMapper';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/utils/formatDate';
 import { useExpandable } from '@/hooks/useExpandable';
@@ -91,20 +90,16 @@ const DeviceList = ({
                   </td>
                   <td style={{ textAlign: 'center' }}>
                     <VStatus 
-                      label={getDeviceTypeLabel(device.type) || 'N/A'}
-                      style={getDeviceTypeStyle(device.type)}
+                      status={device.type} type="device_type"
                       className="badge-outline"
                     />
                   </td>
 
                   <td style={{ textAlign: 'center' }}>
-                    <VStatus 
-                      status={device.status} 
-                      label={device.status === 'active' ? t('assets.filter_status_active') : t('assets.filter_status_inactive')} 
-                    />
+                    <VStatus status={device.status} type="status" />
                   </td>
                   <td style={{ textAlign: 'center' }}>
-                    <VStatus {...getScenarioProps(device.current_scenario, t)} />
+                    <VStatus status={device.current_scenario} type="simulator" />
                   </td>
                   <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(device.createdAt)}</td>
                   <td className="actions-col" style={{ textAlign: 'center' }}>
@@ -172,8 +167,7 @@ const DeviceList = ({
                     <span className="detail-label">{t('assets.form.label_type')}</span>
                     <span className="detail-value">
                       <VStatus 
-                        label={getDeviceTypeLabel(device.type) || 'N/A'}
-                        style={getDeviceTypeStyle(device.type)}
+                        status={device.type} type="device_type"
                         className="badge-outline"
                       />
                     </span>
@@ -188,16 +182,13 @@ const DeviceList = ({
                   <div className="detail-row">
                     <span className="detail-label">{t('assets.list.table_status')}</span>
                     <span className="detail-value">
-                      <VStatus 
-                        status={device.status} 
-                        label={device.status === 'active' ? t('assets.filter_status_active') : t('assets.filter_status_inactive')} 
-                      />
+                      <VStatus status={device.status} type="status" />
                     </span>
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">{t('customer.alerts.col_simulation', 'Mô phỏng')}</span>
                     <span className="detail-value">
-                      <VStatus {...getScenarioProps(device.current_scenario, t)} />
+                      <VStatus status={device.current_scenario} type="simulator" />
                     </span>
                   </div>
                   <div className="detail-row">

@@ -16,15 +16,16 @@ class DashboardService {
     const totalDevices = await deviceRepository.countAll(deviceQuery);
 
     let alertMatch = {};
-    let userDeviceIds = [];
     if (isCustomer) {
       const userDevices = await deviceRepository.findAll(deviceQuery, {}, 0, 10000, '_id');
-      userDeviceIds = userDevices.map(d => d._id.toString());
+      const userDeviceIds = userDevices.map(d => d._id.toString());
       alertMatch = { device_id: { $in: userDeviceIds } };
     }
 
     const groupedAlertsRes = await alertRepository.aggregate([
       { $match: alertMatch },
+      { $lookup: { from: 'devices', localField: 'device_id', foreignField: '_id', as: 'device' } },
+      { $match: { 'device.0': { $exists: true } } },
       { $group: { _id: { device_id: '$device_id', rule_name: '$rule_name' } } },
       { $count: 'total' }
     ]);
@@ -32,6 +33,8 @@ class DashboardService {
 
     const activeGroupedAlertsRes = await alertRepository.aggregate([
       { $match: { ...alertMatch, status: { $in: ['new', 'acknowledged'] } } },
+      { $lookup: { from: 'devices', localField: 'device_id', foreignField: '_id', as: 'device' } },
+      { $match: { 'device.0': { $exists: true } } },
       { $group: { _id: { device_id: '$device_id', rule_name: '$rule_name' } } },
       { $count: 'total' }
     ]);
@@ -54,6 +57,9 @@ class DashboardService {
     }
     const groupedIncidentsRes = await incidentRepository.aggregate([
       { $match: incidentMatch },
+      { $lookup: { from: 'alerts', localField: 'alert_ids', foreignField: '_id', as: 'alerts' } },
+      { $lookup: { from: 'devices', localField: 'alerts.device_id', foreignField: '_id', as: 'devices' } },
+      { $match: { 'devices.0': { $exists: true } } },
       { $group: { _id: { title: '$title' } } },
       { $count: 'total' }
     ]);
@@ -74,7 +80,6 @@ class DashboardService {
       query.userId = user._id;
     }
 
-    const totalDevices = await deviceRepository.countAll(query);
     const activeDevices = await deviceRepository.countAll({ ...query, status: 'active' });
     const isolatedDevices = await deviceRepository.countAll({ ...query, status: 'isolated' });
     const offlineDevices = await deviceRepository.countAll({ ...query, status: 'offline' });

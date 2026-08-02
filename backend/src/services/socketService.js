@@ -1,6 +1,5 @@
 import { Server } from 'socket.io';
 import { socketCorsOptions } from '../config/cors.js';
-import notificationService from './notification.service.js';
 
 let io = null;
 

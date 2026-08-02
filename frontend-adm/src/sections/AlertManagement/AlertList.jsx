@@ -8,7 +8,6 @@ import VStatus from '@/components/VStatus';
 import { ALERT_SEVERITIES, ALERT_STATUSES } from '@/constants/alertConstants';
 import { formatDate } from '@/utils/formatDate';
 import { useExpandable } from '@/hooks/useExpandable';
-import { getSeverityVariant } from '@/utils/statusHelpers';
 
 const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, onSelectAll, onViewDetail }) => {
   const { t } = useTranslation();
@@ -17,28 +16,6 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
   if (!alerts || alerts.length === 0) {
     return <VNoData message={t('alerts.no_data', 'Không có cảnh báo nào')} />;
   }
-
-  const getSeverityLabel = (val) => {
-    const sev = ALERT_SEVERITIES.find(s => s.value === val);
-    return sev ? sev.label : val;
-  };
-
-  const getStatusLabel = (val) => {
-    const stat = ALERT_STATUSES.find(s => s.value === val);
-    return stat ? stat.label : val;
-  };
-
-
-
-  const getStatusVariant = (status) => {
-    switch (status) {
-      case 'new': return 'danger';
-      case 'acknowledged': return 'warning';
-      case 'resolved': return 'success';
-      case 'false_positive': return 'neutral';
-      default: return 'neutral';
-    }
-  };
 
   const allSelected = alerts.length > 0 && selectedIds.length === alerts.length;
 
@@ -102,10 +79,10 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
                   </td>
                   <td>{alert.rule_name || '-'}</td>
                   <td>
-                    <VStatus status={getSeverityVariant(alert.severity)} label={getSeverityLabel(alert.severity)} showDot />
+                    <VStatus status={alert.severity} type="severity" showDot />
                   </td>
                   <td>
-                    <VStatus status={getStatusVariant(alert.status)} label={getStatusLabel(alert.status)} showDot />
+                    <VStatus status={alert.status} type="status" showDot />
                   </td>
                   <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{formatDate(alert.detected_at)}</td>
                   <td style={{ whiteSpace: 'nowrap', fontSize: '0.9286rem' }}>{alert.resolved_at ? formatDate(alert.resolved_at) : '-'}</td>
@@ -165,7 +142,7 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
                   <div className="detail-row">
                     <span className="detail-label">{t('alerts.list_table.table_severity', 'Mức độ')}</span>
                     <span className="detail-value">
-                      <VStatus status={getSeverityVariant(alert.severity)} label={getSeverityLabel(alert.severity)} showDot />
+                      <VStatus status={alert.severity} type="severity" showDot />
                     </span>
                     <div className="card-action-menu">
                       <ActionMenu actions={getActions(alert)} direction="down" />
@@ -174,7 +151,7 @@ const AlertList = ({ alerts, onUpdateStatus, onDelete, selectedIds, onSelect, on
                   <div className="detail-row">
                     <span className="detail-label">{t('alerts.list_table.table_status', 'Trạng thái')}</span>
                     <span className="detail-value">
-                      <VStatus status={getStatusVariant(alert.status)} label={getStatusLabel(alert.status)} showDot />
+                      <VStatus status={alert.status} type="status" showDot />
                     </span>
                   </div>
                   <div className="detail-row">

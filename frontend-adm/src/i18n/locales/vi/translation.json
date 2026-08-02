@@ -41,7 +41,7 @@
     "sidebar": {
       "overview": "Tổng quan",
       "topology": "Sơ đồ mạng",
-      "alerts": "Cảnh báo an ninh",
+      "alerts": "Sự cố an ninh",
       "assets": "Quản lý thiết bị",
       "users": "Quản lý người dùng",
       "audit": "Nhật ký hệ thống",
@@ -245,7 +245,7 @@
     "subtitle": "Giám sát thời gian thực và thông tin tình báo mối đe dọa",
     "statistics_title": "Thống kê tổng quan",
     "network_traffic": "Lưu lượng mạng",
-    "threat_activity": "Mức độ cảnh báo an ninh",
+    "threat_activity": "Mức độ sự cố an ninh",
     "system_health": "Trạng thái hệ thống",
     "days": {
       "mon": "T2",
@@ -285,7 +285,30 @@
     "go_back": "Quay lại",
     "go_home": "Về trang chủ",
     "title_under_construction": "Tính năng đang phát triển",
-    "under_construction": "Tính năng này hiện chưa hoàn thiện và đang trong quá trình phát triển. Vui lòng quay lại sau."
+    "under_construction": "Tính năng này hiện chưa hoàn thiện và đang trong quá trình phát triển. Vui lòng quay lại sau.",
+    "active": "Hoạt động",
+    "inactive": "Vô hiệu hóa",
+    "success": "Thành công",
+    "error": "Lỗi",
+    "pending": "Đang chờ",
+    "warning": "Cảnh báo",
+    "online": "Trực tuyến",
+    "offline": "Ngoại tuyến",
+    "new": "Mới",
+    "acknowledged": "Đã tiếp nhận",
+    "resolved": "Đã giải quyết",
+    "false_positive": "Báo động giả",
+    "open": "Mở",
+    "investigating": "Đang điều tra",
+    "investigated": "Đã điều tra",
+    "remediated": "Đã khắc phục",
+    "closed": "Đóng",
+    "idle": "Chưa phân tích",
+    "processing": "Đang phân tích",
+    "completed": "Hoàn tất",
+    "failed": "Thất bại",
+    "blocked": "Bị chặn",
+    "unknown": "Không xác định"
   },
   "profile": {
     "title": "Hồ sơ của bạn",
@@ -752,7 +775,14 @@
       "high": "Cao (High)",
       "critical": "Nghiêm trọng (Critical)"
     },
-    "severity_label": "Mức độ (Severity)"
+    "severity_label": "Mức độ (Severity)",
+    "scenario_normal": "Bình thường",
+    "scenario_fire": "Hỏa hoạn",
+    "scenario_flood": "Ngập lụt",
+    "scenario_traffic_spike": "Tăng đột biến truy cập",
+    "scenario_overheat": "Quá nhiệt",
+    "scenario_offline": "Mất kết nối",
+    "scenario_abnormal": "Bất thường"
   },
   "notifications": {
     "title": "Nhật ký hệ thống",
@@ -765,5 +795,39 @@
       "hours": "{{count}} giờ trước",
       "days": "{{count}} ngày trước"
     }
+  },
+  "severity": {
+    "critical": "Nghiêm trọng",
+    "high": "Cao",
+    "medium": "Trung bình",
+    "low": "Thấp",
+    "info": "Thông tin",
+    "unknown": "Không xác định"
+  },
+  "priority": {
+    "p1": "P1 - Rất cao",
+    "p2": "P2 - Cao",
+    "p3": "P3 - Trung bình",
+    "high": "Cao",
+    "medium": "Trung bình",
+    "low": "Thấp",
+    "unknown": "Không xác định"
+  },
+  "device_type": {
+    "PLC": "Bộ điều khiển PLC",
+    "SENSOR": "Cảm biến",
+    "ACTUATOR": "Thiết bị chấp hành",
+    "GATEWAY": "Gateway",
+    "HMI": "Màn hình HMI",
+    "CAMERA": "Camera",
+    "CONTROLLER": "Controller",
+    "OTHER": "Thiết bị khác"
+  },
+  "role": {
+    "admin": "Quản trị viên",
+    "manager": "Quản lý",
+    "analyst": "Chuyên viên phân tích",
+    "viewer": "Người xem",
+    "unknown": "Không xác định"
   }
 }

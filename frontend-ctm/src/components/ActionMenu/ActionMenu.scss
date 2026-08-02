@@ -28,7 +28,7 @@
     background: var(--white);
     border: 0.0714rem solid var(--slate-200);
     border-radius: 0.5714rem;
-    box-shadow: 0 0.7143rem 1.0714rem -0.2143rem rgba(0, 0, 0, 0.1), 0 0.2857rem 0.4286rem -0.1429rem rgba(0, 0, 0, 0.05);
+    box-shadow: 0 0.7143rem 1.0714rem -0.2143rem var(--custom-color-31), 0 0.2857rem 0.4286rem -0.1429rem var(--custom-color-32);
     min-width: 11.4286rem;
     padding: 0.5714rem 0;
     z-index: 50;

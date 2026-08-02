@@ -6,7 +6,7 @@
   height: 37.1429rem;
   background-color: var(--bg-secondary, var(--white));
   border-radius: 0.8571rem;
-  box-shadow: 0 0.5714rem 2.1429rem rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0.5714rem 2.1429rem var(--custom-color-33);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -94,7 +94,7 @@
         transition: background-color 0.2s;
         
         &:hover {
-          background-color: rgba(255, 255, 255, 0.2);
+          background-color: var(--custom-color-34);
         }
       }
     }
@@ -195,7 +195,7 @@
         color: var(--chat-blue); /* Force dark text for visibility on white bubble */
         font-size: 1rem;
         line-height: 1.5;
-        box-shadow: 0 0.1429rem 0.3571rem rgba(0,0,0,0.1);
+        box-shadow: 0 0.1429rem 0.3571rem var(--custom-color-31);
         overflow-wrap: break-word;
         word-break: normal;
         white-space: pre-wrap;
@@ -213,7 +213,7 @@
           background: var(--white);
           padding: 0.1429rem 0.4286rem;
           border-radius: 0.8571rem;
-          box-shadow: 0 0.0714rem 0.2143rem rgba(0,0,0,0.15);
+          box-shadow: 0 0.0714rem 0.2143rem var(--custom-color-33);
           border: 0.0714rem solid var(--slate-100);
           z-index: 5;
           white-space: nowrap;
@@ -234,7 +234,7 @@
         align-items: center;
         gap: 0.5714rem;
         font-size: 0.7857rem;
-        color: rgba(255, 255, 255, 0.7);
+        color: var(--custom-color-35);
         padding: 0 0.2857rem;
         white-space: nowrap;
         
@@ -251,7 +251,7 @@
           transition: all 0.2s;
           
           &:hover {
-            background-color: rgba(255,255,255,0.15);
+            background-color: var(--custom-color-36);
             color: $white-short;
           }
         }
@@ -261,7 +261,7 @@
     .expiration-notice {
       text-align: center;
       font-size: 0.8571rem;
-      color: rgba(255, 255, 255, 0.75);
+      color: var(--custom-color-37);
       margin-top: 0.5714rem;
       margin-bottom: 0.5714rem;
       display: flex;
@@ -347,13 +347,13 @@
         transition: all 0.2s;
         
         &:hover {
-          background-color: rgba(59, 130, 246, 0.1);
+          background-color: var(--custom-color-38);
         }
         
         &.send-btn {
           color: var(--primary-color, var(--blue-500));
           &:hover {
-            background-color: rgba(59, 130, 246, 0.15);
+            background-color: var(--custom-color-39);
             transform: scale(1.05);
           }
         }

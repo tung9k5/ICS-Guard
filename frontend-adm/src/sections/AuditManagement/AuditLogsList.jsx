@@ -229,7 +229,7 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                     </td>
                     <td>
                       <div className="truncate-text" style={{ display: 'block', width: '100%' }} title={log.action}>
-                        <VStatus status={getActionVariant(log.action)} label={log.action} />
+                        <VStatus status={getActionVariant(log.action)} type="status" label={log.action} />
                       </div>
                     </td>
                     <td className="time-col">
@@ -302,7 +302,7 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                       <div className="detail-row">
                         <span className="detail-label">{t('audit.logs.table_action')}</span>
                         <span className="detail-value">
-                          <VStatus status={getActionVariant(log.action)} label={log.action} />
+                          <VStatus status={getActionVariant(log.action)} type="status" label={log.action} />
                         </span>
                         <div className="card-action-menu" style={{ marginLeft: '0.8571rem' }}>
                           <ActionMenu

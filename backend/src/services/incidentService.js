@@ -1,4 +1,3 @@
-import axios from 'axios';
 import incidentRepository from '../repositories/incidentRepository.js';
 import incidentTimelineRepository from '../repositories/incidentTimelineRepository.js';
 import deviceRepository from '../repositories/deviceRepository.js';
@@ -8,6 +7,8 @@ import AppError from '../utils/AppError.js';
 import { ROLES, INCIDENT_STATUSES, SEVERITY_LEVELS, INCIDENT_TIMELINE_TYPES } from '../constants/index.js';
 import { analyzeIncident } from '../../../ai-services/index.js';
 import { parsePagination, buildSortOption } from '../utils/pagination.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 class IncidentService {
   async getAll(queryParams, user) {
@@ -89,7 +90,7 @@ class IncidentService {
 
   async getById(id) {
     const incident = await incidentRepository.findById(id);
-    if (!incident) throw new AppError('Incident not found', 404);
+    if (!incident) throw new AppError('Incident not found', HTTP_STATUS.NOT_FOUND);
 
     const timeline = await incidentTimelineRepository.findByIncidentId(id);
 
@@ -146,7 +147,7 @@ class IncidentService {
 
   async update(id, data) {
     const incident = await incidentRepository.findById(id);
-    if (!incident) throw new AppError('Incident not found', 404);
+    if (!incident) throw new AppError('Incident not found', HTTP_STATUS.NOT_FOUND);
 
     const updateData = {};
     if (data.status !== undefined) updateData.status = data.status;
@@ -182,7 +183,7 @@ class IncidentService {
 
   async remove(id, user) {
     const incident = await incidentRepository.findById(id);
-    if (!incident) throw new AppError('Incident not found', 404);
+    if (!incident) throw new AppError('Incident not found', HTTP_STATUS.NOT_FOUND);
 
     if (user && user.role?.toLowerCase() !== ROLES.ADMIN) {
       const userDevices = await deviceRepository.findAll({ userId: user.id }, {}, 0, 10000, '_id');
@@ -194,7 +195,7 @@ class IncidentService {
       const hasUserAlerts = incident.alert_ids && incident.alert_ids.some(alertId => userAlertIds.includes(alertId.toString()));
       
       if (!isAssignedToUser && !hasUserAlerts) {
-        throw new AppError('Forbidden: You can only delete incidents associated with your devices or assigned to you', 403);
+        throw new AppError('Forbidden: You can only delete incidents associated with your devices or assigned to you', HTTP_STATUS.FORBIDDEN);
       }
     }
 
@@ -217,7 +218,7 @@ class IncidentService {
       });
 
       if (invalidIncidents.length > 0) {
-        throw new AppError('Forbidden: Some incidents do not belong to you', 403);
+        throw new AppError('Forbidden: Some incidents do not belong to you', HTTP_STATUS.FORBIDDEN);
       }
     }
 

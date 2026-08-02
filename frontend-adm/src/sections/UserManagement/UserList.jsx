@@ -93,8 +93,7 @@ const UserList = ({
                     />
                   </td>
                   <td>
-                    <VStatus 
-                      status={user.is_active ? 'active' : 'inactive'} 
+                    <VStatus status={user.is_active ? 'active' : 'inactive'} type="status" 
                       label={user.is_active ? t('users.list.status_active') : t('users.list.status_inactive')} 
                     />
                   </td>
@@ -177,8 +176,7 @@ const UserList = ({
                   <div className="detail-row">
                     <span className="detail-label">{t('users.list.table_status')}</span>
                     <span className="detail-value">
-                      <VStatus 
-                        status={user.is_active ? 'active' : 'inactive'} 
+                      <VStatus status={user.is_active ? 'active' : 'inactive'} type="status" 
                         label={user.is_active ? t('users.list.status_active') : t('users.list.status_inactive')} 
                       />
                     </span>

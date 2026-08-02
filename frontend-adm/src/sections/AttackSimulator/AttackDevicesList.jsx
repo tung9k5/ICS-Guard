@@ -86,8 +86,7 @@ const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChang
                     </td>
                     <td style={{ whiteSpace: 'nowrap' }}>{device.ipAddress || '-'}</td>
                     <td>
-                      <VStatus 
-                        status={device.status} 
+                      <VStatus status={device.status} type="status" 
                         label={device.status === 'active' ? t('assets.filter_status_active') : t('assets.filter_status_inactive')} 
                         showDot 
                       />
@@ -171,8 +170,7 @@ const AttackDevicesList = ({ devices, loading, page, perPage, total, onPageChang
                       <div className="detail-row">
                         <span className="detail-label">{t('attack.list.table_status')}</span>
                         <span className="detail-value">
-                          <VStatus 
-                            status={device.status} 
+                          <VStatus status={device.status} type="status" 
                             label={device.status === 'active' ? t('assets.filter_status_active') : t('assets.filter_status_inactive')} 
                             showDot 
                           />

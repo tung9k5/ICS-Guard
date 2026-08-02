@@ -10,6 +10,8 @@ import AppError from '../utils/AppError.js';
 import socketService from './socketService.js';
 import { parsePagination, buildSortOption } from '../utils/pagination.js';
 import idGeneratorService from './idGeneratorService.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 const DEVICE_PROJECTION = '_id name type zone ipAddress ip_address macAddress mac_address description status location manufacturer serial_number uptime battery_level tags configuration current_scenario scenario_start_time createdAt updatedAt';
 
@@ -60,7 +62,7 @@ class DeviceService {
 
   async getById(id) {
     const device = await deviceRepository.findById(id, DEVICE_PROJECTION);
-    if (!device) throw new AppError('Device not found', 404);
+    if (!device) throw new AppError('Device not found', HTTP_STATUS.NOT_FOUND);
 
     const alertRepository = (await import('../repositories/alertRepository.js')).default;
     const history = await alertRepository.findAll(
@@ -98,7 +100,7 @@ class DeviceService {
     });
 
     if (!validationResult.isValid) {
-      throw new AppError(`Validation failed: ${JSON.stringify(validationResult.errors)}`, 400);
+      throw new AppError(`Validation failed: ${JSON.stringify(validationResult.errors)}`, HTTP_STATUS.BAD_REQUEST);
     }
 
     const newDevice = await deviceRepository.create({
@@ -144,8 +146,8 @@ class DeviceService {
   async update(id, data, user) {
     const { name, type, ipAddress, ip_address, macAddress, description, status, location, manufacturer, serial_number, uptime, battery_level, tags, configuration } = data;
     const device = await deviceRepository.findById(id);
-    if (!device) throw new AppError('Device not found', 404);
-    if (user && user.role !== ROLES.ADMIN && device.userId?.toString() !== user.id) throw new AppError('Forbidden: Device does not belong to you', 403);
+    if (!device) throw new AppError('Device not found', HTTP_STATUS.NOT_FOUND);
+    if (user && user.role !== ROLES.ADMIN && device.userId?.toString() !== user.id) throw new AppError('Forbidden: Device does not belong to you', HTTP_STATUS.FORBIDDEN);
 
     const updateData = {};
     if (name !== undefined) updateData.name = name;
@@ -193,10 +195,31 @@ class DeviceService {
 
   async remove(id, user) {
     const device = await deviceRepository.findById(id);
-    if (!device) throw new AppError('Device not found', 404);
+    if (!device) throw new AppError('Device not found', HTTP_STATUS.NOT_FOUND);
     if (user && user.role !== ROLES.ADMIN && device.userId?.toString() !== user.id) {
-      throw new AppError('Forbidden: Device does not belong to you', 403);
+      throw new AppError('Forbidden: Device does not belong to you', HTTP_STATUS.FORBIDDEN);
     }
+
+    // CASCADE DELETE: ALERTS & INCIDENTS
+    const alertRepository = (await import('../repositories/alertRepository.js')).default;
+    const incidentRepository = (await import('../repositories/incidentRepository.js')).default;
+    const incidentTimelineRepository = (await import('../repositories/incidentTimelineRepository.js')).default;
+    
+    const deviceAlerts = await alertRepository.findAll({ device_id: id }, {}, 0, 10000);
+    const alertIds = deviceAlerts.map(a => a._id);
+    
+    if (alertIds.length > 0) {
+      const relatedIncidents = await incidentRepository.findAll({ alert_ids: { $in: alertIds } }, {}, 0, 10000);
+      const incidentIds = relatedIncidents.map(i => i._id);
+      
+      if (incidentIds.length > 0) {
+        await incidentTimelineRepository.deleteByIncidentIds(incidentIds);
+        await incidentRepository.deleteMany(incidentIds);
+      }
+      
+      await alertRepository.deleteMany(alertIds);
+    }
+
     await deviceRepository.deleteById(id);
   }
 
@@ -204,15 +227,36 @@ class DeviceService {
     if (user && user.role !== ROLES.ADMIN) {
       const devices = await deviceRepository.findAll({ _id: { $in: ids } });
       const notOwned = devices.some(d => d.userId?.toString() !== user.id);
-      if (notOwned) throw new AppError('Forbidden: Some devices do not belong to you', 403);
+      if (notOwned) throw new AppError('Forbidden: Some devices do not belong to you', HTTP_STATUS.FORBIDDEN);
     }
+
+    // CASCADE DELETE: ALERTS & INCIDENTS
+    const alertRepository = (await import('../repositories/alertRepository.js')).default;
+    const incidentRepository = (await import('../repositories/incidentRepository.js')).default;
+    const incidentTimelineRepository = (await import('../repositories/incidentTimelineRepository.js')).default;
+    
+    const deviceAlerts = await alertRepository.findAll({ device_id: { $in: ids } }, {}, 0, 100000);
+    const alertIds = deviceAlerts.map(a => a._id);
+    
+    if (alertIds.length > 0) {
+      const relatedIncidents = await incidentRepository.findAll({ alert_ids: { $in: alertIds } }, {}, 0, 100000);
+      const incidentIds = relatedIncidents.map(i => i._id);
+      
+      if (incidentIds.length > 0) {
+        await incidentTimelineRepository.deleteByIncidentIds(incidentIds);
+        await incidentRepository.deleteMany(incidentIds);
+      }
+      
+      await alertRepository.deleteMany(alertIds);
+    }
+
     return deviceRepository.deleteMany(ids);
   }
 
   async isolate(id, actor, ipAddress) {
     const device = await deviceRepository.findById(id);
-    if (!device) throw new AppError('Device not found', 404);
-    if (device.status === DEVICE_STATUSES.ISOLATED) throw new AppError('Device is already isolated', 400);
+    if (!device) throw new AppError('Device not found', HTTP_STATUS.NOT_FOUND);
+    if (device.status === DEVICE_STATUSES.ISOLATED) throw new AppError('Device is already isolated', HTTP_STATUS.BAD_REQUEST);
 
     await isolateDevice(device, actor, ipAddress);
     return device;
@@ -220,8 +264,8 @@ class DeviceService {
 
   async unisolate(id, actor, ipAddress) {
     const device = await deviceRepository.findById(id);
-    if (!device) throw new AppError('Device not found', 404);
-    if (device.status === DEVICE_STATUSES.ACTIVE || device.status === DEVICE_STATUSES.ONLINE) throw new AppError('Device is already active', 400);
+    if (!device) throw new AppError('Device not found', HTTP_STATUS.NOT_FOUND);
+    if (device.status === DEVICE_STATUSES.ACTIVE || device.status === DEVICE_STATUSES.ONLINE) throw new AppError('Device is already active', HTTP_STATUS.BAD_REQUEST);
 
     const updatedDevice = await deviceRepository.updateById(id, { status: DEVICE_STATUSES.ACTIVE });
 
@@ -255,7 +299,7 @@ class DeviceService {
 
   async rollback(id, actor, ipAddress) {
     const device = await deviceRepository.findById(id);
-    if (!device) throw new AppError('Device not found', 404);
+    if (!device) throw new AppError('Device not found', HTTP_STATUS.NOT_FOUND);
 
     const updatedDevice = await deviceRepository.updateById(id, { status: DEVICE_STATUSES.ACTIVE });
     publishMqtt('ics/control/attack', { device_id: id, attack_type: ATTACK_TYPES.ROLLBACK });

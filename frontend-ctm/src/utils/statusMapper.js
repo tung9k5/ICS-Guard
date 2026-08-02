@@ -18,7 +18,7 @@ export const getSeverityProps = (severity, t) => {
     case 'high':
       return { 
         label: t('customer.severity.high', 'Cao'), 
-        style: { backgroundColor: '#fff7ed', color: 'var(--orange-500)', borderColor: 'var(--orange-500)' } 
+        style: { backgroundColor: 'var(--custom-color-28)', color: 'var(--orange-500)', borderColor: 'var(--orange-500)' } 
       };
     case 'medium':
       return { label: t('customer.severity.medium', 'Trung bình'), status: 'warning' };
@@ -42,7 +42,7 @@ export const getAlertStatusProps = (status, t) => {
     case 'acknowledged':
       return { 
         label: t('customer.status.acknowledged', 'Đã tiếp nhận'), 
-        style: { backgroundColor: '#fff7ed', color: 'var(--orange-500)', borderColor: 'var(--orange-500)' } 
+        style: { backgroundColor: 'var(--custom-color-28)', color: 'var(--orange-500)', borderColor: 'var(--orange-500)' } 
       };
     case 'resolved':
       return { label: t('customer.status.resolved', 'Đã giải quyết'), status: 'success' };
@@ -61,7 +61,7 @@ export const getIncidentStatusProps = (status, t) => {
     case 'investigating':
       return { 
         label: t('incidents.status_investigating', 'Đang điều tra'), 
-        style: { backgroundColor: '#fff7ed', color: 'var(--orange-500)', borderColor: 'var(--orange-500)' } 
+        style: { backgroundColor: 'var(--custom-color-28)', color: 'var(--orange-500)', borderColor: 'var(--orange-500)' } 
       };
     case 'investigated':
       return { 
@@ -95,7 +95,7 @@ export const getScenarioProps = (scenario, t) => {
   
   return { 
     label: t(labelKey, scenario), 
-    style: { backgroundColor: '#fff7ed', color: 'var(--orange-500)', borderColor: 'var(--orange-500)' } 
+    style: { backgroundColor: 'var(--custom-color-28)', color: 'var(--orange-500)', borderColor: 'var(--orange-500)' } 
   };
 };
 

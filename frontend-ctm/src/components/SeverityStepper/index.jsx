@@ -19,7 +19,7 @@ const SeverityStepper = ({ severity, t, compact = false }) => {
   const margin = compact ? '0' : '1rem 0';
   
   // Use system primary color to maintain UI consistency
-  const activeColor = 'var(--blue-500, #3b82f6)';
+  const activeColor = 'var(--blue-500, var(--blue-500))';
   
   return (
     <div style={{ 
@@ -44,7 +44,7 @@ const SeverityStepper = ({ severity, t, compact = false }) => {
       <div style={{ display: 'flex', gap: '4px', flex: 1, maxWidth: compact ? 'unset' : '300px', alignItems: 'center' }}>
         {levels.map((lvl, idx) => {
           const isActive = idx <= currentIdx;
-          const bg = isActive ? activeColor : '#e2e8f0';
+          const bg = isActive ? activeColor : 'var(--slate-200)';
           return (
             <div 
               key={lvl} 
@@ -54,7 +54,7 @@ const SeverityStepper = ({ severity, t, compact = false }) => {
                 backgroundColor: bg, 
                 borderRadius: '4px',
                 transition: 'background-color 0.3s ease',
-                boxShadow: isActive ? `0 0 6px rgba(59, 130, 246, 0.4)` : 'none',
+                boxShadow: isActive ? `0 0 6px var(--custom-color-49)` : 'none',
                 opacity: isActive ? 1 : 0.8
               }} 
             />

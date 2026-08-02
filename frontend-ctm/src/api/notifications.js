@@ -16,6 +16,3 @@ export const markAllRead = () => {
   return http.patch('/notifications/read-all', {}, { hideLoading: true });
 };
 
-export const deleteNotification = (id) => {
-  return http.delete(`/notifications/${id}`, { hideLoading: true });
-};

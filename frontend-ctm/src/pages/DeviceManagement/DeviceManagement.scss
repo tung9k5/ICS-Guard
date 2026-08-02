@@ -21,7 +21,7 @@
     background: var(--white); /* Card trắng trên nền xám */
     border-radius: 0.8571rem;
     border: 0.0714rem solid var(--slate-200); /* Slate 200 */
-    box-shadow: 0 0.2857rem 0.4286rem -0.0714rem rgba(0, 0, 0, 0.05), 0 0.1429rem 0.2857rem -0.0714rem rgba(0, 0, 0, 0.03);
+    box-shadow: 0 0.2857rem 0.4286rem -0.0714rem var(--custom-color-32), 0 0.1429rem 0.2857rem -0.0714rem var(--custom-color-102);
     overflow: hidden;
 
     .pagination-wrapper {

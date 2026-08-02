@@ -54,7 +54,7 @@ const CustomerHeader = ({ toggleSidebar, user, onOpenProfile }) => {
                 position: 'absolute',
                 top: '-5px',
                 right: '-5px',
-                background: '#ff4d4f',
+                background: 'var(--custom-color-18)',
                 color: 'white',
                 fontSize: '10px',
                 padding: '2px 6px',

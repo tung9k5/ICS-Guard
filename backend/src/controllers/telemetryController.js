@@ -1,10 +1,12 @@
 import { successResponse } from '../utils/response.js';
 import telemetryService from '../services/telemetryService.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 export const ingestLog = async (req, res, next) => {
   try {
     const result = await telemetryService.ingestLog(req.body);
-    return res.status(201).json(result);
+    return res.status(HTTP_STATUS.CREATED).json(result);
   } catch (error) {
     next(error);
   }

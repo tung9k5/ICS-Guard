@@ -1,8 +1,8 @@
 .sidebar {
   width: 18.5714rem;
   background: linear-gradient(180deg, var(--blue-900) 0%, var(--slate-900) 100%);
-  border-right: 0.0714rem solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0.2857rem 0 1.7143rem rgba(0, 0, 0, 0.2);
+  border-right: 0.0714rem solid var(--custom-color-68);
+  box-shadow: 0.2857rem 0 1.7143rem var(--custom-color-40);
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -29,7 +29,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 1.4286rem;
-    border-bottom: 0.0714rem solid rgba(255, 255, 255, 0.05);
+    border-bottom: 0.0714rem solid var(--custom-color-68);
     height: 5rem;
     width: 100%;
 
@@ -87,14 +87,14 @@
       white-space: nowrap;
 
       &:hover {
-        background-color: rgba(62, 46, 150, 0.15);
+        background-color: var(--custom-color-105);
         color: var(--slate-50);
       }
 
       &.active {
         background: linear-gradient(90deg, var(--blue-500) 0%, var(--blue-600) 100%);
         color: white;
-        box-shadow: 0 0.2857rem 0.8571rem rgba(59, 130, 246, 0.3);
+        box-shadow: 0 0.2857rem 0.8571rem var(--custom-color-90);
       }
     }
   }
@@ -120,7 +120,7 @@
       white-space: nowrap;
 
       &:hover {
-        background-color: var(--danger-color-light, rgba(239, 68, 68, 0.1));
+        background-color: var(--danger-color-light, var(--custom-color-101));
         color: var(--danger-color, var(--red-500));
       }
     }
@@ -165,7 +165,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: var(--custom-color-73);
   z-index: 90;
 
   @media (max-width: 54.8571rem) {

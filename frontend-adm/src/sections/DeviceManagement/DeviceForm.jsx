@@ -6,6 +6,7 @@ import ApiDevice from '@/api/device';
 import { DEVICE_TYPES } from '@/constants/deviceConstants';
 import { toast } from '@/utils/toast';
 import { useTranslation } from 'react-i18next';
+import { getDeviceTypeConfig, getStatusConfig } from '@/utils/statusMapper';
 
 import VTextarea from '@/components/VTextarea';
 import VDialog from '@/components/VDialog';
@@ -114,7 +115,7 @@ const DeviceForm = ({ device, onClose, onSuccess }) => {
             >
               <option value="">{t('assets.form.select_type')}</option>
               {DEVICE_TYPES.map(t => (
-                <option key={t.value} value={t.value}>{t.label} - {t.description}</option>
+                <option key={t.value} value={t.value}>{useTranslation().t(getDeviceTypeConfig(t.value).label)}</option>
               ))}
             </select>
           </div>
@@ -131,8 +132,8 @@ const DeviceForm = ({ device, onClose, onSuccess }) => {
               className="v-input"
               style={{ width: '100%', padding: '0.7143rem 1rem', borderRadius: '0.5714rem', backgroundColor: 'var(--white)', color: 'var(--slate-900)', border: '0.0714rem solid var(--slate-300)' }}
             >
-              <option value="active">{t('assets.filter_status_active')}</option>
-              <option value="inactive">{t('assets.filter_status_inactive')}</option>
+              <option value="active">{useTranslation().t(getStatusConfig('active').label)}</option>
+              <option value="inactive">{useTranslation().t(getStatusConfig('inactive').label)}</option>
             </select>
           </div>
         </div>

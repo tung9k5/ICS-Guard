@@ -14,7 +14,6 @@ const DeviceManagement = lazy(() => import('@/pages/DeviceManagement'));
 const UserManagement = lazy(() => import('@/pages/UserManagement'));
 const IncidentManagement = lazy(() => import('@/pages/IncidentManagement'));
 const AuditManagement = lazy(() => import('@/pages/AuditManagement'));
-const AttackSimulator = lazy(() => import('@/pages/AttackSimulator'));
 const RuleManagement = lazy(() => import('@/pages/RuleManagement'));
 const AlertManagement = lazy(() => import('@/pages/AlertManagement'));
 const Settings = lazy(() => import('@/pages/Settings'));
@@ -42,7 +41,6 @@ const AppRoutes = () => {
           <Route path={APP_ROUTES.SOC.RULE_MANAGEMENT} element={<RuleManagement />} />
           <Route path={APP_ROUTES.SOC.ALERT_MANAGEMENT} element={<AlertManagement />} />
           <Route path={APP_ROUTES.SOC.AUDIT_MANAGEMENT} element={<AuditManagement />} />
-          <Route path={APP_ROUTES.SOC.ATTACK_SIMULATOR} element={<AttackSimulator />} />
           <Route path={APP_ROUTES.SOC.SETTINGS} element={<Settings />} />
           <Route path={APP_ROUTES.SOC.REPORTS} element={<Reports />} />
         </Route>

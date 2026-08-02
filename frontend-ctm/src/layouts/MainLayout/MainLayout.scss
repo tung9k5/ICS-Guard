@@ -31,7 +31,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.85);
+    background: var(--custom-color-76);
     backdrop-filter: blur(0.5714rem);
     display: flex;
     align-items: center;
@@ -45,7 +45,7 @@
       background: var(--apple-dark-bg);
       border: 0.1429rem solid var(--apple-red);
       border-radius: 0.8571rem;
-      box-shadow: 0 0 2.5rem rgba(255, 59, 48, 0.4), inset 0 0 1.0714rem rgba(255, 59, 48, 0.1);
+      box-shadow: 0 0 2.5rem var(--custom-color-77), inset 0 0 1.0714rem var(--custom-color-78);
       padding: 2.1429rem;
       color: var(--apple-gray-2);
       text-align: center;
@@ -75,7 +75,7 @@
         margin: 0 0 1.0714rem 0;
         text-transform: uppercase;
         letter-spacing: 0.1071rem;
-        text-shadow: 0 0 0.7143rem rgba(255, 59, 48, 0.5);
+        text-shadow: 0 0 0.7143rem var(--custom-color-79);
       }
 
       p {
@@ -83,10 +83,10 @@
         line-height: 1.6;
         color: var(--apple-gray-3);
         margin: 0 0 1.7857rem 0;
-        background: rgba(255, 59, 48, 0.05);
+        background: var(--custom-color-80);
         padding: 1.0714rem;
         border-radius: 0.4286rem;
-        border: 0.0714rem solid rgba(255, 59, 48, 0.25);
+        border: 0.0714rem solid var(--custom-color-81);
       }
 
       .modal-actions {
@@ -107,12 +107,12 @@
         .quarantine-btn {
           background: var(--apple-red);
           color: var(--white-short);
-          box-shadow: 0 0.2857rem 1.0714rem rgba(255, 59, 48, 0.4);
+          box-shadow: 0 0.2857rem 1.0714rem var(--custom-color-77);
 
           &:hover:not(:disabled) {
             background: var(--apple-red-light);
             transform: translateY(-0.1429rem);
-            box-shadow: 0 0.4286rem 1.4286rem rgba(255, 59, 48, 0.6);
+            box-shadow: 0 0.4286rem 1.4286rem var(--custom-color-82);
           }
 
           &:disabled {

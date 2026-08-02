@@ -7,7 +7,7 @@
     margin: 0 auto 1.7143rem auto;
     display: block;
     animation: floatImage 3s ease-in-out infinite;
-    filter: drop-shadow(0 0.7143rem 1.0714rem rgba(0,0,0,0.2));
+    filter: drop-shadow(0 0.7143rem 1.0714rem var(--custom-color-40));
   }
 
   &.animate-spin {

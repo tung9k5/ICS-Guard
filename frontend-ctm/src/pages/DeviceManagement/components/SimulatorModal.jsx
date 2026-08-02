@@ -92,11 +92,11 @@ const SimulatorModal = ({ device, onClose }) => {
       style={{ width: '450px', maxWidth: '100%' }}
     >
       {device.current_scenario && device.current_scenario !== 'NORMAL' && (
-        <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderLeft: '4px solid #ef4444', borderRadius: '4px' }}>
-          <h4 style={{ margin: '0 0 0.5rem 0', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div style={{ marginBottom: '1.5rem', padding: '1rem', backgroundColor: 'var(--custom-color-101)', borderLeft: '4px solid var(--red-500)', borderRadius: '4px' }}>
+          <h4 style={{ margin: '0 0 0.5rem 0', color: 'var(--red-700)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Activity size={16} /> {t('simulator.running_scenario', 'Đang chạy kịch bản')}
           </h4>
-          <div style={{ fontSize: '0.9rem', color: '#7f1d1d' }}>
+          <div style={{ fontSize: '0.9rem', color: 'var(--apple-red-darkest)' }}>
             <div><strong>{t('simulator.type', 'Loại:')}</strong> {currentScenarioLabel}</div>
             {device.current_severity && (
               <div>
@@ -110,13 +110,13 @@ const SimulatorModal = ({ device, onClose }) => {
         </div>
       )}
 
-      <p style={{ marginBottom: '1rem', color: '#4b5563', fontSize: '0.95rem', lineHeight: '1.5' }}>
-        {t('simulator.description', 'Chọn kịch bản mô phỏng để áp dụng lên thiết bị')} <strong style={{ color: '#111827' }}>{device.name}</strong> ({device.id || device._id}).
+      <p style={{ marginBottom: '1rem', color: 'var(--custom-color-16)', fontSize: '0.95rem', lineHeight: '1.5' }}>
+        {t('simulator.description', 'Chọn kịch bản mô phỏng để áp dụng lên thiết bị')} <strong style={{ color: 'var(--gray-900)' }}>{device.name}</strong> ({device.id || device._id}).
       </p>
 
       <form id="simulator-form" onSubmit={handleSubmit}>
         <div className="v-input-wrapper" style={{ marginBottom: '1.5rem' }}>
-          <label className="v-label" style={{ fontWeight: '500', marginBottom: '0.5rem', display: 'block', color: '#374151' }}>
+          <label className="v-label" style={{ fontWeight: '500', marginBottom: '0.5rem', display: 'block', color: 'var(--gray-700)' }}>
             {t('simulator.scenario_label', 'Kịch bản mới (Scenario)')}
           </label>
           <select 
@@ -127,9 +127,9 @@ const SimulatorModal = ({ device, onClose }) => {
               width: '100%', 
               padding: '0.75rem 2.5rem 0.75rem 1rem', 
               borderRadius: '8px',
-              border: '1px solid #d1d5db',
-              backgroundColor: '#f9fafb',
-              color: '#1f2937',
+              border: '1px solid var(--gray-300)',
+              backgroundColor: 'var(--gray-50)',
+              color: 'var(--gray-800)',
               fontSize: '0.95rem',
               outline: 'none',
               cursor: 'pointer',
@@ -141,11 +141,11 @@ const SimulatorModal = ({ device, onClose }) => {
               transition: 'border-color 0.2s, box-shadow 0.2s'
             }}
             onFocus={(e) => {
-              e.target.style.borderColor = 'var(--primary-color, #3b82f6)';
-              e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+              e.target.style.borderColor = 'var(--primary-color, var(--blue-500))';
+              e.target.style.boxShadow = '0 0 0 3px var(--custom-color-38)';
             }}
             onBlur={(e) => {
-              e.target.style.borderColor = '#d1d5db';
+              e.target.style.borderColor = 'var(--gray-300)';
               e.target.style.boxShadow = 'none';
             }}
           >
@@ -156,7 +156,7 @@ const SimulatorModal = ({ device, onClose }) => {
         </div>
 
         <div className="v-input-wrapper" style={{ marginBottom: '1.5rem' }}>
-          <label className="v-label" style={{ fontWeight: '500', marginBottom: '0.5rem', display: 'block', color: '#374151' }}>
+          <label className="v-label" style={{ fontWeight: '500', marginBottom: '0.5rem', display: 'block', color: 'var(--gray-700)' }}>
             {t('simulator.severity_label', 'Mức độ (Severity)')}
           </label>
           <select 
@@ -167,9 +167,9 @@ const SimulatorModal = ({ device, onClose }) => {
               width: '100%', 
               padding: '0.75rem 2.5rem 0.75rem 1rem', 
               borderRadius: '8px',
-              border: '1px solid #d1d5db',
-              backgroundColor: '#f9fafb',
-              color: '#1f2937',
+              border: '1px solid var(--gray-300)',
+              backgroundColor: 'var(--gray-50)',
+              color: 'var(--gray-800)',
               fontSize: '0.95rem',
               outline: 'none',
               cursor: 'pointer',
@@ -181,11 +181,11 @@ const SimulatorModal = ({ device, onClose }) => {
               transition: 'border-color 0.2s, box-shadow 0.2s'
             }}
             onFocus={(e) => {
-              e.target.style.borderColor = 'var(--primary-color, #3b82f6)';
-              e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+              e.target.style.borderColor = 'var(--primary-color, var(--blue-500))';
+              e.target.style.boxShadow = '0 0 0 3px var(--custom-color-38)';
             }}
             onBlur={(e) => {
-              e.target.style.borderColor = '#d1d5db';
+              e.target.style.borderColor = 'var(--gray-300)';
               e.target.style.boxShadow = 'none';
             }}
           >

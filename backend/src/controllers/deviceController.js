@@ -1,6 +1,8 @@
 import { successResponse, paginatedResponse } from '../utils/response.js';
 import deviceService from '../services/deviceService.js';
 import { getClientIp, getActor } from '../utils/ipHelper.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 export const getAllDevices = async (req, res, next) => {
   try {
@@ -23,7 +25,7 @@ export const getDeviceById = async (req, res, next) => {
 export const createDevice = async (req, res, next) => {
   try {
     const device = await deviceService.create(req.body, req.user);
-    return res.status(201).json(device);
+    return res.status(HTTP_STATUS.CREATED).json(device);
   } catch (error) {
     next(error);
   }

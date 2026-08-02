@@ -132,7 +132,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, collapsed, setCollapsed }) =
             </NavLink>
           </NavGroup>
 
-          <NavGroup title={t('sidebar.system_group', 'Hệ thống & Thiết bị')} icon={Server} collapsed={!isSidebarOpen} pathPrefixes={['/device-management', '/audit-management', '/attack-simulator']}>
+          <NavGroup title={t('sidebar.system_group', 'Hệ thống & Thiết bị')} icon={Server} collapsed={!isSidebarOpen} pathPrefixes={['/device-management', '/audit-management']}>
             <NavLink to="/device-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '0.5714rem 0.8571rem', minHeight: '2.8571rem' }}>
               <Server size={18} />
               <span style={{ fontSize: '0.9286rem' }}>{t('layout.sidebar.assets')}</span>
@@ -140,10 +140,6 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, collapsed, setCollapsed }) =
             <NavLink to="/audit-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '0.5714rem 0.8571rem', minHeight: '2.8571rem' }}>
               <Activity size={18} />
               <span style={{ fontSize: '0.9286rem' }}>{t('layout.sidebar.audit')}</span>
-            </NavLink>
-            <NavLink to="/attack-simulator" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '0.5714rem 0.8571rem', minHeight: '2.8571rem' }}>
-              <Crosshair size={18} />
-              <span style={{ fontSize: '0.9286rem' }}>{t('layout.sidebar.attack')}</span>
             </NavLink>
           </NavGroup>
 

@@ -4,6 +4,8 @@ import AppError from '../utils/AppError.js';
 import { AUDIT_STATUSES } from '../constants/index.js';
 import { parsePagination, buildSortOption } from '../utils/pagination.js';
 import User from '../models/user.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 class AuditService {
   async getLogs(queryParams) {
@@ -87,7 +89,7 @@ class AuditService {
   async unblockIp(ipAddress, username) {
     const blocked = await blockedIpRepository.deleteByIp(ipAddress);
     if (blocked.deletedCount === 0) {
-      throw new AppError('IP Address not found in blocked list', 404);
+      throw new AppError('IP Address not found in blocked list', HTTP_STATUS.NOT_FOUND);
     }
 
     await auditRepository.create({
@@ -101,7 +103,7 @@ class AuditService {
 
   async deleteLog(id) {
     const log = await auditRepository.deleteById(id);
-    if (!log) throw new AppError('Log not found', 404);
+    if (!log) throw new AppError('Log not found', HTTP_STATUS.NOT_FOUND);
   }
 
   async deleteLogs(ids) {

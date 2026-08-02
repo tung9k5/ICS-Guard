@@ -24,7 +24,7 @@ const DeviceDetailModal = ({ device, onClose }) => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
           
           {/* Card: Thông tin cơ bản */}
-          <div style={{ background: 'var(--white)', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid var(--slate-200)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+          <div style={{ background: 'var(--white)', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid var(--slate-200)', boxShadow: '0 1px 3px var(--custom-color-32)' }}>
             <h4 style={{ margin: '0 0 1rem 0', fontSize: '1rem', color: 'var(--slate-800)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Monitor size={18} className="text-primary" />
               {t('assets.detail.basic_info', 'Thông tin cơ bản')}
@@ -55,7 +55,7 @@ const DeviceDetailModal = ({ device, onClose }) => {
           </div>
 
           {/* Card: Mạng & Vị trí */}
-          <div style={{ background: 'var(--white)', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid var(--slate-200)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+          <div style={{ background: 'var(--white)', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid var(--slate-200)', boxShadow: '0 1px 3px var(--custom-color-32)' }}>
             <h4 style={{ margin: '0 0 1rem 0', fontSize: '1rem', color: 'var(--slate-800)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Globe size={18} className="text-primary" />
               {t('assets.detail.network_location', 'Mạng & Vị trí')}
@@ -91,7 +91,7 @@ const DeviceDetailModal = ({ device, onClose }) => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            <div style={{ background: 'var(--white)', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid var(--slate-200)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div style={{ background: 'var(--white)', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid var(--slate-200)', boxShadow: '0 1px 3px var(--custom-color-32)' }}>
               <h4 style={{ margin: '0 0 1rem 0', fontSize: '1rem', color: 'var(--slate-800)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Activity size={18} className="text-primary" />
                 {t('assets.detail.operation_status', 'Trạng thái hoạt động')}
@@ -108,7 +108,7 @@ const DeviceDetailModal = ({ device, onClose }) => {
               </div>
             </div>
 
-            <div style={{ background: 'var(--white)', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid var(--slate-200)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div style={{ background: 'var(--white)', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid var(--slate-200)', boxShadow: '0 1px 3px var(--custom-color-32)' }}>
               <h4 style={{ margin: '0 0 1rem 0', fontSize: '1rem', color: 'var(--slate-800)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Clock size={18} className="text-primary" />
                 {t('assets.detail.time_info', 'Thời gian')}
@@ -126,7 +126,7 @@ const DeviceDetailModal = ({ device, onClose }) => {
             </div>
           </div>
 
-          <div style={{ background: 'var(--white)', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid var(--slate-200)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ background: 'var(--white)', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid var(--slate-200)', boxShadow: '0 1px 3px var(--custom-color-32)', display: 'flex', flexDirection: 'column' }}>
             <h4 style={{ margin: '0 0 1rem 0', fontSize: '1rem', color: 'var(--slate-800)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <AlignLeft size={18} className="text-primary" />
               {t('assets.list.table_desc', 'Mô tả')}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, X, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { CHATBOT_STORAGE_KEYS } from '@/constants/chatbotConstants';
 import ChatWindow from './ChatWindow';
 import './DraggableChatbot.scss';
 
@@ -17,8 +18,8 @@ const DraggableChatbot = ({ user }) => {
   useEffect(() => {
     const checkUnread = () => {
       const userId = user?.id || user?._id || 'guest';
-      const msgKey = `chatbot_messages_${userId}`;
-      const readKey = `chatbot_read_count_${userId}`;
+      const msgKey = `${CHATBOT_STORAGE_KEYS.MESSAGES_PREFIX}${userId}`;
+      const readKey = `${CHATBOT_STORAGE_KEYS.READ_COUNT_PREFIX}${userId}`;
       
       if (isChatWindowOpen) {
         setUnreadCount(0);

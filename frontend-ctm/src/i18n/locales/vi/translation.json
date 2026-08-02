@@ -77,7 +77,7 @@
     "sidebar": {
       "overview": "Tổng quan",
       "topology": "Sơ đồ mạng",
-      "alerts": "Cảnh báo an ninh",
+      "alerts": "Cảnh báo sự cố",
       "assets": "Quản lý thiết bị",
       "users": "Quản lý người dùng",
       "audit": "Nhật ký hệ thống",
@@ -281,7 +281,7 @@
     "subtitle": "Giám sát thời gian thực và thông tin tình báo mối đe dọa",
     "statistics_title": "Thống kê tổng quan",
     "network_traffic": "Lưu lượng mạng",
-    "threat_activity": "Mức độ cảnh báo an ninh",
+    "threat_activity": "Mức độ sự cố an ninh",
     "system_health": "Trạng thái hệ thống",
     "common": {
       "save": "Lưu",

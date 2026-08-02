@@ -43,7 +43,6 @@ const findOrCreateAlertAndIncident = async ({
   description,
   severity,
   deviceUserId,
-  zone,
   incidentTitle,
   incidentDescription,
   timelineDescription,
@@ -501,9 +500,9 @@ const processStructuredLogs = async (payload) => {
     if (log_level === "INFO") continue;
 
     // Map log event to Rule Name and Severity
-    let rule_name = "";
-    let severity = "MEDIUM";
-    let alert_title = "";
+    let rule_name;
+    let severity;
+    let alert_title;
 
     if (event === "OTA_HASH_MISMATCH") {
       rule_name = "MALICIOUS_OTA_UPDATE";

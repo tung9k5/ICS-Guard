@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bot, ChevronDown, Maximize2, X, Menu, Mic, Send, Minimize2, Copy, Check, Heart, ThumbsUp, MoreVertical, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { CHATBOT_MAX_INPUT_LENGTH } from '@/constants/chatbotConstants';
+import { CHATBOT_MAX_INPUT_LENGTH, CHATBOT_STORAGE_KEYS } from '@/constants/chatbotConstants';
 import './ChatWindow.scss';
 import { aiApi } from '@/api/ai';
 
@@ -10,15 +10,15 @@ const ChatWindow = ({ isOpen, onClose, user }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState(() => {
     const userId = user?.id || user?._id || 'guest';
-    const saved = localStorage.getItem(`chatbot_messages_${userId}`);
-    const lastUpdated = localStorage.getItem(`chatbot_last_updated_${userId}`);
+    const lastUpdated = localStorage.getItem(`${CHATBOT_STORAGE_KEYS.LAST_UPDATED_PREFIX}${userId}`);
+    const saved = localStorage.getItem(`${CHATBOT_STORAGE_KEYS.MESSAGES_PREFIX}${userId}`);
     if (saved && lastUpdated) {
       const timeDiff = Date.now() - parseInt(lastUpdated, 10);
       if (timeDiff < 24 * 60 * 60 * 1000) {
         return JSON.parse(saved);
       } else {
-        localStorage.removeItem(`chatbot_messages_${userId}`);
-        localStorage.removeItem(`chatbot_last_updated_${userId}`);
+        localStorage.removeItem(`${CHATBOT_STORAGE_KEYS.MESSAGES_PREFIX}${userId}`);
+        localStorage.removeItem(`${CHATBOT_STORAGE_KEYS.LAST_UPDATED_PREFIX}${userId}`);
       }
     }
     return [
@@ -72,8 +72,8 @@ const ChatWindow = ({ isOpen, onClose, user }) => {
 
   useEffect(() => {
     const userId = user?.id || user?._id || 'guest';
-    localStorage.setItem(`chatbot_messages_${userId}`, JSON.stringify(messages));
-    localStorage.setItem(`chatbot_last_updated_${userId}`, Date.now().toString());
+    localStorage.setItem(`${CHATBOT_STORAGE_KEYS.MESSAGES_PREFIX}${userId}`, JSON.stringify(messages));
+    localStorage.setItem(`${CHATBOT_STORAGE_KEYS.LAST_UPDATED_PREFIX}${userId}`, Date.now().toString());
     
     // Update expiration timer whenever messages change
     updateExpirationTime();
@@ -81,7 +81,7 @@ const ChatWindow = ({ isOpen, onClose, user }) => {
 
   const updateExpirationTime = () => {
     const userId = user?.id || user?._id || 'guest';
-    const lastUpdated = localStorage.getItem(`chatbot_last_updated_${userId}`);
+    const lastUpdated = localStorage.getItem(`${CHATBOT_STORAGE_KEYS.LAST_UPDATED_PREFIX}${userId}`);
     if (lastUpdated) {
       const expiresAt = parseInt(lastUpdated, 10) + 24 * 60 * 60 * 1000;
       const remaining = expiresAt - Date.now();
@@ -197,12 +197,12 @@ const ChatWindow = ({ isOpen, onClose, user }) => {
               <MoreVertical size={18} />
             </button>
             {isMenuOpen && (
-              <div className="chat-options-menu" style={{ position: 'absolute', top: '120%', right: 0, backgroundColor: 'var(--bg-card, #fff)', border: '1px solid var(--border-color, #e0e0e0)', borderRadius: '6px', padding: '4px 0', minWidth: '160px', zIndex: 100, boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+              <div className="chat-options-menu" style={{ position: 'absolute', top: '120%', right: 0, backgroundColor: 'var(--bg-card, var(--white))', border: '1px solid var(--border-color, var(--gray-light-2))', borderRadius: '6px', padding: '4px 0', minWidth: '160px', zIndex: 100, boxShadow: '0 4px 12px var(--custom-color-33)' }}>
                 <div 
                   className="menu-item" 
                   onClick={() => { setIsExpanded(!isExpanded); setIsMenuOpen(false); }}
-                  style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: 'background-color 0.2s', color: 'var(--text-color, #333)' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-hover, rgba(0,0,0,0.05))'}
+                  style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: 'background-color 0.2s', color: 'var(--text-color, var(--apple-dark-2))' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-hover, var(--custom-color-32))'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
                   {isExpanded ? <Minimize2 size={16} /> : <Maximize2 size={16} />}
@@ -211,8 +211,8 @@ const ChatWindow = ({ isOpen, onClose, user }) => {
                 <div 
                   className="menu-item" 
                   onClick={() => { onClose(); setIsMenuOpen(false); }}
-                  style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: 'background-color 0.2s', color: 'var(--text-color, #333)' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-hover, rgba(0,0,0,0.05))'}
+                  style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: 'background-color 0.2s', color: 'var(--text-color, var(--apple-dark-2))' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-hover, var(--custom-color-32))'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
                   <ChevronDown size={16} />
@@ -221,8 +221,8 @@ const ChatWindow = ({ isOpen, onClose, user }) => {
                 <div 
                   className="menu-item" 
                   onClick={handleClearMessages}
-                  style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--red-500, #ef4444)', transition: 'background-color 0.2s', borderTop: '1px solid var(--border-color, #eee)' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-hover, rgba(0,0,0,0.05))'}
+                  style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--red-500, var(--red-500))', transition: 'background-color 0.2s', borderTop: '1px solid var(--border-color, var(--gray-200))' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-hover, var(--custom-color-32))'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
                   <Trash2 size={16} />
@@ -231,8 +231,8 @@ const ChatWindow = ({ isOpen, onClose, user }) => {
                 <div 
                   className="menu-item" 
                   onClick={() => { onClose(); setIsMenuOpen(false); }}
-                  style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--red-500, #ef4444)', transition: 'background-color 0.2s' }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-hover, rgba(0,0,0,0.05))'}
+                  style={{ padding: '10px 16px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--red-500, var(--red-500))', transition: 'background-color 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--bg-hover, var(--custom-color-32))'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                 >
                   <X size={16} />

@@ -2,6 +2,8 @@ import { successResponse } from '../utils/response.js';
 import authService from '../services/authService.js';
 import { AUTH_CONSTANTS, ROLES } from '../constants/index.js';
 import AppError from '../utils/AppError.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 const determineRoleFromOrigin = (req) => {
   const origin = req.headers.origin || req.headers.referer || '';
@@ -96,7 +98,7 @@ export const register = async (req, res, next) => {
     const result = await authService.register({ ...req.body, role: expectedRole });
 
     setAuthCookies(res, result.accessToken, result.refreshToken, req);
-    return res.status(201).json(result);
+    return res.status(HTTP_STATUS.CREATED).json(result);
   } catch (error) {
     next(error);
   }
@@ -128,7 +130,7 @@ export const googleCallback = async (req, res, next) => {
   try {
     const { code, state } = req.query;
     if (!code) {
-      throw new AppError('Authorization code is required', 400);
+      throw new AppError('Authorization code is required', HTTP_STATUS.BAD_REQUEST);
     }
     const expectedRole = state || ROLES.CUSTOMER;
     const result = await authService.googleCallback(code, expectedRole);

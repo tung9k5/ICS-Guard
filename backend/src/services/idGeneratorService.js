@@ -26,6 +26,8 @@
 
 import IdSequence from '../models/IdSequence.js';
 import AppError from '../utils/AppError.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 // ---------------------------------------------------------------------------
 // Prefix Map
@@ -86,7 +88,7 @@ class IdGeneratorService {
    */
   resolvePrefix(collectionName) {
     if (!collectionName || typeof collectionName !== 'string') {
-      throw new AppError('collectionName must be a non-empty string', 400);
+      throw new AppError('collectionName must be a non-empty string', HTTP_STATUS.BAD_REQUEST);
     }
     const key = collectionName.toLowerCase().trim().replace(/\s+/g, '');
     return PREFIX_MAP[key] ?? collectionName[0].toUpperCase();

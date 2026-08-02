@@ -1,9 +1,9 @@
 .header {
   height: 5rem;
-  background: rgba(30, 58, 138, 0.95);
+  background: var(--custom-color-103);
   backdrop-filter: blur(0.8571rem);
-  border-bottom: 0.0714rem solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0.2857rem 1.7143rem rgba(0, 0, 0, 0.1);
+  border-bottom: 0.0714rem solid var(--custom-color-68);
+  box-shadow: 0 0.2857rem 1.7143rem var(--custom-color-31);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -30,7 +30,7 @@
       transition: all 0.2s;
 
       &:hover {
-        background-color: rgba(255, 255, 255, 0.05);
+        background-color: var(--custom-color-68);
         color: var(--slate-50);
       }
     }
@@ -69,7 +69,7 @@
     }
 
     .notification-btn {
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: var(--custom-color-47);
       border: none;
       color: var(--slate-50);
       position: relative;
@@ -82,7 +82,7 @@
       transition: background-color 0.2s;
 
       &:hover {
-        background-color: rgba(255, 255, 255, 0.2);
+        background-color: var(--custom-color-34);
       }
 
       .notification-dot {
@@ -104,17 +104,17 @@
       cursor: pointer;
       border-radius: 0.5714rem;
       transition: background-color 0.2s;
-      border: 0.1429rem solid rgba(255, 255, 255, 0.05);
+      border: 0.1429rem solid var(--custom-color-68);
       border-radius: 50%;
 
       &:hover {
-        background-color: rgba(255, 255, 255, 0.05);
+        background-color: var(--custom-color-68);
       }
 
       .avatar {
         width: 2.2857rem;
         height: 2.2857rem;
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: var(--custom-color-47);
         border-radius: 50%;
         display: flex;
         align-items: center;

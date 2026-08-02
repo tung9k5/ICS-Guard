@@ -1,8 +1,7 @@
 import React from 'react';
 import VDialog from '@/components/VDialog';
 import VStatus from '@/components/VStatus';
-import { getDeviceTypeLabel, getDeviceTypeStyle } from '@/constants/deviceConstants';
-import { getScenarioProps } from '@/utils/statusMapper';
+import { getScenarioConfig } from '@/utils/statusMapper';
 import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/utils/formatDate';
 import { Hash, Monitor, Server, Globe, Network, Activity, MapPin, AlignLeft, Calendar, Clock } from 'lucide-react';
@@ -51,7 +50,7 @@ const DeviceDetailModal = ({ device: deviceData, onClose }) => {
                 <div style={{ padding: '0.4rem', background: 'var(--slate-100)', borderRadius: '0.375rem', color: 'var(--slate-500)' }}><Activity size={16} /></div>
                 <div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--slate-500)', fontWeight: 600, marginBottom: '0.25rem' }}>{t('assets.list.table_type', 'Loại')}</div>
-                  <VStatus label={getDeviceTypeLabel(device.type) || 'N/A'} style={getDeviceTypeStyle(device.type)} className="badge-outline" />
+                  <VStatus status={device.type} type="device_type" className="badge-outline" />
                 </div>
               </div>
             </div>
@@ -102,11 +101,11 @@ const DeviceDetailModal = ({ device: deviceData, onClose }) => {
               <div style={{ display: 'flex', gap: '2rem' }}>
                 <div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--slate-500)', fontWeight: 600, marginBottom: '0.5rem' }}>{t('assets.list.table_status', 'Trạng thái')}</div>
-                  <VStatus status={device.status} label={device.status === 'active' ? t('assets.filter_status_active') : t('assets.filter_status_inactive')} />
+                  <VStatus status={device.status} type="status" />
                 </div>
                 <div>
                   <div style={{ fontSize: '0.8rem', color: 'var(--slate-500)', fontWeight: 600, marginBottom: '0.5rem' }}>{t('customer.alerts.col_simulation', 'Mô phỏng')}</div>
-                  <VStatus {...getScenarioProps(device.current_scenario, t)} />
+                  <VStatus status={device.current_scenario} type="simulator" />
                 </div>
               </div>
             </div>
@@ -157,7 +156,7 @@ const DeviceDetailModal = ({ device: deviceData, onClose }) => {
                       <span style={{ fontSize: '0.8rem', color: 'var(--slate-500)' }}>{sim.rule_name} • Mô phỏng lần {history.length - index}</span>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <VStatus label={sim.severity} className="badge-outline uppercase" />
+                      <VStatus status={sim.severity} type="severity" className="badge-outline uppercase" />
                       <div style={{ fontSize: '0.8rem', color: 'var(--slate-500)', marginTop: '0.25rem' }}>{formatDate(sim.detected_at)}</div>
                     </div>
                   </div>

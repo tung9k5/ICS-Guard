@@ -38,7 +38,7 @@
   &:has(.v-select-clear) .v-select-filter {
     padding-right: 3.4286rem;
     border-color: var(--blue-400);
-    background-color: var(--blue-50, rgba(239, 246, 255, 0.8));
+    background-color: var(--blue-50, var(--custom-color-56));
     color: var(--blue-700);
     background-image: none; // hide chevron when X is showing
   }

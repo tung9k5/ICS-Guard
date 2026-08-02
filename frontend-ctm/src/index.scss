@@ -7,7 +7,7 @@ html {
   --bg-primary: var(--primary-blue);
   --bg-secondary: var(--slate-800);
   --bg-content: var(--gray-200);
-  --bg-glass: rgba(15, 20, 35, 0.35);
+  --bg-glass: var(--custom-color-67);
   
   --text-primary: var(--white);
   --text-secondary: var(--slate-300); 
@@ -21,14 +21,14 @@ html {
   --accent-gradient: linear-gradient(to right, var(--blue-400), var(--purple-500));
   --accent-gradient-light: linear-gradient(to right, var(--blue-300), var(--purple-400));
   
-  --border-subtle: rgba(255, 255, 255, 0.05);
-  --border-light: rgba(255, 255, 255, 0.15);
-  --border-focus: rgba(96, 165, 250, 0.5);
+  --border-subtle: var(--custom-color-68);
+  --border-light: var(--custom-color-36);
+  --border-focus: var(--custom-color-69);
   
-  --shadow-sm: 0 0.0714rem 0.1429rem 0 rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 0.2857rem 0.4286rem -0.0714rem rgba(0, 0, 0, 0.3), 0 0.1429rem 0.2857rem -0.0714rem rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 0.7143rem 1.0714rem -0.2143rem rgba(0, 0, 0, 0.4), 0 0.2857rem 0.4286rem -0.1429rem rgba(0, 0, 0, 0.25);
-  --shadow-glass: 0 2.1429rem 4.2857rem -0.7143rem rgba(0, 0, 0, 0.7), inset 0 0.0714rem 0 rgba(255, 255, 255, 0.1);
+  --shadow-sm: 0 0.0714rem 0.1429rem 0 var(--custom-color-40);
+  --shadow-md: 0 0.2857rem 0.4286rem -0.0714rem var(--custom-color-41), 0 0.1429rem 0.2857rem -0.0714rem var(--custom-color-40);
+  --shadow-lg: 0 0.7143rem 1.0714rem -0.2143rem var(--custom-color-42), 0 0.2857rem 0.4286rem -0.1429rem var(--custom-color-70);
+  --shadow-glass: 0 2.1429rem 4.2857rem -0.7143rem var(--custom-color-71), inset 0 0.0714rem 0 var(--custom-color-47);
 }
 
 *, *::before, *::after {

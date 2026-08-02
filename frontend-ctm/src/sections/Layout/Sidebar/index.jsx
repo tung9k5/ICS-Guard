@@ -106,7 +106,7 @@ const CustomerSidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
         <div
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 9999,
+            backgroundColor: 'var(--custom-color-104)', zIndex: 9999,
             display: 'flex', justifyContent: 'center', alignItems: 'center',
           }}
           onClick={() => setIsFullscreenLogo(false)}

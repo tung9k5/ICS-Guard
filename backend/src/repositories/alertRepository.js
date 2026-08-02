@@ -32,6 +32,10 @@ class AlertRepository {
     return Alert.create(data);
   }
 
+  async insertMany(data) {
+    return Alert.insertMany(data);
+  }
+
   async updateStatusById(id, data) {
     return Alert.findByIdAndUpdate(id, { $set: data }, { new: true, runValidators: true });
   }

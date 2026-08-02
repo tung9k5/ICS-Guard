@@ -25,7 +25,7 @@
     position: absolute;
     inset: 0;
     /* Gradient nhẹ nhàng hơn để ảnh nền xuyên qua form rõ hơn */
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.6) 100%);
+    background: linear-gradient(135deg, var(--custom-color-40) 0%, var(--custom-color-66) 100%);
     z-index: 1;
   }
 
@@ -49,14 +49,14 @@
       background: var(--accent-gradient-light);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      text-shadow: 0 0.2857rem 0.8571rem rgba(0, 0, 0, 0.3);
+      text-shadow: 0 0.2857rem 0.8571rem var(--custom-color-41);
     }
 
     p {
       font-size: 1.25rem;
-      color: rgba(255, 255, 255, 0.85);
+      color: var(--custom-color-72);
       line-height: 1.6;
-      text-shadow: 0 0.1429rem 0.2857rem rgba(0, 0, 0, 0.5);
+      text-shadow: 0 0.1429rem 0.2857rem var(--custom-color-73);
     }
   }
 }
@@ -132,12 +132,12 @@
     background: linear-gradient(135deg, var(--red-500) 0%, var(--orange-500) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    text-shadow: 0 0.2857rem 0.8571rem rgba(239, 68, 68, 0.25);
+    text-shadow: 0 0.2857rem 0.8571rem var(--custom-color-74);
   }
 
   .auth-panel {
-    border-color: rgba(239, 68, 68, 0.25);
-    box-shadow: 0 0.5714rem 2.2857rem 0 rgba(239, 68, 68, 0.15);
+    border-color: var(--custom-color-74);
+    box-shadow: 0 0.5714rem 2.2857rem 0 var(--custom-color-75);
     
     .auth-subtitle {
       color: var(--red-500);

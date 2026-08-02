@@ -2,6 +2,8 @@ import bcrypt from 'bcryptjs';
 import userRepository from '../repositories/userRepository.js';
 import AppError from '../utils/AppError.js';
 import { parsePagination, buildSortOption } from '../utils/pagination.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 class UserService {
   async getAll(queryParams, currentUserId) {
@@ -35,14 +37,14 @@ class UserService {
 
   async getById(id) {
     const user = await userRepository.findById(id);
-    if (!user) throw new AppError('User not found', 404);
+    if (!user) throw new AppError('User not found', HTTP_STATUS.NOT_FOUND);
     return user;
   }
 
   async create(data) {
     const { username, password, role, email, full_name, is_active } = data;
     const existingUser = await userRepository.findByUsername(username);
-    if (existingUser) throw new AppError('Username already exists', 409);
+    if (existingUser) throw new AppError('Username already exists', HTTP_STATUS.CONFLICT);
 
     const password_hash = await bcrypt.hash(password, 10);
     const newUser = await userRepository.create({
@@ -68,7 +70,7 @@ class UserService {
   async update(id, data) {
     const { role, is_active, password, full_name, email, avatar, username } = data;
     const user = await userRepository.findById(id, '+password_hash');
-    if (!user) throw new AppError('User not found', 404);
+    if (!user) throw new AppError('User not found', HTTP_STATUS.NOT_FOUND);
 
     const updateData = {};
     if (role !== undefined) updateData.role = role;
@@ -80,7 +82,7 @@ class UserService {
     }
     if (username !== undefined && username !== user.username) {
       const existingUser = await userRepository.findByUsername(username);
-      if (existingUser) throw new AppError('Username already exists', 409);
+      if (existingUser) throw new AppError('Username already exists', HTTP_STATUS.CONFLICT);
       updateData.username = username;
     }
     if (full_name !== undefined) updateData.full_name = full_name;
@@ -95,15 +97,15 @@ class UserService {
   }
 
   async remove(id, currentUserId) {
-    if (currentUserId === id.toString()) throw new AppError('You cannot delete your own account', 400);
+    if (currentUserId === id.toString()) throw new AppError('You cannot delete your own account', HTTP_STATUS.BAD_REQUEST);
     const user = await userRepository.findById(id);
-    if (!user) throw new AppError('User not found', 404);
+    if (!user) throw new AppError('User not found', HTTP_STATUS.NOT_FOUND);
     await userRepository.deleteById(id);
   }
 
   async removeMany(ids, currentUserId) {
     if (currentUserId && ids.includes(currentUserId.toString())) {
-      throw new AppError('Bạn không thể tự xóa tài khoản của chính mình', 400);
+      throw new AppError('Bạn không thể tự xóa tài khoản của chính mình', HTTP_STATUS.BAD_REQUEST);
     }
     return userRepository.deleteMany(ids);
   }
@@ -111,7 +113,7 @@ class UserService {
   async updateProfile(userId, data) {
     const { full_name, email, password, avatar } = data;
     const user = await userRepository.findById(userId, '+password_hash');
-    if (!user) throw new AppError('User not found', 404);
+    if (!user) throw new AppError('User not found', HTTP_STATUS.NOT_FOUND);
 
     const updateData = {};
     if (full_name !== undefined) updateData.full_name = full_name;

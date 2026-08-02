@@ -8,6 +8,8 @@ import idGeneratorService from '../services/idGeneratorService.js';
 import socketService from '../services/socketService.js';
 import notificationService from '../services/notification.service.js';
 import { ALERT_STATUSES, INCIDENT_STATUSES, SEVERITY_LEVELS, INCIDENT_TIMELINE_TYPES } from '../constants/index.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 const router = express.Router();
 
@@ -23,18 +25,18 @@ router.get('/status', authMiddleware, authorize([ROLES.ADMIN, ROLES.CUSTOMER]), 
 router.post('/scenario', authMiddleware, authorize([ROLES.ADMIN, ROLES.CUSTOMER]), async (req, res) => {
   const { device_id, scenario, severity } = req.body;
   if (!device_id || !scenario) {
-    return res.status(400).json({ error: 'device_id and scenario are required' });
+    return res.status(HTTP_STATUS.BAD_REQUEST).json({ error: 'device_id and scenario are required' });
   }
 
   let deviceType = 'SENSOR';
   const device = await Device.findById(device_id);
   if (device) {
     if (req.user.role !== ROLES.ADMIN && String(device.userId) !== String(req.user.id)) {
-      return res.status(403).json({ error: 'Forbidden: Device does not belong to you' });
+      return res.status(HTTP_STATUS.FORBIDDEN).json({ error: 'Forbidden: Device does not belong to you' });
     }
     deviceType = device.type || device.node_type || 'SENSOR';
   } else if (req.user.role !== ROLES.ADMIN) {
-    return res.status(403).json({ error: 'Forbidden: Device not found' });
+    return res.status(HTTP_STATUS.FORBIDDEN).json({ error: 'Forbidden: Device not found' });
   }
 
   // Publish to control topic which simulator listens to

@@ -1,5 +1,7 @@
 import { successResponse, paginatedResponse } from '../utils/response.js';
 import incidentService from '../services/incidentService.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 export const getAllIncidents = async (req, res, next) => {
   try {
@@ -22,7 +24,7 @@ export const getIncidentById = async (req, res, next) => {
 export const createIncident = async (req, res, next) => {
   try {
     const incident = await incidentService.create(req.body, req.user);
-    return res.status(201).json(incident);
+    return res.status(HTTP_STATUS.CREATED).json(incident);
   } catch (error) {
     next(error);
   }
@@ -59,7 +61,7 @@ export const triggerAiAnalysis = async (req, res, next) => {
   try {
     const incident = await incidentService.triggerAiAnalysis(req.params.id, req.user);
     // Use 202 Accepted for async job
-    return res.status(202).json({
+    return res.status(HTTP_STATUS.ACCEPTED).json({
       status: 'success',
       message: 'AI Analysis triggered successfully in the background',
       data: { status: incident.status, ai_status: incident.ai_status || 'processing' }

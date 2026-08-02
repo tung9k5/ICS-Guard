@@ -41,8 +41,8 @@
   }
 
   .auth-error-alert {
-    background-color: rgba(239, 68, 68, 0.1);
-    border: 0.0714rem solid rgba(239, 68, 68, 0.2);
+    background-color: var(--custom-color-101);
+    border: 0.0714rem solid var(--custom-color-54);
     color: var(--danger-color);
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;

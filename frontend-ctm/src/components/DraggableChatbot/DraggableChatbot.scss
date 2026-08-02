@@ -24,7 +24,7 @@
       justify-content: center;
       align-items: center;
       cursor: pointer;
-      box-shadow: 0 0.2857rem 0.8571rem rgba(0,0,0,0.15);
+      box-shadow: 0 0.2857rem 0.8571rem var(--custom-color-33);
       transition: transform 0.2s, background-color 0.2s;
       color: var(--blue-600);
 
@@ -47,7 +47,7 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        box-shadow: 0 0.1429rem 0.2857rem rgba(0,0,0,0.2);
+        box-shadow: 0 0.1429rem 0.2857rem var(--custom-color-40);
         border: 0.1429rem solid var(--white);
         z-index: 10;
       }
@@ -64,7 +64,7 @@
     justify-content: center;
     align-items: center;
     cursor: grab;
-    box-shadow: 0 0.2857rem 0.8571rem rgba(0,0,0,0.3);
+    box-shadow: 0 0.2857rem 0.8571rem var(--custom-color-41);
     transition: transform 0.2s, background-color 0.2s;
     position: absolute;
     bottom: 0;
@@ -80,7 +80,7 @@
 
     &.dragging {
       transform: scale(1.05);
-      box-shadow: 0 0.5714rem 1.4286rem rgba(0,0,0,0.4);
+      box-shadow: 0 0.5714rem 1.4286rem var(--custom-color-42);
     }
 
     .unread-badge-main {
@@ -97,7 +97,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      box-shadow: 0 0.1429rem 0.2857rem rgba(0,0,0,0.2);
+      box-shadow: 0 0.1429rem 0.2857rem var(--custom-color-40);
       border: 0.1429rem solid var(--white);
       z-index: 10;
     }

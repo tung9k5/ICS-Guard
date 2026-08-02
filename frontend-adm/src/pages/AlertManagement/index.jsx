@@ -13,6 +13,7 @@ import { useSelection } from '@/hooks/useSelection';
 import { useFetchList } from '@/hooks/useFetchList';
 import { DEFAULT_PAGE_SIZE } from '@/constants/uiConstants';
 import { ALERT_SEVERITIES, ALERT_STATUSES } from '@/constants/alertConstants';
+import { getSeverityConfig, getStatusConfig } from '@/utils/statusMapper';
 import VSelectFilter from '@/components/VSelectFilter';
 import VButton from '@/components/VButton';
 import { Trash2, X } from 'lucide-react';
@@ -124,7 +125,7 @@ const AlertManagement = () => {
             >
               <option value="">{t('alerts.filter_severity', 'Tất cả mức độ')}</option>
               {ALERT_SEVERITIES.map(sev => (
-                <option key={sev.value} value={sev.value}>{sev.label}</option>
+                <option key={sev.value} value={sev.value}>{t(getSeverityConfig(sev.value).label)}</option>
               ))}
             </select>
             {filters.severity && (
@@ -145,7 +146,7 @@ const AlertManagement = () => {
             >
               <option value="">{t('alerts.filter_status', 'Tất cả trạng thái')}</option>
               {ALERT_STATUSES.map(stat => (
-                <option key={stat.value} value={stat.value}>{stat.label}</option>
+                <option key={stat.value} value={stat.value}>{t(getStatusConfig(stat.value).label)}</option>
               ))}
             </select>
             {filters.status && (

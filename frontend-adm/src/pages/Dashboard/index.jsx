@@ -7,8 +7,11 @@ import Viewlogo from '@/components/Viewlogo';
 import dashboardApi from '@/api/dashboard';
 import './Dashboard.scss';
 
+import { useNavigate } from 'react-router-dom';
+
 const Dashboard = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   
   const [networkData, setNetworkData] = useState([]);
   const [threatData, setThreatData] = useState([]);
@@ -62,10 +65,10 @@ const Dashboard = () => {
             <p>{t('dashboard.banner.subtitle', 'Giám sát liên tục 24/7, phát hiện sớm mọi rủi ro và ngăn chặn tấn công vào hạ tầng công nghiệp của bạn.')}</p>
           </div>
           <div className="promo-actions">
-            <VButton variant="primary" className="btn-primary">
+            <VButton variant="primary" className="btn-primary" onClick={() => navigate('/coming-soon')}>
               {t('dashboard.banner.btn_upgrade', 'KÍCH HOẠT BẢO VỆ NÂNG CAO')}
             </VButton>
-            <VButton variant="secondary" className="btn-secondary">
+            <VButton variant="secondary" className="btn-secondary" onClick={() => navigate('/coming-soon')}>
               {t('dashboard.banner.btn_report', 'KẾT NỐI HỆ THỐNG MỚI')}
               <ArrowRight size={16} />
             </VButton>

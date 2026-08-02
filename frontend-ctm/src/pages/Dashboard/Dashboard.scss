@@ -10,7 +10,7 @@
     align-items: flex-start;
     overflow: hidden;
     margin-bottom: 2.2857rem;
-    box-shadow: 0 0.7143rem 1.0714rem -0.2143rem rgba(30, 58, 138, 0.3), 0 0.2857rem 0.4286rem -0.1429rem rgba(30, 58, 138, 0.15);
+    box-shadow: 0 0.7143rem 1.0714rem -0.2143rem var(--custom-color-84), 0 0.2857rem 0.4286rem -0.1429rem var(--custom-color-85);
     color: var(--white);
     min-height: 15.7143rem;
     z-index: 0;
@@ -83,7 +83,7 @@
           &.btn-primary {
             background-color: var(--blue-500);
             color: var(--white);
-            box-shadow: 0 0.2857rem 0.4286rem -0.0714rem rgba(59, 130, 246, 0.4);
+            box-shadow: 0 0.2857rem 0.4286rem -0.0714rem var(--custom-color-49);
 
             &:hover {
               background-color: var(--blue-600);
@@ -92,13 +92,13 @@
           }
 
           &.btn-secondary {
-            background-color: rgba(255, 255, 255, 0.1);
+            background-color: var(--custom-color-47);
             color: var(--white);
-            border: 0.0714rem solid rgba(255, 255, 255, 0.2);
+            border: 0.0714rem solid var(--custom-color-34);
 
             &:hover {
-              background-color: rgba(255, 255, 255, 0.15);
-              border-color: rgba(255, 255, 255, 0.3);
+              background-color: var(--custom-color-36);
+              border-color: var(--custom-color-86);
             }
           }
         }
@@ -157,7 +157,7 @@
       height: 200%;
       background: conic-gradient(
         transparent,
-        rgba(59, 130, 246, 0.1),
+        var(--custom-color-38),
         var(--blue-500),
         transparent 30%
       );
@@ -221,7 +221,7 @@
     gap: 1.1429rem;
     overflow: hidden;
     color: var(--white);
-    box-shadow: 0 0.7143rem 1.0714rem -0.2143rem rgba(30, 58, 138, 0.3), 0 0.2857rem 0.4286rem -0.1429rem rgba(30, 58, 138, 0.15);
+    box-shadow: 0 0.7143rem 1.0714rem -0.2143rem var(--custom-color-84), 0 0.2857rem 0.4286rem -0.1429rem var(--custom-color-85);
     z-index: 0;
 
     .icon-wrapper {
@@ -231,8 +231,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(255, 255, 255, 0.1);
-      border: 0.0714rem solid rgba(255, 255, 255, 0.15);
+      background: var(--custom-color-47);
+      border: 0.0714rem solid var(--custom-color-36);
       z-index: 2;
     }
 
@@ -250,7 +250,7 @@
         font-weight: 700;
         color: var(--white);
         margin: 0;
-        text-shadow: 0 0.1429rem 0.2857rem rgba(0,0,0,0.3);
+        text-shadow: 0 0.1429rem 0.2857rem var(--custom-color-41);
       }
     }
 
@@ -286,8 +286,8 @@
       height: 200%;
       background: conic-gradient(
         transparent,
-        rgba(255, 255, 255, 0.1),
-        rgba(255, 255, 255, 0.4),
+        var(--custom-color-47),
+        var(--custom-color-87),
         transparent 30%
       );
       animation: rotateBorder 4s linear infinite;
@@ -354,7 +354,7 @@
       z-index: 0;
       overflow: hidden;
       border-radius: 0.8571rem;
-      box-shadow: 0 0.2857rem 0.4286rem -0.0714rem rgba(0, 0, 0, 0.1), 0 0.1429rem 0.2857rem -0.0714rem rgba(0, 0, 0, 0.06);
+      box-shadow: 0 0.2857rem 0.4286rem -0.0714rem var(--custom-color-31), 0 0.1429rem 0.2857rem -0.0714rem var(--custom-color-88);
       padding: 1.7143rem 0.7143rem;
       flex: 1;
       display: flex;
@@ -369,8 +369,8 @@
         height: 200%;
         background: conic-gradient(
           transparent,
-          rgba(59, 130, 246, 0.02),
-          rgba(59, 130, 246, 0.3),
+          var(--custom-color-89),
+          var(--custom-color-90),
           transparent 20%
         );
         animation: rotateBorder 6s linear infinite;
@@ -425,7 +425,7 @@
     }
 
     .dashboard-card {
-      box-shadow: 0 0.2857rem 0.4286rem -0.0714rem rgba(0, 0, 0, 0.5);
+      box-shadow: 0 0.2857rem 0.4286rem -0.0714rem var(--custom-color-73);
       &::after {
         background: var(--gray-800);
       }
@@ -437,9 +437,9 @@
   position: relative;
   background: var(--white);
   border-radius: 1.1429rem;
-  border: 0.0714rem solid rgba(234, 237, 240, 0.8);
-  box-shadow: 0 0.5714rem 1.1429rem -0.2143rem rgba(15, 23, 42, 0.05),
-              0 0.2857rem 0.5714rem -0.1429rem rgba(15, 23, 42, 0.03);
+  border: 0.0714rem solid var(--custom-color-91);
+  box-shadow: 0 0.5714rem 1.1429rem -0.2143rem var(--custom-color-92),
+              0 0.2857rem 0.5714rem -0.1429rem var(--custom-color-93);
   overflow: hidden;
   margin-bottom: 2.2857rem;
   z-index: 1;
@@ -457,11 +457,11 @@
 
   .card-header {
     padding: 1.4286rem 1.7143rem;
-    border-bottom: 0.0714rem solid rgba(226, 232, 240, 0.8);
+    border-bottom: 0.0714rem solid var(--custom-color-94);
     display: flex;
     align-items: center;
     gap: 0.5714rem;
-    background: linear-gradient(180deg, rgba(248, 250, 252, 0.8) 0%, rgba(255, 255, 255, 1) 100%);
+    background: linear-gradient(180deg, var(--custom-color-95) 0%, var(--custom-color-96) 100%);
 
     h3 {
       margin: 0;
@@ -475,7 +475,7 @@
 
 .recent-alert-item {
   padding: 1.2857rem 1.7143rem;
-  border-bottom: 0.0714rem solid rgba(226, 232, 240, 0.6);
+  border-bottom: 0.0714rem solid var(--custom-color-97);
   transition: all 0.3s ease;
   background-color: var(--white);
   
@@ -484,7 +484,7 @@
   }
 
   &:hover {
-    background-color: rgba(248, 250, 252, 0.6);
+    background-color: var(--custom-color-98);
     transform: translateX(0.1429rem);
   }
 
@@ -517,8 +517,8 @@
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        box-shadow: inset 0 0 0 0.0714rem rgba(255, 255, 255, 0.5),
-                    0 0.2857rem 0.5714rem -0.1429rem rgba(0, 0, 0, 0.05);
+        box-shadow: inset 0 0 0 0.0714rem var(--custom-color-99),
+                    0 0.2857rem 0.5714rem -0.1429rem var(--custom-color-32);
         position: relative;
         overflow: hidden;
 
@@ -526,7 +526,7 @@
           content: '';
           position: absolute;
           inset: 0;
-          background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 100%);
+          background: linear-gradient(135deg, var(--custom-color-87) 0%, var(--custom-color-100) 100%);
           pointer-events: none;
         }
 

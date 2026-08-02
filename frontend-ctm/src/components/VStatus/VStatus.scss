@@ -9,11 +9,11 @@
   white-space: nowrap;
   letter-spacing: 0.0214rem;
   transition: all 0.2s ease;
-  box-shadow: 0 0.0714rem 0.1429rem rgba(0, 0, 0, 0.05);
+  box-shadow: 0 0.0714rem 0.1429rem var(--custom-color-32);
   
   &:hover {
     transform: translateY(-0.0714rem);
-    box-shadow: 0 0.1429rem 0.2857rem rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0.1429rem 0.2857rem var(--custom-color-31);
   }
 
   &-success {

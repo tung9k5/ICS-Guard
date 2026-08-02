@@ -71,10 +71,10 @@ const CustomerDashboard = () => {
               <p>{t('customer.dashboard.banner_subtitle')}</p>
             </div>
             <div className="promo-actions">
-              <VButton variant="primary" className="btn-primary">
+              <VButton variant="primary" className="btn-primary" onClick={() => navigate('/coming-soon')}>
                 {t('customer.dashboard.btn_upgrade')}
               </VButton>
-              <VButton variant="secondary" className="btn-secondary">
+              <VButton variant="secondary" className="btn-secondary" onClick={() => navigate('/coming-soon')}>
                 {t('customer.dashboard.btn_report')}
                 <ArrowRight size={16} />
               </VButton>
@@ -100,7 +100,7 @@ const CustomerDashboard = () => {
             <a 
               href="#" 
               onClick={(e) => { e.preventDefault(); navigate('/alerts'); }}
-              style={{ color: '#1877f2', textDecoration: 'none', fontWeight: '600', fontSize: '0.9rem' }}
+              style={{ color: 'var(--custom-color-15)', textDecoration: 'none', fontWeight: '600', fontSize: '0.9rem' }}
               className="view-all-link"
             >
               {t('notifications.viewAll')}
@@ -140,7 +140,7 @@ const CustomerDashboard = () => {
                               <span className="alert-separator">•</span>
                               <span className="alert-time" style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                                 {formatDate(alert.createdAt)}
-                                <span style={{ color: 'var(--primary-color, #3b82f6)', fontWeight: 500 }}>
+                                <span style={{ color: 'var(--primary-color, var(--blue-500))', fontWeight: 500 }}>
                                   ({getTimeAgo(alert.createdAt, t)})
                                 </span>
                               </span>

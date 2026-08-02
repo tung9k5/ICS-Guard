@@ -19,7 +19,7 @@ import incidentsApi from '@/api/incidents';
 const AiResultCard = ({ aiResult, t }) => {
   if (!aiResult || !aiResult.log_summary) return null;
   return (
-    <div style={{ backgroundColor: '#ffffff', borderRadius: '0.75rem', border: '1px solid var(--slate-200)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)', overflow: 'hidden' }}>
+    <div style={{ backgroundColor: 'var(--white-short)', borderRadius: '0.75rem', border: '1px solid var(--slate-200)', boxShadow: '0 4px 6px -1px var(--custom-color-32), 0 2px 4px -1px var(--custom-color-102)', overflow: 'hidden' }}>
       
       {/* Header section */}
       <div style={{ backgroundColor: 'var(--slate-50)', padding: '1rem 1.5rem', borderBottom: '1px solid var(--slate-200)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -36,7 +36,7 @@ const AiResultCard = ({ aiResult, t }) => {
         </div>
         
         {aiResult.risk_level && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'white', padding: '0.375rem 0.75rem', borderRadius: '2rem', border: '1px solid var(--slate-300)', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'white', padding: '0.375rem 0.75rem', borderRadius: '2rem', border: '1px solid var(--slate-300)', boxShadow: '0 1px 2px var(--custom-color-32)' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--slate-700)', fontWeight: 600, textTransform: 'uppercase' }}>
               {t('customer.incidents.ai.risk_level', 'Mức rủi ro')}:
             </span>
@@ -331,7 +331,7 @@ const IncidentDetailModal = ({ incident: incidentData, onClose, onRefresh }) => 
         {aiStatus === AI_STATUS.COMPLETED && liveAiResult ? (
           <AiResultCard aiResult={liveAiResult} t={t} />
         ) : aiStatus === AI_STATUS.PROCESSING ? (
-          <div style={{ backgroundColor: 'var(--slate-50)', padding: '1.25rem', borderRadius: '0.5rem', border: '1px solid #bee3f8', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <div style={{ backgroundColor: 'var(--slate-50)', padding: '1.25rem', borderRadius: '0.5rem', border: '1px solid var(--custom-color-17)', display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <Loader2 size={24} className="text-primary animate-spin" />
             <div>
               <div style={{ fontWeight: 600, color: 'var(--slate-800)' }}>{t('customer.incidents.ai.status_processing', 'Đang phân tích AI...')}</div>

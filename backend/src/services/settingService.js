@@ -1,5 +1,7 @@
 import settingRepository from '../repositories/settingRepository.js';
 import AppError from '../utils/AppError.js';
+import { HTTP_STATUS } from '../constants/index.js';
+
 
 class SettingService {
   async getAllSettings() {
@@ -10,7 +12,7 @@ class SettingService {
   async getSettingByKey(key) {
     const setting = await settingRepository.findByKey(key);
     if (!setting) {
-      throw new AppError('Setting not found', 404);
+      throw new AppError('Setting not found', HTTP_STATUS.NOT_FOUND);
     }
     return setting;
   }

@@ -7,15 +7,15 @@
   padding: 1.7143rem;
   
   .status-container {
-    background: rgba(30, 54, 112, 0.6);
+    background: var(--custom-color-83);
     backdrop-filter: blur(0.8571rem);
     border-radius: 1.1429rem;
     padding: 3.4286rem 2.2857rem;
-    box-shadow: 0 1.0714rem 2.5rem rgba(0,0,0,0.3);
+    box-shadow: 0 1.0714rem 2.5rem var(--custom-color-41);
     max-width: 35.7143rem;
     width: 100%;
     text-align: center;
-    border: 0.0714rem solid rgba(255, 255, 255, 0.1);
+    border: 0.0714rem solid var(--custom-color-47);
     position: relative;
     overflow: hidden;
     

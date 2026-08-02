@@ -70,10 +70,10 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], onSelect, onSelec
                   <div className="truncate-text font-medium text-primary" title={rule.rule_name}>{rule.rule_name}</div>
                 </td>
                 <td>
-                  <VStatus status={getSeverityVariant(rule.severity)} label={getSeverityLabel(rule.severity)} showDot />
+                  <VStatus status={getSeverityVariant(rule.severity)} type="severity" label={getSeverityLabel(rule.severity)} showDot />
                 </td>
                 <td>
-                  <VStatus status={rule.is_active ? 'active' : 'inactive'} label={rule.is_active ? t('rules.status_active', 'Đang hoạt động') : t('rules.status_inactive', 'Tạm dừng')} showDot />
+                  <VStatus status={rule.is_active ? 'active' : 'inactive'} type="status" label={rule.is_active ? t('rules.status_active', 'Đang hoạt động') : t('rules.status_inactive', 'Tạm dừng')} showDot />
                 </td>
                 <td>{rule.time_window_seconds}s</td>
                 <td>{rule.trigger_count}</td>
@@ -133,7 +133,7 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], onSelect, onSelec
                   <div className="detail-row">
                     <span className="detail-label">{t('rules.list_table.table_severity', 'Mức độ')}</span>
                     <span className="detail-value">
-                      <VStatus status={getSeverityVariant(rule.severity)} label={getSeverityLabel(rule.severity)} showDot />
+                      <VStatus status={getSeverityVariant(rule.severity)} type="severity" label={getSeverityLabel(rule.severity)} showDot />
                     </span>
                     <div className="card-action-menu">
                       <ActionMenu actions={getActions(rule)} direction="down" />
@@ -142,7 +142,7 @@ const RuleList = ({ rules, onEdit, onDelete, selectedIds = [], onSelect, onSelec
                   <div className="detail-row">
                     <span className="detail-label">{t('rules.list_table.table_status', 'Trạng thái')}</span>
                     <span className="detail-value">
-                      <VStatus status={rule.is_active ? 'active' : 'inactive'} label={rule.is_active ? t('rules.status_active') : t('rules.status_inactive')} showDot />
+                      <VStatus status={rule.is_active ? 'active' : 'inactive'} type="status" label={rule.is_active ? t('rules.status_active') : t('rules.status_inactive')} showDot />
                     </span>
                   </div>
                   <div className="detail-row">

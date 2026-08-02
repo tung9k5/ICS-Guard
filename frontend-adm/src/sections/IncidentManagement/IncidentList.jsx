@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { formatDate } from '@/utils/formatDate';
 import { useExpandable } from '@/hooks/useExpandable';
 
-import { INCIDENT_STATUS, getIncidentSeverityStyle, getIncidentStatusLabel } from '@/constants/incidentConstants';
+import { INCIDENT_STATUS } from '@/constants/incidentConstants';
 
 
 const IncidentList = ({ 
@@ -87,16 +87,12 @@ const IncidentList = ({
                   </td>
                   <td>
                     <VStatus 
-                      label={incident.severity || 'N/A'}
-                      style={getIncidentSeverityStyle(incident.severity)}
+                      status={incident.severity} type="severity"
                       className="badge-outline"
                     />
                   </td>
                   <td>
-                    <VStatus 
-                      status={incident.status === INCIDENT_STATUS.OPEN ? 'inactive' : incident.status === INCIDENT_STATUS.CLOSED ? 'active' : 'default'} 
-                      label={getIncidentStatusLabel(incident.status, t)} 
-                    />
+                    <VStatus status={incident.status} type="status" />
                   </td>
                   <td className="text-muted" style={{ maxWidth: '14.2857rem' }}>
                     <span className="truncate-text" title={incident.description}>{incident.description || '-'}</span>
@@ -165,8 +161,7 @@ const IncidentList = ({
                     <span className="detail-label">{t('incidents.list.table_severity')}</span>
                     <span className="detail-value">
                       <VStatus 
-                        label={incident.severity || 'N/A'}
-                        style={getIncidentSeverityStyle(incident.severity)}
+                        status={incident.severity} type="severity"
                         className="badge-outline"
                       />
                     </span>
@@ -177,10 +172,7 @@ const IncidentList = ({
                   <div className="detail-row">
                     <span className="detail-label">{t('incidents.list.table_status')}</span>
                     <span className="detail-value">
-                      <VStatus 
-                        status={incident.status === INCIDENT_STATUS.OPEN ? 'inactive' : incident.status === INCIDENT_STATUS.CLOSED ? 'active' : 'default'} 
-                        label={getIncidentStatusLabel(incident.status, t)} 
-                      />
+                      <VStatus status={incident.status} type="status" />
                     </span>
                   </div>
                   <div className="detail-row">

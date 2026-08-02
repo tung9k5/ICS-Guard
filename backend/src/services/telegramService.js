@@ -219,22 +219,17 @@ export const sendTelegramAlert = async (text, inlineButtons = [], customChatId =
     try {
       const message = await bot.sendMessage(targetChat, text, options);
       return message;
-    } catch (err) {
+    } catch {
       return null;
     }
   }
 };
 
 // Help helper to trigger a simulated telegram action (e.g. for testing)
-export const simulateTelegramCallback = async (callbackData, messageText = 'Alert') => {
+export const simulateTelegramCallback = async (callbackData) => {
   console.log(`[TelegramService Simulation] Simulating click on: "${callbackData}"`);
 
-  // Create a dummy message
-  const dummyMessage = {
-    chat: { id: 123456 },
-    message_id: 8888,
-    text: messageText,
-  };
+
 
   // Call internal callback handler logic if it's mockBot or real bot
   // We can simulate it by recreating the callback_query event
@@ -260,7 +255,7 @@ export const simulateTelegramCallback = async (callbackData, messageText = 'Aler
         details: JSON.stringify({ deviceId: device.id, name: device.name, status: DEVICE_STATUSES.ISOLATED }),
       });
 
-      alertResponseText = `✅ Device "${device.name}" (IP: ${device.ipAddress}) has been ISOLATED by Admin via Telegram (Simulated).`;
+      alertResponseText = `Device "${device.name}" (IP: ${device.ipAddress}) has been ISOLATED by Admin via Telegram (Simulated).`;
     }
   } else if (action === 'block_ip') {
     const ipAddress = param;
@@ -282,7 +277,7 @@ export const simulateTelegramCallback = async (callbackData, messageText = 'Aler
       details: JSON.stringify({ ipAddress, duration: '24h', reason: 'Telegram admin trigger (Simulated)' }),
     });
 
-    alertResponseText = `✅ IP Address ${ipAddress} has been BLOCKED for 24 hours by Admin via Telegram (Simulated).`;
+    alertResponseText = `IP Address ${ipAddress} has been BLOCKED for 24 hours by Admin via Telegram (Simulated).`;
   }
 
   console.log(`[TelegramService Simulation] Result: ${alertResponseText}`);

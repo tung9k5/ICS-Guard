@@ -12,6 +12,7 @@ import VPagination from '@/components/VPagination';
 import VHeaderPage from '@/components/VHeaderPage';
 import VFilterPage from '@/components/VFilterPage';
 import { DEVICE_TYPES } from '@/constants/deviceConstants';
+import { getDeviceTypeConfig, getStatusConfig } from '@/utils/statusMapper';
 import { toast } from '@/utils/toast';
 import { useTranslation } from 'react-i18next';
 import { useSelection } from '@/hooks/useSelection';
@@ -167,8 +168,8 @@ const DeviceManagement = () => {
               style={{ paddingRight: filters.type ? '2rem' : undefined }}
             >
               <option value="">{t('assets.filter_type_all')}</option>
-              {DEVICE_TYPES.map(t => (
-                <option key={t.value} value={t.value}>{t.label}</option>
+              {DEVICE_TYPES.map(typeItem => (
+                <option key={typeItem.value} value={typeItem.value}>{t(getDeviceTypeConfig(typeItem.value).label)}</option>
               ))}
             </select>
             {filters.type && (
@@ -188,8 +189,8 @@ const DeviceManagement = () => {
               style={{ paddingRight: filters.status ? '2rem' : undefined }}
             >
               <option value="">{t('assets.filter_status_all')}</option>
-              <option value="active">{t('assets.filter_status_active')}</option>
-              <option value="inactive">{t('assets.filter_status_inactive')}</option>
+              <option value="active">{t(getStatusConfig('active').label)}</option>
+              <option value="inactive">{t(getStatusConfig('inactive').label)}</option>
             </select>
             {filters.status && (
               <X 

@@ -1,7 +1,7 @@
 .global-loading-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.85); /* dark slate with opacity */
+  background: var(--custom-color-46); /* dark slate with opacity */
   backdrop-filter: blur(0.2857rem);
   display: flex;
   justify-content: center;
@@ -21,10 +21,10 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--custom-color-47);
       border-radius: 50%;
       border: 0.1429rem solid var(--primary-color);
-      box-shadow: 0 0 1.4286rem rgba(59, 130, 246, 0.5);
+      box-shadow: 0 0 1.4286rem var(--custom-color-48);
 
       .loading-icon-wrapper {
         width: 100%;

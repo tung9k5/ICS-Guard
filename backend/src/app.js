@@ -42,6 +42,8 @@ import settingRoutes from './routes/settingRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import simulatorRoutes from './routes/simulatorRoutes.js';
 import notificationRoutes from './routes/notification.routes.js';
+import { HTTP_STATUS } from './constants/index.js';
+
 
 const app = express();
 const server = http.createServer(app);
@@ -67,7 +69,7 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.get('/', (req, res) => {
-  res.status(200).json({
+  res.status(HTTP_STATUS.OK).json({
     name: 'ICS-Guard API',
     description: 'Industrial Control Systems Guard Security API for Critical Infrastructure Protection',
     version: '1.0.0',

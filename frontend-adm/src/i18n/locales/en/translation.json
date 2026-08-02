@@ -40,7 +40,7 @@
   "layout": {
     "sidebar": {
       "overview": "Overview",
-      "topology": "Network Topology",
+      "topology": "Alerts Topology",
       "alerts": "Security Alerts",
       "assets": "Devices Management",
       "users": "User Management",
@@ -284,7 +284,30 @@
     "go_back": "Go Back",
     "go_home": "Go to Home",
     "title_under_construction": "Feature under development",
-    "under_construction": "This feature is not yet complete and is currently under development. Please come back later."
+    "under_construction": "This feature is not yet complete and is currently under development. Please come back later.",
+    "active": "Active",
+    "inactive": "Inactive",
+    "success": "Success",
+    "error": "Error",
+    "pending": "Pending",
+    "warning": "Warning",
+    "online": "Online",
+    "offline": "Offline",
+    "new": "New",
+    "acknowledged": "Acknowledged",
+    "resolved": "Resolved",
+    "false_positive": "False Positive",
+    "open": "Open",
+    "investigating": "Investigating",
+    "investigated": "Investigated",
+    "remediated": "Remediated",
+    "closed": "Closed",
+    "idle": "Idle",
+    "processing": "Processing",
+    "completed": "Completed",
+    "failed": "Failed",
+    "blocked": "Blocked",
+    "unknown": "Unknown"
   },
   "profile": {
     "title": "Your Profile",
@@ -748,7 +771,14 @@
       "high": "High",
       "critical": "Critical"
     },
-    "severity_label": "Severity"
+    "severity_label": "Severity",
+    "scenario_normal": "Normal",
+    "scenario_fire": "Fire",
+    "scenario_flood": "Flood",
+    "scenario_traffic_spike": "Traffic Spike",
+    "scenario_overheat": "Overheat",
+    "scenario_offline": "Offline",
+    "scenario_abnormal": "Abnormal"
   },
   "notifications": {
     "title": "System Logs",
@@ -761,5 +791,39 @@
       "hours": "{{count}}h ago",
       "days": "{{count}}d ago"
     }
+  },
+  "severity": {
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "info": "Info",
+    "unknown": "Unknown"
+  },
+  "priority": {
+    "p1": "P1",
+    "p2": "P2",
+    "p3": "P3",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "unknown": "Unknown"
+  },
+  "device_type": {
+    "PLC": "PLC",
+    "SENSOR": "Sensor",
+    "ACTUATOR": "Actuator",
+    "GATEWAY": "Gateway",
+    "HMI": "HMI",
+    "CAMERA": "Camera",
+    "CONTROLLER": "Controller",
+    "OTHER": "Other"
+  },
+  "role": {
+    "admin": "Admin",
+    "manager": "Manager",
+    "analyst": "Analyst",
+    "viewer": "Viewer",
+    "unknown": "Unknown"
   }
 }

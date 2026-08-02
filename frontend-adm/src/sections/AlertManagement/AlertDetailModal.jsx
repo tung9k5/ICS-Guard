@@ -99,18 +99,16 @@ const AlertDetailModal = ({ alert: alertData, onClose }) => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--slate-500)', fontWeight: 600, marginBottom: '0.375rem' }}>{t('alerts.col_severity', 'Mức độ')}</div>
-                <VStatus 
-                  label={t(`severity.${alert.severity?.toLowerCase()}`, alert.severity)}
-                  status={getSeverityVariant(alert.severity)} 
+                <VStatus label={t(`severity.${alert.severity?.toLowerCase()}`, alert.severity)}
+                  status={getSeverityVariant(alert.severity)} type="severity" 
                   className="uppercase badge-outline" 
                 />
               </div>
               
               <div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--slate-500)', fontWeight: 600, marginBottom: '0.375rem' }}>{t('alerts.col_status', 'Trạng thái')}</div>
-                <VStatus 
-                  label={t(`status.${alert.status?.toLowerCase()}`, alert.status)}
-                  status={getAlertStatusVariant(alert.status)}
+                <VStatus label={t(`status.${alert.status?.toLowerCase()}`, alert.status)}
+                  status={getAlertStatusVariant(alert.status)} type="status"
                 />
               </div>
             </div>
@@ -133,9 +131,8 @@ const AlertDetailModal = ({ alert: alertData, onClose }) => {
 
               <div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--slate-500)', fontWeight: 600, marginBottom: '0.375rem' }}>{t('alerts.col_simulation', 'Mô phỏng')}</div>
-                <VStatus 
-                  label={alert.device_id?.current_scenario || 'NORMAL'}
-                  status={getScenarioVariant(alert.device_id?.current_scenario)} 
+                <VStatus label={alert.device_id?.current_scenario || 'NORMAL'}
+                  status={getScenarioVariant(alert.device_id?.current_scenario)} type="simulator" 
                 />
               </div>
             </div>

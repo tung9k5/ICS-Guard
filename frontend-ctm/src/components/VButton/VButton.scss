@@ -45,19 +45,19 @@
     background-color: var(--primary-color);
     color: var(--text-primary);
     border: none; /* Bỏ viền để shadow nổi rõ hơn */
-    box-shadow: 0 0.2857rem 0 0 var(--blue-900), inset 0 0.1429rem 0 0 rgba(255, 255, 255, 0.25);
+    box-shadow: 0 0.2857rem 0 0 var(--blue-900), inset 0 0.1429rem 0 0 var(--custom-color-50);
     font-weight: 700;
     text-transform: uppercase;
     
     &:hover:not(:disabled) {
       background-color: var(--primary-hover);
       transform: translateY(0.0714rem);
-      box-shadow: 0 0.2143rem 0 0 var(--blue-900), inset 0 0.1429rem 0 0 rgba(255, 255, 255, 0.2);
+      box-shadow: 0 0.2143rem 0 0 var(--blue-900), inset 0 0.1429rem 0 0 var(--custom-color-34);
     }
 
     &:active:not(:disabled) {
       transform: translateY(0.2857rem);
-      box-shadow: 0 0 0 0 var(--blue-900), inset 0 0.1429rem 0 0 rgba(0, 0, 0, 0.1);
+      box-shadow: 0 0 0 0 var(--blue-900), inset 0 0.1429rem 0 0 var(--custom-color-31);
     }
 
     &:focus {
@@ -91,7 +91,7 @@
     box-shadow: 0 0.2857rem 0 0 var(--blue-900);
 
     &:hover:not(:disabled) {
-      background-color: rgba(59, 130, 246, 0.1);
+      background-color: var(--custom-color-38);
       transform: translateY(0.0714rem);
       box-shadow: 0 0.2143rem 0 0 var(--blue-900);
     }
@@ -129,7 +129,7 @@
     }
 
     &:focus {
-      outline: 0.1429rem solid rgba(239, 68, 68, 0.4);
+      outline: 0.1429rem solid var(--custom-color-51);
       outline-offset: 0.1429rem;
     }
   }
