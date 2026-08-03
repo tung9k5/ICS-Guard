@@ -1,0 +1,852 @@
+{
+  "zones": [
+    "Zone-A",
+    "Zone-B"
+  ],
+  "connections": [
+    {
+      "from": "gateway-01",
+      "to": "firewall-01"
+    },
+    {
+      "from": "firewall-01",
+      "to": "switch-01"
+    },
+    {
+      "from": "hmi-01",
+      "to": "switch-01"
+    },
+    {
+      "from": "plc-01",
+      "to": "switch-01"
+    },
+    {
+      "from": "plc-02",
+      "to": "switch-01"
+    },
+    {
+      "from": "esp32-01",
+      "to": "switch-01"
+    },
+    {
+      "from": "esp32-02",
+      "to": "switch-01"
+    },
+    {
+      "from": "temp-a1",
+      "to": "switch-01"
+    },
+    {
+      "from": "temp-a2",
+      "to": "switch-01"
+    },
+    {
+      "from": "temp-a3",
+      "to": "switch-01"
+    },
+    {
+      "from": "humid-a1",
+      "to": "switch-01"
+    },
+    {
+      "from": "press-a1",
+      "to": "switch-01"
+    },
+    {
+      "from": "flow-a1",
+      "to": "switch-01"
+    },
+    {
+      "from": "smoke-a1",
+      "to": "switch-01"
+    },
+    {
+      "from": "water-a1",
+      "to": "switch-01"
+    },
+    {
+      "from": "motor-a1",
+      "to": "switch-01"
+    },
+    {
+      "from": "valve-a1",
+      "to": "switch-01"
+    },
+    {
+      "from": "valve-a2",
+      "to": "switch-01"
+    },
+    {
+      "from": "relay-a1",
+      "to": "switch-01"
+    },
+    {
+      "from": "relay-a2",
+      "to": "switch-01"
+    },
+    {
+      "from": "siren-a1",
+      "to": "switch-01"
+    },
+    {
+      "from": "camera-a1",
+      "to": "switch-01"
+    },
+    {
+      "from": "meter-a1",
+      "to": "switch-01"
+    },
+    {
+      "from": "lock-a1",
+      "to": "switch-01"
+    },
+    {
+      "from": "gateway-02",
+      "to": "firewall-02"
+    },
+    {
+      "from": "firewall-02",
+      "to": "switch-02"
+    },
+    {
+      "from": "hmi-02",
+      "to": "switch-02"
+    },
+    {
+      "from": "plc-03",
+      "to": "switch-02"
+    },
+    {
+      "from": "plc-04",
+      "to": "switch-02"
+    },
+    {
+      "from": "esp32-03",
+      "to": "switch-02"
+    },
+    {
+      "from": "esp32-04",
+      "to": "switch-02"
+    },
+    {
+      "from": "temp-b1",
+      "to": "switch-02"
+    },
+    {
+      "from": "temp-b2",
+      "to": "switch-02"
+    },
+    {
+      "from": "humid-b1",
+      "to": "switch-02"
+    },
+    {
+      "from": "humid-b2",
+      "to": "switch-02"
+    },
+    {
+      "from": "press-b1",
+      "to": "switch-02"
+    },
+    {
+      "from": "flow-b1",
+      "to": "switch-02"
+    },
+    {
+      "from": "smoke-b1",
+      "to": "switch-02"
+    },
+    {
+      "from": "water-b1",
+      "to": "switch-02"
+    },
+    {
+      "from": "motor-b1",
+      "to": "switch-02"
+    },
+    {
+      "from": "valve-b1",
+      "to": "switch-02"
+    },
+    {
+      "from": "valve-b2",
+      "to": "switch-02"
+    },
+    {
+      "from": "relay-b1",
+      "to": "switch-02"
+    },
+    {
+      "from": "relay-b2",
+      "to": "switch-02"
+    },
+    {
+      "from": "siren-b1",
+      "to": "switch-02"
+    },
+    {
+      "from": "camera-b1",
+      "to": "switch-02"
+    },
+    {
+      "from": "meter-b1",
+      "to": "switch-02"
+    },
+    {
+      "from": "lock-b1",
+      "to": "switch-02"
+    }
+  ],
+  "devices": [
+    {
+      "id": "gateway-01",
+      "name": "Router Gateway Zone-A",
+      "type": "GATEWAY",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.1",
+      "macAddress": "00:60:2F:A1:B2:01",
+      "intervalMs": 5000,
+      "x": 100,
+      "y": 120
+    },
+    {
+      "id": "firewall-01",
+      "name": "Firewall Industrial Zone-A",
+      "type": "GATEWAY",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.2",
+      "macAddress": "00:60:2F:A1:B2:02",
+      "intervalMs": 5000,
+      "x": 100,
+      "y": 215
+    },
+    {
+      "id": "switch-01",
+      "name": "Switch Cong Nghiep Zone-A",
+      "type": "GATEWAY",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.3",
+      "macAddress": "00:60:2F:A1:B2:03",
+      "intervalMs": 5000,
+      "x": 100,
+      "y": 310
+    },
+    {
+      "id": "hmi-01",
+      "name": "HMI Supervision Panel A",
+      "type": "HMI",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.10",
+      "macAddress": "00:60:2F:A1:B2:10",
+      "intervalMs": 5000,
+      "x": 320,
+      "y": 120
+    },
+    {
+      "id": "plc-01",
+      "name": "Master PLC Siemens S7-1500",
+      "type": "PLC",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.20",
+      "macAddress": "00:60:2F:A1:B2:20",
+      "intervalMs": 5000,
+      "x": 320,
+      "y": 215
+    },
+    {
+      "id": "plc-02",
+      "name": "Auxiliary PLC Rockwell Automation",
+      "type": "PLC",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.21",
+      "macAddress": "00:60:2F:A1:B2:21",
+      "intervalMs": 5000,
+      "x": 320,
+      "y": 310
+    },
+    {
+      "id": "esp32-01",
+      "name": "Smart Valve Chip ESP32 A1",
+      "type": "CHIP",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.30",
+      "macAddress": "00:60:2F:A1:B2:30",
+      "intervalMs": 5000,
+      "x": 320,
+      "y": 405
+    },
+    {
+      "id": "esp32-02",
+      "name": "Sensor HUB Chip ESP32 A2",
+      "type": "CHIP",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.31",
+      "macAddress": "00:60:2F:A1:B2:31",
+      "intervalMs": 5000,
+      "x": 320,
+      "y": 500
+    },
+    {
+      "id": "temp-a1",
+      "name": "Boiler 1 Temperature Sensor",
+      "type": "SENSOR",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.100",
+      "macAddress": "00:60:2F:A1:B2:40",
+      "intervalMs": 5000,
+      "x": 580,
+      "y": 120
+    },
+    {
+      "id": "temp-a2",
+      "name": "Boiler 2 Temperature Sensor",
+      "type": "SENSOR",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.101",
+      "macAddress": "00:60:2F:A1:B2:41",
+      "intervalMs": 5000,
+      "x": 580,
+      "y": 215
+    },
+    {
+      "id": "temp-a3",
+      "name": "Turbine Intake Temperature Sensor",
+      "type": "SENSOR",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.102",
+      "macAddress": "00:60:2F:A1:B2:42",
+      "intervalMs": 5000,
+      "x": 580,
+      "y": 310
+    },
+    {
+      "id": "humid-a1",
+      "name": "Cleanroom Humidity Sensor",
+      "type": "SENSOR",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.103",
+      "macAddress": "00:60:2F:A1:B2:43",
+      "intervalMs": 5000,
+      "x": 580,
+      "y": 405
+    },
+    {
+      "id": "press-a1",
+      "name": "Gas Line Steam Pressure Sensor",
+      "type": "SENSOR",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.104",
+      "macAddress": "00:60:2F:A1:B2:44",
+      "intervalMs": 5000,
+      "x": 580,
+      "y": 500
+    },
+    {
+      "id": "flow-a1",
+      "name": "Feedwater Flow Rate Sensor",
+      "type": "SENSOR",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.105",
+      "macAddress": "00:60:2F:A1:B2:45",
+      "intervalMs": 5000,
+      "x": 580,
+      "y": 595
+    },
+    {
+      "id": "smoke-a1",
+      "name": "Main Power Room Smoke Detector",
+      "type": "SENSOR",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.106",
+      "macAddress": "00:60:2F:A1:B2:46",
+      "intervalMs": 5000,
+      "x": 580,
+      "y": 690
+    },
+    {
+      "id": "water-a1",
+      "name": "Boiler Water Level Sensor",
+      "type": "SENSOR",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.107",
+      "macAddress": "00:60:2F:A1:B2:47",
+      "intervalMs": 5000,
+      "x": 580,
+      "y": 785
+    },
+    {
+      "id": "motor-a1",
+      "name": "Boiler Feedwater Pump Motor",
+      "type": "ACTUATOR",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.120",
+      "macAddress": "00:60:2F:A1:B2:50",
+      "intervalMs": 5000,
+      "x": 840,
+      "y": 120
+    },
+    {
+      "id": "valve-a1",
+      "name": "Boiler 1 Gas Intake Valve",
+      "type": "ACTUATOR",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.121",
+      "macAddress": "00:60:2F:A1:B2:51",
+      "intervalMs": 5000,
+      "x": 840,
+      "y": 215
+    },
+    {
+      "id": "valve-a2",
+      "name": "Boiler 2 Gas Intake Valve",
+      "type": "ACTUATOR",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.122",
+      "macAddress": "00:60:2F:A1:B2:52",
+      "intervalMs": 5000,
+      "x": 840,
+      "y": 310
+    },
+    {
+      "id": "relay-a1",
+      "name": "Emergency Shutdown Trip Relay",
+      "type": "ACTUATOR",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.123",
+      "macAddress": "00:60:2F:A1:B2:53",
+      "intervalMs": 5000,
+      "x": 840,
+      "y": 405
+    },
+    {
+      "id": "relay-a2",
+      "name": "Main Grid Circuit Breaker",
+      "type": "ACTUATOR",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.124",
+      "macAddress": "00:60:2F:A1:B2:54",
+      "intervalMs": 5000,
+      "x": 840,
+      "y": 500
+    },
+    {
+      "id": "siren-a1",
+      "name": "Control Room Alarm Horn A",
+      "type": "FIRE_ALARM",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.125",
+      "macAddress": "00:60:2F:A1:B2:55",
+      "intervalMs": 5000,
+      "x": 840,
+      "y": 595
+    },
+    {
+      "id": "camera-a1",
+      "name": "Zone-A Perimeter IP Camera",
+      "type": "IP_CAMERA",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.140",
+      "macAddress": "00:60:2F:A1:B2:60",
+      "intervalMs": 5000,
+      "x": 1080,
+      "y": 120
+    },
+    {
+      "id": "meter-a1",
+      "name": "Industrial Smart Power Meter A",
+      "type": "SMART_METER",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.141",
+      "macAddress": "00:60:2F:A1:B2:61",
+      "intervalMs": 5000,
+      "x": 1080,
+      "y": 215
+    },
+    {
+      "id": "lock-a1",
+      "name": "Server Rack Electronic Lock A",
+      "type": "IP_CAMERA",
+      "zone": "Zone-A",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.10.142",
+      "macAddress": "00:60:2F:A1:B2:62",
+      "intervalMs": 5000,
+      "x": 1080,
+      "y": 310
+    },
+    {
+      "id": "gateway-02",
+      "name": "Router Gateway Zone-B",
+      "type": "GATEWAY",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.1",
+      "macAddress": "00:60:2F:A1:B2:A1",
+      "intervalMs": 5000,
+      "x": 1350,
+      "y": 120
+    },
+    {
+      "id": "firewall-02",
+      "name": "Firewall Industrial Zone-B",
+      "type": "GATEWAY",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.2",
+      "macAddress": "00:60:2F:A1:B2:A2",
+      "intervalMs": 5000,
+      "x": 1350,
+      "y": 215
+    },
+    {
+      "id": "switch-02",
+      "name": "Switch Cong Nghiep Zone-B",
+      "type": "GATEWAY",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.3",
+      "macAddress": "00:60:2F:A1:B2:A3",
+      "intervalMs": 5000,
+      "x": 1350,
+      "y": 310
+    },
+    {
+      "id": "hmi-02",
+      "name": "HMI Operator Desk Panel B",
+      "type": "HMI",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.10",
+      "macAddress": "00:60:2F:A1:B2:B0",
+      "intervalMs": 5000,
+      "x": 1570,
+      "y": 120
+    },
+    {
+      "id": "plc-03",
+      "name": "Process PLC Schneider Modicon",
+      "type": "PLC",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.20",
+      "macAddress": "00:60:2F:A1:B2:C0",
+      "intervalMs": 5000,
+      "x": 1570,
+      "y": 215
+    },
+    {
+      "id": "plc-04",
+      "name": "Conveyor Controller PLC Omron",
+      "type": "PLC",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.21",
+      "macAddress": "00:60:2F:A1:B2:C1",
+      "intervalMs": 5000,
+      "x": 1570,
+      "y": 310
+    },
+    {
+      "id": "esp32-03",
+      "name": "Capacitor Bank Smart Chip B1",
+      "type": "CHIP",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.30",
+      "macAddress": "00:60:2F:A1:B2:D0",
+      "intervalMs": 5000,
+      "x": 1570,
+      "y": 405
+    },
+    {
+      "id": "esp32-04",
+      "name": "Arduino Pump Monitor Chip B2",
+      "type": "CHIP",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.31",
+      "macAddress": "00:60:2F:A1:B2:D1",
+      "intervalMs": 5000,
+      "x": 1570,
+      "y": 500
+    },
+    {
+      "id": "temp-b1",
+      "name": "Coolant Intake Temperature Sensor",
+      "type": "SENSOR",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.100",
+      "macAddress": "00:60:2F:A1:B2:E0",
+      "intervalMs": 5000,
+      "x": 1830,
+      "y": 120
+    },
+    {
+      "id": "temp-b2",
+      "name": "Reactor Outflow Temperature Sensor",
+      "type": "SENSOR",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.101",
+      "macAddress": "00:60:2F:A1:B2:E1",
+      "intervalMs": 5000,
+      "x": 1830,
+      "y": 215
+    },
+    {
+      "id": "humid-b1",
+      "name": "Warehouse Storage Humidity 1",
+      "type": "SENSOR",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.102",
+      "macAddress": "00:60:2F:A1:B2:E2",
+      "intervalMs": 5000,
+      "x": 1830,
+      "y": 310
+    },
+    {
+      "id": "humid-b2",
+      "name": "Warehouse Storage Humidity 2",
+      "type": "SENSOR",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.103",
+      "macAddress": "00:60:2F:A1:B2:E3",
+      "intervalMs": 5000,
+      "x": 1830,
+      "y": 405
+    },
+    {
+      "id": "press-b1",
+      "name": "Hydraulic Line Oil Pressure Sensor",
+      "type": "SENSOR",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.104",
+      "macAddress": "00:60:2F:A1:B2:E4",
+      "intervalMs": 5000,
+      "x": 1830,
+      "y": 500
+    },
+    {
+      "id": "flow-b1",
+      "name": "Chemical Inflow Flowmeter Sensor",
+      "type": "SENSOR",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.105",
+      "macAddress": "00:60:2F:A1:B2:E5",
+      "intervalMs": 5000,
+      "x": 1830,
+      "y": 595
+    },
+    {
+      "id": "smoke-b1",
+      "name": "Oil Storage Room Smoke Detector",
+      "type": "SENSOR",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.106",
+      "macAddress": "00:60:2F:A1:B2:E6",
+      "intervalMs": 5000,
+      "x": 1830,
+      "y": 690
+    },
+    {
+      "id": "water-b1",
+      "name": "Coolant Fluid Reservoir Level Sensor",
+      "type": "SENSOR",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.107",
+      "macAddress": "00:60:2F:A1:B2:E7",
+      "intervalMs": 5000,
+      "x": 1830,
+      "y": 785
+    },
+    {
+      "id": "motor-b1",
+      "name": "Coolant Circulating Pump Motor",
+      "type": "ACTUATOR",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.120",
+      "macAddress": "00:60:2F:A1:B2:F0",
+      "intervalMs": 5000,
+      "x": 2090,
+      "y": 120
+    },
+    {
+      "id": "valve-b1",
+      "name": "Coolant Fluid Emergency Inlet Valve",
+      "type": "ACTUATOR",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.121",
+      "macAddress": "00:60:2F:A1:B2:F1",
+      "intervalMs": 5000,
+      "x": 2090,
+      "y": 215
+    },
+    {
+      "id": "valve-b2",
+      "name": "Chemical Process Outlet Flow Control Valve",
+      "type": "ACTUATOR",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.122",
+      "macAddress": "00:60:2F:A1:B2:F2",
+      "intervalMs": 5000,
+      "x": 2090,
+      "y": 310
+    },
+    {
+      "id": "relay-b1",
+      "name": "Generator Trip Coil Safety Relay",
+      "type": "ACTUATOR",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.123",
+      "macAddress": "00:60:2F:A1:B2:F3",
+      "intervalMs": 5000,
+      "x": 2090,
+      "y": 405
+    },
+    {
+      "id": "relay-b2",
+      "name": "High-Voltage Capacitor Shorting Breaker",
+      "type": "ACTUATOR",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.124",
+      "macAddress": "00:60:2F:A1:B2:F4",
+      "intervalMs": 5000,
+      "x": 2090,
+      "y": 500
+    },
+    {
+      "id": "siren-b1",
+      "name": "Process Block Warning Incident Siren B",
+      "type": "FIRE_ALARM",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.125",
+      "macAddress": "00:60:2F:A1:B2:F5",
+      "intervalMs": 5000,
+      "x": 2090,
+      "y": 595
+    },
+    {
+      "id": "camera-b1",
+      "name": "Zone-B Storage IP Security Camera",
+      "type": "IP_CAMERA",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.140",
+      "macAddress": "00:60:2F:A1:B2:80",
+      "intervalMs": 5000,
+      "x": 2330,
+      "y": 120
+    },
+    {
+      "id": "meter-b1",
+      "name": "Process Block Main Smart Power Meter B",
+      "type": "SMART_METER",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.141",
+      "macAddress": "00:60:2F:A1:B2:81",
+      "intervalMs": 5000,
+      "x": 2330,
+      "y": 215
+    },
+    {
+      "id": "lock-b1",
+      "name": "Control Room Smart Magnetic Lock B",
+      "type": "IP_CAMERA",
+      "zone": "Zone-B",
+      "isPowerConnected": true,
+      "approvalStatus": "APPROVED",
+      "ipAddress": "192.168.20.142",
+      "macAddress": "00:60:2F:A1:B2:82",
+      "intervalMs": 5000,
+      "x": 2330,
+      "y": 310
+    }
+  ]
+}

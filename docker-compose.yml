@@ -146,6 +146,8 @@ services:
   iot-simulator:
     build:
       context: ./iot-simulator
+    ports:
+      - "5001:5001"
     volumes:
       - ./iot-simulator:/app
       - /app/node_modules

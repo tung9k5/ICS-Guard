@@ -178,4 +178,4 @@ const RuleForm = ({ initialData, onSubmit, onCancel, loading }) => {
 };
 
 export default RuleForm;
-export default RuleForm;
+

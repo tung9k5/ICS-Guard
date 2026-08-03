@@ -13,7 +13,17 @@ export class PlcDevice extends BaseDevice {
   }
 
   generateSpecificMetrics(metrics) {
-    if (this.scenario === 'OVERHEAT') {
+    const hasLogicTampering = this.activeAttacks.includes('LOGIC_TAMPERING');
+    const hasReplayCmd = this.activeAttacks.includes('REPLAY_COMMAND');
+    const hasOverheat = this.activeAttacks.includes('OVERHEAT');
+
+    if (hasLogicTampering) {
+      this.motorRpm = 2200 + Math.random() * 800; // abnormal fluctuations
+      this.cycleTime = 28 + Math.random() * 8; // high cycle time
+    } else if (hasReplayCmd) {
+      this.motorRpm = 3000; // forced max speed
+      this.cycleTime = 10 + Math.random() * 2 - 1;
+    } else if (hasOverheat) {
       this.motorRpm = 3000 + Math.random() * 500;
       this.cycleTime = 25 + Math.random() * 5;
     } else {
@@ -26,3 +36,4 @@ export class PlcDevice extends BaseDevice {
     return metrics;
   }
 }
+

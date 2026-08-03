@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ICS-Guard: Trình Mô Phỏng Vật Lý IoT</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <h1>ICS-Guard | IoT Simulator</h1>
+    <div class="nav-links">
+      <a href="/" class="active">Mô Phỏng Vật Lý (/)</a>
+      <a href="/attacks">Điều Khiển Tấn Công (/attacks)</a>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <!-- LEFT SIDEBAR: Device Accordion Toolbox & Zone Manager -->
+    <div class="sidebar">
+      <h2>Hộp Thiết Bị (Toolbox)</h2>
+      <div class="accordion" id="toolbox-accordion">
+        
+        <!-- Accordion 1: Controllers -->
+        <div class="accordion-item open">
+          <div class="accordion-header">1. Bộ Điều Khiển (Controllers)</div>
+          <div class="accordion-content">
+            <div class="device-template" data-type="PLC" draggable="true">
+              <div class="device-icon-wrapper">PLC</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">PLC Control Unit</div></div>
+            </div>
+            <div class="device-template" data-type="HMI" draggable="true">
+              <div class="device-icon-wrapper">HMI</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">HMI Touchscreen</div></div>
+            </div>
+            <div class="device-template" data-type="PLC" draggable="true">
+              <div class="device-icon-wrapper">RTU</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">RTU Controller</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accordion 2: Sensors -->
+        <div class="accordion-item">
+          <div class="accordion-header">2. Cảm Biến (Sensors)</div>
+          <div class="accordion-content">
+            <div class="device-template" data-type="SENSOR" draggable="true" data-subtype="temperature">
+              <div class="device-icon-wrapper">TEMP</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">Cảm biến Nhiệt độ</div></div>
+            </div>
+            <div class="device-template" data-type="SENSOR" draggable="true" data-subtype="humidity">
+              <div class="device-icon-wrapper">HUM</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">Cảm biến Độ ẩm</div></div>
+            </div>
+            <div class="device-template" data-type="SENSOR" draggable="true" data-subtype="pressure">
+              <div class="device-icon-wrapper">PRES</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">Cảm biến Áp suất</div></div>
+            </div>
+            <div class="device-template" data-type="SENSOR" draggable="true" data-subtype="flow_rate">
+              <div class="device-icon-wrapper">FLOW</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">Cảm biến Dòng chảy</div></div>
+            </div>
+            <div class="device-template" data-type="SENSOR" draggable="true" data-subtype="smoke">
+              <div class="device-icon-wrapper">SMK</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">Cảm biến Khói</div></div>
+            </div>
+            <div class="device-template" data-type="SENSOR" draggable="true" data-subtype="water_level">
+              <div class="device-icon-wrapper">WTR</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">Cảm biến Mực nước</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accordion 3: Actuators -->
+        <div class="accordion-item">
+          <div class="accordion-header">3. Cơ Cấu Chấp Hành (Actuators)</div>
+          <div class="accordion-content">
+            <div class="device-template" data-type="ACTUATOR" draggable="true">
+              <div class="device-icon-wrapper">MTR</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">Động cơ (Motor Switch)</div></div>
+            </div>
+            <div class="device-template" data-type="ACTUATOR" draggable="true">
+              <div class="device-icon-wrapper">VLV</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">Van Điều Khiển (Valve)</div></div>
+            </div>
+            <div class="device-template" data-type="ACTUATOR" draggable="true">
+              <div class="device-icon-wrapper">RLY</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">Rơ le Điện (Relay)</div></div>
+            </div>
+            <div class="device-template" data-type="FIRE_ALARM" draggable="true">
+              <div class="device-icon-wrapper">SRN</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">Còi Báo Động (Siren)</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accordion 4: Network & Security -->
+        <div class="accordion-item">
+          <div class="accordion-header">4. Thiết Bị Mạng (Network & Sec)</div>
+          <div class="accordion-content">
+            <div class="device-template" data-type="GATEWAY" draggable="true">
+              <div class="device-icon-wrapper">GW</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">Gateway Mạng Chính</div></div>
+            </div>
+            <div class="device-template" data-type="GATEWAY" draggable="true">
+              <div class="device-icon-wrapper">SW</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">Switch Công Nghiệp</div></div>
+            </div>
+            <div class="device-template" data-type="GATEWAY" draggable="true">
+              <div class="device-icon-wrapper">FW</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">Industrial Firewall</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accordion 5: Smart Devices -->
+        <div class="accordion-item">
+          <div class="accordion-header">5. Giám Sát & Smart IoT</div>
+          <div class="accordion-content">
+            <div class="device-template" data-type="IP_CAMERA" draggable="true">
+              <div class="device-icon-wrapper">CAM</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">IP Camera An Ninh</div></div>
+            </div>
+            <div class="device-template" data-type="SMART_METER" draggable="true">
+              <div class="device-icon-wrapper">MTR</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">Smart Power Meter</div></div>
+            </div>
+            <div class="device-template" data-type="IP_CAMERA" draggable="true">
+              <div class="device-icon-wrapper">LCK</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">Khóa Từ Cửa Server</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Accordion 6: Chip Vi Điều Khiển (Microchips) -->
+        <div class="accordion-item">
+          <div class="accordion-header">6. Chip Vi Điều Khiển (Microchips)</div>
+          <div class="accordion-content">
+            <div class="device-template" data-type="CHIP" draggable="true">
+              <div class="device-icon-wrapper">ESP</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">ESP32 Wi-Fi MCU</div></div>
+            </div>
+            <div class="device-template" data-type="CHIP" draggable="true">
+              <div class="device-icon-wrapper">ARD</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">Arduino Uno Board</div></div>
+            </div>
+            <div class="device-template" data-type="CHIP" draggable="true">
+              <div class="device-icon-wrapper">RPI</div>
+              <div><div style="font-weight:600;font-size:0.8rem;">Raspberry Pi Pico</div></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <h2>Quản Lý Vùng (Zones)</h2>
+      <div class="zone-manager-list" id="zone-list">
+        <!-- Zone lists populated dynamically -->
+      </div>
+      <div style="display:flex;gap:0.4rem;margin-top:0.4rem;">
+        <input type="text" id="new-zone-input" placeholder="Tên Zone..." style="flex:1;background:rgba(0,0,0,0.3);border:1px solid var(--border-color);border-radius:4px;padding:0.3rem 0.5rem;color:white;font-size:0.8rem;">
+        <button id="add-zone-btn" class="btn btn-cyan" style="padding:0.3rem 0.6rem;font-size:0.8rem;">+ Thêm</button>
+      </div>
+    </div>
+
+    <!-- CENTER WORKSPACE -->
+    <div class="workspace-container">
+      <!-- Zoom / Pan HUD controls -->
+      <div class="zoom-controls">
+        <button class="zoom-btn" id="zoom-in-btn" title="Phóng to">+</button>
+        <button class="zoom-btn" id="zoom-out-btn" title="Thu nhỏ">-</button>
+        <button class="zoom-btn" id="zoom-reset-btn" title="Reset Zoom" style="font-size:0.7rem;font-weight:normal;">1:1</button>
+      </div>
+
+      <!-- Zone Selection Filter Tabs -->
+      <div class="zone-filter-hud" id="zone-filter-container">
+        <span style="font-size:0.75rem;color:var(--text-secondary);font-weight:600;margin-right:0.5rem;letter-spacing:0.5px;">BỘ LỌC VÙNG:</span>
+        <div id="zone-filter-tabs" style="display:flex;gap:0.3rem;">
+          <!-- Tabs dynamically loaded -->
+        </div>
+      </div>
+
+      <div id="canvas" class="canvas-area">
+        <div id="canvas-content">
+          <!-- SVG layer for wires -->
+          <svg id="svg-overlay" class="connection-overlay"></svg>
+          
+          <!-- Nodes will be rendered dynamically here -->
+        </div>
+      </div>
+
+      <!-- BOTTOM PANEL: Terminal log viewer -->
+      <div class="bottom-panel">
+        <div class="panel-header">
+          <div class="panel-title" id="terminal-title">Centralized SIEM Log Stream (Tất cả thiết bị)</div>
+          <div style="font-size:0.8rem;color:var(--text-secondary);">Mẹo: Double-click vào dây mạng để rút cáp. Nhấp vào vùng trống sơ đồ để bỏ lọc.</div>
+        </div>
+        <div id="terminal" class="terminal-logs">
+          <!-- Live logs stream here -->
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT CONFIGURATION PANEL (Opens when clicking device) -->
+    <div id="control-overlay" class="overlay-panel">
+      <div class="overlay-header">
+        <h4 id="overlay-device-title">Cấu hình thiết bị</h4>
+        <button id="close-overlay" class="close-btn">&times;</button>
+      </div>
+
+      <!-- Device Status Badges -->
+      <div id="overlay-approval-badge" style="display:flex;align-items:center;justify-content:center;padding:0.5rem;border-radius:4px;font-weight:600;font-size:0.85rem;">
+        CHỜ DUYỆT
+      </div>
+
+      <!-- Configuration form -->
+      <form id="device-config-form" style="display:flex;flex-direction:column;gap:0.7rem;">
+        <div class="form-group">
+          <label>Mã thiết bị (ID)</label>
+          <input type="text" id="overlay-dev-id" readonly style="opacity:0.6;cursor:not-allowed;">
+        </div>
+        <div class="form-group">
+          <label for="overlay-dev-name">Tên thiết bị</label>
+          <input type="text" id="overlay-dev-name" required>
+        </div>
+        <div class="form-group">
+          <label for="overlay-dev-ip">Địa chỉ IP</label>
+          <input type="text" id="overlay-dev-ip" required>
+        </div>
+        <div class="form-group">
+          <label for="overlay-dev-mac">Địa chỉ MAC</label>
+          <input type="text" id="overlay-dev-mac" required>
+        </div>
+        <div class="form-group">
+          <label for="overlay-dev-zone">Vùng mạng (Zone)</label>
+          <select id="overlay-dev-zone" required>
+            <!-- Zones loaded dynamically -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="overlay-dev-interval">Tần suất gửi tin (ms)</label>
+          <input type="number" id="overlay-dev-interval" min="1000" step="500" required>
+        </div>
+        <button type="submit" class="btn btn-cyan" style="padding:0.4rem;font-size:0.85rem;width:100%;margin-top:0.3rem;">Lưu Cấu Hình</button>
+      </form>
+
+      <!-- Physical Switches -->
+      <div class="control-item">
+        <span>Cáp nguồn điện (Power Link)</span>
+        <label class="switch">
+          <input type="checkbox" id="power-switch" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <!-- Real-time metrics readings -->
+      <div style="background:rgba(0,0,0,0.3);padding:0.6rem;border-radius:4px;border:1px solid rgba(255,255,255,0.02);">
+        <div style="font-weight:600;font-size:0.78rem;margin-bottom:0.3rem;color:var(--neon-cyan);display:flex;justify-content:space-between;">
+          <span>Thông số tức thời (Metrics):</span>
+          <span id="overlay-network-status" style="font-family:var(--font-mono);font-size:0.7rem;">ONLINE</span>
+        </div>
+        <div id="metrics-view" style="font-family:var(--font-mono);font-size:0.78rem;color:#39ff14;white-space:pre-wrap;">-</div>
+      </div>
+
+      <!-- Connected network wires list -->
+      <div style="background:rgba(0,0,0,0.3);padding:0.6rem;border-radius:4px;border:1px solid rgba(255,255,255,0.02);">
+        <div style="font-weight:600;font-size:0.78rem;margin-bottom:0.3rem;color:var(--neon-cyan);">Các liên kết cáp (Links):</div>
+        <div id="connected-wires-view" style="display:flex;flex-direction:column;gap:0.3rem;">
+          <!-- Links listed dynamically with disconnect button -->
+        </div>
+      </div>
+
+      <!-- Active incidents & troubleshooting mitigation options -->
+      <div id="overlay-incidents-section" style="display:none;">
+        <div style="font-weight:600;font-size:0.8rem;color:var(--neon-red);margin-bottom:0.2rem;">Sự cố vật lý đang diễn ra:</div>
+        <div class="mitigate-actions" id="mitigate-actions-container">
+          <!-- Mitigate buttons dynamically shown -->
+        </div>
+      </div>
+
+      <!-- Delete device button -->
+      <button id="delete-device-btn" class="btn btn-primary" style="padding:0.4rem;font-size:0.85rem;width:100%;justify-content:center;">Xóa Thiết Bị Khỏi Hệ Thống</button>
+    </div>
+  </div>
+
+  <script src="/js/simulator.js"></script>
+</body>
+</html>

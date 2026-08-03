@@ -8,16 +8,23 @@ export class HmiDevice extends BaseDevice {
   }
 
   generateSpecificMetrics(metrics) {
+    const hasBruteForce = this.activeAttacks.includes('BRUTE_FORCE');
+
     // Randomly change screens
     if (Math.random() > 0.9) {
       this.activeScreens = Math.floor(Math.random() * 5) + 1;
     }
     
-    // Simulate failed logins
-    if (Math.random() > 0.95) {
-      this.failedLogins += 1;
-    } else if (Math.random() > 0.8 && this.failedLogins > 0) {
-      this.failedLogins = 0; // reset
+    if (hasBruteForce) {
+      // Force 15 failed logins (matching graduation project guide criteria)
+      this.failedLogins = 15;
+    } else {
+      // Simulate failed logins normally (very rare)
+      if (Math.random() > 0.99) {
+        this.failedLogins += 1;
+      } else if (Math.random() > 0.8 && this.failedLogins > 0) {
+        this.failedLogins = 0; // reset
+      }
     }
 
     metrics.active_screens = this.activeScreens;
@@ -26,3 +33,4 @@ export class HmiDevice extends BaseDevice {
     return metrics;
   }
 }
+

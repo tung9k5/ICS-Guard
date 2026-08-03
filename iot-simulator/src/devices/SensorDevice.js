@@ -12,8 +12,19 @@ export class SensorDevice extends BaseDevice {
   }
 
   generateSpecificMetrics(metrics) {
-    // Specific sensor metrics can be added here if needed
-    metrics.sensor_health = 100;
+    const hasDataSpoofing = this.activeAttacks.includes('DATA_SPOOFING');
+    const hasFirmwareAttack = this.activeAttacks.includes('FIRMWARE_ATTACK');
+
+    if (hasDataSpoofing) {
+      metrics.temperature = 95.5; // frozen at dangerous level
+      metrics.humidity = 88.0;    // frozen at high level
+      metrics.sensor_health = 10;
+    } else if (hasFirmwareAttack) {
+      metrics.sensor_health = 0; // failed firmware state
+    } else {
+      metrics.sensor_health = 100;
+    }
     return metrics;
   }
 }
+

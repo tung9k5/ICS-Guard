@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ICS-Guard: Trình Điều Khiển Tấn Công & Sự Cố</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header>
+    <h1>ICS-Guard | IoT Simulator</h1>
+    <div class="nav-links">
+      <a href="/">Mô Phỏng Vật Lý (/)</a>
+      <a href="/attacks" class="active">Điều Khiển Tấn Công (/attacks)</a>
+    </div>
+  </header>
+
+  <div class="main-container">
+    <!-- LEFT SIDEBAR: Device Explorer Tree -->
+    <div class="sidebar sidebar-fixed" style="width:320px;">
+      <h2>Cấu Trúc Hệ Thống (Explorer)</h2>
+      <div style="font-size:0.8rem;color:var(--text-secondary);margin-bottom:0.5rem;display:flex;justify-content:space-between;">
+        <button id="select-all-btn" style="background:none;border:none;color:var(--neon-cyan);cursor:pointer;font-weight:600;">Chọn tất cả</button>
+        <button id="deselect-all-btn" style="background:none;border:none;color:var(--text-secondary);cursor:pointer;font-weight:600;">Bỏ chọn</button>
+      </div>
+      <div id="explorer-container">
+        <!-- Tree explorer built dynamically -->
+        <ul class="explorer-tree" id="explorer-root">
+          <!-- Zones and Devices -->
+        </ul>
+      </div>
+    </div>
+
+    <!-- MAIN CONFIGURATION AND ACTIONS PANEL -->
+    <div class="attack-config-panel">
+
+
+      <div class="attack-grid-layout" style="display:flex;flex-direction:column;gap:1.5rem;">
+        
+        <!-- Cyber Attacks -->
+        <div class="control-card">
+          <h3>⚡ Tấn Công Mạng (Cyber Attacks)</h3>
+          <div class="attack-grid">
+            <div class="attack-option-btn" data-attack="BRUTE_FORCE">
+              <div class="title">HMI Brute Force</div>
+              <div class="desc">Mô phỏng 15 lần nhập mật khẩu sai trên HMI. Kích hoạt rule BRUTE_FORCE_DETECTED.</div>
+            </div>
+
+            <div class="attack-option-btn" data-attack="TRAFFIC_SPIKE">
+              <div class="title">DDoS / Traffic Spike</div>
+              <div class="desc">Bơm băng thông cực đại (>85,000 Bps). Kích hoạt rule ABNORMAL_TRAFFIC_SPIKE.</div>
+            </div>
+
+            <div class="attack-option-btn" data-attack="LOGIC_TAMPERING">
+              <div class="title">PLC Logic Tampering</div>
+              <div class="desc">Sửa đổi chương trình logic của PLC. Kích hoạt FIRMWARE_CHECKSUM_ERROR.</div>
+            </div>
+
+            <div class="attack-option-btn" data-attack="DATA_SPOOFING">
+              <div class="title">Sensor Data Spoofing</div>
+              <div class="desc">Chèn dữ liệu sai lệch làm đông cứng nhiệt độ cảm biến. Kích hoạt SENSOR_SPOOFING_DETECTED.</div>
+            </div>
+
+            <div class="attack-option-btn" data-attack="FIRMWARE_ATTACK">
+              <div class="title">Firmware Poisoning</div>
+              <div class="desc">Nạp firmware giả mạo không hợp lệ. Kích hoạt OTA_HASH_MISMATCH.</div>
+            </div>
+
+            <div class="attack-option-btn" data-attack="ROUTE_POISONING">
+              <div class="title">Route Poisoning</div>
+              <div class="desc">Đầu độc bảng định tuyến trên Gateway. Kích hoạt ROUTE_MODIFIED.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Physical Incidents -->
+        <div class="control-card">
+          <h3>🔥 Sự Cố Vật Lý & Môi Trường</h3>
+          <div class="attack-grid">
+            <div class="attack-option-btn" data-attack="FIRE" style="border-color:rgba(255,0,85,0.2);">
+              <div class="title">Hỏa Hoạn (FIRE)</div>
+              <div class="desc">Kích hoạt khói cực lớn (>600 ppm) và tăng nhiệt độ. Kích hoạt rule FIRE_ALARM. Khắc phục trên trang (/).</div>
+            </div>
+
+            <div class="attack-option-btn" data-attack="FLOOD" style="border-color:rgba(0,243,255,0.2);">
+              <div class="title">Ngập Lụt (FLOOD)</div>
+              <div class="desc">Mực nước dâng cao cực hạn (>90%). Kích hoạt rule FLOOD_WARNING. Khắc phục trên trang (/).</div>
+            </div>
+
+            <div class="attack-option-btn" data-attack="OVERHEAT" style="border-color:rgba(255,159,0,0.2);">
+              <div class="title">Quá Nhiệt (OVERHEAT)</div>
+              <div class="desc">Nhiệt độ hoạt động vượt ngưỡng an toàn (>95°C). Kích hoạt rule CRITICAL_OVERHEAT. Khắc phục trên trang (/).</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Panel -->
+      <div class="control-card" style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <span style="font-weight:600;font-size:0.95rem;">Đang chọn: </span>
+          <span id="selected-count-label" style="font-family:var(--font-mono);color:var(--neon-cyan);font-weight:bold;">0 thiết bị</span>
+        </div>
+        <div class="actions-bar">
+          <button id="stop-attacks-btn" class="btn btn-secondary">Dừng Toàn Bộ Sự Cố</button>
+          <button id="launch-attack-btn" class="btn btn-primary" disabled>KÍCH HOẠT SỰ CỐ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/attacks.js"></script>
+</body>
+</html>
