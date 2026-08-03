@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Home, ArrowLeft } from 'lucide-react';
 import VButton from '@/components/VButton';
+import Viewlogo from '@/components/Viewlogo';
 
 const UnderConstruction = () => {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ const UnderConstruction = () => {
 
   return (
     <>
-      <img src="/image-logo.png" alt="Under Construction" className="status-image" />
+      <Viewlogo size={390} />
       <h1>{t('status.title_under_construction', 'Tính năng đang phát triển')}</h1>
       <p>{t('status.under_construction', 'Tính năng này hiện chưa hoàn thiện và đang trong quá trình phát triển. Vui lòng quay lại sau.')}</p>
       <div className="status-actions">

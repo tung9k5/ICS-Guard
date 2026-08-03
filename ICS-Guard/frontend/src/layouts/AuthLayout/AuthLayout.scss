@@ -2,7 +2,7 @@
   position: relative;
   display: flex;
   min-height: 100vh;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Metropolis', system-ui, -apple-system, sans-serif;
   background-color: var(--bg-primary);
   justify-content: flex-end;
   overflow-y: auto;
@@ -121,7 +121,7 @@
   }
 
   .auth-cover-content h1 {
-    background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+    background: linear-gradient(135deg, var(--red-500) 0%, var(--orange-500) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     text-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
@@ -132,7 +132,7 @@
     box-shadow: 0 8px 32px 0 rgba(239, 68, 68, 0.15);
     
     .auth-subtitle {
-      color: #ef4444;
+      color: var(--red-500);
     }
   }
 }

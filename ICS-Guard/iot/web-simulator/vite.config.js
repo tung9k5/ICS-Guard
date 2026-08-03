@@ -8,17 +8,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     envDir: '../../',
-    // The browser simulator is a demo-only surface. Keep its injected keys in
-    // sync with the backend source of truth so duplicate VITE_* values cannot
-    // silently drift and make every public device request return 401.
-    define: {
-      'import.meta.env.VITE_SIMULATOR_API_KEY': JSON.stringify(
-        env.SIMULATOR_API_KEY || env.VITE_SIMULATOR_API_KEY || ''
-      ),
-      'import.meta.env.VITE_ATTACK_SIMULATOR_API_KEY': JSON.stringify(
-        env.ATTACK_SIMULATOR_API_KEY || env.VITE_ATTACK_SIMULATOR_API_KEY || ''
-      ),
-    },
+
 
     resolve: {
       alias: {
@@ -39,8 +29,18 @@ export default defineConfig(({ mode }) => {
 
       proxy: {
         '/api': {
-          target: 'http://backend:8000',
+          target: env.VITE_PROXY_TARGET || env.VITE_BACKEND_URL || 'http://localhost:8000',
           changeOrigin: true,
+        },
+        '/hardware-api': {
+          target: env.VITE_HARDWARE_BFF_URL || env.VITE_BACKEND_URL || 'http://localhost:8000',
+          changeOrigin: true,
+          rewrite: (requestPath) => requestPath.replace(/^\/hardware-api/, '/api'),
+        },
+        '/attack-api': {
+          target: env.VITE_ATTACK_ADAPTER_URL || env.VITE_BACKEND_URL || 'http://localhost:8000',
+          changeOrigin: true,
+          rewrite: (requestPath) => requestPath.replace(/^\/attack-api/, '/api'),
         },
       },
 

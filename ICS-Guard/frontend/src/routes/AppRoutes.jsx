@@ -1,29 +1,40 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import AuthLayout from '@/layouts/AuthLayout';
 import MainLayout from '@/layouts/MainLayout';
 import StatusLayout from '@/layouts/StatusLayout';
-import AttackerLayout from '@/layouts/AttackerLayout';
-import Login from '@/pages/Login';
-import Register from '@/pages/Register';
-import Dashboard from '@/pages/Dashboard';
-import Assets from '@/pages/Assets';
-import Onboarding from '@/pages/Onboarding';
-import AttackerConsole from '@/pages/AttackerConsole';
-import HardwareSimulator from '@/pages/HardwareSimulator';
-import Topology from '@/pages/Topology';
-import UserManagement from '@/pages/UserManagement';
-import OperationReports from '@/pages/OperationReports';
-import NotFound from '@/pages/NotFound';
-import UnderConstruction from '@/pages/UnderConstruction';
+const Login = lazy(() => import('@/pages/Login'));
+const Dashboard = lazy(() => import('@/pages/Dashboard'));
+const DeviceManagement = lazy(() => import('@/pages/DeviceManagement'));
+const Onboarding = lazy(() => import('@/pages/Onboarding'));
+const Topology = lazy(() => import('@/pages/Topology'));
+const UserManagement = lazy(() => import('@/pages/UserManagement'));
+const OperationReports = lazy(() => import('@/pages/OperationReports'));
+const IncidentManagement = lazy(() => import('@/pages/IncidentManagement'));
+const AlertManagement = lazy(() => import('@/pages/AlertManagement'));
+const RuleManagement = lazy(() => import('@/pages/RuleManagement'));
+const PlaybookManagement = lazy(() => import('@/pages/PlaybookManagement'));
+const AuditManagement = lazy(() => import('@/pages/AuditManagement'));
+const OtZoneMatrix = lazy(() => import('@/pages/OtZoneMatrix'));
+const ThreatIntel = lazy(() => import('@/pages/ThreatIntel'));
+const SystemSettings = lazy(() => import('@/pages/Settings'));
+const NotFound = lazy(() => import('@/pages/NotFound'));
+const UnderConstruction = lazy(() => import('@/pages/UnderConstruction'));
+
+
+const RouteFallback = () => (
+  <div role="status" aria-live="polite" style={{ padding: '2rem', textAlign: 'center' }}>
+    Đang tải trang…
+  </div>
+);
 
 // Hàm kiểm tra Hybrid Onboarding - đồng bộ với MainLayout
 const shouldOnboard = (token) => {
   try {
     const payload = jwtDecode(token);
     const isFirst = payload.isFirstLogin === true;
-    const isCriticalRole = ['admin', 'l3_manager'].includes(payload.role);
+    const isCriticalRole = ['admin', 'analyst'].includes(payload.role);
     const isTelegramMissing = !payload.telegramChatId;
     return isFirst || (isCriticalRole && isTelegramMissing);
   } catch (e) {
@@ -64,13 +75,11 @@ const RoleProtectedRoute = ({ allowedRoles, children }) => {
 
 const AppRoutes = () => {
   return (
-    <Routes>
-      {/* Auth Routes - AuthGuard chặn người đã đăng nhập vào lại */}
+    <Suspense fallback={<RouteFallback />}>
+      <Routes>
       <Route element={<AuthGuard />}>
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/attacker/login" element={<Login isAttacker={true} />} />
         </Route>
       </Route>
 
@@ -80,42 +89,77 @@ const AppRoutes = () => {
       {/* Protected SOC Dashboard Routes */}
       <Route element={<MainLayout />}>
         <Route path="/" element={<Dashboard />} />
-        <Route path="/devices" element={
-          <RoleProtectedRoute allowedRoles={['admin', 'device_manager']}>
-            <Assets />
+        
+        {/* Security & Incidents */}
+        <Route path="/incident-management" element={
+          <RoleProtectedRoute allowedRoles={['admin', 'analyst', 'l2_responder', 'ot_operator']}>
+            <IncidentManagement />
+          </RoleProtectedRoute>
+        } />
+        <Route path="/alert-management" element={<Navigate to="/incident-management?tab=alerts" replace />} />
+        <Route path="/rule-management" element={
+          <RoleProtectedRoute allowedRoles={['admin', 'analyst']}>
+            <RuleManagement />
+          </RoleProtectedRoute>
+        } />
+        <Route path="/playbook-management" element={
+          <RoleProtectedRoute allowedRoles={['admin', 'analyst']}>
+            <PlaybookManagement />
+          </RoleProtectedRoute>
+        } />
+        <Route path="/threat-intel" element={
+          <RoleProtectedRoute allowedRoles={['admin', 'analyst', 'l2_responder']}>
+            <ThreatIntel />
+          </RoleProtectedRoute>
+        } />
+
+        {/* System & Devices */}
+        <Route path="/device-management" element={
+          <RoleProtectedRoute allowedRoles={['admin', 'device_management']}>
+            <DeviceManagement />
+          </RoleProtectedRoute>
+        } />
+        <Route path="/ot-zone-matrix" element={
+          <RoleProtectedRoute allowedRoles={['admin', 'device_management', 'analyst']}>
+            <OtZoneMatrix />
           </RoleProtectedRoute>
         } />
         <Route path="/topology" element={
-          <RoleProtectedRoute allowedRoles={['admin', 'device_manager', 'analyst']}>
+          <RoleProtectedRoute allowedRoles={['admin', 'device_management', 'analyst']}>
             <Topology />
           </RoleProtectedRoute>
         } />
-        <Route path="/users" element={
-          <RoleProtectedRoute allowedRoles={['admin', 'hr_manager']}>
+
+        {/* Administration */}
+        <Route path="/user-management" element={
+          <RoleProtectedRoute allowedRoles={['admin', 'hr_management']}>
             <UserManagement />
           </RoleProtectedRoute>
         } />
+        <Route path="/audit-management" element={
+          <RoleProtectedRoute allowedRoles={['admin', 'hr_management']}>
+            <AuditManagement />
+          </RoleProtectedRoute>
+        } />
         <Route path="/reports" element={
-          <RoleProtectedRoute allowedRoles={['admin', 'hr_manager', 'device_manager', 'analyst']}>
+          <RoleProtectedRoute allowedRoles={['admin', 'hr_management']}>
             <OperationReports />
+          </RoleProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <RoleProtectedRoute allowedRoles={['admin', 'device_management', 'analyst', 'hr_management']}>
+            <SystemSettings />
           </RoleProtectedRoute>
         } />
         <Route path="/coming-soon" element={<UnderConstruction />} />
       </Route>
 
-      {/* Attacker Console Routes */}
-      <Route element={<AttackerLayout />}>
-        <Route path="/attacker" element={<AttackerConsole />} />
-      </Route>
-
-      {/* IoT Hardware Simulator Route */}
-      <Route path="/simulator" element={<HardwareSimulator />} />
-
       {/* Status Routes (Under Construction & Not Found) */}
       <Route element={<StatusLayout />}>
         <Route path="*" element={<NotFound />} />
       </Route>
-    </Routes>
+      </Routes>
+    </Suspense>
   );
 };
 

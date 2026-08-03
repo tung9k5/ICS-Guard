@@ -33,6 +33,14 @@ import auditRoutes from './routes/auditRoutes.js';
 import incidentRoutes from './routes/incidentRoutes.js';
 import telemetryRoutes from './routes/telemetryRoutes.js';
 import attackRoutes from './routes/attackRoutes.js';
+import ruleRoutes from './routes/ruleRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
+import alertRoutes from './routes/alertRoutes.js';
+import cveRoutes from './routes/cveRoutes.js';
+import commandRoutes from './routes/commandRoutes.js';
+import playbookRoutes from './routes/playbookRoutes.js';
+import otPolicyRoutes from './routes/otPolicyRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -72,6 +80,7 @@ const globalLimiter = rateLimit({
   message: { error: 'TooManyRequests', message: 'Quá nhiều truy vấn từ IP của bạn, vui lòng thử lại sau 15 phút.' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: false,
   // store: new RedisStore({
   //   sendCommand: (...args) => redisClient.sendCommand(args),
   // }),
@@ -83,6 +92,7 @@ const authLimiter = rateLimit({
   message: { error: 'TooManyRequests', message: 'Tần suất đăng nhập quá cao, IP tạm khóa 15 phút để bảo vệ.' },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: false,
   // store: new RedisStore({
   //   sendCommand: (...args) => redisClient.sendCommand(args),
   // }),
@@ -151,6 +161,14 @@ app.use('/api/audits', auditRoutes);
 app.use('/api/incidents', incidentRoutes);
 app.use('/api/telemetry', telemetryRoutes);
 app.use('/api/attacks', attackRoutes);
+app.use('/api/rules', ruleRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/alerts', alertRoutes);
+app.use('/api/cves', cveRoutes);
+app.use('/api/commands', commandRoutes);
+app.use('/api/playbooks', playbookRoutes);
+app.use('/api/ot-policy', otPolicyRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {

@@ -8,6 +8,10 @@ import Rule from './rule.js';
 import Alert from './alert.js';
 import Incident from './incident.js';
 import IncidentTimeline from './incidentTimeline.js';
+import Playbook from './playbook.js';
+import SimulatorCommand from './simulatorCommand.js';
+import OtPolicy from './otPolicy.js';
+import SystemMetadata from './systemMetadata.js';
 
 const db = {
   connectDB,
@@ -20,6 +24,10 @@ const db = {
   Alert,
   Incident,
   IncidentTimeline,
+  Playbook,
+  SimulatorCommand,
+  OtPolicy,
+  SystemMetadata,
 };
 
 export {
@@ -33,6 +41,10 @@ export {
   Alert,
   Incident,
   IncidentTimeline,
+  Playbook,
+  SimulatorCommand,
+  OtPolicy,
+  SystemMetadata,
 };
 
 export default db;

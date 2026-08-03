@@ -1,24 +1,72 @@
 import { io } from 'socket.io-client';
 
-const socketUrl = import.meta.env.VITE_API_URL 
-  ? import.meta.env.VITE_API_URL.replace('/api', '') 
+const configuredApiUrl = import.meta.env.VITE_API_URL || '';
+const socketUrl = configuredApiUrl
+  ? configuredApiUrl.replace(/\/api\/?$/, '')
   : 'http://localhost:8000';
 
-console.log(`[SocketService] Connecting to Socket.io at: ${socketUrl}`);
+const getAccessToken = () => (
+  typeof window === 'undefined' ? null : localStorage.getItem('access_token')
+);
 
 export const socket = io(socketUrl, {
-  autoConnect: true,
+  autoConnect: false,
+  auth: {},
   reconnection: true,
   reconnectionAttempts: 10,
   reconnectionDelay: 2000,
 });
 
+export const disconnectSocket = () => {
+  socket.auth = {};
+  if (socket.connected || socket.active) {
+    socket.disconnect();
+  }
+};
+
+export const connectAuthenticatedSocket = () => {
+  const token = getAccessToken();
+  if (!token) {
+    disconnectSocket();
+    return false;
+  }
+
+  const tokenChanged = socket.auth?.token !== token;
+  socket.auth = { token };
+  if (socket.connected && tokenChanged) {
+    socket.disconnect();
+  }
+  if (!socket.connected) {
+    socket.connect();
+  }
+  return true;
+};
+
+export const refreshSocketAuthentication = connectAuthenticatedSocket;
+
+socket.io.on('reconnect_attempt', () => {
+  const token = getAccessToken();
+  if (!token) {
+    disconnectSocket();
+    return;
+  }
+  socket.auth = { token };
+});
+
 socket.on('connect', () => {
-  console.log('[SocketService] Connected to WebSocket server successfully.');
+  console.info('[SocketService] Authenticated socket connected.');
 });
 
 socket.on('disconnect', () => {
-  console.log('[SocketService] Disconnected from WebSocket server.');
+  console.info('[SocketService] Socket disconnected.');
 });
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key !== 'access_token') return;
+    if (event.newValue) connectAuthenticatedSocket();
+    else disconnectSocket();
+  });
+}
 
 export default socket;

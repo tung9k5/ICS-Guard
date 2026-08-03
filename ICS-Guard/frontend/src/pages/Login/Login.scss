@@ -1,12 +1,44 @@
 .auth-form-card {
   width: 100%;
+  color: #ffffff;
   
   .auth-form-title {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: #ffffff;
     margin: 0 0 1.5rem 0;
     text-align: center;
+  }
+
+  .v-input-label {
+    color: #ffffff !important;
+    font-weight: 500;
+  }
+
+  .v-input-field {
+    color: #ffffff !important;
+    background-color: rgba(15, 23, 42, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+
+    &::placeholder {
+      color: #94a3b8 !important;
+    }
+
+    &:focus {
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25) !important;
+    }
+  }
+
+  .v-input-toggle-password {
+    color: #cbd5e1 !important;
+    &:hover {
+      color: #ffffff !important;
+    }
+  }
+
+  .v-input-icon .icon-svg {
+    color: #94a3b8 !important;
   }
 
   .auth-form-options {
@@ -20,7 +52,7 @@
       gap: 0.5rem;
       cursor: pointer;
       font-size: 0.875rem;
-      color: var(--text-secondary);
+      color: #ffffff !important;
       user-select: none;
       transition: color 0.2s;
 
@@ -30,20 +62,20 @@
         height: 1.125rem;
         cursor: pointer;
         background-color: transparent;
-        border: 1px solid var(--border-light);
+        border: 1px solid rgba(255, 255, 255, 0.3);
         border-radius: 4px;
       }
       
       &:hover {
-        color: var(--text-primary);
+        color: #ffffff !important;
       }
     }
   }
 
   .auth-error-alert {
-    background-color: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-    color: var(--danger-color);
+    background-color: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    color: #f87171 !important;
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
     margin-bottom: 1.5rem;
@@ -58,16 +90,16 @@
     margin-top: 1.5rem;
     text-align: center;
     font-size: 0.875rem;
-    color: #94a3b8; /* slate-400 */
+    color: #cbd5e1 !important;
 
     .auth-link {
-      color: #60a5fa; /* blue-400 */
+      color: #60a5fa !important;
       text-decoration: none;
       transition: color 0.2s;
 
       &:hover {
-        color: #93c5fd; /* blue-300 */
+        color: #93c5fd !important;
       }
     }
   }
-}
+}

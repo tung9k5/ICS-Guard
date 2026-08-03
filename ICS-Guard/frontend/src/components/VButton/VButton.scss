@@ -45,19 +45,19 @@
     background-color: var(--primary-color);
     color: var(--text-primary);
     border: none; /* Bỏ viền để shadow nổi rõ hơn */
-    box-shadow: 0px 4px 0px 0px #1e3a8a, inset 0px 2px 0px 0px rgba(255, 255, 255, 0.25);
+    box-shadow: 0px 4px 0px 0px var(--blue-900), inset 0px 2px 0px 0px rgba(255, 255, 255, 0.25);
     font-weight: 700;
     text-transform: uppercase;
     
     &:hover:not(:disabled) {
       background-color: var(--primary-hover);
       transform: translateY(1px);
-      box-shadow: 0px 3px 0px 0px #1e3a8a, inset 0px 2px 0px 0px rgba(255, 255, 255, 0.2);
+      box-shadow: 0px 3px 0px 0px var(--blue-900), inset 0px 2px 0px 0px rgba(255, 255, 255, 0.2);
     }
 
     &:active:not(:disabled) {
       transform: translateY(4px);
-      box-shadow: 0px 0px 0px 0px #1e3a8a, inset 0px 2px 0px 0px rgba(0, 0, 0, 0.1);
+      box-shadow: 0px 0px 0px 0px var(--blue-900), inset 0px 2px 0px 0px rgba(0, 0, 0, 0.1);
     }
 
     &:focus {
@@ -67,20 +67,20 @@
   }
 
   &.btn-secondary {
-    background-color: transparent;
-    color: var(--text-primary);
-    border: 1px solid var(--border-light);
-    box-shadow: 0px 4px 0px 0px var(--border-light);
+    background-color: var(--white);
+    color: var(--slate-700);
+    border: 1px solid var(--slate-300);
+    box-shadow: 0px 4px 0px 0px var(--slate-200);
 
     &:hover:not(:disabled) {
-      background-color: var(--border-subtle);
+      background-color: var(--slate-50);
       transform: translateY(1px);
-      box-shadow: 0px 3px 0px 0px var(--border-light);
+      box-shadow: 0px 3px 0px 0px var(--slate-200);
     }
 
     &:active:not(:disabled) {
       transform: translateY(4px);
-      box-shadow: 0px 0px 0px 0px var(--border-light);
+      box-shadow: 0px 0px 0px 0px var(--slate-200);
     }
   }
 
@@ -88,17 +88,17 @@
     background-color: transparent;
     color: var(--primary-color);
     border: 1px solid var(--primary-color);
-    box-shadow: 0px 4px 0px 0px #1e3a8a;
+    box-shadow: 0px 4px 0px 0px var(--blue-900);
 
     &:hover:not(:disabled) {
       background-color: rgba(59, 130, 246, 0.1);
       transform: translateY(1px);
-      box-shadow: 0px 3px 0px 0px #1e3a8a;
+      box-shadow: 0px 3px 0px 0px var(--blue-900);
     }
 
     &:active:not(:disabled) {
       transform: translateY(4px);
-      box-shadow: 0px 0px 0px 0px #1e3a8a;
+      box-shadow: 0px 0px 0px 0px var(--blue-900);
     }
   }
 
@@ -115,17 +115,17 @@
   &.btn-danger {
     background-color: var(--danger-color);
     color: var(--text-primary);
-    box-shadow: 0px 4px 0px 0px #7f1d1d; /* Solid dark red shadow */
+    box-shadow: 0px 4px 0px 0px var(--apple-red-darkest); /* Solid dark red shadow */
 
     &:hover:not(:disabled) {
-      background-color: #dc2626;
+      background-color: var(--red-600);
       transform: translateY(1px);
-      box-shadow: 0px 3px 0px 0px #7f1d1d;
+      box-shadow: 0px 3px 0px 0px var(--apple-red-darkest);
     }
 
     &:active:not(:disabled) {
       transform: translateY(4px);
-      box-shadow: 0px 0px 0px 0px #7f1d1d;
+      box-shadow: 0px 0px 0px 0px var(--apple-red-darkest);
     }
 
     &:focus {

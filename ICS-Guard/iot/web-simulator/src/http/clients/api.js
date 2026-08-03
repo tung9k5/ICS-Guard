@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { showGlobalLoading, hideGlobalLoading } from '@/utils/loadingEvent';
 
-const baseURL = import.meta.env.VITE_API_URL;
+const baseURL = import.meta.env.VITE_API_URL || '/api';
 
 const http = axios.create({
   baseURL,
@@ -12,32 +12,22 @@ const http = axios.create({
 
 // Helper to determine auth keys based on current URL path
 const getAuthKeys = () => {
-  const isAttacker = window.location.pathname.startsWith('/attacker');
-  const isPublicDemo = window.location.pathname === '/' ||
-    window.location.pathname.startsWith('/simulator') ||
+  const isAttacker = window.location.pathname.startsWith('/attacker') ||
     window.location.pathname.startsWith('/attacks');
   return {
     accessTokenKey: isAttacker ? 'attacker_access_token' : 'access_token',
     refreshTokenKey: isAttacker ? 'attacker_refresh_token' : 'refresh_token',
-    loginUrl: isAttacker ? '/attacker/login' : '/',
-    isPublicDemo,
-    isAttackDemo: window.location.pathname.startsWith('/attacks')
+    loginUrl: isAttacker ? '/attacker/login' : '/login',
   };
 };
 
 http.interceptors.request.use(
   (config) => {
     showGlobalLoading();
-    const { accessTokenKey, isPublicDemo, isAttackDemo } = getAuthKeys();
+    const { accessTokenKey } = getAuthKeys();
     const token = localStorage.getItem(accessTokenKey);
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
-    }
-    if (localStorage.getItem('attacker_authenticated') === 'true' || isPublicDemo) {
-      config.headers['x-simulator-api-key'] = import.meta.env.VITE_SIMULATOR_API_KEY || 'replace_with_simulator_key';
-    }
-    if (localStorage.getItem('attacker_authenticated') === 'true' || isAttackDemo) {
-      config.headers['x-attack-simulator-api-key'] = import.meta.env.VITE_ATTACK_SIMULATOR_API_KEY || 'replace_with_attack_simulator_key';
     }
     return config;
   },
@@ -69,12 +59,13 @@ http.interceptors.response.use(
   async (error) => {
     hideGlobalLoading();
     const originalRequest = error.config;
-    const { accessTokenKey, refreshTokenKey, loginUrl, isPublicDemo } = getAuthKeys();
+    const { accessTokenKey, refreshTokenKey, loginUrl } = getAuthKeys();
     
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Public demo surfaces use simulator API keys and must never redirect to a login page.
-      if (isPublicDemo) return Promise.reject(error);
-      if (originalRequest.url.includes('/auth/refresh')) {
+      if (originalRequest.url?.includes('/auth/login')) {
+        return Promise.reject(error);
+      }
+      if (originalRequest.url?.includes('/auth/refresh')) {
         localStorage.removeItem(accessTokenKey);
         localStorage.removeItem(refreshTokenKey);
         window.location.href = loginUrl;

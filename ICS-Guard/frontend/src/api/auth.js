@@ -1,4 +1,4 @@
-import http from '@/http/clients/api';
+import http from '@/api/httpClient';
 
 export default {
   login(data, options = {}) {
@@ -6,9 +6,11 @@ export default {
       url: '/auth/login',
       method: 'POST',
       data,
+      skipLoading: true,
       ...options
     });
   },
+
 
   loginGoogle(data, options = {}) {
     return http({

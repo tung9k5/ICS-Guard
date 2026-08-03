@@ -3,12 +3,19 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { writeTelemetry } from './influxService.js';
+import { writeTelemetry, writeDeviceEvent } from './influxService.js';
 import { sendTelegramAlert } from './telegramService.js';
+import { sendEmailAlert } from './emailService.js';
 import { getActiveAdminSessions, addEmergencyAlert } from './sessionRegistry.js';
 import socketService from './socketService.js';
 import redisClient from '../config/redis.js';
 import ruleEngineService from './ruleEngineService.js';
+import { executePlaybook } from './playbookService.js';
+import { Device, Alert, Incident, IncidentTimeline } from '../models/index.js';
+import { calculateAndUpdateRiskScore } from './riskService.js';
+import { applyHardwareSnapshot } from './snapshotService.js';
+import { processCommandAck } from './commandService.js';
+import { processPolicyAck } from './otPolicyService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,21 +25,50 @@ let MQTT_URL = process.env.MQTT_URL || 'mqtt://mosquitto:1883';
 let mqttClient = null;
 
 // AES-256-CBC Config for E2E Encryption
-const AES_SECRET_KEY = process.env.AES_SECRET_KEY || "0123456789abcdef0123456789abcdef";
-const AES_IV = process.env.AES_IV || "abcdef9876543210";
+export function decryptPayload(payloadObj) {
+    const aesSecret = process.env.AES_SECRET_KEY;
+    const aesIv = process.env.AES_IV;
+    let encryptedData = typeof payloadObj === 'string' ? payloadObj : payloadObj.encrypted_data;
+    const iv = payloadObj && payloadObj.iv;
+    const authTag = payloadObj && payloadObj.auth_tag;
+    const alg = payloadObj && payloadObj.alg;
 
-function decryptPayload(encryptedBase64) {
-    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(AES_SECRET_KEY), Buffer.from(AES_IV));
-    let decrypted = decipher.update(encryptedBase64, 'base64', 'utf8');
-    decrypted += decipher.final('utf8');
-    return JSON.parse(decrypted);
+    if (alg === 'AES-256-GCM' || (iv && authTag)) {
+        const decipher = crypto.createDecipheriv(
+            'aes-256-gcm',
+            Buffer.from(aesSecret),
+            Buffer.from(iv, 'base64')
+        );
+        decipher.setAuthTag(Buffer.from(authTag, 'base64'));
+        let decrypted = decipher.update(encryptedData, 'base64', 'utf8');
+        decrypted += decipher.final('utf8');
+        return JSON.parse(decrypted);
+    } else {
+        const decipher = crypto.createDecipheriv(
+            'aes-256-cbc',
+            Buffer.from(aesSecret),
+            Buffer.from(aesIv)
+        );
+        let decrypted = decipher.update(encryptedData, 'base64', 'utf8');
+        decrypted += decipher.final('utf8');
+        return JSON.parse(decrypted);
+    }
 }
 
 export const connectMqtt = () => {
   const options = {
+    clientId: process.env.MQTT_CLIENT_ID || `ics-backend-${process.pid}`,
     queueQoSZero: false, // Prevent OOM by not queueing QoS 0 messages when offline
     queueLimit: 100 // Limit offline queue size
   };
+  const mqttUsername = process.env.MQTT_USERNAME || process.env.MQTT_USER;
+  const mqttPassword = process.env.MQTT_PASSWORD;
+  if (mqttUsername && mqttPassword) {
+    options.username = mqttUsername;
+    options.password = mqttPassword;
+  } else if (process.env.NODE_ENV !== 'test') {
+    throw new Error('[MqttService] MQTT_USERNAME and MQTT_PASSWORD are required.');
+  }
   
   // Setup TLS configuration
   const caCertPath = path.resolve(__dirname, '../certs/ca.crt');
@@ -46,7 +82,7 @@ export const connectMqtt = () => {
     
     console.log(`[MqttService] Found CA Certificate at: ${caCertPath}. Configuring TLS...`);
     options.ca = fs.readFileSync(caCertPath);
-    options.rejectUnauthorized = false; 
+    options.rejectUnauthorized = process.env.ALLOW_INSECURE_TLS !== 'true'; 
     
     // Update protocol and port for TLS
     if (MQTT_URL.startsWith('mqtt://')) {
@@ -60,11 +96,30 @@ export const connectMqtt = () => {
 
   client.on('connect', () => {
     console.log(`[MqttService] Connected to MQTT Broker successfully.`);
-    client.subscribe('ics/telemetry/#', (err) => {
+    client.subscribe('ics/v1/telemetry/#', { qos: 1 }, (err) => {
       if (!err) {
-        console.log('[MqttService] Subscribed to topic "ics/telemetry/#" successfully.');
+        console.log('[MqttService] Subscribed to topic "ics/v1/telemetry/#" successfully.');
       } else {
-        console.error('[MqttService] Subscription failed:', err.message);
+        console.error('[MqttService] Telemetry subscription failed:', err.message);
+      }
+    });
+    if (process.env.ENABLE_LEGACY_MQTT === 'true') {
+      client.subscribe('ics/telemetry/#', { qos: 1 });
+    }
+
+    client.subscribe('ics/v1/hardware/snapshot/#', (err) => {
+      if (!err) {
+        console.log('[MqttService] Subscribed to topic "ics/v1/hardware/snapshot/#" successfully.');
+      } else {
+        console.error('[MqttService] Snapshot subscription failed:', err.message);
+      }
+    });
+
+    client.subscribe('ics/v1/acks/#', (err) => {
+      if (!err) {
+        console.log('[MqttService] Subscribed to topic "ics/v1/acks/#" successfully.');
+      } else {
+        console.error('[MqttService] ACK subscription failed:', err.message);
       }
     });
   });
@@ -75,17 +130,48 @@ export const connectMqtt = () => {
       
       // Decrypt E2E Payload if encrypted
       if (payload.encrypted_data) {
-        payload = decryptPayload(payload.encrypted_data);
+        payload = decryptPayload(payload);
+      }
+
+      // Handle Full Snapshot from Hardware Runtime Engine
+      if (topic.startsWith('ics/v1/hardware/snapshot/')) {
+        await applyHardwareSnapshot(payload);
+        return;
+      }
+
+      // Handle Security Command ACKs
+      if (topic.startsWith('ics/v1/acks/')) {
+        const [, , , topicRuntimeId, topicCommandId] = topic.split('/');
+        if (payload.command_type === 'policy' || payload.policy_apply_id) {
+          await processPolicyAck(payload, {
+            runtime_id: topicRuntimeId,
+            command_id: topicCommandId,
+          });
+        } else {
+          await processCommandAck(payload, {
+            runtime_id: topicRuntimeId,
+            command_id: topicCommandId,
+          });
+        }
+        return;
       }
       
       // 1. Write to InfluxDB
       await writeTelemetry(payload);
  
-      // 2. Check metrics for anomalies
+      // 2. Check metrics for anomalies (Rule Engine)
       await checkTelemetryAnomalies(payload);
+
+      // 2.5. Run AI Anomaly Classification (ML Model)
+      await runAiClassification(payload);
 
       // 3. Process structured logs
       await processStructuredLogs(payload);
+
+      // 4. Update dynamic risk score in real-time
+      if (payload.device_id) {
+        calculateAndUpdateRiskScore(payload.device_id).catch(() => {});
+      }
     } catch (error) {
       // Ignore parsing errors for non-json
     }
@@ -96,24 +182,76 @@ export const connectMqtt = () => {
   });
 };
 
-export const publishMqtt = (topic, payload) => {
-  if (mqttClient && mqttClient.connected) {
-    const dataStr = typeof payload === 'string' ? payload : JSON.stringify(payload);
-    
-    // Encrypt E2E Payload
-    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(AES_SECRET_KEY), Buffer.from(AES_IV));
-    let encrypted = cipher.update(dataStr, 'utf8', 'base64');
-    encrypted += cipher.final('base64');
-    
-    const securePayload = JSON.stringify({ encrypted_data: encrypted });
-    
-    mqttClient.publish(topic, securePayload, { qos: 1 });
-    console.log(`[MqttService] Published securely to ${topic}`);
-    return true;
+const encodeSecurePayload = (payload) => {
+  const dataStr = typeof payload === 'string' ? payload : JSON.stringify(payload);
+  const iv = crypto.randomBytes(12);
+  const aesSecret = process.env.AES_SECRET_KEY;
+  if (!aesSecret || Buffer.byteLength(aesSecret) !== 32) {
+    throw new Error('AES_SECRET_KEY must be exactly 32 bytes.');
   }
-  console.error('[MqttService] MQTT Client not connected, publish failed.');
-  return false;
+  const cipher = crypto.createCipheriv('aes-256-gcm', Buffer.from(aesSecret), iv);
+  let encrypted = cipher.update(dataStr, 'utf8', 'base64');
+  encrypted += cipher.final('base64');
+  return JSON.stringify({
+    encrypted_data: encrypted,
+    iv: iv.toString('base64'),
+    auth_tag: cipher.getAuthTag().toString('base64'),
+    alg: 'AES-256-GCM'
+  });
 };
+
+export const publishMqtt = (topic, payload) => {
+  if (!mqttClient?.connected) {
+    console.error('[MqttService] MQTT Client not connected, publish failed.');
+    return false;
+  }
+  try {
+    mqttClient.publish(topic, encodeSecurePayload(payload), { qos: 1 }, (error) => {
+      if (error) {
+        console.error(`[MqttService] Publish failed for ${topic}:`, error.message);
+      }
+    });
+    return true;
+  } catch (error) {
+    console.error(`[MqttService] Failed to encode MQTT payload for ${topic}:`, error.message);
+    return false;
+  }
+};
+
+export const publishMqttAsync = (topic, payload, timeoutMs = 5000) => new Promise((resolve, reject) => {
+  if (!mqttClient?.connected) {
+    reject(new Error('MQTT broker is not connected.'));
+    return;
+  }
+
+  let securePayload;
+  try {
+    securePayload = encodeSecurePayload(payload);
+  } catch (error) {
+    reject(error);
+    return;
+  }
+
+  let settled = false;
+  const timer = setTimeout(() => {
+    if (!settled) {
+      settled = true;
+      reject(new Error(`MQTT PUBACK timeout for ${topic}.`));
+    }
+  }, timeoutMs);
+  timer.unref?.();
+
+  mqttClient.publish(topic, securePayload, { qos: 1 }, (error) => {
+    if (settled) return;
+    settled = true;
+    clearTimeout(timer);
+    if (error) {
+      reject(error);
+    } else {
+      resolve(true);
+    }
+  });
+});
 
 const checkTelemetryAnomalies = async (payload) => {
   const { device_id, zone } = payload;
@@ -202,7 +340,96 @@ const checkTelemetryAnomalies = async (payload) => {
           html: `<p><strong>Security Alert:</strong> Device <strong>${device_id}</strong> in <strong>${zone}</strong> violated rule <strong>${rule.rule_name}</strong>.</p>`
         });
       }
+
+      // 4. Run automated playbooks for this rule
+      await executePlaybook(rule.rule_name, device_id, { alert_id: alert._id });
     }
+  }
+};
+
+const runAiClassification = async (payload) => {
+  const { device_id, zone, metrics } = payload;
+  if (!device_id || !metrics) return;
+
+  try {
+    const aiUrl = process.env.AI_ENGINE_URL || 'http://localhost:5000';
+    // Native fetch (Node 18+)
+    const response = await fetch(`${aiUrl}/classify/anomaly`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ metrics })
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      // data: { label: "DDoS", confidence: 0.95 }
+      if (data.label && data.label !== 'Normal' && data.label !== '0' && data.confidence > 0.8) {
+        const rule_name = `AI_DETECTED_${data.label.toUpperCase().replace(/\s+/g, '_')}`;
+        
+        const recentAlert = await Alert.findOne({
+          device_id, rule_name, status: 'new',
+          detected_at: { $gt: new Date(Date.now() - 5 * 60 * 1000) }
+        });
+        
+        if (!recentAlert) {
+          console.log(`🤖 [AI Classification] Detected ${data.label} on ${device_id} (Confidence: ${data.confidence})`);
+          
+          const alert = await Alert.create({
+            rule_name,
+            device_id,
+            title: `AI Cảnh báo: Mô hình ML phát hiện ${data.label}`,
+            description: `Mô hình phát hiện bất thường với độ tin cậy ${data.confidence * 100}% dựa trên metrics: CPU ${metrics.cpu_usage}%, Mem ${metrics.memory_usage}%`,
+             severity: 'CRITICAL',
+             status: 'new',
+             detected_at: new Date(),
+             ai_provenance: {
+               model_id: data.model_id || null,
+               algorithm: data.algorithm || null,
+               feature_schema_version: data.feature_schema_version || null,
+               score: data.score ?? null,
+               confidence: data.confidence ?? null,
+               inference_at: new Date(),
+             },
+          });
+
+          const incident = await Incident.create({
+            title: `Sự cố AI: ${data.label} trên ${device_id}`,
+            description: `Hệ thống AI/ML đã phát hiện luồng dữ liệu bất thường phân loại là [${data.label}]. Độ tin cậy: ${data.confidence}.`,
+            severity: 'CRITICAL',
+            status: 'investigating',
+            alert_ids: [alert._id]
+          });
+
+          alert.incident_id = incident._id;
+          await alert.save();
+
+          await IncidentTimeline.create({
+            incident_id: incident._id,
+            actor: 'AI Anomaly Detector',
+            action_type: 'incident_created',
+            description: `AI phát hiện dị thường ${data.label} (Conf: ${data.confidence})`,
+            metadata: {
+              metrics,
+              label: data.label,
+              confidence: data.confidence,
+              model_id: data.model_id,
+              algorithm: data.algorithm,
+              feature_schema_version: data.feature_schema_version,
+              score: data.score,
+              inference_at: new Date().toISOString(),
+            }
+          });
+
+          socketService.emitNewAlert(alert);
+          socketService.emitNewIncident(incident);
+
+          // 4. Run automated playbooks for AI anomaly
+          await executePlaybook(rule_name, device_id, { alert_id: alert._id });
+        }
+      }
+    }
+  } catch (err) {
+    // Silent fail if AI engine is down
   }
 };
 
@@ -212,6 +439,18 @@ const processStructuredLogs = async (payload) => {
 
   for (const log of logs) {
     const { event, log_level, source_ip, message } = log;
+    
+    // Write physical operational log to InfluxDB
+    writeDeviceEvent({
+      device_id,
+      zone: zone || 'Default-Zone',
+      log_type: 'operational',
+      event: event || 'LOG',
+      severity: log_level || 'INFO',
+      source_ip,
+      message: message || `${event || 'Log'} event on ${device_id}`,
+      timestamp: new Date()
+    }).catch(err => console.error('[MqttService] Failed to write event to InfluxDB:', err.message));
     
     // Only raise security Alerts/Incidents for WARN, ERROR, CRITICAL logs
     if (log_level === 'INFO') continue;
@@ -315,11 +554,15 @@ const processStructuredLogs = async (payload) => {
                <p><strong>Log Details:</strong> ${message}</p>
                <p><strong>Action Taken:</strong> Flagged in SOC Dashboard and registered for AI analysis.</p>`
       }).catch(err => console.error('[MqttService] Email send error:', err));
+
+      // 4. Run automated playbooks for structured log anomaly
+      await executePlaybook(rule_name, device_id, { alert_id: alert._id });
     }
   }
 };
 
 export default {
   connectMqtt,
-  publishMqtt
+  publishMqtt,
+  publishMqttAsync
 };

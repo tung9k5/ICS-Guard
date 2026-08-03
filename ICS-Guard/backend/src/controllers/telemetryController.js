@@ -1,7 +1,13 @@
 import { Alert, Incident, IncidentTimeline, Device, BlockedIp } from '../models/index.js';
-import { registerFailedIpAttempt } from '../services/securityService.js';
 import { sendEmailAlert } from '../services/emailService.js';
 import { publishMqtt } from '../services/mqttService.js';
+import socketService from '../services/socketService.js';
+import { sendTelegramAlert } from '../services/telegramService.js';
+import { getActiveAdminSessions, addEmergencyAlert } from '../services/sessionRegistry.js';
+import { calculateAndUpdateRiskScore } from '../services/riskService.js';
+import { parseSyslog, parseCSV } from '../utils/logParser.js';
+import { writeTelemetry, writeDeviceEvent } from '../services/influxService.js';
+import ruleEngineService from '../services/ruleEngineService.js';
 
 export const getBlockedIpsPublic = async (req, res) => {
   try {
@@ -16,6 +22,21 @@ export const getBlockedIpsPublic = async (req, res) => {
 // In-memory brute force tracker grouped by device_id + source_ip
 // Format: { 'plc-water-01:185.220.101.45': [timestamp1, timestamp2, ...] }
 const bruteForceAttempts = {};
+
+const blockSourceIp = async (ipAddress, deviceId) => {
+  if (!ipAddress) return null;
+  const blockHours = Number.parseInt(process.env.IP_BLOCK_TIME_HOURS || '24', 10);
+  const expiresAt = new Date(Date.now() + blockHours * 60 * 60 * 1000);
+  return BlockedIp.findOneAndUpdate(
+    { ipAddress },
+    {
+      ipAddress,
+      reason: `Auto-blocked after brute-force detection against ${deviceId}`,
+      expiresAt,
+    },
+    { upsert: true, new: true },
+  );
+};
 
 export const ingestTelemetryLog = async (req, res) => {
   const { device_id, log_type, event, source_ip, username, timestamp } = req.body;
@@ -66,7 +87,7 @@ export const ingestTelemetryLog = async (req, res) => {
 
   try {
     // Check if device exists in Mongo, if not register/log warning
-    const device = await Device.findOne({ device_id });
+    const device = await Device.findById(device_id);
     const zone = device ? device.zone : 'unknown';
 
     if (log_type === 'auth' && event === 'AUTH_FAILED') {
@@ -91,7 +112,7 @@ export const ingestTelemetryLog = async (req, res) => {
 
         // 1. Auto-block the attacker IP in backend firewall middleware
         if (source_ip) {
-          await registerFailedIpAttempt(source_ip);
+          await blockSourceIp(source_ip, device_id);
         }
 
         // 2. Raise critical Alert in MongoDB
@@ -146,7 +167,7 @@ export const ingestTelemetryLog = async (req, res) => {
           const alertText = `🚨 *CRITICAL SECURITY ALERT: SSH BRUTE FORCE*\n\nDevice: *${device_id}*\nZone: *${zone}*\nAttacker IP: *${source_ip || 'unknown'}*\nAction: *IP Auto-Blocked*\nSeverity: *CRITICAL*`;
           
           sendTelegramAlert(alertText, [
-            { text: `🚫 Cô lập thiết bị ${device_id}`, callback_data: `quarantine_device:${device_id}` }
+            { text: `🚫 Cô lập thiết bị ${device_id}`, callback_data: `isolate_device:${device_id}` }
           ]).catch(err => console.error('[TelemetryController] Telegram send error:', err));
           
           sendEmailAlert({
@@ -158,6 +179,11 @@ export const ingestTelemetryLog = async (req, res) => {
           }).catch(err => console.error('[TelemetryController] Email send error:', err));
         }
       }
+    }
+
+    // Update dynamic risk score in real-time
+    if (device_id) {
+      calculateAndUpdateRiskScore(device_id).catch(() => {});
     }
 
     return res.status(200).json({ status: 'success', message: 'Log ingested successfully.' });
@@ -200,6 +226,221 @@ export const controlAttackEndpoint = async (req, res) => {
   } catch (error) {
     console.error('[TelemetryController] Control attack error:', error);
     return res.status(500).json({ error: 'Internal Server Error', message: 'Failed to dispatch attack command.' });
+  }
+};
+
+/**
+ * Xử lý chung dòng log/telemetry (cả từ REST, Syslog, CSV)
+ */
+const processTelemetryLogEntry = async (entry) => {
+  const { device_id, log_type, event, source_ip, username, timestamp, metrics, message } = entry;
+  const zone = entry.zone || 'Default-Zone';
+
+  // Save physical infrastructure log to InfluxDB if it's not a software auth/audit log
+  if (log_type !== 'auth' && log_type !== 'user_action' && log_type !== 'audit') {
+    let logMessage = message;
+    if (!logMessage) {
+      if (metrics) {
+        logMessage = `Telemetry: ${Object.entries(metrics).map(([k, v]) => `${k}=${v}`).join(', ')}`;
+      } else {
+        logMessage = `${event || 'LOG'} event occurred on ${device_id}`;
+      }
+    }
+    
+    let severity = entry.severity || 'INFO';
+    if (event && (event.includes('FAIL') || event.includes('ERROR') || event.includes('ATTACK') || event.includes('OVERFLOW') || event.includes('SPIKE'))) {
+      severity = 'CRITICAL';
+    } else if (event && (event.includes('WARN') || event.includes('HIGH') || event.includes('LOW'))) {
+      severity = 'WARNING';
+    }
+    
+    writeDeviceEvent({
+      device_id,
+      zone,
+      log_type: log_type || 'telemetry',
+      event: event || 'OPERATION',
+      severity,
+      source_ip,
+      username,
+      message: logMessage,
+      timestamp: timestamp || new Date()
+    }).catch(err => console.error('[TelemetryController] failed to write device event to Influx:', err));
+  }
+
+  // 1. Ghi InfluxDB và kiểm tra Rule Engine nếu chứa metrics đo lường
+  if (metrics && Object.keys(metrics).length > 0) {
+    try {
+      await writeTelemetry({ device_id, zone, metrics, timestamp: timestamp || new Date() });
+      
+      const matchedRules = await ruleEngineService.evaluateTelemetry({ device_id, zone, metrics });
+      for (const rule of matchedRules) {
+        // Tạo Alert trong MongoDB
+        const alert = await Alert.create({
+          rule_name: rule.rule_name,
+          device_id,
+          title: rule.alert_title || `Phát hiện bất thường: ${rule.rule_name} trên ${device_id}`,
+          description: rule.alert_description || rule.description || `Hệ thống phát hiện vi phạm quy tắc ${rule.rule_name}.`,
+          severity: rule.severity,
+          status: 'new',
+          event_count: 1,
+          raw_events_sample: [{ timestamp: new Date(), message: message || 'Rule threshold matched' }]
+        });
+
+        // Tìm hoặc tạo Incident liên quan
+        const alertTitle = rule.alert_title || `Sự cố: Vi phạm quy tắc bảo mật ${rule.rule_name} trên ${device_id}`;
+        let incident = await Incident.findOne({ title: alertTitle, status: { $in: ['open', 'investigating'] } });
+        if (!incident) {
+          incident = await Incident.create({
+            title: alertTitle,
+            description: rule.alert_description || `Quy tắc ${rule.rule_name} đã bị vi phạm tại vùng ${zone || 'unknown'}. Chi tiết: ${rule.description}`,
+            severity: rule.severity,
+            status: 'open',
+            alert_ids: [alert._id]
+          });
+          await IncidentTimeline.create({
+            incident_id: incident._id,
+            actor: 'System',
+            action_type: 'rule_trigger',
+            description: `Sự cố được kích hoạt tự động từ thiết bị ${device_id} do khớp quy tắc giám sát.`
+          });
+        } else {
+          incident.alert_ids.push(alert._id);
+          await incident.save();
+        }
+
+        alert.incident_id = incident._id;
+        await alert.save();
+
+        // Đồng bộ thời gian thực qua socket
+        socketService.emitNewAlert(alert);
+        socketService.emitNewIncident(incident);
+      }
+    } catch (err) {
+      console.error('[TelemetryController] Error processing metrics entry:', err.message);
+    }
+  }
+
+  // 2. Chặn brute force nếu log dạng auth failed
+  if (log_type === 'auth' && event === 'AUTH_FAILED') {
+    const now = Date.now();
+    const ipKey = `${device_id}:${source_ip || 'unknown'}`;
+    const timeWindowMs = 120 * 1000;
+
+    if (!bruteForceAttempts[ipKey]) {
+      bruteForceAttempts[ipKey] = [];
+    }
+
+    bruteForceAttempts[ipKey].push(now);
+    bruteForceAttempts[ipKey] = bruteForceAttempts[ipKey].filter(ts => now - ts < timeWindowMs);
+
+    const failedCount = bruteForceAttempts[ipKey].length;
+    console.log(`[TelemetryController] Syslog/CSV auth failed on ${device_id} from ${source_ip}: ${failedCount}/10`);
+
+    if (failedCount >= 10) {
+      delete bruteForceAttempts[ipKey];
+
+      if (source_ip) {
+        await blockSourceIp(source_ip, device_id);
+      }
+
+      const alert = await Alert.create({
+        rule_name: 'DEVICE_BRUTE_FORCE',
+        device_id,
+        title: `Tấn công SSH Brute Force trên ${device_id}`,
+        description: `Phát hiện hành vi brute force mật khẩu từ nguồn ngoài vào thiết bị ${device_id} (Đăng nhập sai ${failedCount} lần liên tiếp).`,
+        severity: 'CRITICAL',
+        status: 'new',
+        source_ip,
+        detected_at: new Date()
+      });
+
+      const incident = await Incident.create({
+        title: `Sự cố: Tấn công Brute Force vào thiết bị ${device_id}`,
+        description: `Phát hiện tấn công dò mật khẩu SSH liên tục từ IP nguồn ${source_ip || 'unknown'} nhắm vào thiết bị ${device_id} tại phân vùng mạng ${zone}. Hệ thống đã kích hoạt cơ chế tự động chặn IP nguồn.`,
+        severity: 'CRITICAL',
+        status: 'investigating',
+        alert_ids: [alert._id]
+      });
+
+      alert.incident_id = incident._id;
+      await alert.save();
+
+      await IncidentTimeline.create({
+        incident_id: incident._id,
+        actor: 'Security Log Engine',
+        action_type: 'incident_created',
+        description: `Phát hiện hành vi brute force mật khẩu từ IP ${source_ip || 'unknown'} (Đăng nhập sai > 10 lần trong 2 phút).`,
+        metadata: { source_ip, failedAttempts: failedCount }
+      });
+
+      socketService.emitNewAlert(alert);
+      socketService.emitNewIncident(incident);
+
+      const activeAdmins = getActiveAdminSessions();
+      if (activeAdmins.length > 0) {
+        addEmergencyAlert({ device_id, attack_type: 'brute_force', admin_users: activeAdmins });
+      } else {
+        const alertText = `🚨 *CRITICAL SECURITY ALERT: SSH BRUTE FORCE*\n\nDevice: *${device_id}*\nZone: *${zone}*\nAttacker IP: *${source_ip || 'unknown'}*\nAction: *IP Auto-Blocked*\nSeverity: *CRITICAL*`;
+        sendTelegramAlert(alertText, [
+          { text: `🚫 Cô lập thiết bị ${device_id}`, callback_data: `isolate_device:${device_id}` }
+        ]).catch(() => {});
+        
+        sendEmailAlert({
+          subject: `[ICS-GUARD CRITICAL] SSH Brute Force Attack on ${device_id}`,
+          text: `Critical Alert: SSH Brute force attack detected on device ${device_id} from IP ${source_ip}. IP has been auto-blocked.`,
+          html: `<h3>Critical Infrastructure Security Alert</h3>`
+        }).catch(() => {});
+      }
+    }
+  }
+
+  // 3. Tính toán lại Risk Score thời gian thực
+  if (device_id) {
+    calculateAndUpdateRiskScore(device_id).catch(() => {});
+  }
+};
+
+export const ingestSyslogEndpoint = async (req, res) => {
+  try {
+    const rawLog = req.body.log || req.body.message || (typeof req.body === 'string' ? req.body : null);
+    if (!rawLog) {
+      return res.status(400).json({ error: 'Bad Request', message: 'No syslog content provided.' });
+    }
+
+    const payload = parseSyslog(rawLog);
+    if (!payload) {
+      return res.status(400).json({ error: 'Bad Request', message: 'Failed to parse syslog content.' });
+    }
+
+    await processTelemetryLogEntry(payload);
+
+    return res.status(200).json({ status: 'success', message: 'Syslog parsed and ingested successfully.', data: payload });
+  } catch (error) {
+    console.error('ingestSyslogEndpoint error:', error);
+    return res.status(500).json({ error: 'Internal Server Error', message: error.message });
+  }
+};
+
+export const ingestCsvEndpoint = async (req, res) => {
+  try {
+    const csvContent = req.body.csv || (typeof req.body === 'string' ? req.body : null);
+    if (!csvContent) {
+      return res.status(400).json({ error: 'Bad Request', message: 'No CSV content provided.' });
+    }
+
+    const entries = parseCSV(csvContent);
+    if (entries.length === 0) {
+      return res.status(400).json({ error: 'Bad Request', message: 'No valid rows parsed from CSV.' });
+    }
+
+    for (const entry of entries) {
+      await processTelemetryLogEntry(entry);
+    }
+
+    return res.status(200).json({ status: 'success', message: `Parsed and processed ${entries.length} log entries from CSV.`, count: entries.length });
+  } catch (error) {
+    console.error('ingestCsvEndpoint error:', error);
+    return res.status(500).json({ error: 'Internal Server Error', message: error.message });
   }
 };
 

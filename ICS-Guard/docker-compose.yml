@@ -150,8 +150,8 @@ services:
   ai-engine:
     build:
       context: ./ai-engine
-    ports:
-      - "${AI_ENGINE_PORT:-5000}:5000"
+    expose:
+      - "5000"
     volumes:
       - ./ai-engine:/app
     environment:
@@ -185,8 +185,65 @@ services:
       - AES_SECRET_KEY=${AES_SECRET_KEY}
       - AES_IV=${AES_IV}
       - ALLOW_INSECURE_TLS=${ALLOW_INSECURE_TLS}
+      - MQTT_USERNAME=${HARDWARE_MQTT_USER:-hardware-runtime-01}
+      - MQTT_PASSWORD=${HARDWARE_MQTT_PASSWORD:-hardware_secret_pass}
     depends_on:
       - mosquitto
+      - backend
+    restart: always
+
+  # 10. Hardware BFF Service
+  hardware-bff:
+    build:
+      context: ./iot/hardware-bff
+    ports:
+      - "5001:5001"
+    environment:
+      - HARDWARE_BFF_PORT=5001
+      - PYTHON_RUNTIME_URL=http://simulator:5002
+    depends_on:
+      - simulator
+    restart: always
+
+  # 11. Standalone Attack Adapter Service
+  attack-adapter:
+    build:
+      context: ./iot/attack-adapter
+    ports:
+      - "5003:5003"
+    environment:
+      - ATTACK_ADAPTER_PORT=5003
+      - MQTT_URL=mqtt://mosquitto:1883
+      - ATTACK_MQTT_USER=${ATTACK_MQTT_USER:-attack-adapter}
+      - ATTACK_MQTT_PASSWORD=${ATTACK_MQTT_PASSWORD:-attack_secret_pass}
+    depends_on:
+      - mosquitto
+    restart: always
+
+  # 12. Defense Agent — Real SOAR Enforcement (iptables + docker network)
+  defense-agent:
+    build:
+      context: ./iot/defense-agent
+    expose:
+      - "5050"
+    environment:
+      - DEFENSE_AGENT_PORT=5050
+      - DEFENSE_AGENT_KEY=${DEFENSE_AGENT_KEY}
+      - OT_DOCKER_NETWORK=${OT_DOCKER_NETWORK:-ics-guard_ot_network}
+      - BACKEND_CAPTURE_CALLBACK=http://backend:8000/api/internal/capture-complete
+      - CAPTURE_INTERFACE=eth0
+      - PCAP_DIR=/pcap
+      - AUDIT_LOG_DIR=/pcap
+    volumes:
+      # Persistent PCAP storage
+      - pcap_data:/pcap
+      # Docker socket — allows docker network disconnect/connect
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    cap_add:
+      # Required for iptables manipulation
+      - NET_ADMIN
+      - NET_RAW
+    depends_on:
       - backend
     restart: always
 
@@ -199,3 +256,4 @@ volumes:
   rabbitmq_data:
   ollama_data:
   redis_data:
+  pcap_data:

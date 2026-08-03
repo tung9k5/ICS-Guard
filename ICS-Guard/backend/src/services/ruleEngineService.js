@@ -14,9 +14,18 @@ class RuleEngineService {
       return; // Use memory cache
     }
 
+    if (this.isLoading) {
+      // wait until loaded by another concurrent call
+      while (this.isLoading) {
+        await new Promise(r => setTimeout(r, 50));
+      }
+      return;
+    }
+
+    this.isLoading = true;
     try {
       this.rules = await Rule.find({ is_active: true }).lean();
-      this.lastLoadTime = now;
+      this.lastLoadTime = Date.now();
       console.log(`[RuleEngine] Loaded ${this.rules.length} active rules from Database.`);
       try {
         await redisClient.setEx('active_rules', 3600, JSON.stringify(this.rules));
@@ -28,10 +37,12 @@ class RuleEngineService {
         const cached = await redisClient.get('active_rules');
         if (cached) {
           this.rules = JSON.parse(cached);
-          this.lastLoadTime = now;
+          this.lastLoadTime = Date.now();
           console.log(`[RuleEngine] Loaded ${this.rules.length} rules from Redis Fallback.`);
         }
       } catch (e) {}
+    } finally {
+      this.isLoading = false;
     }
   }
 
@@ -53,10 +64,11 @@ class RuleEngineService {
 
   async evaluateTelemetry(payload) {
     const { device_id, zone, metrics } = payload;
-    if (!metrics) return [];
+    if (!device_id || !metrics) return [];
 
     await this.loadRules();
     const matchedRules = [];
+    const now = Date.now();
 
     for (const rule of this.rules) {
       if (!rule.conditions || rule.conditions.length === 0) continue;
@@ -73,7 +85,35 @@ class RuleEngineService {
       }
 
       if (allConditionsMet) {
-        matchedRules.push(rule);
+        const key = `rule_hits:${rule.rule_name}:${device_id}`;
+        const windowMs = (rule.time_window_seconds || 60) * 1000;
+        const triggerCount = rule.trigger_count || 1;
+
+        try {
+          // Add current hit timestamp to Sorted Set (value is timestamp + random nonce to allow duplicates)
+          const member = `${now}_${Math.random().toString(36).substring(2, 6)}`;
+          await redisClient.sendCommand(['ZADD', key, String(now), member]);
+
+          // Prune hits older than window
+          const minScore = String(now - windowMs);
+          await redisClient.sendCommand(['ZREMRANGEBYSCORE', key, '-inf', `(${minScore}`]);
+
+          // Get count of hits in window
+          const countStr = await redisClient.sendCommand(['ZCARD', key]);
+          const count = parseInt(countStr, 10) || 0;
+
+          console.log(`[CorrelationEngine] Rule ${rule.rule_name} on device ${device_id} hits: ${count}/${triggerCount} (window: ${rule.time_window_seconds}s)`);
+
+          if (count >= triggerCount) {
+            matchedRules.push(rule);
+            // Clear hits after trigger so it starts fresh
+            await redisClient.del(key);
+          }
+        } catch (err) {
+          console.error('[CorrelationEngine] Redis error, falling back to instant match:', err.message);
+          // Fallback to instant match
+          matchedRules.push(rule);
+        }
       }
     }
 

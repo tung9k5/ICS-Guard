@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import http from '@/http/clients/api';
+import http from '@/api/httpClient';
 import { 
   FileText, User, Calendar, ShieldAlert, CheckCircle, XCircle, 
   Download, RefreshCw, Search, ArrowRightLeft, ShieldCheck

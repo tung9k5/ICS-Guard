@@ -19,18 +19,18 @@
       width: 56px;
       height: 56px;
       border-radius: 50%;
-      background-color: #ffffff;
+      background-color: var(--white);
       display: flex;
       justify-content: center;
       align-items: center;
       cursor: pointer;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       transition: transform 0.2s, background-color 0.2s;
-      color: #2563eb;
+      color: var(--blue-600);
 
       &:hover {
         transform: scale(1.1);
-        background-color: #f8fafc;
+        background-color: var(--slate-50);
       }
     }
   }
@@ -39,7 +39,7 @@
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background-color: var(--primary-color, #2563eb);
+    background-color: var(--primary-color, var(--blue-600));
     color: white;
     display: flex;
     justify-content: center;
@@ -56,7 +56,7 @@
     }
 
     &:hover {
-      background-color: var(--primary-color-hover, #1d4ed8);
+      background-color: var(--primary-color-hover, var(--blue-700));
     }
 
     &.dragging {

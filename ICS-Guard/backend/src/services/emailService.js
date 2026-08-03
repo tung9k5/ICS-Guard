@@ -43,8 +43,12 @@ const getTransporter = async () => {
           console.log(`From: ${mailOptions.from}`);
           console.log(`To: ${mailOptions.to}`);
           console.log(`Subject: ${mailOptions.subject}`);
-          console.log(`Text: ${mailOptions.text}`);
-          console.log(`HTML: ${mailOptions.html}`);
+          if (process.env.NODE_ENV === 'production') {
+            console.log('Text/HTML: [Redacted in Production for Security]');
+          } else {
+            console.log(`Text: ${mailOptions.text}`);
+            console.log(`HTML: ${mailOptions.html}`);
+          }
           console.log('-------------------------\n');
           return { messageId: 'dummy-id', previewUrl: 'http://localhost' };
         }

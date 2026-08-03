@@ -18,7 +18,16 @@ const incidentTimelineSchema = new mongoose.Schema({
   },
   action_type: {
     type: String,
-    enum: ['incident_created', 'auto_response', 'ai_analysis', 'status_change', 'manual_note'],
+    enum: [
+      'incident_created',
+      'auto_response',
+      'ai_analysis',
+      'status_change',
+      'manual_note',
+      'containment_triggered',
+      'rule_trigger',
+      'playbook_execution'
+    ],
     required: true,
   },
   description: {

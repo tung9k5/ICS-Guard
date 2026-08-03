@@ -14,10 +14,10 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
   const currentUser = cached ? JSON.parse(cached) : null;
   const role = currentUser?.role;
 
-  const canSeeTopology = ['admin', 'device_manager', 'analyst'].includes(role);
-  const canSeeDevices = ['admin', 'device_manager'].includes(role);
-  const canSeeUsers = ['admin', 'hr_manager'].includes(role);
-  const canSeeReports = ['admin', 'hr_manager', 'device_manager', 'analyst'].includes(role);
+  const canSeeTopology = ['admin', 'device_management', 'analyst'].includes(role);
+  const canSeeDevices = ['admin', 'device_management'].includes(role);
+  const canSeeUsers = ['admin', 'hr_management'].includes(role);
+  const canSeeReports = ['admin', 'hr_management', 'device_management', 'analyst'].includes(role);
 
   const handleClose = () => {
     if (window.innerWidth <= 768) {

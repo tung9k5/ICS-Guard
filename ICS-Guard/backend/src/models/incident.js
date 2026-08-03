@@ -29,6 +29,17 @@ const incidentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Alert',
   }],
+  forensics_artifacts: [{
+    name: { type: String, required: true },
+    type: { type: String, enum: ['PCAP', 'PLC_REGISTER_DUMP', 'SYSLOG', 'SYSTEM_LOG'], default: 'PCAP' },
+    size: { type: String, default: '0 KB' },
+    size_bytes: { type: Number, default: 0 },
+    sha256: { type: String, default: null },
+    path: { type: String, default: null },
+    filename: { type: String, default: null },
+    download_url: { type: String, default: null },
+    captured_at: { type: Date, default: Date.now }
+  }],
 }, {
   timestamps: true,
 });

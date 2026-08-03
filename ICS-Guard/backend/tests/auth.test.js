@@ -1,5 +1,5 @@
 import { jest } from '@jest/globals';
-import { loginEndpoint } from '../src/controllers/authController.js';
+import { login as loginEndpoint } from '../src/controllers/authController.js';
 import { User, AuditLog } from '../src/models/index.js';
 import bcrypt from 'bcryptjs';
 
@@ -38,18 +38,25 @@ describe('Auth Controller - Login', () => {
     const mockUser = {
       _id: 'userid123',
       username: 'admin',
-      password: await bcrypt.hash('correctpassword', 1),
-      failedLoginAttempts: 0,
+      password_hash: await bcrypt.hash('correctpassword', 1),
+      login_failures: { count: 0, last_failed_at: null, lockout_until: null },
       save: jest.fn().mockResolvedValue(true)
     };
     
-    jest.spyOn(User, 'findOne').mockResolvedValue(mockUser);
+    jest.spyOn(User, 'findOne').mockReturnValue({
+      select: jest.fn().mockResolvedValue(mockUser)
+    });
     jest.spyOn(AuditLog, 'create').mockResolvedValue(true);
     
     await loginEndpoint(req, res);
     
-    expect(User.findOne).toHaveBeenCalledWith({ username: 'admin' });
-    expect(mockUser.failedLoginAttempts).toBe(1);
+    expect(User.findOne).toHaveBeenCalledWith({
+      $or: [
+        { email: 'admin' },
+        { username: 'admin' }
+      ]
+    });
+    expect(mockUser.login_failures.count).toBe(1);
     expect(mockUser.save).toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(401);
   });

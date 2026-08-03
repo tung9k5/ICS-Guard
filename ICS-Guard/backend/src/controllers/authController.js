@@ -1,9 +1,16 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import axios from 'axios';
+import crypto from 'crypto';
+
 import { User, RefreshToken } from '../models/index.js';
 import { handleFailedLogin, handleSuccessfulLogin, registerFailedIpAttempt } from '../services/securityService.js';
 import { sendTelegramAlert } from '../services/telegramService.js';
+import { normalizeRole } from '../utils/roles.js';
+
+const hashToken = (token) => {
+  if (!token) return '';
+  return crypto.createHash('sha256').update(token).digest('hex');
+};
 
 // -----------------------------------------------
 // In-memory OTP store (không cần Redis)
@@ -14,12 +21,15 @@ const OTP_TTL_MS = 5 * 60 * 1000;    // 5 phút
 const OTP_MAX_ATTEMPTS = 5;           // Tối đa 5 lần nhập sai
 
 // Dọn OTP hết hạn mỗi 10 phút
-setInterval(() => {
+const cleanupTimer = setInterval(() => {
   const now = Date.now();
   for (const [key, val] of telegramOtpStore.entries()) {
     if (now > val.expiresAt) telegramOtpStore.delete(key);
   }
 }, 10 * 60 * 1000);
+if (cleanupTimer.unref) {
+  cleanupTimer.unref();
+}
 
 const generateAccessToken = (user) => {
   return jwt.sign(
@@ -30,7 +40,7 @@ const generateAccessToken = (user) => {
       isFirstLogin: user.isFirstLogin === undefined ? true : user.isFirstLogin,
       telegramChatId: user.contactInfo ? user.contactInfo.telegramChatId : null
     },
-    process.env.JWT_SECRET || 'ics_guard_access_secret_key_2026_@_secure',
+    process.env.JWT_ACCESS_SECRET,
     { expiresIn: process.env.JWT_ACCESS_EXPIRY || '30d' }
   );
 };
@@ -38,34 +48,41 @@ const generateAccessToken = (user) => {
 const generateRefreshToken = (user) => {
   return jwt.sign(
     { id: user._id },
-    process.env.JWT_SECRET || 'ics_guard_refresh_secret_key_2026_@_secure',
+    process.env.JWT_REFRESH_SECRET,
     { expiresIn: process.env.JWT_REFRESH_EXPIRY || '365d' }
   );
 };
 
 export const login = async (req, res) => {
-  console.log('[Login Request Body]', req.body);
-  const rawUsername = req.body.username || req.body.username_or_email;
-  const usernameInput = typeof rawUsername === 'string' ? rawUsername.trim() : rawUsername;
+  const rawUsername = req.body.username || req.body.username_or_email || req.body.email;
+  console.log('[Login Request] Attempt by:', typeof rawUsername === 'string' ? rawUsername.trim() : rawUsername);
+  const emailInput = typeof rawUsername === 'string' ? rawUsername.trim() : rawUsername;
   const { password } = req.body;
   const rawIp = req.ip || req.connection.remoteAddress;
   const ipAddress = rawIp.replace(/^::ffff:/, '');
 
-  if (!usernameInput || !password) {
-    return res.status(400).json({ error: 'Bad Request', message: 'Username and password are required.' });
+  if (!emailInput || !password) {
+    return res.status(400).json({ error: 'Bad Request', message: 'Email and password are required.' });
   }
 
   try {
-    // Support logging in by either username or email
+    // Support logging in by either email or username
     const user = await User.findOne({
       $or: [
-        { username: usernameInput },
-        { email: usernameInput }
+        { email: emailInput },
+        { username: emailInput }
       ]
-    });
+    }).select('+password_hash');
 
     // Handle brute force user lockout check
     if (user) {
+      if (user.status === 'locked' || user.is_active === false || user.deletion_pending === true) {
+        return res.status(403).json({
+          error: 'ACCOUNT_DEACTIVATED',
+          message: 'Tài khoản của bạn đã bị tạm thời vô hiệu hóa hoặc bị khóa bởi Quản trị viên.',
+        });
+      }
+
       const now = new Date();
       if (user.login_failures && user.login_failures.lockout_until && user.login_failures.lockout_until > now) {
         const waitTimeMin = Math.ceil((user.login_failures.lockout_until - now) / 60000);
@@ -96,6 +113,11 @@ export const login = async (req, res) => {
     }
 
     // Successful login
+    const canonicalRole = normalizeRole(user.role);
+    if (canonicalRole && canonicalRole !== user.role) {
+      user.role = canonicalRole;
+      await user.save();
+    }
     await handleSuccessfulLogin(user);
 
     // Generate tokens
@@ -109,7 +131,7 @@ export const login = async (req, res) => {
     // Save refresh token to database
     await RefreshToken.create({
       userId: user._id,
-      token: refreshToken,
+      token: hashToken(refreshToken),
       expiresAt,
     });
 
@@ -144,13 +166,13 @@ export const refresh = async (req, res) => {
     // 1. Verify token signature & expiry
     let decoded;
     try {
-      decoded = jwt.verify(refreshToken, process.env.JWT_SECRET || 'ics_guard_refresh_secret_key_2026_@_secure');
+      decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET);
     } catch (err) {
       return res.status(401).json({ error: 'Unauthorized', message: 'Invalid or expired refresh token.' });
     }
 
     // 2. Find token in DB
-    const dbToken = await RefreshToken.findOne({ token: refreshToken });
+    const dbToken = await RefreshToken.findOne({ token: hashToken(refreshToken) });
 
     // Token reuse detection (Security best practice)
     if (!dbToken || dbToken.revoked || new Date(dbToken.expiresAt) < new Date()) {
@@ -171,6 +193,12 @@ export const refresh = async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized', message: 'User is locked, inactive, or no longer exists.' });
     }
 
+    const canonicalRole = normalizeRole(user.role);
+    if (canonicalRole && canonicalRole !== user.role) {
+      user.role = canonicalRole;
+      await user.save();
+    }
+
     // 4. Revoke the current refresh token (rotation)
     dbToken.revoked = true;
     await dbToken.save();
@@ -185,7 +213,7 @@ export const refresh = async (req, res) => {
     // 6. Save new refresh token
     await RefreshToken.create({
       userId: user._id,
-      token: newRefreshToken,
+      token: hashToken(newRefreshToken),
       expiresAt,
     });
 
@@ -220,7 +248,7 @@ export const logout = async (req, res) => {
   try {
     // Revoke refresh token
     const result = await RefreshToken.updateOne(
-      { token: refreshToken },
+      { token: hashToken(refreshToken) },
       { revoked: true }
     );
 
@@ -249,11 +277,11 @@ export const me = async (req, res) => {
 };
 
 export const setupOnboarding = async (req, res) => {
-  const { newPassword, email, telegramChatId } = req.body;
+  const { newPassword, email, telegramChatId, username } = req.body;
   const userId = req.user.id; // Từ authMiddleware
 
-  if (!newPassword || !email) {
-    return res.status(400).json({ error: 'Bad Request', message: 'Mật khẩu mới và email là bắt buộc.' });
+  if (!newPassword) {
+    return res.status(400).json({ error: 'Bad Request', message: 'Mật khẩu mới là bắt buộc.' });
   }
 
   try {
@@ -262,10 +290,23 @@ export const setupOnboarding = async (req, res) => {
       return res.status(404).json({ error: 'Not Found', message: 'Không tìm thấy tài khoản.' });
     }
 
+    // Cập nhật username nếu được cung cấp (và khác username hiện tại)
+    if (username && username.trim() && username.trim() !== user.username) {
+      const taken = await User.findOne({ username: username.trim(), _id: { $ne: userId } });
+      if (taken) {
+        return res.status(409).json({ error: 'Conflict', message: 'Tên đăng nhập đã được sử dụng bởi tài khoản khác.' });
+      }
+      user.username = username.trim();
+    }
+
     // Băm mật khẩu mới
     user.password_hash = await bcrypt.hash(newPassword, 10);
-    user.email = email;
-    
+
+    // Cập nhật email chỉ nếu được cung cấp
+    if (email && email.trim()) {
+      user.email = email.trim();
+    }
+
     // Cập nhật thông tin liên hệ
     if (!user.contactInfo) {
       user.contactInfo = {};
@@ -299,139 +340,7 @@ export const setupOnboarding = async (req, res) => {
   }
 };
 
-export const register = async (req, res) => {
-  console.log('[Register Request Body]', req.body);
-  const { username, email, password, full_name } = req.body;
 
-  if (!username || !email || !password) {
-    return res.status(400).json({ error: 'Bad Request', message: 'Username, email and password are required.' });
-  }
-
-  try {
-    const existingUser = await User.findOne({
-      $or: [{ username }, { email }]
-    });
-
-    if (existingUser) {
-      return res.status(409).json({ error: 'Conflict', message: 'Username or email already exists.' });
-    }
-
-    const password_hash = await bcrypt.hash(password, 10);
-
-    const newUser = await User.create({
-      username,
-      email,
-      password_hash,
-      full_name: full_name || '',
-      role: 'admin',
-      isFirstLogin: false
-    });
-
-    const accessToken = generateAccessToken(newUser);
-    const refreshToken = generateRefreshToken(newUser);
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 365);
-
-    await RefreshToken.create({
-      userId: newUser._id,
-      token: refreshToken,
-      expiresAt,
-    });
-
-    return res.status(201).json({
-      message: 'Registration successful.',
-      accessToken,
-      refreshToken,
-      access_token: accessToken,
-      refresh_token: refreshToken,
-      user: {
-        id: newUser._id,
-        username: newUser.username,
-        email: newUser.email,
-        role: newUser.role,
-        isFirstLogin: false
-      }
-    });
-
-  } catch (error) {
-    console.error('Registration error:', error);
-    return res.status(500).json({ error: 'Internal Server Error', message: 'Something went wrong.' });
-  }
-};
-
-export const googleLogin = async (req, res) => {
-  const { idToken } = req.body;
-  if (!idToken) {
-    return res.status(400).json({ error: 'Bad Request', message: 'Google ID token is required.' });
-  }
-
-  try {
-    const response = await axios.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
-    const { email, name, sub } = response.data; // `sub` is Google user ID
-
-    let user = await User.findOne({ email });
-
-    if (!user) {
-      // Create user if not exists
-      // Generate a random password since they login with Google
-      const randomPassword = Math.random().toString(36).slice(-10);
-      const password_hash = await bcrypt.hash(randomPassword, 10);
-      
-      user = await User.create({
-        username: email.split('@')[0] + '_' + sub.substring(0, 4),
-        email,
-        full_name: name,
-        password_hash,
-        role: 'admin', // default role, adjust if needed
-        isFirstLogin: false
-      });
-    }
-
-    // Lock check
-    const now = new Date();
-    if (user.login_failures && user.login_failures.lockout_until && user.login_failures.lockout_until > now) {
-      const waitTimeMin = Math.ceil((user.login_failures.lockout_until - now) / 60000);
-      return res.status(403).json({
-        error: 'Forbidden',
-        message: `Account is locked. Please try again after ${waitTimeMin} minute(s).`,
-      });
-    }
-
-    await handleSuccessfulLogin(user);
-
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 365);
-
-    await RefreshToken.create({
-      userId: user._id,
-      token: refreshToken,
-      expiresAt,
-    });
-
-    return res.status(200).json({
-      message: 'Login successful.',
-      accessToken,
-      refreshToken,
-      access_token: accessToken,
-      refresh_token: refreshToken,
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        isFirstLogin: user.isFirstLogin === undefined ? true : user.isFirstLogin,
-      },
-    });
-
-  } catch (error) {
-    console.error('Google login error:', error.response?.data || error);
-    return res.status(401).json({ error: 'Unauthorized', message: 'Invalid Google ID token.' });
-  }
-};
 
 // ------------------------------------
 // Gửi mã OTP xác thực Telegram
@@ -458,7 +367,7 @@ export const sendTelegramOtp = async (req, res) => {
   telegramOtpStore.set(String(telegramChatId), { code, expiresAt, sentAt, attempts: 0 });
 
   try {
-    console.log(`[AuthController] Gửi OTP ${code} đến Chat ID: ${telegramChatId}`);
+    console.log(`[AuthController] Gửi OTP (masked) đến Chat ID: ${telegramChatId}`);
 
     const sent = await sendTelegramAlert(
       `🔐 *ICS\-GUARD XÁC THỰC*\n\nMã xác nhận liên kết tài khoản của bạn là:\n\n*${code}*\n\n⏰ Mã này có hiệu lực trong *5 phút*\. Không chia sẻ mã này với bất kỳ ai\.`,
@@ -527,6 +436,5 @@ export default {
   setupOnboarding,
   sendTelegramOtp,
   verifyTelegramOtp,
-  register,
-  googleLogin,
 };
+

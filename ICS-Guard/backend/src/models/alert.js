@@ -67,6 +67,14 @@ const alertSchema = new mongoose.Schema({
     ref: 'Incident',
     default: null,
   },
+  ai_provenance: {
+    model_id: { type: String, default: null },
+    algorithm: { type: String, default: null },
+    feature_schema_version: { type: String, default: null },
+    score: { type: Number, default: null },
+    confidence: { type: Number, default: null },
+    inference_at: { type: Date, default: null },
+  },
 }, {
   timestamps: true,
 });

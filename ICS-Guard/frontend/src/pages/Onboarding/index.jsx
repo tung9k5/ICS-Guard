@@ -2,18 +2,42 @@ import './Onboarding.scss';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authApi from '@/api/auth';
-import http from '@/http/clients/api';
+import http from '@/api/httpClient';
 import { jwtDecode } from 'jwt-decode';
 import {
-  Lock, Mail, Send, Eye, EyeOff,
+  Lock, Mail, Send, Eye, EyeOff, User,
   CheckCircle, AlertCircle, HelpCircle,
-  ChevronDown, ChevronUp, ShieldAlert, KeyRound, Radio
+  ChevronDown, ChevronUp, ShieldAlert, KeyRound, Radio, Check, X
 } from 'lucide-react';
+
+// ---- Password Strength Helper ----
+const getPasswordStrength = (pwd) => {
+  let score = 0;
+  if (pwd.length >= 8) score++;
+  if (/[A-Z]/.test(pwd)) score++;
+  if (/[0-9]/.test(pwd)) score++;
+  if (/[^a-zA-Z0-9]/.test(pwd)) score++;
+  return score; // 0-4
+};
+
+const STRENGTH_LABELS = ['', 'Yếu', 'Trung bình', 'Khá mạnh', 'Mạnh'];
+const STRENGTH_CLASSES = ['', 'strength-weak', 'strength-fair', 'strength-good', 'strength-strong'];
+
+// ---- Username-Email Similarity Check ----
+const isUsernameTooSimilarToEmail = (uname, userEmail) => {
+  if (!uname || !userEmail) return false;
+  const emailPrefix = userEmail.split('@')[0].toLowerCase();
+  const cleaned = uname.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (cleaned === emailPrefix) return true;
+  if (emailPrefix.length > 3 && cleaned.includes(emailPrefix)) return true;
+  return false;
+};
 
 const Onboarding = () => {
   const navigate = useNavigate();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [telegramChatId, setTelegramChatId] = useState('');
 
@@ -22,13 +46,13 @@ const Onboarding = () => {
   const [showGuide, setShowGuide] = useState(false);
 
   // OTP flow states
-  const [otpSent, setOtpSent] = useState(false);       // Đã gửi mã chưa
-  const [otpCode, setOtpCode] = useState('');           // Mã user nhập vào
-  const [otpVerified, setOtpVerified] = useState(false);// Đã xác thực thành công
-  const [isSending, setIsSending] = useState(false);    // Đang gửi mã
-  const [isVerifying, setIsVerifying] = useState(false);// Đang xác minh
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [otpError, setOtpError] = useState('');
-  const [resendCooldown, setResendCooldown] = useState(0); // Đếm ngược gửi lại
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -44,7 +68,17 @@ const Onboarding = () => {
     }
   };
 
-  // Khởi động đếm ngược 30s khi gửi mã
+  const getCurrentEmail = () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      if (!token) return '';
+      const payload = jwtDecode(token);
+      return payload.email || '';
+    } catch (e) {
+      return '';
+    }
+  };
+
   const startResendCooldown = () => {
     setResendCooldown(30);
     const timer = setInterval(() => {
@@ -68,7 +102,7 @@ const Onboarding = () => {
 
     try {
       const res = await http({
-        url: '/v1/auth/send-telegram-otp',
+        url: '/auth/send-telegram-otp',
         method: 'POST',
         data: { telegramChatId: telegramChatId.trim() }
       });
@@ -93,7 +127,7 @@ const Onboarding = () => {
 
     try {
       const res = await http({
-        url: '/v1/auth/verify-telegram-otp',
+        url: '/auth/verify-telegram-otp',
         method: 'POST',
         data: { telegramChatId: telegramChatId.trim(), code: otpCode.trim() }
       });
@@ -112,26 +146,37 @@ const Onboarding = () => {
     e.preventDefault();
     setSubmitError('');
 
-    if (newPassword.length < 6) {
-      setSubmitError('Mật khẩu mới phải chứa ít nhất 6 ký tự.');
+    // Validate password
+    if (newPassword.length < 8) {
+      setSubmitError('Mật khẩu mới phải chứa ít nhất 8 ký tự.');
+      return;
+    }
+    if (getPasswordStrength(newPassword) < 3) {
+      setSubmitError('Mật khẩu chưa đủ mạnh. Vui lòng đáp ứng ít nhất 3/4 tiêu chí bảo mật.');
       return;
     }
     if (newPassword !== confirmPassword) {
       setSubmitError('Xác nhận mật khẩu không trùng khớp.');
       return;
     }
-    if (!email) {
-      setSubmitError('Vui lòng điền Email để nhận thông báo.');
+
+    // Validate username similarity
+    const emailToCheck = email.trim() || getCurrentEmail();
+    if (username.trim() && isUsernameTooSimilarToEmail(username.trim(), emailToCheck)) {
+      setSubmitError('Tên đăng nhập không nên quá giống với địa chỉ email của bạn.');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const response = await authApi.setupOnboarding({
+      const payload = {
         newPassword,
-        email,
-        telegramChatId: telegramChatId || null
-      });
+        telegramChatId: telegramChatId || null,
+        ...(username.trim() ? { username: username.trim() } : {}),
+        ...(email.trim() ? { email: email.trim() } : {})
+      };
+
+      const response = await authApi.setupOnboarding(payload);
 
       if (response && response.access_token) {
         localStorage.setItem('access_token', response.access_token);
@@ -146,6 +191,8 @@ const Onboarding = () => {
       setIsSubmitting(false);
     }
   };
+
+  const strength = getPasswordStrength(newPassword);
 
   return (
     <div className="onboarding-page">
@@ -179,16 +226,40 @@ const Onboarding = () => {
         {/* Form */}
         <form className="onboarding-form" onSubmit={handleSubmit}>
 
+          {/* Username mới — Tùy chọn */}
+          <div className="form-group">
+            <label>
+              TÊN ĐĂNG NHẬP MỚI
+              <span className="optional-tag"> (Tùy chọn)</span>
+            </label>
+            <div className="input-wrapper">
+              <span className="input-icon"><User size={16} /></span>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder={`Để trống giữ nguyên: ${getUsername()}`}
+                autoComplete="username"
+              />
+            </div>
+            {username.trim() && isUsernameTooSimilarToEmail(username.trim(), email.trim() || getCurrentEmail()) && (
+              <div className="status-error" style={{ marginTop: '6px' }}>
+                <AlertCircle size={13} />
+                <span>Tên đăng nhập không nên quá giống địa chỉ email của bạn.</span>
+              </div>
+            )}
+          </div>
+
           {/* Mật khẩu mới */}
           <div className="form-group">
-            <label>MẬT KHẨU MỚI</label>
+            <label>MẬT KHẨU MỚI <span style={{ color: 'var(--red-500)' }}>*</span></label>
             <div className="input-wrapper">
               <span className="input-icon"><Lock size={16} /></span>
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Nhập tối thiểu 6 ký tự..."
+                placeholder="Tối thiểu 8 ký tự..."
                 required
               />
               <button
@@ -199,11 +270,46 @@ const Onboarding = () => {
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
+
+            {/* Password Strength Indicator */}
+            {newPassword && (
+              <div className="password-strength-meter">
+                <div className="strength-bars">
+                  {[1, 2, 3, 4].map(i => (
+                    <div
+                      key={i}
+                      className={`strength-bar ${strength >= i ? STRENGTH_CLASSES[strength] : ''}`}
+                    />
+                  ))}
+                </div>
+                <span className={`strength-label ${STRENGTH_CLASSES[strength]}`}>
+                  {STRENGTH_LABELS[strength]}
+                </span>
+                <ul className="strength-checklist">
+                  <li className={newPassword.length >= 8 ? 'rule-pass' : 'rule-fail'}>
+                    {newPassword.length >= 8 ? <Check size={11} /> : <X size={11} />}
+                    Tối thiểu 8 ký tự
+                  </li>
+                  <li className={/[A-Z]/.test(newPassword) ? 'rule-pass' : 'rule-fail'}>
+                    {/[A-Z]/.test(newPassword) ? <Check size={11} /> : <X size={11} />}
+                    Ít nhất 1 chữ hoa (A–Z)
+                  </li>
+                  <li className={/[0-9]/.test(newPassword) ? 'rule-pass' : 'rule-fail'}>
+                    {/[0-9]/.test(newPassword) ? <Check size={11} /> : <X size={11} />}
+                    Ít nhất 1 chữ số (0–9)
+                  </li>
+                  <li className={/[^a-zA-Z0-9]/.test(newPassword) ? 'rule-pass' : 'rule-fail'}>
+                    {/[^a-zA-Z0-9]/.test(newPassword) ? <Check size={11} /> : <X size={11} />}
+                    Ít nhất 1 ký tự đặc biệt (!@#$...)
+                  </li>
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* Xác nhận mật khẩu */}
           <div className="form-group">
-            <label>XÁC NHẬN MẬT KHẨU</label>
+            <label>XÁC NHẬN MẬT KHẨU <span style={{ color: 'var(--red-500)' }}>*</span></label>
             <div className="input-wrapper">
               <span className="input-icon"><Lock size={16} /></span>
               <input
@@ -221,19 +327,27 @@ const Onboarding = () => {
                 {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
+            {confirmPassword && newPassword !== confirmPassword && (
+              <div className="status-error" style={{ marginTop: '6px' }}>
+                <AlertCircle size={13} />
+                <span>Mật khẩu xác nhận chưa trùng khớp.</span>
+              </div>
+            )}
           </div>
 
-          {/* Email */}
+          {/* Email — Tùy chọn */}
           <div className="form-group">
-            <label>EMAIL NHẬN CẢNH BÁO</label>
+            <label>
+              EMAIL NHẬN CẢNH BÁO
+              <span className="optional-tag"> (Tùy chọn)</span>
+            </label>
             <div className="input-wrapper">
               <span className="input-icon"><Mail size={16} /></span>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="example@icsguard.local"
-                required
+                placeholder="Để trống nếu không muốn thay đổi"
               />
             </div>
           </div>
@@ -276,8 +390,8 @@ const Onboarding = () => {
                   <div className="terminal-line">
                     <span className="prompt">$ </span>
                     step_3: Mở{' '}
-                    <a href="https://t.me/ics_guard_bot" target="_blank" rel="noreferrer">
-                      @ics_guard_bot
+                    <a href="https://t.me/ics_guard_alert_bot" target="_blank" rel="noreferrer">
+                      @ics_guard_alert_bot
                     </a>{' '}
                     và nhấn <span className="highlight">/start</span> để đăng ký nhận tin.
                   </div>
@@ -328,7 +442,7 @@ const Onboarding = () => {
               </div>
             )}
 
-            {/* Bước 2: Nhập OTP + nút Xác nhận — hiện sau khi gửi mã */}
+            {/* Bước 2: Nhập OTP + nút Xác nhận */}
             {otpSent && !otpVerified && (
               <div className="otp-input-row">
                 <div className="otp-hint">
@@ -374,7 +488,6 @@ const Onboarding = () => {
               </div>
             )}
 
-            {/* Thông báo gửi mã thành công */}
             {otpSent && !otpVerified && !otpError && (
               <div className="status-info">
                 <AlertCircle size={13} />

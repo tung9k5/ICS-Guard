@@ -1,0 +1,104 @@
+.idle-timeout-dialog {
+  background: rgba(11, 15, 30, 0.95) !important;
+  border: 1px solid rgba(245, 158, 11, 0.5) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85),
+              0 0 40px rgba(245, 158, 11, 0.25),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(20px) !important;
+
+  .v-dialog-header {
+    display: none !important; // Custom body header for maximum visual impact
+  }
+
+  .v-dialog-body {
+    padding: 32px 28px 28px 28px !important;
+  }
+
+  .idle-timeout-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+
+    .idle-icon-badge {
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      background: rgba(245, 158, 11, 0.14);
+      border: 1.5px solid rgba(245, 158, 11, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #f59e0b;
+      margin-bottom: 20px;
+      box-shadow: 0 0 28px rgba(245, 158, 11, 0.35);
+      animation: pulseGlow 2s infinite ease-in-out;
+    }
+
+    .idle-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #ffffff !important;
+      margin: 0 0 14px 0;
+      letter-spacing: -0.01em;
+    }
+
+    .idle-description {
+      font-size: 0.95rem;
+      color: #cbd5e1 !important;
+      line-height: 1.6;
+      margin: 0 0 26px 0;
+
+      .idle-countdown-box {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(239, 68, 68, 0.18);
+        border: 1px solid rgba(239, 68, 68, 0.5);
+        padding: 4px 10px;
+        border-radius: 8px;
+        color: #ff4d4d !important;
+        font-weight: 800;
+        font-size: 1.05rem;
+        margin: 0 4px;
+        box-shadow: 0 0 14px rgba(239, 68, 68, 0.3);
+      }
+    }
+
+    .idle-continue-btn {
+      width: 100%;
+      max-width: 280px;
+      height: 48px;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+      border: none !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.45) !important;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 26px rgba(16, 185, 129, 0.6) !important;
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 22px rgba(245, 158, 11, 0.35);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 0 38px rgba(245, 158, 11, 0.65);
+  }
+}

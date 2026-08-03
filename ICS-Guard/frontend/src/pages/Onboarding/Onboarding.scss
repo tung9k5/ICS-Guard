@@ -119,12 +119,12 @@
   }
 
   p {
-    color: #94a3b8;
+    color: #f1f5f9;
     font-size: 0.875rem;
     margin: 0;
     line-height: 1.6;
 
-    strong { color: #e2e8f0; }
+    strong { color: #ffffff; }
   }
 }
 
@@ -148,7 +148,7 @@
     font-weight: 600;
 
     &--password { color: #39ff14; }
-    &--telegram { color: #a78bfa; }
+    &--telegram { color: #c4b5fd; }
   }
 
   .step-divider {
@@ -175,7 +175,7 @@
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #cbd5e1;
+    color: #ffffff !important;
   }
 }
 
@@ -187,7 +187,7 @@
     left: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: #64748b;
+    color: #94a3b8;
     pointer-events: none;
     display: flex;
     align-items: center;
@@ -198,7 +198,7 @@
     right: 12px;
     top: 50%;
     transform: translateY(-50%);
-    color: #64748b;
+    color: #cbd5e1;
     background: none;
     border: none;
     cursor: pointer;
@@ -207,22 +207,23 @@
     align-items: center;
     transition: color 0.2s;
 
-    &:hover { color: #e2e8f0; }
+    &:hover { color: #ffffff; }
   }
 
   input {
     width: 100%;
     padding: 12px 40px;
     background: rgba(14, 22, 47, 0.9);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 10px;
-    color: #f1f5f9;
+    color: #ffffff !important;
     font-size: 14px;
     outline: none;
     transition: border-color 0.25s, box-shadow 0.25s;
     box-sizing: border-box;
 
-    &::placeholder { color: #475569; }
+    &::placeholder { color: #94a3b8; }
+
 
     &:focus {
       border-color: rgba(57, 255, 20, 0.5);
@@ -243,9 +244,10 @@
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #cbd5e1;
+    color: #ffffff !important;
     flex: 1;
   }
+
 
   .guide-toggle-btn {
     display: flex;
@@ -496,3 +498,76 @@
     border-color: rgba(255, 255, 255, 0.18);
   }
 }
+
+// ---- Optional tag ----
+.optional-tag {
+  font-size: 10px;
+  font-weight: 500;
+  color: #475569;
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+// ---- Password Strength Meter ----
+.password-strength-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(8, 14, 30, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  animation: fade-slide-in 0.2s ease-out;
+
+  .strength-bars {
+    display: flex;
+    gap: 4px;
+
+    .strength-bar {
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255, 255, 255, 0.08);
+      transition: background 0.3s ease;
+
+      &.strength-weak    { background: #ef4444; }
+      &.strength-fair    { background: #f97316; }
+      &.strength-good    { background: #eab308; }
+      &.strength-strong  { background: #22c55e; }
+    }
+  }
+
+  .strength-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #475569;
+
+    &.strength-weak    { color: #ef4444; }
+    &.strength-fair    { color: #f97316; }
+    &.strength-good    { color: #eab308; }
+    &.strength-strong  { color: #22c55e; }
+  }
+
+  .strength-checklist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 12px;
+
+    li {
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: color 0.25s;
+
+      &.rule-fail { color: #475569; }
+      &.rule-pass { color: #4ade80; }
+    }
+  }
+}
+

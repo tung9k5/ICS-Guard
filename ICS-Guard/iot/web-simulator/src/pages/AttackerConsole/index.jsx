@@ -1,13 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import http from '@/http/clients/api';
+import { useNavigate } from 'react-router-dom';
+import ApiAttacks from '@/api/attacks';
 import { 
   Network, Cpu, Radio, Thermometer, Droplets, Zap, Wind, Gauge, 
   ToggleLeft, ToggleRight, Volume2, Fan, Bell, ShieldAlert, Play, Square,
   ChevronDown, ChevronRight, RefreshCw, Activity, ShieldCheck, LogOut
 } from 'lucide-react';
-import authApi from '@/api/auth';
 import './AttackerConsole.scss';
+
+const ACTIVE_RUNS_KEY = 'ics_guard_active_attack_runs';
+
+const loadActiveRuns = () => {
+  try {
+    const value = JSON.parse(sessionStorage.getItem(ACTIVE_RUNS_KEY) || '{}');
+    return value && typeof value === 'object' ? value : {};
+  } catch {
+    return {};
+  }
+};
 
 const ATTACK_SCENARIOS = {
   gateway: [
@@ -53,33 +63,53 @@ const getIcon = (iconName) => {
 
 const AttackerConsole = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  const isPublicAttackPage = location.pathname.startsWith('/attacks');
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedNodes, setSelectedNodes] = useState([]);
   const [selectedAttacks, setSelectedAttacks] = useState({}); // format: { [device_type]: attack_type }
   const [triggering, setTriggering] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
-  const [collapsedZones, setCollapsedZones] = useState({ 'Zone-B': true, 'Zone-C': true });
+  const [collapsedZones, setCollapsedZones] = useState({});
+  const [activeRunIds, setActiveRunIds] = useState(loadActiveRuns);
 
   const handleLogout = () => {
-    localStorage.removeItem('attacker_authenticated');
+    localStorage.removeItem('attacker_access_token');
+    localStorage.removeItem('attacker_refresh_token');
+    sessionStorage.removeItem(ACTIVE_RUNS_KEY);
     navigate('/attacker/login');
   };
 
   const fetchDevices = async (isInitial = false) => {
     try {
       if (isInitial) setLoading(true);
-      const res = await http.get('/devices/public/list', { params: { per_page: 1000 } });
+      const res = await ApiAttacks.getDevices();
       const list = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
-      if (list.length > 0 || Array.isArray(res) || Array.isArray(res?.data)) {
-        setDevices(list);
-        setSelectedNodes(prev => prev.filter(id => {
-          const dev = list.find(d => d._id === id);
-          return dev && dev.status !== 'isolated';
-        }));
-      }
+
+      const normalized = list.map((device) => {
+        const id = device._id ?? device.id ?? device.device_id;
+        const parentId = device.parent_id ?? device.parentId ?? null;
+        return {
+        ...device,
+        _id: id == null ? '' : String(id),
+        name: device.name || id || 'Device',
+        node_type: device.node_type || device.type || 'sensor',
+        zone: device.zone || 'Zone-A',
+        status: device.status || device.operational_status || 'active',
+        parent_id: parentId == null || parentId === '' ? null : String(parentId),
+      };
+      }).filter(device => device._id);
+      setDevices(normalized);
+      setActiveRunIds((previous) => {
+        const next = { ...previous };
+        normalized.forEach((device) => {
+          if (device.active_run_id) next[device._id] = device.active_run_id;
+        });
+        return next;
+      });
+      setSelectedNodes(prev => prev.filter(id => {
+        const dev = normalized.find(d => d._id === id);
+        return dev && dev.status !== 'isolated';
+      }));
     } catch (error) {
       console.error('Lỗi khi tải danh sách thiết bị:', error);
     } finally {
@@ -95,6 +125,10 @@ const AttackerConsole = () => {
     const interval = setInterval(() => fetchDevices(false), 2000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    sessionStorage.setItem(ACTIVE_RUNS_KEY, JSON.stringify(activeRunIds));
+  }, [activeRunIds]);
 
   const toggleZone = (zoneName) => {
     setCollapsedZones(prev => ({
@@ -168,15 +202,17 @@ const AttackerConsole = () => {
       setTriggering(true);
       setSuccessMsg('');
 
-      const attackPromises = selectedDevices.map(device => {
-        const attack_type = selectedAttacks[device.node_type];
-        return http.post('/telemetry/control-attack', {
-          device_id: device._id,
-          attack_type
+      const attackResults = await Promise.all(selectedDevices.map((device) =>
+        ApiAttacks.launchAttack(device._id, selectedAttacks[device.node_type])
+      ));
+      setActiveRunIds((previous) => {
+        const next = { ...previous };
+        attackResults.forEach((response, index) => {
+          const run = response?.data || response;
+          if (run?.run_id) next[selectedDevices[index]._id] = run.run_id;
         });
+        return next;
       });
-
-      await Promise.all(attackPromises);
       setSuccessMsg(`🚀 Đã khởi động chiến dịch tấn công thành công trên ${selectedDevices.length} thiết bị!`);
       fetchDevices();
     } catch (error) {
@@ -197,15 +233,22 @@ const AttackerConsole = () => {
       setTriggering(true);
       setSuccessMsg('');
 
-      const selectedDevices = devices.filter(d => selectedNodes.includes(d._id));
-      const stopPromises = selectedDevices.map(device => {
-        return http.post('/telemetry/control-attack', {
-          device_id: device._id,
-          attack_type: 'stop'
-        });
+      const selectedDevices = devices.filter((device) =>
+        selectedNodes.includes(device._id) &&
+        Boolean(activeRunIds[device._id] || device.active_run_id)
+      );
+      if (selectedDevices.length === 0) {
+        setSuccessMsg('No active attack lease exists on the selected targets.');
+        return;
+      }
+      await Promise.all(selectedDevices.map((device) =>
+        ApiAttacks.stopRun(activeRunIds[device._id] || device.active_run_id)
+      ));
+      setActiveRunIds((previous) => {
+        const next = { ...previous };
+        selectedDevices.forEach((device) => delete next[device._id]);
+        return next;
       });
-
-      await Promise.all(stopPromises);
       setSuccessMsg(`✅ Đã dừng tấn công và phục hồi trạng thái cho ${selectedDevices.length} thiết bị!`);
       fetchDevices();
     } catch (error) {
@@ -216,32 +259,64 @@ const AttackerConsole = () => {
     }
   };
 
-  const zones = ['Zone-A', 'Zone-B', 'Zone-C'];
+  const zones = Array.from(new Set([
+    'Zone-A', 'Zone-B', 'Zone-C',
+    ...devices.map(device => device.zone).filter(Boolean),
+  ]));
   
-  const renderTreeNode = (device, level = 0) => {
-    const children = devices.filter(d => d.parent_id === device._id);
+  const deviceMap = React.useMemo(() => Object.fromEntries(devices.map(d => [d._id, d])), [devices]);
+
+  const isDeviceReachable = (deviceId) => {
+    let current = deviceMap[deviceId];
+    const visited = new Set();
+    while (current) {
+      if (visited.has(current._id)) break;
+      visited.add(current._id);
+      if (current.status === 'offline' || current.status === 'isolated') return false;
+      current = current.parent_id ? deviceMap[current.parent_id] : null;
+    }
+    return true;
+  };
+
+  const renderTreeNode = (device, level = 0, ancestors = new Set()) => {
+    if (ancestors.has(device._id)) return null;
+    const nextAncestors = new Set(ancestors).add(device._id);
+    const children = devices.filter(d => d.parent_id === device._id && d.zone === device.zone);
     const hasChildren = children.length > 0;
     const isSelected = selectedNodes.includes(device._id);
+    
+    const reachable = isDeviceReachable(device._id);
+    const isOffline = device.status === 'offline';
     const isIsolated = device.status === 'isolated';
+    const isUnreachable = !reachable && !isOffline && !isIsolated;
+    const isDisabled = isIsolated || isOffline || isUnreachable;
+
+    const disabledTitle = isIsolated
+      ? "Thiết bị đã bị cô lập mạng, không thể tấn công"
+      : isOffline
+      ? "Thiết bị đang Offline (Rút dây / Ngắt nguồn)"
+      : isUnreachable
+      ? "Thiết bị mất kết nối truyền dẫn từ node cha"
+      : "Chọn thiết bị mục tiêu";
 
     return (
       <div key={device._id} className="tree-node-wrapper" style={{ marginLeft: `${level * 15}px` }}>
-        <div className={`tree-node-item ${isIsolated ? 'node-isolated-disabled' : ''}`}>
+        <div className={`tree-node-item ${isDisabled ? 'node-isolated-disabled' : ''}`}>
           <input 
             type="checkbox" 
-            checked={isSelected && !isIsolated}
+            checked={isSelected && !isDisabled}
             onChange={() => handleSelectNode(device._id)}
-            disabled={isIsolated}
+            disabled={isDisabled}
             className="node-checkbox"
-            title={isIsolated ? "Thiết bị đã bị cô lập mạng, không thể tấn công" : "Chọn thiết bị"}
+            title={disabledTitle}
           />
           
           {hasChildren && (
             <button 
               onClick={() => handleSelectAllInBranch(device, devices)}
               className="select-branch-btn"
-              disabled={isIsolated}
-              title={isIsolated ? "Thiết bị đầu nhánh đã bị cô lập" : "Chọn toàn bộ nhánh phụ thuộc"}
+              disabled={isDisabled}
+              title={isDisabled ? disabledTitle : "Chọn toàn bộ nhánh phụ thuộc"}
             >
               *
             </button>
@@ -252,7 +327,7 @@ const AttackerConsole = () => {
           </div>
 
           <div className="node-info">
-            <span className="node-name" style={{ textDecoration: isIsolated ? 'line-through' : 'none', opacity: isIsolated ? 0.6 : 1 }}>
+            <span className="node-name" style={{ textDecoration: isDisabled ? 'line-through' : 'none', opacity: isDisabled ? 0.6 : 1 }}>
               {device.name}
             </span>
             <span className="node-id">({device._id})</span>
@@ -261,7 +336,12 @@ const AttackerConsole = () => {
             </span>
             {device.status !== 'active' && (
               <span className={`node-badge-status status-${device.status}`}>
-                {device.status === 'quarantined' ? 'Bị tấn công' : device.status === 'isolated' ? 'Đã cô lập' : device.status}
+                {device.status === 'quarantined' ? 'Bị tấn công' : device.status === 'isolated' ? 'Đã cô lập' : isOffline ? 'Offline' : device.status}
+              </span>
+            )}
+            {isUnreachable && (
+              <span className="node-badge-status status-unreachable" style={{ background: 'rgba(148, 163, 184, 0.15)', color: '#94a3b8' }}>
+                Mất tín hiệu cha
               </span>
             )}
           </div>
@@ -269,7 +349,7 @@ const AttackerConsole = () => {
         
         {hasChildren && (
           <div className="node-children">
-            {children.map(child => renderTreeNode(child, level + 1))}
+            {children.map(child => renderTreeNode(child, level + 1, nextAncestors))}
           </div>
         )}
       </div>
@@ -302,7 +382,7 @@ const AttackerConsole = () => {
             <RefreshCw size={18} />
             <span>Làm mới</span>
           </button>
-          {!isPublicAttackPage && <button 
+          <button 
             onClick={handleLogout} 
             className="logout-header-btn" 
             title="Đăng xuất"
@@ -325,7 +405,7 @@ const AttackerConsole = () => {
           >
             <LogOut size={16} />
             <span>Đăng xuất</span>
-          </button>}
+          </button>
         </div>
       </div>
 
@@ -347,8 +427,15 @@ const AttackerConsole = () => {
             
             <div className="system-tree-wrapper">
               {zones.map(zone => {
-                const zoneDevices = devices.filter(d => d.zone === zone);
-                const rootGateways = zoneDevices.filter(d => d.node_type === 'gateway');
+                const zoneDevices = devices.filter(d => {
+                  const deviceZone = (d.zone || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+                  const targetZone = zone.toLowerCase().replace(/[^a-z0-9]/g, '');
+                  return deviceZone === targetZone;
+                });
+                const zoneIds = new Set(zoneDevices.map(device => device._id));
+                const rootDevices = zoneDevices.filter(device =>
+                  !device.parent_id || !zoneIds.has(device.parent_id)
+                );
                 const isCollapsed = collapsedZones[zone];
 
                 return (
@@ -360,7 +447,10 @@ const AttackerConsole = () => {
 
                     {!isCollapsed && (
                       <div className="zone-branch-content">
-                        {rootGateways.map(gw => renderTreeNode(gw, 0))}
+                        {rootDevices.length > 0
+                          ? rootDevices.map(gw => renderTreeNode(gw, 0))
+                          : <div style={{ padding: '8px 12px', color: '#64748b', fontSize: '12px' }}>Không có thiết bị nào trong zone này.</div>
+                        }
                       </div>
                     )}
                   </div>

@@ -20,20 +20,41 @@ const ChatWindow = ({ onClose }) => {
     scrollToBottom();
   }, [messages, isTyping]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputValue.trim()) return;
 
-    const newUserMsg = { id: Date.now(), text: inputValue.trim(), sender: 'user' };
+    const userText = inputValue.trim();
+    const newUserMsg = { id: Date.now(), text: userText, sender: 'user' };
     setMessages(prev => [...prev, newUserMsg]);
     setInputValue('');
     setIsTyping(true);
 
-    // Mock bot reply
-    setTimeout(() => {
-      const reply = MOCK_REPLIES[Math.floor(Math.random() * MOCK_REPLIES.length)];
-      setMessages(prev => [...prev, { id: Date.now(), text: reply, sender: 'bot' }]);
+    try {
+      const token = localStorage.getItem('access_token') || localStorage.getItem('attacker_access_token');
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/ai/chat`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
+        body: JSON.stringify({ message: userText })
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok || data.error) {
+         throw new Error(data.message || data.error?.message || 'Lỗi từ hệ thống AI');
+      }
+
+      const replyText = data.data?.reply || 'Xin lỗi, tôi không thể trả lời lúc này.';
+      
+      setMessages(prev => [...prev, { id: Date.now(), text: replyText, sender: 'bot' }]);
+    } catch (error) {
+      console.error('AI Chat Error:', error);
+      setMessages(prev => [...prev, { id: Date.now(), text: `Đã xảy ra lỗi khi kết nối với AI: ${error.message}`, sender: 'bot' }]);
+    } finally {
       setIsTyping(false);
-    }, CHATBOT_MOCK_REPLY_DELAY_MS);
+    }
   };
 
   const handleKeyPress = (e) => {

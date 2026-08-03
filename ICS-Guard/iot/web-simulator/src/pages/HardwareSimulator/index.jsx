@@ -1,6 +1,6 @@
 import './HardwareSimulator.scss';
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import http from '@/http/clients/api';
+import { hardwareApi } from '@/http/clients/trustEdges';
 import {
   Network, Cpu, Radio, Thermometer, Droplets, Zap, Wind, Gauge, HardDrive,
   Trash2, Plus, RefreshCw, Server, Wifi, Activity, ChevronRight, X,
@@ -191,6 +191,23 @@ const generateIp = (zone, existingIps = [], allZones = DEFAULT_ZONES) => {
 const generateMac = () =>
   Array.from({ length: 6 }, () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0').toUpperCase()).join(':');
 
+const normalizeDevice = (device) => {
+  const id = device?._id ?? device?.id ?? device?.device_id;
+  if (id === undefined || id === null || id === '') return null;
+  const parentId = device.parent_id ?? device.parentId ?? null;
+  return {
+    ...device,
+    _id: String(id),
+    id: String(id),
+    parent_id: parentId === undefined || parentId === null || parentId === ''
+      ? null
+      : String(parentId),
+    node_type: device.node_type || device.type || 'sensor',
+    zone: device.zone || 'Zone-A',
+    status: device.status || device.operational_status || 'offline',
+  };
+};
+
 // Hierarchy depth: 0=gateway, 1=controller, 2=chip/sensor/actuator
 const typeDepth = { gateway: 0, controller: 1, chip: 2, sensor: 2, actuator: 2 };
 
@@ -259,6 +276,7 @@ const computeHierarchicalLayout = (zoneDevs) => {
   };
 
   // Place roots horizontally side by side
+  if (roots.length === 0) return result;
   const rootWidths = roots.map(r => subtreeWidth(r._id));
   const totalRootW = rootWidths.reduce((a, b) => a + b, 0) + H_GAP * (roots.length - 1);
   let curX = PAD_L + rootWidths[0] / 2;
@@ -279,7 +297,7 @@ const HardwareSimulator = () => {
   const [customZones, setCustomZones] = useState([]);
   const [deletedZones, setDeletedZones] = useState(() => {
     try { return JSON.parse(localStorage.getItem('sim_deleted_zones') || '[]'); }
-    catch { return []; }
+    catch (err) { return []; }
   });
   const [devices, setDevices]           = useState([]);
   
@@ -355,7 +373,7 @@ const HardwareSimulator = () => {
   // Canvas positions (persisted)
   const [positions, setPositions] = useState(() => {
     try { return JSON.parse(localStorage.getItem('sim_positions_v2') || '{}'); }
-    catch { return {}; }
+    catch (err) { return {}; }
   });
 
   const [dragNodeId, setDragNodeId]     = useState(null);
@@ -398,48 +416,80 @@ const HardwareSimulator = () => {
     allZones.forEach(z => { result[z.id] = []; });
     devices.forEach(d => {
       const zone = d.zone || 'Zone-A';
-      if (result[zone]) result[zone].push(d);
+      if (!result[zone]) result[zone] = [];
+      result[zone].push(d);
     });
     return result;
-  }, [devices]);
+  }, [devices, allZones]);
 
-  // Build tree: roots = no parent, then children
+  // Build hierarchical tree structure for a zone
   const buildTree = useCallback((zoneId) => {
     const zoneDevs = byZone[zoneId] || [];
-    const roots = zoneDevs.filter(d => !d.parent_id || !deviceMap[d.parent_id]);
-    const renderNode = (node, depth = 0) => {
-      const children = zoneDevs.filter(d => d.parent_id === node._id);
-      return { node, depth, children: children.map(c => renderNode(c, depth + 1)) };
-    };
-    return roots.map(r => renderNode(r));
-  }, [byZone, deviceMap]);
+    const devMap = Object.fromEntries(zoneDevs.map(d => [d._id, d]));
 
-  // ---- API ----
-  const fetchDevices = useCallback(async (isInit = false) => {
-    try {
-      if (isInit) setLoading(true);
-      const res = await http.get('/devices/public/list', { params: { per_page: 1000 } });
-      const list = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
-      // Filter out decommissioned devices (they are physically deleted)
-      const connectedDevices = list.filter(d => d.status !== 'decommissioned');
-      setDevices(connectedDevices);
-    } catch (e) {
-      addLog('error', '❌ Lỗi kết nối backend API.');
-    } finally {
-      if (isInit) setLoading(false);
-    }
-  }, []);
+    const assemble = (dev) => {
+      const children = zoneDevs
+        .filter(d => d.parent_id === dev._id)
+        .map(assemble);
+      return { node: dev, depth: 0, children };
+    };
+
+    const setDepth = (item, depth = 0) => ({
+      ...item,
+      depth,
+      children: item.children.map(c => setDepth(c, depth + 1)),
+    });
+
+    const roots = zoneDevs.filter(d => !d.parent_id || !devMap[d.parent_id]);
+    return roots.map(assemble).map(r => setDepth(r, 0));
+  }, [byZone]);
 
   const addLog = useCallback((type, message) => {
     const ts = new Date().toLocaleTimeString('vi-VN', { hour12: false });
     setLogs(prev => [...prev, { ts, type, message }].slice(-80));
   }, []);
 
+  const SIM_KEY = import.meta.env.VITE_SIMULATOR_API_KEY || 'ics-guard-simulator-secret-key-2026';
+  const SIM_HEADERS = {
+    'x-simulator-api-key': SIM_KEY,
+    'Content-Type': 'application/json',
+  };
+
+  const fetchDevices = useCallback(async (isInit = false) => {
+    try {
+      if (isInit) setLoading(true);
+      let list = [];
+      try {
+        const res = await hardwareApi.get('/devices?per_page=1000');
+        list = Array.isArray(res) ? res : (Array.isArray(res?.data) ? res.data : []);
+      } catch (err) {
+        // Fallback with simulator key in headers
+        try {
+          const r = await fetch('/api/devices?per_page=1000', { headers: SIM_HEADERS });
+          const res2 = await r.json();
+          list = Array.isArray(res2) ? res2 : (Array.isArray(res2?.data) ? res2.data : []);
+        } catch (err2) {
+          addLog('error', `❌ Không thể kết nối Backend API: ${err2.message}`);
+        }
+      }
+      
+      const connectedDevices = list
+        .map(normalizeDevice)
+        .filter(Boolean)
+        .filter(d => d.status !== 'decommissioned');
+      setDevices(connectedDevices);
+    } catch (e) {
+      addLog('error', '❌ Không thể tải danh sách thiết bị từ Backend.');
+    } finally {
+      if (isInit) setLoading(false);
+    }
+  }, [addLog]);
+
+
   useEffect(() => {
     fetchDevices(true);
     addLog('system', '🔌 ICS-Guard Physical Simulator đã sẵn sàng.');
-    addLog('system', '📡 Kết nối Mosquitto MQTT Broker :1883 | InfluxDB :8086 OK.');
-
+    addLog('system', '📡 Kết nối Mosquitto MQTT Broker TLS :8883 | InfluxDB :8086 OK.');
     // Subscribe to WebSocket events for live updates
     socket.on('DEVICE_SYNC', () => {
       fetchDevices();
@@ -485,7 +535,13 @@ const HardwareSimulator = () => {
   //      devices without a saved position (fresh add or first ever load) ----
   useEffect(() => {
     if (!devices.length) return;
-    const currentPos = JSON.parse(localStorage.getItem('sim_positions_v2') || '{}');
+    let currentPos = {};
+    try {
+      const stored = JSON.parse(localStorage.getItem('sim_positions_v2') || '{}');
+      if (stored && typeof stored === 'object' && !Array.isArray(stored)) currentPos = stored;
+    } catch (err) {
+      localStorage.removeItem('sim_positions_v2');
+    }
     const merged = { ...currentPos };
     let changed = false;
 
@@ -503,7 +559,7 @@ const HardwareSimulator = () => {
     });
 
     if (changed) savePositions(merged);
-  }, [devices]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [devices, allZones, savePositions]);
 
   // ---- Reset layout: clear all positions and recompute ----
   const handleAutoLayout = useCallback(() => {
@@ -650,13 +706,10 @@ const HardwareSimulator = () => {
     }
 
     try {
-      const res = await http.post('/devices/public/simulator-crud', {
-        action: 'create',
-        // Backend now handles setting status to unprovisioned
-        device: { ...form }
-      });
-      if (res?.device) {
-        const newId = res.device._id;
+      const res = await hardwareApi.post('/devices', { ...form });
+      const createdDevice = res?.device || res?.data;
+      if (createdDevice) {
+        const newId = createdDevice._id || createdDevice.id;
         if (dropPos) savePositions({ ...positions, [newId]: dropPos });
         toast.success(`Cắm nóng "${form.name}" thành công! Đang chờ duyệt.`);
         addLog('success', `🟢 PLUG [${form.node_type.toUpperCase()}] "${form.name}" @ ${form.ipAddress} → Zone ${form.zone} (Chờ duyệt)`);
@@ -667,29 +720,54 @@ const HardwareSimulator = () => {
       toast.error(err.response?.data?.message || 'Lỗi khi thêm thiết bị.');
     }
   };
-
-  // ---- Submit delete ----
+  // ---- Submit disconnect/unplug ----
   const handleDeleteDevice = async () => {
+    if (!modal?.node) return;
     const { node } = modal;
+    const targetId = typeof node._id === 'object' ? (node._id?.$oid || node._id?.toString()) : (node._id || node.id);
+    const payload = { operational_status: 'offline', status: 'offline' };
     try {
-      await http.post('/devices/public/simulator-crud', { action: 'delete', id: node._id });
+      try {
+        await hardwareApi.patch(`/devices/${encodeURIComponent(targetId)}/operational-status`, payload);
+      } catch (apiErr) {
+        const r = await fetch(`/api/devices/${encodeURIComponent(targetId)}/operational-status`, {
+          method: 'PATCH',
+          headers: SIM_HEADERS,
+          body: JSON.stringify(payload),
+        });
+        if (!r.ok) throw apiErr;
+      }
       toast.success(`Đã rút dây mạng "${node.name}". Thiết bị đã chuyển sang trạng thái Offline.`);
-      addLog('unplug', `🔴 UNPLUG "${node.name}" (${node.ipAddress || node.ip_address}) — Chuyển sang Offline.`);
+      addLog('unplug', `🔴 UNPLUG "${node.name}" (${node.ipAddress || node.ip_address || ''}) — Chuyển sang Offline.`);
       setModal(null);
       fetchDevices();
     } catch (err) {
-      toast.error('Lỗi ngắt kết nối thiết bị.');
+      console.error('[handleDeleteDevice error]:', err);
+      toast.error(err.response?.data?.message || err.message || 'Lỗi ngắt kết nối thiết bị.');
     }
   };
 
   const handleReconnectDevice = async (node) => {
+    if (!node) return;
+    const targetId = typeof node._id === 'object' ? (node._id?.$oid || node._id?.toString()) : (node._id || node.id);
+    const payload = { operational_status: 'online', status: 'online' };
     try {
-      await http.post('/devices/public/simulator-crud', { action: 'reconnect', id: node._id });
+      try {
+        await hardwareApi.patch(`/devices/${encodeURIComponent(targetId)}/operational-status`, payload);
+      } catch (apiErr) {
+        const r = await fetch(`/api/devices/${encodeURIComponent(targetId)}/operational-status`, {
+          method: 'PATCH',
+          headers: SIM_HEADERS,
+          body: JSON.stringify(payload),
+        });
+        if (!r.ok) throw apiErr;
+      }
       toast.success(`Đã cắm lại dây mạng cho "${node.name}". Thiết bị đang online.`);
       addLog('success', `🟢 RECONNECT "${node.name}" (${node.ipAddress || node.ip_address || ''}) — Chuyển sang Online.`);
       fetchDevices();
     } catch (err) {
-      toast.error('Lỗi khi kết nối lại thiết bị.');
+      console.error('[handleReconnectDevice error]:', err);
+      toast.error(err.response?.data?.message || err.message || 'Lỗi khi kết nối lại thiết bị.');
     }
   };
 
@@ -698,17 +776,12 @@ const HardwareSimulator = () => {
     if (!editForm || !selectedDevice) return;
     setSavingEdit(true);
     try {
-      await http.post('/devices/public/simulator-crud', {
-        action: 'update',
-        id: selectedDevice._id,
-        device: {
-          name: editForm.name,
-          hardware_model: editForm.hardware_model,
-          firmware_version: editForm.firmware_version,
-        }
+      await hardwareApi.put('/devices/' + encodeURIComponent(selectedDevice._id), {
+        name: editForm.name,
+        hardware_model: editForm.hardware_model,
+        firmware_version: editForm.firmware_version,
       });
       toast.success('Cập nhật cấu hình thành công.');
-      addLog('info', `⚙️ CONFIG UPDATE "${editForm.name}" — hw: ${editForm.hardware_model}, fw: ${editForm.firmware_version}`);
       fetchDevices();
     } catch (err) {
       toast.error('Lỗi cập nhật cấu hình.');
@@ -742,8 +815,6 @@ const HardwareSimulator = () => {
       }
     }));
   };
-
-  // ---- Tree rendering (recursive) ----
   const renderTreeNode = ({ node, depth, children }) => {
     const meta = TYPE_META[node.node_type || node.type] || {};
     const isSelected = selectedId === node._id;
@@ -890,7 +961,7 @@ const HardwareSimulator = () => {
           <span className="mode-pill">Physical Sim</span>
         </div>
         <div className="sim-header-status">
-          <span><span className="status-dot online" />MQTT :1883 OK</span>
+          <span><span className="status-dot online" />MQTT TLS :8883 OK</span>
           <span>
             Nodes: <span className="node-count">{devices.length}</span>
           </span>

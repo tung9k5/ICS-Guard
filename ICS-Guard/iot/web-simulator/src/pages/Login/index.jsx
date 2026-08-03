@@ -1,20 +1,15 @@
 import './Login.scss';
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Lock, User } from 'lucide-react';
 import VInput from '@/components/VInput';
 import VButton from '@/components/VButton';
-import { toast } from '@/utils/toast';
 import { useAuth } from '@/hooks/useAuth';
-import authApi from '@/api/auth';
 
 import { useTranslation } from 'react-i18next';
 
 const Login = ({ isAttacker = false }) => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { login, loading } = useAuth();
-  const [localLoading, setLocalLoading] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [rememberMe, setRememberMe] = useState(false);
 
@@ -37,44 +32,7 @@ const Login = ({ isAttacker = false }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLocalLoading(true);
-
-    if (isAttacker) {
-      if (formData.email === 'adminattack' && formData.password === 'Admin@123') {
-        localStorage.setItem('attacker_authenticated', 'true');
-        toast.success(t('auth.login.success'));
-        navigate('/attacker', { replace: true });
-      } else {
-        toast.error('Tên đăng nhập hoặc mật khẩu tấn công không chính xác!');
-      }
-      setLocalLoading(false);
-      return;
-    }
-
-    try {
-      const response = await authApi.login(formData);
-      if (response && response.access_token) {
-        if (rememberMe) {
-          const expires = Date.now() + 30 * 24 * 60 * 60 * 1000; // 30 days in ms
-          localStorage.setItem('remembered_account', JSON.stringify({
-            username: formData.email,
-            email: formData.email,
-            expires
-          }));
-        } else {
-          localStorage.removeItem('remembered_account');
-        }
-
-        toast.success(t('auth.login.success'));
-        localStorage.setItem('access_token', response.access_token);
-        localStorage.setItem('refresh_token', response.refresh_token);
-        navigate('/', { replace: true });
-      }
-    } catch (err) {
-      toast.error(err.response?.data?.message || t('auth.login.fail'));
-    } finally {
-      setLocalLoading(false);
-    }
+    await login(formData, rememberMe, isAttacker);
   };
 
   return (
@@ -124,7 +82,7 @@ const Login = ({ isAttacker = false }) => {
             type="submit"
             variant="primary"
             fullWidth
-            loading={localLoading || loading}
+            loading={loading}
           >
             {t('auth.login.submit')}
           </VButton>

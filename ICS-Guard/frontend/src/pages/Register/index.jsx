@@ -1,24 +1,23 @@
 import './Register.scss';
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import authApi from '@/api/auth';
+import { Link } from 'react-router-dom';
 import { Lock, User, Mail } from 'lucide-react';
 import VInput from '@/components/VInput';
 import VButton from '@/components/VButton';
 import { toast } from '@/utils/toast';
+import { useAuth } from '@/hooks/useAuth';
 
 import { useTranslation } from 'react-i18next';
 
 const Register = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const { register, loading } = useAuth();
   const [formData, setFormData] = useState({ 
     username: '', 
     email: '', 
     password: '',
     confirmPassword: ''
   });
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,23 +27,13 @@ const Register = () => {
       return;
     }
 
-    setLoading(true);
-
-    try {
-      const payload = {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password
-      };
-      
-      await authApi.register(payload);
-      toast.success(t('auth.register.success'));
-      navigate('/login');
-    } catch (err) {
-      toast.error(err.response?.data?.message || t('auth.register.fail'));
-    } finally {
-      setLoading(false);
-    }
+    const payload = {
+      username: formData.username,
+      email: formData.email,
+      password: formData.password
+    };
+    
+    await register(payload);
   };
 
   return (

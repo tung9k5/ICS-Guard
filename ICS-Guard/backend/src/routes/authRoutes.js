@@ -1,5 +1,6 @@
 import express from 'express';
-import { login, refresh, logout, setupOnboarding, register, me, googleLogin, sendTelegramOtp, verifyTelegramOtp } from '../controllers/authController.js';
+import { login, refresh, logout, setupOnboarding, me, sendTelegramOtp, verifyTelegramOtp } from '../controllers/authController.js';
+
 import auditLogger from '../middlewares/auditMiddleware.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 
@@ -25,12 +26,13 @@ const router = express.Router();
  *           schema:
  *             type: object
  *             required:
- *               - username
+ *               - email
  *               - password
  *             properties:
- *               username:
+ *               email:
  *                 type: string
- *                 example: admin_soc
+ *                 format: email
+ *                 example: admin@example.com
  *               password:
  *                 type: string
  *                 example: Admin@123
@@ -162,33 +164,6 @@ router.get('/me', authMiddleware, me);
  *       201:
  *         description: Registration successful
  */
-router.post('/register', auditLogger('USER_REGISTER'), register);
-
-/**
- * @openapi
- * /api/auth/google-login:
- *   post:
- *     summary: Log in to the system using Google Sign-In
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - idToken
- *             properties:
- *               idToken:
- *                 type: string
- *     responses:
- *       200:
- *         description: Login successful
- *       400:
- *         description: Bad Request
- *       401:
- *         description: Unauthorized
- */
-router.post('/google-login', auditLogger('USER_GOOGLE_LOGIN_ATTEMPT'), googleLogin);
 
 export default router;
+

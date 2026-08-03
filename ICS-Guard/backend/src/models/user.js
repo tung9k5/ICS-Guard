@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema({
   password_hash: {
     type: String,
     required: true,
+    select: false,
   },
   email: {
     type: String,
@@ -22,13 +23,35 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['admin', 'hr_manager', 'device_manager', 'analyst'],
+    enum: ['admin', 'hr_management', 'analyst', 'device_management'],
     default: 'analyst',
   },
   is_active: {
     type: Boolean,
     default: true,
   },
+  status: {
+    type: String,
+    enum: ['active', 'pending', 'locked'],
+    default: 'active',
+  },
+  deletion_pending: {
+    type: Boolean,
+    default: false,
+  },
+  deletion_requested_at: {
+    type: Date,
+    default: null,
+  },
+  deletion_expires_at: {
+    type: Date,
+    default: null,
+  },
+  deletion_requested_by: {
+    type: String,
+    default: null,
+  },
+
   login_failures: {
     count: {
       type: Number,

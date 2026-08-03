@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { AuditLog } from '../models/index.js';
 
 const sanitizeData = (data) => {
@@ -27,7 +28,7 @@ export const auditLogger = (customActionName = null) => {
           return;
         }
 
-        const userId = req.user ? req.user._id : null;
+        const userId = req.user && mongoose.Types.ObjectId.isValid(req.user._id) ? req.user._id : null;
         const username = req.user ? req.user.username : (req.body && req.body.username ? req.body.username : 'Anonymous');
         const action = customActionName || `${req.method} ${req.originalUrl}`;
         

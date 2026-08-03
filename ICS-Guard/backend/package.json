@@ -2,12 +2,14 @@
   "name": "ics-guard-api",
   "version": "1.0.0",
   "description": "ICS-Guard (Industrial Control Systems Guard) Backend API",
-  "main": "src/app.js",
+  "main": "src/bootstrap.js",
   "type": "module",
   "scripts": {
-    "start": "node src/app.js",
-    "dev": "node --watch src/app.js",
-    "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --passWithNoTests",
+    "start": "node src/bootstrap.js",
+    "dev": "node --watch src/bootstrap.js",
+    "seed:demo:reset": "node scripts/seedData.js",
+    "seed:influx": "node src/scripts/seed_influx.js",
+    "test:unit": "node --experimental-vm-modules node_modules/jest/bin/jest.js --passWithNoTests --runInBand",
     "test:integration": "node test-api.js",
     "test": "npm run test:unit"
   },

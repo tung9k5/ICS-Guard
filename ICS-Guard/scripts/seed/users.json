@@ -1,50 +1,82 @@
 [
     {
         "username": "admin_soc",
-        "email": "admin@icsguard.local",
+        "email": "admin@ics-guard.local",
         "full_name": "SOC Administrator",
         "role": "admin",
         "is_active": true,
-        "password_hash": "",
+        "password_hash": "$2a$10$AV6c2gJycgJFmb2F/RcnDOKaikW3ctaDZYkbBGCVyiftQugpA8j1y",
         "isFirstLogin": true,
-        "login_failures": { "count": 0, "last_failed_at": null, "lockout_until": null },
-        "created_at": { "$date": "2026-06-21T00:00:00Z" },
-        "updated_at": { "$date": "2026-06-21T00:00:00Z" }
+        "login_failures": {
+            "count": 0,
+            "last_failed_at": null,
+            "lockout_until": null
+        },
+        "created_at": {
+            "$date": "2026-07-15T13:19:37.097Z"
+        },
+        "updated_at": {
+            "$date": "2026-07-15T13:19:37.103Z"
+        }
     },
     {
-        "username": "hr_manager",
-        "email": "hr@icsguard.local",
-        "full_name": "HR Manager (Nhân sự)",
-        "role": "hr_manager",
+        "username": "hr_01",
+        "email": "hr@ics-guard.local",
+        "full_name": "HR Manager",
+        "role": "hr_management",
         "is_active": true,
-        "password_hash": "",
+        "password_hash": "$2a$10$AV6c2gJycgJFmb2F/RcnDO3BPd.L2cWAlxp.zDMBbe2yXWwKsMnFy",
         "isFirstLogin": true,
-        "login_failures": { "count": 0, "last_failed_at": null, "lockout_until": null },
-        "created_at": { "$date": "2026-06-21T00:00:00Z" },
-        "updated_at": { "$date": "2026-06-21T00:00:00Z" }
+        "login_failures": {
+            "count": 0,
+            "last_failed_at": null,
+            "lockout_until": null
+        },
+        "created_at": {
+            "$date": "2026-07-15T13:19:37.284Z"
+        },
+        "updated_at": {
+            "$date": "2026-07-15T13:19:37.284Z"
+        }
     },
     {
-        "username": "device_manager",
-        "email": "device@icsguard.local",
-        "full_name": "Device Manager (Thiết bị)",
-        "role": "device_manager",
+        "username": "ot_engineer",
+        "email": "ot@ics-guard.local",
+        "full_name": "Device Manager",
+        "role": "device_management",
         "is_active": true,
-        "password_hash": "",
+        "password_hash": "$2a$10$AV6c2gJycgJFmb2F/RcnDOxzguNUszC/EPONAAMsfbqN5kp79fJK2",
         "isFirstLogin": true,
-        "login_failures": { "count": 0, "last_failed_at": null, "lockout_until": null },
-        "created_at": { "$date": "2026-06-21T00:00:00Z" },
-        "updated_at": { "$date": "2026-06-21T00:00:00Z" }
+        "login_failures": {
+            "count": 0,
+            "last_failed_at": null,
+            "lockout_until": null
+        },
+        "created_at": {
+            "$date": "2026-07-15T13:19:37.411Z"
+        },
+        "updated_at": {
+            "$date": "2026-07-15T13:19:37.411Z"
+        }
     },
     {
-        "username": "analyst_soc",
-        "email": "analyst@icsguard.local",
-        "full_name": "SOC Monitor Analyst (Giám sát)",
+        "username": "analyst_01",
+        "email": "analyst@ics-guard.local",
+        "full_name": "SOC Analyst",
         "role": "analyst",
         "is_active": true,
-        "password_hash": "",
+        "password_hash": "$2a$10$AV6c2gJycgJFmb2F/RcnDOkShKOm5IrRcswcjt0uzwdKd/c/GmPEy",
         "isFirstLogin": true,
-        "login_failures": { "count": 0, "last_failed_at": null, "lockout_until": null },
-        "created_at": { "$date": "2026-06-21T00:00:00Z" },
-        "updated_at": { "$date": "2026-06-21T00:00:00Z" }
+        "login_failures": {
+            "count": 0,
+            "last_failed_at": null,
+            "lockout_until": null
+        },
+        "created_at": {
+            "$date": "2026-07-15T13:19:37.510Z"
+        },
+        "updated_at": {
+            "$date": "2026-07-15T13:19:37.510Z"
+        }
     }
 ]
