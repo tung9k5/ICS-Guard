@@ -36,6 +36,10 @@ const simulatorCommandSchema = new mongoose.Schema({
     type: String,
     default: 'system',
   },
+  correlation: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null,
+  },
   status: {
     type: String,
     enum: ['pending', 'accepted', 'succeeded', 'failed', 'expired'],
@@ -83,6 +87,10 @@ const simulatorCommandSchema = new mongoose.Schema({
 simulatorCommandSchema.index(
   { active_target: 1 },
   { unique: true, sparse: true, name: 'one_active_command_per_target' }
+);
+simulatorCommandSchema.index(
+  { 'correlation.incident_id': 1, issued_at: 1 },
+  { sparse: true, name: 'incident_command_timeline' }
 );
 
 const SimulatorCommand = mongoose.model('SimulatorCommand', simulatorCommandSchema);

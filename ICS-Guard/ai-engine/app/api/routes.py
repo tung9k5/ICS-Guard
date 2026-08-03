@@ -3,7 +3,7 @@ from app.services.assistant.ollama_client import analyze_incident
 from app.services.anomaly.detector import detector
 from app.services.anomaly.model_store import ModelStoreError, activate_candidate
 from app.services.risk.scorer import RiskScorer
-from app.models.schemas import Device, DeviceCVE, Alert
+from app.models.schemas import Device, DeviceCVE, Alert, IncidentAnalysisRequest
 from pydantic import BaseModel
 from starlette.concurrency import run_in_threadpool
 from typing import Any, Dict, List, Optional
@@ -27,9 +27,9 @@ class TrainModelRequest(BaseModel):
     params: Optional[Dict[str, Any]] = None
 
 @router.post("/analyze/incident")
-async def analyze(req: Request):
-    data = await req.json()
-    language = data.get("language", "vi")
+async def analyze(req: IncidentAnalysisRequest):
+    data = req.model_dump(mode="json")
+    language = req.language
     analysis = await analyze_incident(data, language)
     return {"analysis": analysis}
 

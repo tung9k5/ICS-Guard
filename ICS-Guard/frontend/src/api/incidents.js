@@ -70,6 +70,24 @@ export default {
     });
   },
 
+  verifyAndClose(id, data, options = {}) {
+    return http({
+      url: `/incidents/${id}/verify-close`,
+      method: 'POST',
+      data,
+      ...options
+    });
+  },
+
+  recover(id, data = {}, options = {}) {
+    return http({
+      url: `/incidents/${id}/recovery`,
+      method: 'POST',
+      data,
+      ...options
+    });
+  },
+
   getAttackGraph(id, options = {}) {
     return http({
       url: `/incidents/${id}/attack-graph`,

@@ -15,6 +15,7 @@ import {
 import socket from '@/services/socket';
 import { toast } from '@/utils/toast';
 import EmergencyIncidentModal from '@/components/modals/EmergencyIncidentModal';
+import { hasFreshAiAdvice, selectLatestAiAdvice } from '@/components/modals/EmergencyIncidentModal/responseWorkspaceUtils';
 import './Dashboard.scss';
 
 const Dashboard = () => {
@@ -32,6 +33,17 @@ const Dashboard = () => {
 
   const responseRequestRef = useRef(0);
   const commandPollAbortRef = useRef(null);
+  const aiPollTimerRef = useRef(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      commandPollAbortRef.current?.abort();
+      if (aiPollTimerRef.current) window.clearTimeout(aiPollTimerRef.current);
+    };
+  }, []);
 
   const fetchRiskStatus = async (options = {}) => {
     try {
@@ -63,7 +75,7 @@ const Dashboard = () => {
       );
 
       if (!incident) {
-        if (requestId === responseRequestRef.current) {
+        if (mountedRef.current && requestId === responseRequestRef.current) {
           setResponseCase(null);
         }
         return null;
@@ -93,7 +105,7 @@ const Dashboard = () => {
         return text.includes('isolate') || text.includes('isolat') || text.includes('co lap') || text.includes('cô lập');
       });
 
-      const aiAdviceEntry = newestTimeline.find(item => item.action_type === 'ai_analysis' && item.description && !item.description.includes('đã được gửi'));
+      const aiAdviceEntry = selectLatestAiAdvice(timeline);
       const aiAdvice = aiAdviceEntry ? aiAdviceEntry.description : null;
 
       const nextCase = {
@@ -103,10 +115,12 @@ const Dashboard = () => {
         device,
         deviceId,
         aiAdvice,
+        aiAdviceId: aiAdviceEntry?._id || aiAdviceEntry?.id || null,
+        aiAdviceAt: aiAdviceEntry ? (aiAdviceEntry.event_time || aiAdviceEntry.createdAt || null) : null,
         isolatedAt: isolationTimeline?.event_time || isolationTimeline?.createdAt || null
       };
 
-      if (requestId === responseRequestRef.current) {
+      if (mountedRef.current && requestId === responseRequestRef.current) {
         setResponseCase(nextCase);
       }
       return nextCase;
@@ -114,7 +128,7 @@ const Dashboard = () => {
       console.error('Failed to fetch response case', error);
       return undefined;
     } finally {
-      if (requestId === responseRequestRef.current) {
+      if (mountedRef.current && requestId === responseRequestRef.current) {
         setResponseLoading(false);
       }
     }
@@ -184,29 +198,15 @@ const Dashboard = () => {
     return 'severity-low';
   };
 
-  const getDeviceSecurityStatus = () => (
-    responseCase?.device?.security_status
-    || responseCase?.device?.status
-    || 'normal'
-  );
-
-  const isDeviceIsolated = () => {
-    const status = getDeviceSecurityStatus();
-    return status === 'isolated' || status === 'quarantined';
-  };
-
-  const isRestoreConfirmed = () => (
-    !isDeviceIsolated()
-    && getDeviceSecurityStatus() === 'normal'
-    && responseCase?.incident?.status === 'closed'
-  );
-
   const issueAndTrackCommand = async (commandType, issueCommandFn) => {
+    let controller = null;
     try {
       setResponseAction(commandType);
+      setActiveCommand(null);
       setCommandPollingError('');
 
       const res = await issueCommandFn();
+      if (!mountedRef.current) return null;
       const rawCommand = extractCommand(res);
       const commandId = rawCommand?.command_id || res?.data?.command_id || res?.command_id;
 
@@ -215,12 +215,13 @@ const Dashboard = () => {
         return;
       }
 
-      const controller = new AbortController();
+      controller = new AbortController();
       commandPollAbortRef.current = controller;
 
       const finalStatus = await pollCommandStatus(commandId, {
         signal: controller.signal,
         onUpdate: (commandState) => {
+          if (!mountedRef.current) return;
           setActiveCommand(commandState);
           if (commandState?.target_id && responseCase?.device) {
             setResponseCase((prev) => (
@@ -240,6 +241,8 @@ const Dashboard = () => {
         },
       });
 
+      if (!mountedRef.current) return finalStatus;
+
       if (finalStatus?.status === 'succeeded') {
         toast.success(
           commandType === 'isolate'
@@ -248,15 +251,19 @@ const Dashboard = () => {
         );
       }
       await refreshResponseWorkflow();
+      return finalStatus;
     } catch (error) {
+      if (!mountedRef.current) return null;
       if (error instanceof CommandPollingTimeoutError) {
         setCommandPollingError('Hết thời gian polling xác nhận lệnh.');
         await refreshResponseWorkflow();
       } else {
         toast.error(error?.message || 'Không thể phát hành lệnh.');
       }
+      return null;
     } finally {
-      setResponseAction('');
+      if (commandPollAbortRef.current === controller) commandPollAbortRef.current = null;
+      if (mountedRef.current) setResponseAction('');
     }
   };
 
@@ -266,13 +273,17 @@ const Dashboard = () => {
   };
 
   const handleIsolateDevice = async () => {
-    const deviceId = responseCase?.deviceId || responseCase?.device?._id || 'plc-water-01';
+    const deviceId = responseCase?.deviceId || responseCase?.device?._id;
+    if (!deviceId) {
+      toast.error('Không xác định được thiết bị mục tiêu. Không thể phát lệnh cô lập.');
+      return;
+    }
     const incidentId = responseCase?.incident?._id || responseCase?.incident?.id;
-    await issueAndTrackCommand('isolate', () => (
-      incidentId
-        ? incidentApi.contain(incidentId, { device_id: deviceId })
-        : deviceApi.isolate(deviceId)
-    ));
+    if (!incidentId) {
+      toast.error('Không xác định được incident. Lệnh cô lập đã bị chặn.');
+      return;
+    }
+    await issueAndTrackCommand('isolate', () => incidentApi.contain(incidentId, { device_id: deviceId }));
   };
 
   const handleAiRemediation = async () => {
@@ -281,32 +292,72 @@ const Dashboard = () => {
 
     try {
       setResponseAction('ai');
+      const previousAdviceId = responseCase?.aiAdviceId || null;
+      const requestedAt = Date.now();
       await incidentApi.triggerAiAnalysis(incidentId);
+      if (!mountedRef.current) return;
       toast.info('Yêu cầu chẩn đoán sự cố an ninh đã được gửi tới trợ lý AI.');
 
       let attempts = 0;
-      const interval = setInterval(async () => {
+      const pollForAiAdvice = async () => {
+        if (!mountedRef.current) return;
         attempts++;
         const nextCase = await fetchResponseCase({ skipLoading: true });
-        if (nextCase?.aiAdvice || attempts >= 60) {
-          clearInterval(interval);
+        if (!mountedRef.current) return;
+        const adviceIsFresh = hasFreshAiAdvice(nextCase, previousAdviceId, requestedAt);
+        if (adviceIsFresh || attempts >= 60) {
+          aiPollTimerRef.current = null;
           setResponseAction('');
-          if (nextCase?.aiAdvice) {
+          if (adviceIsFresh) {
             toast.success('Trợ lý AI đã hoàn tất báo cáo chẩn đoán sự cố.');
           } else {
             toast.error('Thời gian yêu cầu AI chẩn đoán phản hồi quá lâu.');
           }
+          return;
         }
-      }, 2000);
+        aiPollTimerRef.current = window.setTimeout(pollForAiAdvice, 2000);
+      };
+      if (aiPollTimerRef.current) window.clearTimeout(aiPollTimerRef.current);
+      aiPollTimerRef.current = window.setTimeout(pollForAiAdvice, 2000);
     } catch (error) {
-      toast.error(error?.message || 'Không thể gửi yêu cầu phân tích tới AI.');
-      setResponseAction('');
+      if (mountedRef.current) {
+        toast.error(error?.message || 'Không thể gửi yêu cầu phân tích tới AI.');
+        setResponseAction('');
+      }
     }
   };
 
   const handleRestoreDevice = async () => {
-    const deviceId = responseCase?.deviceId || responseCase?.device?._id || 'plc-water-01';
-    await issueAndTrackCommand('restore', () => deviceApi.rollback(deviceId));
+    const deviceId = responseCase?.deviceId || responseCase?.device?._id;
+    if (!deviceId) {
+      toast.error('Không xác định được thiết bị mục tiêu. Không thể phát lệnh khôi phục.');
+      return;
+    }
+    const incidentId = responseCase?.incident?._id || responseCase?.incident?.id;
+    if (!incidentId) {
+      toast.error('Không xác định được incident. Không thể khôi phục thiết bị.');
+      return;
+    }
+    const finalStatus = await issueAndTrackCommand('restore', () => incidentApi.recover(incidentId, { device_id: deviceId }));
+    if (finalStatus?.status === 'succeeded') {
+      setResponseCase(previous => previous ? { ...previous, recoveryCompleted: true } : previous);
+    }
+  };
+
+  const handleCloseIncident = async (verificationPayload) => {
+    const incidentId = responseCase?.incident?._id || responseCase?.incident?.id;
+    if (!incidentId) return;
+    if (!window.confirm('Đóng sự cố sau khi xác minh sẽ kết thúc quy trình ứng phó. Bạn có chắc muốn tiếp tục?')) return;
+    try {
+      setResponseAction('close');
+      await incidentApi.verifyAndClose(incidentId, verificationPayload);
+      toast.success('Sự cố đã được xác minh và đóng thành công.');
+      setResponseCase(null);
+    } catch (error) {
+      toast.error(error?.message || 'Không thể đóng sự cố.');
+    } finally {
+      setResponseAction('');
+    }
   };
 
   return (
@@ -449,9 +500,12 @@ const Dashboard = () => {
         responseCase={responseCase}
         responseLoading={responseLoading}
         responseAction={responseAction}
+        activeCommand={activeCommand}
+        commandPollingError={commandPollingError}
         onIsolate={handleIsolateDevice}
         onAiRemediation={handleAiRemediation}
         onRestore={handleRestoreDevice}
+        onCloseIncident={handleCloseIncident}
       />
     </div>
   );

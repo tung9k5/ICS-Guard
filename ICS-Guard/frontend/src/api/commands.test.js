@@ -47,13 +47,17 @@ describe('command API helpers', () => {
       data: { command: { command_id: 'cmd-3', status: 'pending' } },
     });
 
-    await expect(pollCommandStatus('cmd-3', {
-      request,
-      timeoutMs: 0,
-      wait: () => Promise.resolve(),
-    })).rejects.toEqual(expect.objectContaining({
-      name: CommandPollingTimeoutError.name,
-      lastCommand: expect.objectContaining({ status: 'pending' }),
-    }));
+    try {
+      await pollCommandStatus('cmd-3', {
+        request,
+        timeoutMs: 0,
+        wait: () => Promise.resolve(),
+      });
+      throw new Error('Expected command polling to time out');
+    } catch (error) {
+      expect(error).toBeInstanceOf(CommandPollingTimeoutError);
+      expect(error.name).toBe('CommandPollingTimeoutError');
+      expect(error.lastCommand).toMatchObject({ status: 'pending' });
+    }
   });
 });

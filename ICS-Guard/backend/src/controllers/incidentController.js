@@ -3,8 +3,107 @@ import path from 'path';
 import axios from 'axios';
 import { Incident, Alert, IncidentTimeline, Device, SimulatorCommand } from '../models/index.js';
 import aiService from '../services/aiService.js';
+import { queryTelemetry, queryDeviceEvents } from '../services/influxService.js';
 import { formatPagination } from '../utils/pagination.js';
 import { successResponse, errorResponse, paginatedResponse } from '../utils/response.js';
+
+const normalizeDeviceId = value => {
+  const rawValue = value && typeof value === 'object'
+    ? value._id ?? value.id
+    : value;
+  if (rawValue === undefined || rawValue === null) return null;
+  const normalized = String(rawValue).trim();
+  return normalized || null;
+};
+
+const getIncidentDeviceReferences = incident => {
+  const references = [];
+  for (const alert of incident?.alert_ids || []) {
+    const deviceId = normalizeDeviceId(alert?.device_id ?? alert?.device);
+    if (deviceId) references.push(deviceId);
+  }
+  const legacyDeviceId = normalizeDeviceId(incident?.device_id);
+  if (legacyDeviceId) references.push(legacyDeviceId);
+  return [...new Set(references)];
+};
+
+const findDeviceByIncidentReference = async reference => {
+  const directMatch = await Device.findById(reference);
+  if (directMatch) return directMatch;
+  const sourceMatches = await Device.find({ source_id: reference }).limit(2);
+  if (sourceMatches.length > 1) {
+    const error = new Error(`Incident device reference ${reference} matches multiple inventory devices; use a canonical device _id.`);
+    error.status = 409;
+    throw error;
+  }
+  return sourceMatches[0] || null;
+};
+
+/**
+ * Resolve a target exclusively from device references stored on the incident.
+ * A client-provided ID may identify the linked device by its canonical _id or
+ * source_id, but it can never introduce a device unrelated to the case.
+ */
+const resolveIncidentTargetDevice = async (incident, requestedDeviceId) => {
+  const incidentReferences = getIncidentDeviceReferences(incident);
+  if (!incidentReferences.length) {
+    const error = new Error('Incident does not contain a target device.');
+    error.status = 409;
+    throw error;
+  }
+
+  const candidates = [];
+  for (const reference of incidentReferences) {
+    const device = await findDeviceByIncidentReference(reference);
+    if (!device) continue;
+    const aliases = new Set([
+      reference,
+      normalizeDeviceId(device._id),
+      normalizeDeviceId(device.source_id),
+      normalizeDeviceId(device.external_device_id),
+    ].filter(Boolean));
+    candidates.push({ device, aliases });
+  }
+
+  const requested = normalizeDeviceId(requestedDeviceId);
+  if (requestedDeviceId !== undefined && requestedDeviceId !== null && !requested) {
+    const error = new Error('A valid device_id string is required.');
+    error.status = 400;
+    throw error;
+  }
+
+  if (requested) {
+    const matchingCandidates = candidates.filter(candidate => candidate.aliases.has(requested));
+    const uniqueMatches = new Map(matchingCandidates.map(candidate => [String(candidate.device._id), candidate.device]));
+    if (!uniqueMatches.size) {
+      const error = new Error(`Device ${requested} is not linked to this incident.`);
+      error.status = 409;
+      throw error;
+    }
+    if (uniqueMatches.size > 1) {
+      const error = new Error(`Device identifier ${requested} is ambiguous for this incident; use the canonical device _id.`);
+      error.status = 409;
+      throw error;
+    }
+    const device = [...uniqueMatches.values()][0];
+    return { device, deviceId: String(device._id) };
+  }
+
+  const uniqueCandidates = new Map(candidates.map(candidate => [String(candidate.device._id), candidate.device]));
+  if (!uniqueCandidates.size) {
+    const error = new Error('No incident-linked device exists in the device inventory.');
+    error.status = 409;
+    throw error;
+  }
+  if (uniqueCandidates.size > 1) {
+    const error = new Error('This incident affects multiple devices; a canonical device_id is required.');
+    error.status = 409;
+    throw error;
+  }
+
+  const device = [...uniqueCandidates.values()][0];
+  return { device, deviceId: String(device._id) };
+};
 
 export const getAllIncidents = async (req, res) => {
   try {
@@ -57,11 +156,29 @@ export const getIncidentById = async (req, res) => {
       return res.status(404).json({ error: 'Not Found', message: 'Incident not found.' });
     }
 
-    const timeline = await IncidentTimeline.find({ incident_id: id }).sort({ event_time: 1 });
+    const timeline = await IncidentTimeline.find({ incident_id: id }).sort({ event_time: 1 }).lean();
+    const commands = await SimulatorCommand.find({ 'correlation.incident_id': String(id) }).sort({ issued_at: 1 }).lean();
+    const commandTimeline = commands.map(command => ({
+      _id: `command-${command.command_id}`,
+      incident_id: id,
+      event_time: command.executed_at || command.updatedAt || command.issued_at,
+      actor: command.requested_by || 'SOAR',
+      action_type: 'playbook_execution',
+      description: `Lệnh ${command.command_type} cho thiết bị ${command.target_id}: ${command.status}.`,
+      metadata: {
+        command_id: command.command_id,
+        command_type: command.command_type,
+        device_id: command.target_id,
+        status: command.status,
+        enforcement_mode: command.enforcement_mode,
+        enforcement_status: command.enforcement_status,
+      },
+    }));
+    const completeTimeline = [...timeline, ...commandTimeline].sort((a, b) => new Date(a.event_time || 0) - new Date(b.event_time || 0));
 
     return res.status(200).json({
       incident,
-      timeline,
+      timeline: completeTimeline,
     });
   } catch (error) {
     console.error('GetIncidentById error:', error);
@@ -78,23 +195,7 @@ export const triggerAiAnalysis = async (req, res) => {
       return res.status(404).json({ error: 'Not Found', message: 'Incident not found.' });
     }
 
-    let alertsToProcess = incident.alert_ids;
-    if (alertsToProcess.length === 0) {
-      alertsToProcess = [{
-        _id: 'dummy-alert',
-        rule_name: 'TEST_RULE',
-        device_id: 'dummy-device',
-        title: 'Mock Alert for Testing',
-        description: 'This is a mock alert because no real alerts were associated.',
-        severity: 'MEDIUM',
-        status: 'open',
-        source_ip: '192.168.1.100',
-        destination_ip: '10.0.0.5',
-        event_count: 1,
-        raw_events_sample: [{ timestamp: new Date(), message: 'Mock event log line' }],
-        detected_at: new Date()
-      }];
-    }
+    const alertsToProcess = incident.alert_ids || [];
 
     incident.status = 'investigating';
     await incident.save();
@@ -107,7 +208,7 @@ export const triggerAiAnalysis = async (req, res) => {
     });
 
     const formattedAlerts = alertsToProcess.map(alert => ({
-      _id: alert._id.toString(),
+      _id: alert._id?.toString(),
       rule_name: alert.rule_name || 'UNKNOWN_RULE',
       device_id: alert.device_id,
       title: alert.title,
@@ -117,11 +218,13 @@ export const triggerAiAnalysis = async (req, res) => {
       source_ip: alert.source_ip || null,
       destination_ip: alert.destination_ip || null,
       event_count: alert.event_count || 1,
-      raw_events_sample: (alert.raw_events_sample || []).map(ev => ({
-        timestamp: ev.timestamp || new Date(),
+      raw_events_sample: (alert.raw_events_sample || []).slice(0, 20).map((ev, eventIndex) => ({
+        evidence_id: `alert:${alert._id}:event:${eventIndex}`,
+        timestamp: ev.timestamp || null,
         message: ev.message || ''
       })),
-      detected_at: alert.detected_at || new Date()
+      detected_at: alert.detected_at || null,
+      evidence_id: `alert:${alert._id}`,
     }));
 
     runBackgroundAiAnalysis(incident._id, incident, formattedAlerts);
@@ -141,18 +244,34 @@ const runBackgroundAiAnalysis = async (incidentId, incidentData, alertsData) => 
     const incident = await Incident.findById(incidentId).populate('alert_ids');
     if (!incident) return;
 
-    let deviceId = null;
-    if (incident.alert_ids && incident.alert_ids.length > 0) {
-      deviceId = incident.alert_ids[0].device_id;
-    }
-    
-    let device = { name: 'Unknown', ipAddress: 'Unknown' };
-    if (deviceId) {
-      const dev = await Device.findById(deviceId).lean();
-      if (dev) device = dev;
-    }
+    const deviceIds = [...new Set((incident.alert_ids || []).map(alert => normalizeDeviceId(alert.device_id)).filter(Boolean))];
+    const devices = deviceIds.length
+      ? await Device.find({
+        $or: [
+          { _id: { $in: deviceIds } },
+          { source_id: { $in: deviceIds } },
+        ],
+      }).lean()
+      : [];
+    const primaryReference = deviceIds[0];
+    const directPrimaryDevice = devices.find(device => String(device._id) === primaryReference);
+    const sourcePrimaryDevices = devices.filter(device => String(device.source_id) === primaryReference);
+    const primaryDevice = directPrimaryDevice
+      || (sourcePrimaryDevices.length === 1 ? sourcePrimaryDevices[0] : null)
+      || { name: 'Chưa xác định', ipAddress: null };
+    const timeline = await IncidentTimeline.find({ incident_id: incidentId }).sort({ event_time: 1 }).lean();
+    const telemetryEntries = await Promise.all(deviceIds.slice(0, 5).map(async id => ({
+      device_id: id,
+      samples: await queryTelemetry(id, 30),
+      events: await queryDeviceEvents(id, null, 50),
+    })));
 
-    const aiReportText = await aiService.analyzeIncident(incident, device, alertsData);
+    const aiReportText = await aiService.analyzeIncident(incident, primaryDevice, alertsData, {
+      devices,
+      timeline,
+      telemetry: telemetryEntries,
+      forensics: incident.forensics_artifacts || [],
+    });
 
     incident.status = 'investigating';
     await incident.save();
@@ -162,7 +281,18 @@ const runBackgroundAiAnalysis = async (incidentId, incidentData, alertsData) => 
       actor: 'AI Security Assistant',
       action_type: 'ai_analysis',
       description: aiReportText,
-      metadata: { ai: true }
+      metadata: {
+        ai: true,
+        schema_version: 'incident-diagnosis.v1',
+        evidence_counts: {
+          alerts: alertsData.length,
+          devices: devices.length,
+          timeline_events: timeline.length,
+          telemetry_samples: telemetryEntries.reduce((sum, item) => sum + item.samples.length, 0),
+          device_events: telemetryEntries.reduce((sum, item) => sum + item.events.length, 0),
+          forensics: (incident.forensics_artifacts || []).length,
+        },
+      }
     });
 
   } catch (error) {
@@ -213,6 +343,21 @@ export const updateIncident = async (req, res) => {
   const { id } = req.params;
   const { status, severity, title, description } = req.body;
 
+  if (status !== undefined) {
+    const normalizedStatus = String(status).toLowerCase();
+    if (['closed', 'resolved'].includes(normalizedStatus)) {
+      return errorResponse(
+        res,
+        'Closing an incident requires the verification workflow.',
+        { required_endpoint: `/api/incidents/${id}/verify-close` },
+        409
+      );
+    }
+    if (!['open', 'investigating', 'remediated'].includes(status)) {
+      return errorResponse(res, 'Invalid incident status', { allowed_statuses: ['open', 'investigating', 'remediated'] }, 400);
+    }
+  }
+
   try {
     const incident = await Incident.findById(id);
     if (!incident) {
@@ -254,6 +399,69 @@ export const updateIncident = async (req, res) => {
   } catch (error) {
     console.error('UpdateIncident error:', error);
     return errorResponse(res, 'Failed to update incident', error.message);
+  }
+};
+
+export const verifyAndCloseIncident = async (req, res) => {
+  const { id } = req.params;
+  const {
+    device_id: requestedDeviceId,
+    verification = {},
+    note: rawNote,
+    closure_note: legacyClosureNote,
+  } = req.body || {};
+  const requiredChecks = ['device_operational', 'traffic_normal', 'resolution_documented'];
+  const missingChecks = requiredChecks.filter(key => verification[key] !== true);
+  const closureNote = String(rawNote ?? legacyClosureNote ?? '').trim();
+
+  if (missingChecks.length) {
+    return errorResponse(res, 'Verification checklist is incomplete', { missing_checks: missingChecks }, 400);
+  }
+  if (closureNote.length < 10) {
+    return errorResponse(res, 'A closure note of at least 10 characters is required', null, 400);
+  }
+
+  try {
+    const incident = await Incident.findById(id).populate('alert_ids');
+    if (!incident) return errorResponse(res, 'Incident not found', null, 404);
+    if (incident.status === 'closed') return successResponse(res, incident, 'Sự cố đã được đóng trước đó');
+
+    const { device, deviceId } = await resolveIncidentTargetDevice(incident, requestedDeviceId);
+
+    const securityStatus = String(device.security_status || '').toLowerCase();
+    const operationalStatus = String(device.status || device.operational_status || '').toLowerCase();
+    if (['isolated', 'isolation_pending', 'rollback_pending'].includes(securityStatus) || !['active', 'online'].includes(operationalStatus)) {
+      return errorResponse(res, 'Device is not in a verified operational state', { security_status: securityStatus, operational_status: operationalStatus }, 409);
+    }
+
+    const activeCommand = await SimulatorCommand.findOne({
+      target_id: String(deviceId),
+      status: { $in: ['pending', 'accepted'] },
+    }).lean();
+    if (activeCommand) return errorResponse(res, 'An active device command is still pending', { command_id: activeCommand.command_id }, 409);
+
+    const successfulRecovery = await SimulatorCommand.findOne({
+      command_type: 'rollback',
+      target_id: String(deviceId),
+      status: 'succeeded',
+      'correlation.incident_id': String(incident._id),
+    }).lean();
+    if (!successfulRecovery) return errorResponse(res, 'No successful recovery command is recorded for this incident', null, 409);
+
+    incident.status = 'closed';
+    await incident.save();
+    await IncidentTimeline.create({
+      incident_id: incident._id,
+      actor: req.user?.username || 'SOC Operator',
+      action_type: 'status_change',
+      description: `Sự cố đã được xác minh và đóng sau khi thiết bị ${device.name} (${device.ipAddress || device.ip_address || deviceId}) hoạt động ổn định. Kết luận: ${closureNote}`,
+      metadata: { verification, closure_note: closureNote, device_id: String(deviceId), verified_at: new Date().toISOString() },
+    });
+
+    return successResponse(res, incident, 'Sự cố đã được xác minh và đóng thành công');
+  } catch (error) {
+    console.error('verifyAndCloseIncident error:', error);
+    return errorResponse(res, 'Failed to verify and close incident', error.message, error.status || 500);
   }
 };
 
@@ -591,63 +799,15 @@ export const containIncidentDevice = async (req, res) => {
       return errorResponse(res, 'Incident not found', null, 404);
     }
 
-    let targetDeviceId = device_id;
-    if (!targetDeviceId && incident.alert_ids && incident.alert_ids.length > 0) {
-      const firstAlert = incident.alert_ids[0];
-      targetDeviceId = firstAlert?.device_id || firstAlert?.device;
-    }
-    if (!targetDeviceId) {
-      targetDeviceId = incident.device_id;
-    }
-
-    if (!targetDeviceId || targetDeviceId === 'dummy-device') {
-      const fallbackDev = await Device.findOne({ status: { $ne: 'decommissioned' } });
-      if (fallbackDev) {
-        targetDeviceId = fallbackDev._id;
-      } else {
-        return errorResponse(res, 'Không tìm thấy thiết bị hợp lệ để thực thi lệnh cô lập', null, 400);
-      }
-    }
+    const { deviceId: targetDeviceId } = await resolveIncidentTargetDevice(incident, device_id);
 
     const { issueSecurityCommand } = await import('../services/commandService.js');
-    let command;
-    try {
-      command = await issueSecurityCommand({
-        command_type: 'isolate',
-        target_id: targetDeviceId,
-        requested_by: req.user ? req.user.username : 'Emergency-SOC-Operator'
-      });
-    } catch (cmdErr) {
-      console.warn('[containIncidentDevice] issueSecurityCommand error fallback:', cmdErr.message);
-      const fallbackId = `fallback-${Date.now()}`;
-      // Fallback: direct update in DB in case of validation/save or queue errors
-      await Device.updateOne(
-        { _id: targetDeviceId },
-        { $set: { status: 'isolated', security_status: 'isolated' } }
-      );
-      try {
-        command = await SimulatorCommand.create({
-          command_id: fallbackId,
-          command_type: 'isolate',
-          runtime_id: 'hardware-01',
-          target_id: String(targetDeviceId),
-          envelope_hash: 'fallback-hash',
-          status: 'succeeded',
-          issued_at: new Date(),
-          expires_at: new Date(Date.now() + 30000),
-          executed_at: new Date(),
-          final_ack: { status: 'succeeded', message: 'Fallback execution' }
-        });
-      } catch (dbErr) {
-        console.error('Failed to create fallback command record in DB:', dbErr.message);
-        command = {
-          command_id: fallbackId,
-          status: 'succeeded',
-          command_type: 'isolate',
-          target_id: targetDeviceId,
-        };
-      }
-    }
+    const command = await issueSecurityCommand({
+      command_type: 'isolate',
+      target_id: targetDeviceId,
+      requested_by: req.user ? req.user.username : 'Emergency-SOC-Operator',
+      correlation: { incident_id: String(incident._id) },
+    });
 
     incident.status = 'investigating';
     await incident.save();
@@ -677,6 +837,35 @@ export const containIncidentDevice = async (req, res) => {
   }
 };
 
+export const recoverIncidentDevice = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { device_id } = req.body || {};
+    const incident = await Incident.findById(id).populate('alert_ids');
+    if (!incident) return errorResponse(res, 'Incident not found', null, 404);
+    const { deviceId: targetDeviceId } = await resolveIncidentTargetDevice(incident, device_id);
+
+    const { issueSecurityCommand } = await import('../services/commandService.js');
+    const command = await issueSecurityCommand({
+      command_type: 'rollback',
+      target_id: targetDeviceId,
+      requested_by: req.user?.username || 'SOC-Operator',
+      correlation: { incident_id: String(incident._id) },
+    });
+    await IncidentTimeline.create({
+      incident_id: incident._id,
+      actor: req.user?.username || 'SOC-Operator',
+      action_type: 'playbook_execution',
+      description: `Đã phát lệnh khôi phục có kiểm soát cho thiết bị ${targetDeviceId} (Command ID: ${command.command_id}).`,
+      metadata: { command_id: command.command_id, command_type: 'rollback', device_id: String(targetDeviceId), status: command.status },
+    });
+    return successResponse(res, { command, incident, device_id: targetDeviceId }, 'Lệnh khôi phục đã được phát và đang chờ Runtime ACK', 202);
+  } catch (error) {
+    console.error('recoverIncidentDevice error:', error);
+    return errorResponse(res, 'Không thể phát lệnh khôi phục.', error.message, error.status || 500);
+  }
+};
+
 export default {
   getAllIncidents,
   getIncidentById,
@@ -691,5 +880,7 @@ export default {
   downloadIncidentPcap,
   handleCaptureCompleteCallback,
   generateExecutivePdfReport,
-  containIncidentDevice
+  containIncidentDevice,
+  recoverIncidentDevice,
+  verifyAndCloseIncident
 };

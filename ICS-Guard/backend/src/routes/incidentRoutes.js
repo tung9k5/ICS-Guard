@@ -12,7 +12,9 @@ import {
   getIncidentForensics,
   downloadIncidentPcap,
   generateExecutivePdfReport,
-  containIncidentDevice
+  containIncidentDevice,
+  recoverIncidentDevice,
+  verifyAndCloseIncident
 } from '../controllers/incidentController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 import { authorize } from '../middlewares/rbacMiddleware.js';
@@ -27,6 +29,8 @@ router.get('/:id', authorize(['admin', 'analyst']), getIncidentById);
 router.post('/', authorize(['admin', 'analyst']), auditLogger('INCIDENT_CREATE'), createIncident);
 router.post('/:id/ai-analyze', authorize(['admin', 'analyst']), auditLogger('INCIDENT_AI_ANALYZE'), triggerAiAnalysis);
 router.post('/:id/containment', authorize(['admin', 'analyst']), auditLogger('INCIDENT_CONTAINMENT'), containIncidentDevice);
+router.post('/:id/recovery', authorize(['admin', 'analyst']), auditLogger('INCIDENT_RECOVERY'), recoverIncidentDevice);
+router.post('/:id/verify-close', authorize(['admin', 'analyst']), auditLogger('INCIDENT_VERIFY_CLOSE'), verifyAndCloseIncident);
 
 router.get('/:id/attack-graph', authorize(['admin', 'analyst']), getIncidentAttackGraph);
 router.post('/:id/playbook/step', authorize(['admin', 'analyst']), auditLogger('SOAR_PLAYBOOK_STEP'), executePlaybookStep);

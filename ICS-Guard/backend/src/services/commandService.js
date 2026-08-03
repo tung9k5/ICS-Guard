@@ -163,6 +163,7 @@ export const issueSecurityCommand = async ({
       envelope_hash: envelopeHash,
       previous_security_status: device.security_status || 'normal',
       requested_by,
+      correlation,
       status: 'pending',
       issued_at: now,
       expires_at: expiresAt,
