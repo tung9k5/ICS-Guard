@@ -5,6 +5,7 @@
   "main": "src/app.js",
   "type": "module",
   "scripts": {
+    "prestart": "npm run swagger",
     "start": "node src/app.js",
     "predev": "npm run swagger",
     "dev": "node --watch src/app.js",
