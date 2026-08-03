@@ -321,8 +321,8 @@ class IncidentService {
       }
 
       await notificationService.createNotification({
-        title: `AI đã phân tích - ${incidentData.title}`,
-        message: `Hệ thống AI đã hoàn tất điều tra sự cố`,
+        title: `AI - ${incidentData.title}`,
+        message: `AI đã hoàn tất điều tra sự cố`,
         type: 'SYSTEM',
         severity: incidentData.severity,
         userId: targetUserId,
