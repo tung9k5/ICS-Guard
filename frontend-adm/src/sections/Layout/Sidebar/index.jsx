@@ -126,10 +126,10 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, collapsed, setCollapsed }) =
               <Bell size={18} />
               <span style={{ fontSize: '0.9286rem' }}>{t('sidebar.alert_management', 'Cảnh báo thô')}</span>
             </NavLink>
-            <NavLink to="/rule-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '0.5714rem 0.8571rem', minHeight: '2.8571rem' }}>
+            {/* <NavLink to="/rule-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '0.5714rem 0.8571rem', minHeight: '2.8571rem' }}>
               <ClipboardList size={18} />
               <span style={{ fontSize: '0.9286rem' }}>{t('sidebar.rule_management', 'Quy tắc')}</span>
-            </NavLink>
+            </NavLink> */}
           </NavGroup>
 
           <NavGroup title={t('sidebar.system_group', 'Hệ thống & Thiết bị')} icon={Server} collapsed={!isSidebarOpen} pathPrefixes={['/device-management', '/audit-management']}>
