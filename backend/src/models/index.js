@@ -1,4 +1,4 @@
-import connectDB from '../config/db.js';
+﻿import connectDB from '../config/db.js';
 import User from './user.js';
 import Device from './device.js';
 import DeviceSensor from './deviceSensor.js';
@@ -11,6 +11,10 @@ import Incident from './incident.js';
 import IncidentTimeline from './incidentTimeline.js';
 import Setting from './Setting.js';
 import IdSequence from './IdSequence.js';
+import RemediationSession from './remediationSession.js';
+import RemediationStep from './remediationStep.js';
+import RemediationActionLog from './remediationActionLog.js';
+import RemediationCase from './remediationCase.js';
 
 const db = {
   connectDB,
@@ -26,6 +30,10 @@ const db = {
   IncidentTimeline,
   Setting,
   IdSequence,
+  RemediationSession,
+  RemediationStep,
+  RemediationActionLog,
+  RemediationCase,
 };
 
 export {
@@ -42,6 +50,11 @@ export {
   IncidentTimeline,
   Setting,
   IdSequence,
+  RemediationSession,
+  RemediationStep,
+  RemediationActionLog,
+  RemediationCase,
 };
 
 export default db;
+

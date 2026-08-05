@@ -1,4 +1,4 @@
-import 'dotenv/config';
+﻿import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -42,6 +42,7 @@ import settingRoutes from './routes/settingRoutes.js';
 import reportRoutes from './routes/reportRoutes.js';
 import simulatorRoutes from './routes/simulatorRoutes.js';
 import notificationRoutes from './routes/notification.routes.js';
+import remediationRoutes from './routes/remediationRoutes.js';
 import { HTTP_STATUS } from './constants/index.js';
 
 
@@ -93,6 +94,7 @@ app.use('/api/settings', settingRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/simulator', simulatorRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/remediation', remediationRoutes);
 
 app.use((err, req, res, next) => {
   logger.error('[Global Error]', { message: err.message, stack: err.stack });
@@ -134,3 +136,4 @@ const startServer = async () => {
 };
 
 startServer();
+
