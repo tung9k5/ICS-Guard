@@ -15,6 +15,8 @@ function createTrustEdgeClient(baseURL, tokenKeys, loginUrl) {
       showGlobalLoading();
       const token = tokenKeys.map((key) => localStorage.getItem(key)).find(Boolean);
       if (token) config.headers.Authorization = `Bearer ${token}`;
+      config.headers['X-Simulator-API-Key'] = SIMULATOR_KEY;
+      config.headers['x-simulator-api-key'] = SIMULATOR_KEY;
       return config;
     },
     (error) => {
@@ -37,12 +39,16 @@ function createTrustEdgeClient(baseURL, tokenKeys, loginUrl) {
   return client;
 }
 
-// Hardware simulator → backend /api (proxied via /hardware-api → port 8000)
+// Hardware simulator → Hardware BFF (proxied via /hardware-api → port 5001)
 export const hardwareApi = createTrustEdgeClient(
-  '/api',
+  '/hardware-api',
   ['access_token'],
   '/login'
 );
+
+hardwareApi.defaults.headers.common = hardwareApi.defaults.headers.common || {};
+hardwareApi.defaults.headers.common['X-Simulator-API-Key'] = SIMULATOR_KEY;
+hardwareApi.defaults.headers.common['x-simulator-api-key'] = SIMULATOR_KEY;
 
 // Attack console → standalone Attack Adapter (proxied via /attack-api → port 5003)
 export const attackApi = createTrustEdgeClient(
@@ -50,3 +56,8 @@ export const attackApi = createTrustEdgeClient(
   ['attacker_access_token', 'access_token'],
   '/login'
 );
+
+// Add simulator authorization header so attack adapter accepts requests from the web simulator
+attackApi.defaults.headers.common = attackApi.defaults.headers.common || {};
+attackApi.defaults.headers.common['X-Simulator-API-Key'] = SIMULATOR_KEY;
+attackApi.defaults.headers.common['x-simulator-api-key'] = SIMULATOR_KEY;

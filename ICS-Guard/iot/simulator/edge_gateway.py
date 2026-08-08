@@ -177,7 +177,7 @@ class EdgeGatewayController:
                 siren_coil = 32
 
                 if temp_val > 80.0:
-                    logging.warning(f"⚠️ [Modbus Gateway Client] {temp_id} nhiệt độ cao ({temp_val} C). Gửi lệnh Modbus Write Coil {valve_coil} & {siren_coil} = ON!")
+                    logging.warning(f"[Modbus Gateway Client] {temp_id} nhiệt độ cao ({temp_val} C). Gửi lệnh Modbus Write Coil {valve_coil} & {siren_coil} = ON!")
                     self._write_coil(valve_coil, True)
                     self._write_coil(siren_coil, True)
                 
@@ -227,7 +227,7 @@ class EdgeGatewayController:
                 alarm_coil = 42 if idx < 3 else 43
 
                 if gas_val > 50.0:
-                    logging.warning(f"⚠️ [Modbus Gateway Client] {gas_id} rò rỉ khí gas ({gas_val} ppm). Gửi lệnh Modbus Write Coil {fan_coil} & {alarm_coil} = ON!")
+                    logging.warning(f"[Modbus Gateway Client] {gas_id} rò rỉ khí gas ({gas_val} ppm). Gửi lệnh Modbus Write Coil {fan_coil} & {alarm_coil} = ON!")
                     self._write_coil(fan_coil, True)
                     self._write_coil(alarm_coil, True)
 

@@ -4,6 +4,7 @@ import {
   Bot,
   Check,
   CheckCircle2,
+  ChevronLeft,
   ChevronRight,
   ClipboardCheck,
   Clock3,
@@ -70,6 +71,11 @@ const ResponseWorkspace = ({
   onAiRemediation,
   onRestore,
   onCloseIncident,
+  onAcceptIncident,
+  onPrevIncident,
+  onNextIncident,
+  currentIndex,
+  totalIncidents,
 }) => {
   const incident = responseCase?.incident;
   const device = responseCase?.device;
@@ -88,7 +94,8 @@ const ResponseWorkspace = ({
     : null;
   const containmentCommandStatus = String(activeIsolationCommand?.status || latestIsolationCommand?.metadata?.status || '').toLowerCase();
   const containmentPending = ['pending', 'accepted', 'issued', 'queued', 'processing', 'executing'].includes(containmentCommandStatus);
-  const containmentStarted = incidentStatus === 'investigating' || Boolean(activeIsolationCommand || latestIsolationCommand);
+  const isAcceptedInDb = ['open', 'accepted', 'investigating', 'remediated', 'closed'].includes(incidentStatus) || Boolean(incident?.accepted_by);
+  const containmentStarted = isAcceptedInDb || incidentStatus === 'investigating' || Boolean(activeIsolationCommand || latestIsolationCommand);
   const recoveryRecorded = timeline.some(event => event?.metadata?.command_type === 'rollback' && event?.metadata?.status === 'succeeded');
   const restored = (responseCase?.recoveryCompleted === true || recoveryRecorded) && ['normal', 'active', 'online'].includes(deviceStatus);
 
@@ -111,7 +118,6 @@ const ResponseWorkspace = ({
   }, [visible]);
 
   useEffect(() => {
-    setIsDocked(true);
     setIsExpanded(false);
     setActiveTab('overview');
     setManualInvestigationComplete(false);
@@ -149,9 +155,9 @@ const ResponseWorkspace = ({
     if (restored) return 4;
     if (isolated && (investigationReviewed || manualInvestigationComplete)) return 3;
     if (isolated) return 2;
-    if (incident && (acknowledged || containmentStarted)) return 1;
+    if (incident && (acknowledged || isAcceptedInDb || containmentStarted)) return 1;
     return 0;
-  }, [acknowledged, containmentStarted, incident, isolated, investigationReviewed, manualInvestigationComplete, restored]);
+  }, [acknowledged, containmentStarted, incident, isAcceptedInDb, isolated, investigationReviewed, manualInvestigationComplete, restored]);
 
   const recoveryReady = Object.values(recoveryChecks).every(Boolean);
   const normalizedClosureNote = closureNote.trim();
@@ -213,15 +219,34 @@ const ResponseWorkspace = ({
           <ShieldAlert size={20} />
           <span><strong>{severity}</strong><small>{device?.name || deviceId || 'Thiết bị OT'}</small></span>
           <em>Bước {currentPhase + 1}/5</em>
+          {totalIncidents > 0 && (
+            <span style={{ background: '#ef4444', color: '#fff', padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 700, marginLeft: '6px' }}>
+              {totalIncidents} sự cố đang tồn tại
+            </span>
+          )}
           <ChevronRight size={18} />
         </button>
       </div>
     );
   }
 
+  const handleAcceptIncidentClick = async () => {
+    try {
+      setAcknowledged(true);
+      if (incidentId) {
+        await incidentApi.acceptIncident(incidentId);
+      }
+      if (onAcceptIncident) {
+        onAcceptIncident(incidentId);
+      }
+    } catch (err) {
+      console.warn('Failed to accept incident in DB:', err);
+    }
+  };
+
   const renderContextAction = () => {
     if (currentPhase === 0) {
-      return <button className="response-primary acknowledge" onClick={() => setAcknowledged(true)}><CheckCircle2 size={16}/>Tiếp nhận sự cố</button>;
+      return <button className="response-primary acknowledge" onClick={handleAcceptIncidentClick}><CheckCircle2 size={16}/>Tiếp nhận sự cố</button>;
     }
     if (currentPhase === 1) {
       return <button className="response-primary danger" onClick={handleIsolate} disabled={!deviceId || isolated || containmentPending || Boolean(responseAction)}><LockKeyhole size={16}/>{containmentPending ? 'Đang chờ xác nhận cô lập…' : responseAction === 'isolate' ? 'Đang phát lệnh cô lập…' : 'Cô lập khẩn cấp'}</button>;
@@ -247,7 +272,32 @@ const ResponseWorkspace = ({
             <h2>{incident?.title || 'Sự cố thiết bị OT'}</h2>
             <div><em className={`severity-badge severity-${severity.toLowerCase()}`}>{severity}</em><code>#{String(incidentId || '').slice(-8)}</code><small><Clock3 size={13}/>{Math.floor(elapsed / 60000)}m {Math.floor((elapsed % 60000) / 1000)}s</small></div>
           </div>
-          <div className="response-window-actions">
+          <div className="response-window-actions" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {(Boolean(onPrevIncident) || Boolean(onNextIncident)) && (
+              <div className="incident-nav-group" style={{ display: 'flex', alignItems: 'center', gap: '2px', background: 'rgba(255,255,255,0.08)', padding: '2px 6px', borderRadius: '6px', marginRight: '6px', border: '1px solid rgba(255,255,255,0.15)' }}>
+                <button
+                  type="button"
+                  onClick={onPrevIncident}
+                  disabled={!onPrevIncident}
+                  style={{ opacity: onPrevIncident ? 1 : 0.3, cursor: onPrevIncident ? 'pointer' : 'not-allowed', background: 'none', border: 'none', color: '#fff', padding: '3px', display: 'flex', alignItems: 'center' }}
+                  title="Sự cố trước đó"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <span style={{ fontSize: '11px', color: '#cbd5e1', fontWeight: 600, padding: '0 4px', userSelect: 'none' }}>
+                  {typeof currentIndex === 'number' && typeof totalIncidents === 'number' ? `${currentIndex + 1}/${totalIncidents}` : 'Chuyển'}
+                </span>
+                <button
+                  type="button"
+                  onClick={onNextIncident}
+                  disabled={!onNextIncident}
+                  style={{ opacity: onNextIncident ? 1 : 0.3, cursor: onNextIncident ? 'pointer' : 'not-allowed', background: 'none', border: 'none', color: '#fff', padding: '3px', display: 'flex', alignItems: 'center' }}
+                  title="Sự cố tiếp theo"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
             <button onClick={() => setIsExpanded(value => !value)} aria-label={isExpanded ? 'Thu gọn workspace' : 'Mở rộng workspace'}>{isExpanded ? <Minimize2 size={18}/> : <Maximize2 size={18}/>}</button>
             <button onClick={() => setIsDocked(true)} aria-label="Thu nhỏ thành Incident Dock"><Minimize2 size={18}/></button>
           </div>

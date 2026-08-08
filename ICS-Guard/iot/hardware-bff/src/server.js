@@ -1,7 +1,16 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 import axios from 'axios';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 import {
   exactOriginCors,
   parseAllowedOrigins,
@@ -75,6 +84,7 @@ export function createApp(config) {
     timeout: 5000,
     headers: {
       'X-Runtime-Service-Key': config.runtimeServiceKey,
+      'X-Service-Key': config.runtimeServiceKey,
       Accept: 'application/json',
     },
   });
@@ -170,7 +180,7 @@ const config = {
   jwtIssuer: process.env.JWT_ISSUER || undefined,
   jwtAudience: process.env.JWT_AUDIENCE || undefined,
   runtimeServiceKey: requiredSecret('HARDWARE_RUNTIME_SERVICE_KEY'),
-  runtimeUrl: process.env.PYTHON_RUNTIME_URL || 'http://simulator:5002',
+  runtimeUrl: process.env.PYTHON_RUNTIME_URL || 'http://localhost:5002',
   allowedOrigins: parseAllowedOrigins(process.env.HARDWARE_ALLOWED_ORIGINS || DEFAULT_ORIGINS),
 };
 

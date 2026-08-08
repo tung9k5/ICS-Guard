@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Device, AuditLog, SimulatorCommand } from '../models/index.js';
 import { v4 as uuidv4 } from 'uuid';
 import { sendEmailAlert } from '../services/emailService.js';
@@ -122,9 +123,12 @@ export const createDevice = async (req, res) => {
   }
 
   try {
+    const rawUserId = req.user?.id || req.user?._id;
+    const validUserId = (rawUserId && !req.user?.isSimulator && mongoose.Types.ObjectId.isValid(rawUserId)) ? rawUserId : null;
+
     const newDevice = await Device.create({
       _id: customId,
-      userId: req.user ? req.user.id : null,
+      userId: validUserId,
       name,
       type: type || 'IoT Device',
       node_type: node_type || type || 'sensor',
@@ -136,7 +140,9 @@ export const createDevice = async (req, res) => {
       hardware_model: hardware_model || '',
       firmware_version: firmware_version || '',
       description: description || '',
-      status: status || 'active',
+      status: 'unprovisioned',
+      approval_status: 'pending', // Always start as pending approval
+      commissioned_date: req.body.commissioned_date || null,
       lastSeen: new Date(),
     });
 
@@ -161,11 +167,13 @@ export const createDevice = async (req, res) => {
       firmware_version: newDevice.firmware_version,
       description: newDevice.description,
       status: newDevice.status,
+      approval_status: newDevice.approval_status,
+      commissioned_date: newDevice.commissioned_date,
       createdAt: newDevice.createdAt,
       updatedAt: newDevice.updatedAt
     };
 
-    return successResponse(res, cleanDevice, 'Thêm thiết bị mới thành công', 201);
+    return successResponse(res, cleanDevice, 'Thiết bị đã được tạo thành công, đang chờ phê duyệt bởi Admin.', 201);
   } catch (error) {
     console.error('CreateDevice error:', error);
     return errorResponse(res, 'Failed to create device', error.message);
@@ -257,6 +265,7 @@ export const updateDevice = async (req, res) => {
 
 export const deleteDevice = async (req, res) => {
   const { id } = req.params;
+  const isHardDelete = req.query.hard_delete === 'true' || req.body?.hard_delete === true || req.user?.isSimulator === true;
 
   try {
     const device = await Device.findById(id);
@@ -264,19 +273,65 @@ export const deleteDevice = async (req, res) => {
       return errorResponse(res, 'Device not found', null, 404);
     }
 
-    await device.deleteOne();
+    if (isHardDelete) {
+      // Xóa cứng: Giải phóng vĩnh viễn khỏi DB (Thực hiện khi xóa tại Hardware Simulator)
+      await Device.findByIdAndDelete(id);
 
-    const io = socketService.getIo();
-    if (io) {
-      io.emit('DEVICE_SYNC', { action: 'delete', device_id: id });
+      const io = socketService.getIo();
+      if (io) {
+        io.emit('DEVICE_SYNC', { action: 'delete', device_id: id });
+      }
+      publishMqtt('ics/device/sync', { action: 'delete', device_id: id });
+
+      return successResponse(res, null, 'Đã giải phóng và xóa cứng vĩnh viễn thiết bị khỏi hệ thống.');
+    } else {
+      // Xóa mềm: Thực hiện từ Device Management, chuyển sang decommissioned & rejected, ngắt nhận log
+      device.status = 'decommissioned';
+      device.approval_status = 'rejected';
+      await device.save();
+
+      const io = socketService.getIo();
+      if (io) {
+        io.emit('DEVICE_SYNC', { action: 'decommission', device_id: id, device });
+      }
+      publishMqtt('ics/device/sync', { action: 'decommission', device_id: id });
+
+      return successResponse(res, { device }, 'Thiết bị đã chuyển sang trạng thái Xóa mềm (Decommissioned). Ngừng nhận log. Cần xóa cứng ở Simulator để ẩn hoàn toàn.');
     }
-
-    publishMqtt('ics/device/sync', { action: 'delete', device_id: id });
-
-    return successResponse(res, null, 'Xóa thiết bị thành công');
   } catch (error) {
     console.error('DeleteDevice error:', error);
     return errorResponse(res, 'Failed to delete device', error.message);
+  }
+};
+
+export const restoreDevice = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const device = await Device.findById(id);
+    if (!device) {
+      return errorResponse(res, 'Device not found', null, 404);
+    }
+
+    if (device.status !== 'decommissioned' && device.approval_status !== 'rejected') {
+      return errorResponse(res, 'Thiết bị không ở trạng thái xóa mềm (Decommissioned)', null, 400);
+    }
+
+    device.status = 'active';
+    device.operational_status = 'active';
+    device.approval_status = 'approved';
+    await device.save();
+
+    const io = socketService.getIo();
+    if (io) {
+      io.emit('DEVICE_SYNC', { action: 'restore', device_id: id, device });
+    }
+    publishMqtt('ics/device/sync', { action: 'restore', device_id: id });
+
+    return successResponse(res, device, 'Khôi phục thiết bị xóa mềm thành công. Hệ thống tiếp tục nhận log.');
+  } catch (error) {
+    console.error('RestoreDevice error:', error);
+    return errorResponse(res, 'Failed to restore device', error.message);
   }
 };
 
@@ -398,7 +453,7 @@ export const unisolateDeviceEndpoint = async (req, res) => {
     });
 
     await sendTelegramAlert(
-      `🔔 *DEVICE RECONNECTED*\n\nDevice *${device.name}* (IP: ${device.ipAddress}) has been reconnected to the network.\nOperator: ${actor}`
+      `*DEVICE RECONNECTED*\n\nDevice *${device.name}* (IP: ${device.ipAddress}) has been reconnected to the network.\nOperator: ${actor}`
     );
 
     return res.status(200).json({ message: `Device "${device.name}" has been successfully reconnected.`, device });
@@ -545,3 +600,90 @@ export const updateOperationalStatus = async (req, res) => {
     return errorResponse(res, 'Operational status update failed', err.message);
   }
 };
+
+// ============================================================
+// Device Approval Workflow
+// ============================================================
+
+/**
+ * PATCH /api/devices/:id/approve
+ * Approve a pending device — starts receiving telemetry and logs
+ */
+export const approveDevice = async (req, res) => {
+  const { id } = req.params;
+  const actor = req.user ? req.user.username : 'Admin';
+  try {
+    const device = await Device.findById(id);
+    if (!device) return errorResponse(res, 'Device not found', null, 404);
+    if (device.approval_status === 'approved') {
+      return errorResponse(res, 'Thiết bị đã được duyệt trước đó.', null, 400);
+    }
+
+    device.approval_status = 'approved';
+    device.approved_by = actor;
+    device.approved_at = new Date();
+    device.status = 'active';
+    device.operational_status = 'active';
+    // Set commissioned_date if not already set
+    if (!device.commissioned_date) {
+      device.commissioned_date = new Date();
+    }
+    await device.save();
+
+    await AuditLog.create({
+      action: 'DEVICE_APPROVED',
+      username: actor,
+      ipAddress: (req.ip || '').replace(/^::ffff:/, ''),
+      details: { deviceId: device._id, name: device.name, ipAddress: device.ipAddress },
+      status: 'SUCCESS',
+    });
+
+    const io = socketService.getIo();
+    if (io) {
+      io.emit('DEVICE_SYNC', { action: 'approved', device });
+    }
+
+    return successResponse(res, device, `Thiết bị "${device.name}" đã được phê duyệt. Hệ thống bắt đầu nhận Log & Telemetry.`);
+  } catch (err) {
+    console.error('[approveDevice] Error:', err);
+    return errorResponse(res, 'Approve device failed', err.message);
+  }
+};
+
+/**
+ * PATCH /api/devices/:id/reject
+ * Reject a pending device
+ */
+export const rejectDevice = async (req, res) => {
+  const { id } = req.params;
+  const actor = req.user ? req.user.username : 'Admin';
+  const { reason } = req.body;
+  try {
+    const device = await Device.findById(id);
+    if (!device) return errorResponse(res, 'Device not found', null, 404);
+
+    device.approval_status = 'rejected';
+    device.status = 'decommissioned';
+    await device.save();
+
+    await AuditLog.create({
+      action: 'DEVICE_REJECTED',
+      username: actor,
+      ipAddress: (req.ip || '').replace(/^::ffff:/, ''),
+      details: { deviceId: device._id, name: device.name, reason: reason || 'Không có lý do' },
+      status: 'SUCCESS',
+    });
+
+    const io = socketService.getIo();
+    if (io) {
+      io.emit('DEVICE_SYNC', { action: 'decommission', device_id: id, device });
+    }
+    publishMqtt('ics/device/sync', { action: 'decommission', device_id: id });
+
+    return successResponse(res, device, `Thiết bị "${device.name}" đã bị từ chối và chuyển sang trạng thái Xóa mềm (Decommissioned). Cần xóa cứng ở Simulator để ẩn hoàn toàn.`);
+  } catch (err) {
+    console.error('[rejectDevice] Error:', err);
+    return errorResponse(res, 'Reject device failed', err.message);
+  }
+};
+

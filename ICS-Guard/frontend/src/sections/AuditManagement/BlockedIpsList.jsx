@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Unlock, ShieldAlert, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -20,6 +20,15 @@ const BlockedIpsList = () => {
   const [total, setTotal] = useState(0);
 
   const [expandedId, setExpandedId] = useState(null);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const toggleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id);
@@ -57,6 +66,18 @@ const BlockedIpsList = () => {
     // eslint-disable-next-line
   }, [page, perPage, search]);
 
+  // Khử trùng lặp IP trong danh sách
+  const displayIps = useMemo(() => {
+    if (!Array.isArray(ips)) return [];
+    const seen = new Set();
+    return ips.filter(item => {
+      const key = item.ipAddress || item._id || item.id;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [ips]);
+
   const handleUnblock = async (ipAddress) => {
     if (!window.confirm(`Bạn có chắc muốn mở khóa cho IP: ${ipAddress}?`)) return;
 
@@ -76,7 +97,7 @@ const BlockedIpsList = () => {
   return (
     <div className="blocked-ips-section">
       <VFilterPage 
-        searchPlaceholder={t('audit.search_placeholder')}
+        searchPlaceholder={t('audit.search_placeholder', 'Tìm kiếm địa chỉ IP...')}
         searchValue={search}
         onSearchChange={(e) => {
           setSearch(e.target.value);
@@ -85,62 +106,66 @@ const BlockedIpsList = () => {
       />
 
       <div className="list-container">
-        {/* --- DESKTOP TABLE VIEW --- */}
-        <div className="table-wrapper">
-          {loading ? (
-            <div className="loading-state">{t('common.processing_data')}</div>
-          ) : ips.length === 0 ? (
-            <VNoData message={t('assets.list.no_data')} />
-          ) : (
-            <table className="v-table">
-              <thead>
-                <tr>
-                  <th style={{ width: '140px', whiteSpace: 'nowrap' }}>{t('audit.blocked.table_ip')}</th>
-                  <th>{t('audit.blocked.table_reason')}</th>
-                  <th style={{ width: '160px', whiteSpace: 'nowrap' }}>{t('audit.blocked.table_blocked_at')}</th>
-                  <th style={{ width: '110px' }}>{t('audit.blocked.table_actions')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ips.map(ip => (
-                  <tr key={ip.id || ip._id}>
-                    <td>
-                      <div className="ip-badge">
-                        <ShieldAlert size={16} />
-                        <span style={{ whiteSpace: 'nowrap' }}>{ip.ipAddress}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="reason-text truncate-text" style={{ maxWidth: '200px', display: 'inline-block' }} title={ip.reason}>{ip.reason || '-'}</span>
-                    </td>
-                    <td className="time-col" style={{ whiteSpace: 'nowrap' }}>
-                      {dayjs(ip.createdAt).format('DD/MM/YYYY HH:mm')}
-                    </td>
-                    <td>
-                      <VButton 
-                        variant="outline"
-                        onClick={() => handleUnblock(ip.ipAddress)}
-                      >
-                        <Unlock size={16} />
-                        {t('audit.btn_unblock')}
-                      </VButton>
-                    </td>
+        {/* --- DESKTOP TABLE VIEW (Width > 768px) --- */}
+        {!isMobile && (
+          <div className="table-wrapper">
+            {loading ? (
+              <div className="loading-state">{t('common.processing_data')}</div>
+            ) : displayIps.length === 0 ? (
+              <VNoData message={t('assets.list.no_data')} />
+            ) : (
+              <table className="v-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: '160px', whiteSpace: 'nowrap' }}>{t('audit.blocked.table_ip')}</th>
+                    <th>{t('audit.blocked.table_reason')}</th>
+                    <th style={{ width: '160px', whiteSpace: 'nowrap' }}>{t('audit.blocked.table_blocked_at')}</th>
+                    <th style={{ width: '120px' }}>{t('audit.blocked.table_actions')}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+                </thead>
+                <tbody>
+                  {displayIps.map(ip => (
+                    <tr key={ip.id || ip._id}>
+                      <td>
+                        <div className="ip-badge" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ef4444', fontWeight: 600 }}>
+                          <ShieldAlert size={16} />
+                          <span style={{ whiteSpace: 'nowrap' }}>{ip.ipAddress}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', lineHeight: 1.5, color: '#e2e8f0' }}>
+                          {ip.reason || '-'}
+                        </div>
+                      </td>
+                      <td className="time-col" style={{ whiteSpace: 'nowrap' }}>
+                        {dayjs(ip.createdAt).format('DD/MM/YYYY HH:mm')}
+                      </td>
+                      <td>
+                        <VButton 
+                          variant="outline"
+                          onClick={() => handleUnblock(ip.ipAddress)}
+                        >
+                          <Unlock size={16} />
+                          {t('audit.btn_unblock')}
+                        </VButton>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
 
-        {/* --- MOBILE LIST VIEW --- */}
-        {!loading && ips.length > 0 && (
+        {/* --- MOBILE LIST VIEW (Width <= 768px) --- */}
+        {isMobile && !loading && displayIps.length > 0 && (
           <div className="mobile-list">
             <div className="mobile-list-header">
               <div className="col-id">{t('audit.blocked.table_ip')}</div>
               <div className="col-action"></div>
             </div>
             
-            {ips.map(ip => {
+            {displayIps.map(ip => {
               const id = ip.id || ip._id;
               const isExpanded = expandedId === id;
               
@@ -148,7 +173,7 @@ const BlockedIpsList = () => {
                 <div className={`mobile-card ${isExpanded ? 'expanded' : ''}`} key={id}>
                   <div className="mobile-card-header" onClick={() => toggleExpand(id)}>
                     <div className="col-id">
-                      <div className="ip-badge">
+                      <div className="ip-badge" style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#ef4444', fontWeight: 600 }}>
                         <ShieldAlert size={16} />
                         <span style={{ whiteSpace: 'nowrap' }}>{ip.ipAddress}</span>
                       </div>
@@ -162,7 +187,7 @@ const BlockedIpsList = () => {
                     <div className="mobile-card-body">
                       <div className="detail-row">
                         <span className="detail-label">{t('audit.blocked.table_reason')}</span>
-                        <span className="detail-value">{ip.reason || '-'}</span>
+                        <div className="detail-value" style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: '#e2e8f0' }}>{ip.reason || '-'}</div>
                       </div>
                       <div className="detail-row">
                         <span className="detail-label">{t('audit.blocked.table_blocked_at')}</span>
@@ -189,12 +214,12 @@ const BlockedIpsList = () => {
         )}
       </div>
 
-      {ips && ips.length > 0 && (
+      {displayIps && displayIps.length > 0 && (
         <VPagination 
           page={page}
           perPage={perPage}
           total={total}
-          dataLength={ips.length}
+          dataLength={displayIps.length}
           itemName={t('audit.tab_blocked')}
           onPageChange={(newPage) => setPage(newPage)}
           onPerPageChange={(newPerPage) => {

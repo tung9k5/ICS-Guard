@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Info, User, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
+import { User, ChevronDown, ChevronUp, Trash2, Calendar } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import ApiAudit from '@/api/audit';
@@ -16,7 +16,7 @@ import dayjs from 'dayjs';
 // Known audit actions from server (extend as needed)
 const AUDIT_ACTIONS = [
   'USER_LOGIN_ATTEMPT', 'USER_LOGOUT', 'USER_REGISTER', 'USER_GOOGLE_LOGIN_ATTEMPT', 'USER_SETUP_ONBOARDING',
-  'USER_CREATE', 'USER_UPDATE', 'USER_DELETE', 'USER_BULK_DELETE', 'PROFILE_UPDATE',
+  'USER_CREATE', 'USER_UPDATE', 'USER_DELETE', 'USER_BULK_DELETE', 'USER_RESTORE', 'PROFILE_UPDATE',
   'DEVICE_CREATE', 'DEVICE_UPDATE', 'DEVICE_DELETE', 'DEVICE_BULK_DELETE', 'DEVICE_ISOLATE', 'DEVICE_UNISOLATE', 'DEVICE_ROLLBACK', 'DEVICE_ISOLATION_TRIGGERED', 'DEVICE_UNISOLATION_TRIGGERED', 'DEVICE_ROLLBACK_TRIGGERED',
   'IP_AUTO_BLOCK', 'IP_MANUAL_UNBLOCK',
   'RULE_CREATE', 'RULE_UPDATE', 'RULE_DELETE', 'RULE_BULK_DELETE',
@@ -31,6 +31,8 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
   const [search, setSearch] = useState('');
   const [action, setAction] = useState('all');
   const [role, setRole] = useState('all');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const [order, setOrder] = useState('desc');
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
@@ -97,6 +99,8 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
         search,
         action: action !== 'all' ? action : undefined,
         role: role !== 'all' ? role : undefined,
+        from: fromDate || undefined,
+        to: toDate || undefined,
         order,
       });
       if (res.data) {
@@ -121,18 +125,53 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
     const timer = setTimeout(() => fetchLogs(), 300);
     return () => clearTimeout(timer);
     // eslint-disable-next-line
-  }, [page, perPage, search, action, order]);
+  }, [page, perPage, search, action, role, fromDate, toDate, order]);
+
+  const getRoleLabel = (r) => {
+    switch (r) {
+      case 'admin': return 'Quản trị viên (Admin)';
+      case 'hr_management': return 'Quản lý nhân sự (HR)';
+      case 'device_management': return 'Quản lý thiết bị';
+      case 'analyst': return 'Chuyên viên phân tích';
+      default: return r || 'System';
+    }
+  };
 
   return (
     <div className="audit-logs-section">
       <VFilterPage
-        searchPlaceholder={t('audit.search_placeholder')}
+        searchPlaceholder={t('audit.search_placeholder', 'Tìm kiếm từ khóa, IP, tên...')}
         searchValue={search}
         onSearchChange={(e) => {
           setSearch(e.target.value);
           setPage(1);
         }}
       >
+        {/* Từ ngày */}
+        <div className="filter-select-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--slate-800)', border: '1px solid var(--slate-700)', padding: '4px 10px', borderRadius: '8px' }}>
+          <Calendar size={14} style={{ color: 'var(--slate-400)' }} />
+          <span style={{ fontSize: '12px', color: 'var(--slate-400)', whiteSpace: 'nowrap' }}>Từ:</span>
+          <input 
+            type="date" 
+            value={fromDate}
+            onChange={(e) => { setFromDate(e.target.value); setPage(1); }}
+            style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '13px', outline: 'none' }}
+          />
+        </div>
+
+        {/* Đến ngày */}
+        <div className="filter-select-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--slate-800)', border: '1px solid var(--slate-700)', padding: '4px 10px', borderRadius: '8px' }}>
+          <Calendar size={14} style={{ color: 'var(--slate-400)' }} />
+          <span style={{ fontSize: '12px', color: 'var(--slate-400)', whiteSpace: 'nowrap' }}>Đến:</span>
+          <input 
+            type="date" 
+            value={toDate}
+            onChange={(e) => { setToDate(e.target.value); setPage(1); }}
+            style={{ background: 'transparent', border: 'none', color: '#fff', fontSize: '13px', outline: 'none' }}
+          />
+        </div>
+
+        {/* Lọc 4 vai trò chuẩn */}
         <VSelectFilter
           value={role}
           onChange={(val) => {
@@ -141,14 +180,13 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
           }}
           placeholder={t('audit.all_roles', 'Tất cả vai trò')}
           options={[
-            { value: 'admin', label: 'Admin' },
-            { value: 'analyst', label: 'Analyst' },
-            { value: 'l2_responder', label: 'L2 Responder' },
-            { value: 'hr_management', label: 'HR Management' },
-            { value: 'device_management', label: 'Device Management' },
-            { value: 'ot_operator', label: 'OT Operator' }
+            { value: 'admin', label: 'Quản trị viên (Admin)' },
+            { value: 'hr_management', label: 'Quản lý nhân sự (HR)' },
+            { value: 'device_management', label: 'Quản lý thiết bị' },
+            { value: 'analyst', label: 'Chuyên viên phân tích' }
           ]}
         />
+
         <VSelectFilter
           value={action}
           onChange={(val) => {
@@ -194,9 +232,9 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                   <th>{t('audit.logs.table_username', 'TÊN NGƯỜI DÙNG')}</th>
                   <th>{t('audit.logs.table_email', 'EMAIL')}</th>
                   <th>{t('audit.logs.table_role', 'VAI TRÒ')}</th>
-                  <th>{t('audit.logs.table_action')}</th>
-                  <th>{t('audit.logs.table_ip')}</th>
-                  <th style={{ whiteSpace: 'nowrap' }}>{t('audit.logs.table_time')}</th>
+                  <th>{t('audit.logs.table_action', 'HÀNH ĐỘNG')}</th>
+                  <th>{t('audit.logs.table_ip', 'ĐỊA CHỈ IP')}</th>
+                  <th style={{ whiteSpace: 'nowrap' }}>{t('audit.logs.table_time', 'THỜI GIAN')}</th>
                   <th className="actions-col">{t('assets.list.table_actions')}</th>
                 </tr>
               </thead>
@@ -220,7 +258,7 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                       <span className="truncate-text" style={{ maxWidth: '150px' }} title={log.email || 'N/A'}>{log.email || 'N/A'}</span>
                     </td>
                     <td>
-                      <span className="truncate-text" title={log.role}>{log.role || 'System'}</span>
+                      <span className="truncate-text" title={getRoleLabel(log.role)}>{getRoleLabel(log.role)}</span>
                     </td>
                     <td>
                       <span className="action-badge">
@@ -307,6 +345,10 @@ const AuditLogsList = ({ selectedIds = [], setSelectedIds, triggerBulkDelete }) 
                             direction="down"
                           />
                         </div>
+                      </div>
+                      <div className="detail-row">
+                        <span className="detail-label">VAI TRÒ</span>
+                        <span className="detail-value">{getRoleLabel(log.role)}</span>
                       </div>
                       <div className="detail-row">
                         <span className="detail-label">{t('audit.logs.table_ip')}</span>

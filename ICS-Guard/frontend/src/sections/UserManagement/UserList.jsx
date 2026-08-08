@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Edit2, Trash2, User, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
+import { jwtDecode } from 'jwt-decode';
 import ActionMenu from '@/components/ActionMenu';
 import VNoData from '@/components/VNoData';
 import VStatus from '@/components/VStatus';
@@ -19,18 +20,27 @@ const UserList = ({
   const { t } = useTranslation();
   const [expandedId, setExpandedId] = useState(null);
 
+  const token = localStorage.getItem('access_token');
+  let currentUserId = null;
+  try {
+    if (token) {
+      const payload = jwtDecode(token);
+      currentUserId = payload.id || payload.userId || payload._id;
+    }
+  } catch (e) {}
+
   const toggleExpand = (id) => {
     setExpandedId(expandedId === id ? null : id);
   };
 
   const getRoleLabel = (role) => {
     switch (role) {
-      case 'admin': return t('users.list.role_admin');
-      case 'analyst': return t('users.list.role_l1');
-      case 'hr_management': return 'HR Management';
-      case 'device_management': return 'Device Management';
-      case 'l2_responder': return t('users.list.role_l2');
-      case 'ot_operator': return t('users.list.role_ot');
+      case 'admin': return t('users.list.role_admin', 'Quản trị viên (Admin)');
+      case 'analyst': return t('users.list.role_l1', 'Chuyên viên phân tích');
+      case 'hr_management': return 'Quản lý nhân sự (HR)';
+      case 'device_management': return 'Quản lý thiết bị';
+      case 'l2_responder': return t('users.list.role_l2', 'L2 Responder');
+      case 'ot_operator': return t('users.list.role_ot', 'OT Operator');
       default: return role;
     }
   };
@@ -64,7 +74,6 @@ const UserList = ({
               <th>{t('users.list.table_fullname')}</th>
               <th>{t('users.list.table_email')}</th>
               <th>{t('users.list.table_role')}</th>
-              <th>{t('users.list.table_status')}</th>
               <th>Trạng thái TK</th>
               <th className="actions-col">{t('users.list.table_actions')}</th>
             </tr>
@@ -73,26 +82,36 @@ const UserList = ({
             {users.map((user, index) => {
               const id = user.id || user._id;
               const isSelected = selectedIds.includes(id);
-              const actions = [
-                { label: t('users.list.btn_edit'), icon: Edit2, onClick: () => onEdit(user) },
-                ...(user.deletion_pending || user.status === 'locked' ? [{ label: 'Khôi phục', icon: RotateCcw, onClick: () => onRestore && onRestore(id) }] : []),
-                { label: t('users.list.btn_delete'), icon: Trash2, danger: true, onClick: () => onDelete(id) }
-              ];
+              const isSelf = String(id) === String(currentUserId);
+              const isLocked = user.status === 'locked' || user.deletion_pending === true || user.is_active === false;
 
+              // Trạng thái đã khóa/chờ hủy: CHỈ có thao tác Khôi phục
+              const actions = isLocked
+                ? [{ label: 'Khôi phục tài khoản', icon: RotateCcw, onClick: () => onRestore && onRestore(id) }]
+                : [
+                    { label: t('users.list.btn_edit'), icon: Edit2, onClick: () => onEdit(user) },
+                    ...(!isSelf ? [{ label: t('users.list.btn_delete'), icon: Trash2, danger: true, onClick: () => onDelete(id) }] : [])
+                  ];
 
               return (
                 <tr key={id} className={isSelected ? 'selected-row' : ''}>
                   <td style={{ textAlign: 'center' }}>
                     <VCheckbox 
                       checked={isSelected}
+                      disabled={isSelf || isLocked}
                       onChange={(e) => onSelect(id, e.target.checked)}
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: isSelf || isLocked ? 'not-allowed' : 'pointer' }}
                     />
                   </td>
                   <td>
                     <div className="user-name" title={user.username}>
                       <User size={16} className="text-primary" style={{ flexShrink: 0 }} />
-                      <span className="truncate-text">{user.username}</span>
+                      <span className="truncate-text" style={{ fontWeight: isSelf ? 700 : 500 }}>{user.username}</span>
+                      {isSelf && (
+                        <span style={{ background: 'rgba(59, 130, 246, 0.18)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.35)', padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: 700, marginLeft: '6px', whiteSpace: 'nowrap' }}>
+                          [Bạn]
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td>
@@ -108,23 +127,17 @@ const UserList = ({
                     />
                   </td>
                   <td>
-                    <VStatus 
-                      status={user.is_active ? 'active' : 'inactive'} 
-                      label={user.is_active ? t('users.list.status_active') : t('users.list.status_inactive')} 
-                    />
-                  </td>
-                  <td>
-                    {user.status === 'locked' || user.deletion_pending ? (
+                    {isLocked ? (
                       <span className="user-account-badge user-account-badge--locked" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: '600' }}>
-                        🔴 Đã khóa / Chờ hủy
+                        Đã khóa / Chờ hủy
                       </span>
-                    ) : (user.username === 'admin' || user.is_activated === true) && user.is_active !== false && user.isFirstLogin === false ? (
+                    ) : (user.username === 'admin' || user.is_activated === true) || (user.is_active !== false && user.isFirstLogin === false) ? (
                       <span className="user-account-badge user-account-badge--active" style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.3)', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: '600' }}>
-                        🟢 Đã kích hoạt
+                        Đã kích hoạt
                       </span>
                     ) : (
                       <span className="user-account-badge user-account-badge--pending" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.3)', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: '600' }}>
-                        🔑 Chưa kích hoạt
+                        Chưa kích hoạt
                       </span>
                     )}
                   </td>
@@ -162,10 +175,15 @@ const UserList = ({
           const id = user.id || user._id;
           const isExpanded = expandedId === id;
           const isSelected = selectedIds.includes(id);
-          const actions = [
-            { label: t('users.list.btn_edit'), icon: Edit2, onClick: () => onEdit(user) },
-            { label: t('users.list.btn_delete'), icon: Trash2, danger: true, onClick: () => onDelete(id) }
-          ];
+          const isSelf = String(id) === String(currentUserId);
+          const isLocked = user.status === 'locked' || user.deletion_pending === true || user.is_active === false;
+
+          const actions = isLocked
+            ? [{ label: 'Khôi phục tài khoản', icon: RotateCcw, onClick: () => onRestore && onRestore(id) }]
+            : [
+                { label: t('users.list.btn_edit'), icon: Edit2, onClick: () => onEdit(user) },
+                ...(!isSelf ? [{ label: t('users.list.btn_delete'), icon: Trash2, danger: true, onClick: () => onDelete(id) }] : [])
+              ];
 
           return (
             <div className={`mobile-card ${isExpanded ? 'expanded' : ''} ${isSelected ? 'selected' : ''}`} key={id}>
@@ -174,11 +192,14 @@ const UserList = ({
                 <div className="col-checkbox" style={{ width: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <VCheckbox 
                     checked={isSelected}
+                    disabled={isSelf || isLocked}
                     onChange={(e) => onSelect(id, e.target.checked)}
-                    style={{ cursor: 'pointer' }}
+                    style={{ cursor: isSelf || isLocked ? 'not-allowed' : 'pointer' }}
                   />
                 </div>
-                <div className="col-id" onClick={() => toggleExpand(id)}><strong>{user.username}</strong></div>
+                <div className="col-id" onClick={() => toggleExpand(id)}>
+                  <strong>{user.username} {isSelf && '[Bạn]'}</strong>
+                </div>
                 <div className="col-title truncate-text" onClick={() => toggleExpand(id)}>{user.full_name}</div>
                 <div className="col-action" onClick={() => toggleExpand(id)}>
                   {isExpanded ? <ChevronUp size={20} className="expand-icon" /> : <ChevronDown size={20} className="expand-icon" />}
@@ -205,21 +226,14 @@ const UserList = ({
                     <span className="detail-value">{user.email || 'N/A'}</span>
                   </div>
                   <div className="detail-row">
-                    <span className="detail-label">{t('users.list.table_status')}</span>
-                    <span className="detail-value">
-                      <VStatus 
-                        status={user.is_active ? 'active' : 'inactive'} 
-                        label={user.is_active ? t('users.list.status_active') : t('users.list.status_inactive')} 
-                      />
-                    </span>
-                  </div>
-                  <div className="detail-row">
                     <span className="detail-label">Trạng thái TK</span>
                     <span className="detail-value">
-                      {user.isFirstLogin !== false ? (
-                        <span className="user-account-badge user-account-badge--pending">🔑 Chưa kích hoạt</span>
+                      {isLocked ? (
+                        <span className="user-account-badge user-account-badge--locked">Đã khóa / Chờ hủy</span>
+                      ) : user.isFirstLogin !== false ? (
+                        <span className="user-account-badge user-account-badge--pending">Chưa kích hoạt</span>
                       ) : (
-                        <span className="user-account-badge user-account-badge--active">✅ Đã kích hoạt</span>
+                        <span className="user-account-badge user-account-badge--active">Đã kích hoạt</span>
                       )}
                     </span>
                   </div>

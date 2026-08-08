@@ -86,9 +86,20 @@ export const ingestTelemetryLog = async (req, res) => {
   }
 
   try {
-    // Check if device exists in Mongo, if not register/log warning
-    const device = await Device.findById(device_id);
+    // Check if device exists in Mongo and if it has been approved
+    const device = await Device.findById(device_id).lean();
     const zone = device ? device.zone : 'unknown';
+
+    if (device) {
+      const isPending = device.approval_status === 'pending' || (device.status === 'unprovisioned' && device.approval_status !== 'approved');
+      const isDecommissioned = device.status === 'decommissioned' || device.approval_status === 'rejected';
+      if (isPending || isDecommissioned) {
+        return res.status(202).json({
+          status: 'pending_approval',
+          message: `Thiết bị ${device_id} đang ở trạng thái chờ duyệt hoặc đã ngưng hoạt động. Nhật ký thiết bị không được ghi nhận.`
+        });
+      }
+    }
 
     if (log_type === 'auth' && event === 'AUTH_FAILED') {
       const now = Date.now();
@@ -164,10 +175,10 @@ export const ingestTelemetryLog = async (req, res) => {
           });
         } else {
           console.log('[AlertRouter] No active Admins online. Sending notifications via Email and Telegram.');
-          const alertText = `🚨 *CRITICAL SECURITY ALERT: SSH BRUTE FORCE*\n\nDevice: *${device_id}*\nZone: *${zone}*\nAttacker IP: *${source_ip || 'unknown'}*\nAction: *IP Auto-Blocked*\nSeverity: *CRITICAL*`;
+          const alertText = `*CRITICAL SECURITY ALERT: SSH BRUTE FORCE*\n\nDevice: *${device_id}*\nZone: *${zone}*\nAttacker IP: *${source_ip || 'unknown'}*\nAction: *IP Auto-Blocked*\nSeverity: *CRITICAL*`;
           
           sendTelegramAlert(alertText, [
-            { text: `🚫 Cô lập thiết bị ${device_id}`, callback_data: `isolate_device:${device_id}` }
+            { text: `Cô lập thiết bị ${device_id}`, callback_data: `isolate_device:${device_id}` }
           ]).catch(err => console.error('[TelemetryController] Telegram send error:', err));
           
           sendEmailAlert({
@@ -235,6 +246,17 @@ export const controlAttackEndpoint = async (req, res) => {
 const processTelemetryLogEntry = async (entry) => {
   const { device_id, log_type, event, source_ip, username, timestamp, metrics, message } = entry;
   const zone = entry.zone || 'Default-Zone';
+
+  if (device_id) {
+    const device = await Device.findById(device_id).select('approval_status status').lean();
+    if (device) {
+      const isPending = device.approval_status === 'pending' || (device.status === 'unprovisioned' && device.approval_status !== 'approved');
+      const isDecommissioned = device.status === 'decommissioned' || device.approval_status === 'rejected';
+      if (isPending || isDecommissioned) {
+        return; // Device pending approval or decommissioned — drop log entry
+      }
+    }
+  }
 
   // Save physical infrastructure log to InfluxDB if it's not a software auth/audit log
   if (log_type !== 'auth' && log_type !== 'user_action' && log_type !== 'audit') {
@@ -380,9 +402,9 @@ const processTelemetryLogEntry = async (entry) => {
       if (activeAdmins.length > 0) {
         addEmergencyAlert({ device_id, attack_type: 'brute_force', admin_users: activeAdmins });
       } else {
-        const alertText = `🚨 *CRITICAL SECURITY ALERT: SSH BRUTE FORCE*\n\nDevice: *${device_id}*\nZone: *${zone}*\nAttacker IP: *${source_ip || 'unknown'}*\nAction: *IP Auto-Blocked*\nSeverity: *CRITICAL*`;
+        const alertText = `*CRITICAL SECURITY ALERT: SSH BRUTE FORCE*\n\nDevice: *${device_id}*\nZone: *${zone}*\nAttacker IP: *${source_ip || 'unknown'}*\nAction: *IP Auto-Blocked*\nSeverity: *CRITICAL*`;
         sendTelegramAlert(alertText, [
-          { text: `🚫 Cô lập thiết bị ${device_id}`, callback_data: `isolate_device:${device_id}` }
+          { text: `Cô lập thiết bị ${device_id}`, callback_data: `isolate_device:${device_id}` }
         ]).catch(() => {});
         
         sendEmailAlert({

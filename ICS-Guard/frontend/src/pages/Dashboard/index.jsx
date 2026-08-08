@@ -26,6 +26,8 @@ const Dashboard = () => {
   const [healthData, setHealthData] = useState([]);
   const [riskData, setRiskData] = useState({ averageRisk: 0, topDevices: [] });
   const [responseCase, setResponseCase] = useState(null);
+  const [activeIncidentsList, setActiveIncidentsList] = useState([]);
+  const [activeIncidentIndex, setActiveIncidentIndex] = useState(0);
   const [responseLoading, setResponseLoading] = useState(false);
   const [responseAction, setResponseAction] = useState('');
   const [activeCommand, setActiveCommand] = useState(null);
@@ -56,7 +58,7 @@ const Dashboard = () => {
     }
   };
 
-  const fetchResponseCase = async (options = {}) => {
+  const fetchResponseCase = async (options = {}, targetIndex = 0) => {
     const requestId = ++responseRequestRef.current;
 
     try {
@@ -70,24 +72,46 @@ const Dashboard = () => {
         per_page: 100
       }, options);
       const incidents = Array.isArray(incidentsRes?.data) ? incidentsRes.data : [];
-      const incident = incidents.find((item) =>
-        ['open', 'investigating'].includes(String(item?.status).toLowerCase())
-      );
+      const activeList = incidents.filter(item => {
+        const st = String(item?.status || '').toLowerCase();
+        if (['closed', 'resolved', 'remediated'].includes(st)) return false;
+        if (item?.is_fully_safe === true) return false;
+        return ['unassigned', 'pending', 'open', 'investigating'].includes(st);
+      });
 
-      if (!incident) {
+      // Sort: prioritize unassigned/pending (0) -> open (1) -> investigating (2), newest first
+      activeList.sort((a, b) => {
+        const orderMap = { unassigned: 0, pending: 0, open: 1, investigating: 2 };
+        const stA = orderMap[String(a?.status).toLowerCase()] ?? 3;
+        const stB = orderMap[String(b?.status).toLowerCase()] ?? 3;
+        if (stA !== stB) return stA - stB;
+        return new Date(b.createdAt || b.created_at || 0) - new Date(a.createdAt || a.created_at || 0);
+      });
+
+      setActiveIncidentsList(activeList);
+
+      if (activeList.length === 0) {
         if (mountedRef.current && requestId === responseRequestRef.current) {
           setResponseCase(null);
         }
         return null;
       }
 
+      const safeIndex = (targetIndex % activeList.length + activeList.length) % activeList.length;
+      setActiveIncidentIndex(safeIndex);
+      const incident = activeList[safeIndex];
+
       const incidentId = incident._id || incident.id;
       const details = await incidentApi.getById(incidentId, options);
       const detailPayload = details?.data || details;
       const detailedIncident = detailPayload?.incident || incident;
       const timeline = Array.isArray(detailPayload?.timeline) ? detailPayload.timeline : [];
-      const alert = Array.isArray(detailedIncident.alert_ids) ? detailedIncident.alert_ids[0] : null;
-      const deviceId = alert?.device_id || detailedIncident.device_id;
+      
+      // Extract alert object and device ID reliably
+      const alertObj = Array.isArray(detailedIncident.alert_ids) ? detailedIncident.alert_ids[0] : null;
+      const alert = (alertObj && typeof alertObj === 'object') ? alertObj : null;
+      const rawDevId = alert?.device_id || detailedIncident.device_id || (typeof alertObj === 'string' ? alertObj : null);
+      const deviceId = rawDevId || 'plc-water-01';
       let device = null;
 
       if (deviceId && deviceId !== 'dummy-device') {
@@ -506,6 +530,11 @@ const Dashboard = () => {
         onAiRemediation={handleAiRemediation}
         onRestore={handleRestoreDevice}
         onCloseIncident={handleCloseIncident}
+        onAcceptIncident={() => fetchResponseCase({ skipLoading: true }, activeIncidentIndex)}
+        onPrevIncident={activeIncidentsList.length > 1 ? () => fetchResponseCase({ skipLoading: true }, activeIncidentIndex - 1) : null}
+        onNextIncident={activeIncidentsList.length > 1 ? () => fetchResponseCase({ skipLoading: true }, activeIncidentIndex + 1) : null}
+        currentIndex={activeIncidentIndex}
+        totalIncidents={activeIncidentsList.length}
       />
     </div>
   );

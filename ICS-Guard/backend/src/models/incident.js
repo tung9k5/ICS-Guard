@@ -11,8 +11,8 @@ const incidentSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['open', 'investigating', 'remediated', 'closed'],
-    default: 'open',
+    enum: ['unassigned', 'pending', 'open', 'investigating', 'remediated', 'closed'],
+    default: 'unassigned',
     index: true,
   },
   severity: {
@@ -24,6 +24,19 @@ const incidentSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     default: null,
+  },
+  accepted_by: {
+    type: String,
+    default: null,
+  },
+  accepted_at: {
+    type: Date,
+    default: null,
+  },
+  is_fully_safe: {
+    type: Boolean,
+    default: false,
+    index: true,
   },
   alert_ids: [{
     type: mongoose.Schema.Types.ObjectId,

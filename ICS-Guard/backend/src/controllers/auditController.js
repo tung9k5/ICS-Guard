@@ -4,9 +4,20 @@ import { successResponse, errorResponse, paginatedResponse } from '../utils/resp
 
 export const getAuditLogs = async (req, res) => {
   try {
-    const { search, order, action, role, page = 1, per_page = 10 } = req.query;
+    const { search, order, action, role, from, to, page = 1, per_page = 10 } = req.query;
 
     let query = {};
+
+    // Filter by Date range
+    if (from || to) {
+      query.createdAt = {};
+      if (from) query.createdAt.$gte = new Date(from);
+      if (to) {
+        const toDate = new Date(to);
+        toDate.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = toDate;
+      }
+    }
 
     // Filter by action (exact match)
     if (action && action !== 'all') {
@@ -23,7 +34,7 @@ export const getAuditLogs = async (req, res) => {
       ];
     }
 
-    // Full-text search across username, action, ipAddress
+    // Full-text search across username, action, ipAddress, target_resource
     if (search) {
       const searchRegex = new RegExp(search, 'i');
       if (query.$or) {
@@ -32,6 +43,7 @@ export const getAuditLogs = async (req, res) => {
             { username: searchRegex },
             { action: searchRegex },
             { ipAddress: searchRegex },
+            { target_resource: searchRegex }
           ]
         }];
         delete query.$or;
@@ -40,6 +52,7 @@ export const getAuditLogs = async (req, res) => {
           { username: searchRegex },
           { action: searchRegex },
           { ipAddress: searchRegex },
+          { target_resource: searchRegex }
         ];
       }
     }
@@ -86,6 +99,14 @@ export const getAuditLogs = async (req, res) => {
         delete flatDetails.body;
       }
 
+      const targetResource = log.target_resource || 
+        log.details?.target_resource || 
+        log.details?.name || 
+        log.details?.deviceName || 
+        log.details?.username || 
+        log.details?.body?.email || 
+        'Hệ thống';
+
       return {
         id: log._id,
         userId: user ? user._id : log.userId,
@@ -93,6 +114,7 @@ export const getAuditLogs = async (req, res) => {
         email: user ? user.email : (log.details?.body?.email || ''),
         role: user ? user.role : 'System',
         action: log.action,
+        target_resource: targetResource,
         ipAddress: log.ipAddress,
         userAgent: log.userAgent,
         details: log.details,

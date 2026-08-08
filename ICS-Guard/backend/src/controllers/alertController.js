@@ -1,7 +1,8 @@
-import { Alert } from '../models/index.js';
+import { Alert, Incident } from '../models/index.js';
 import { formatPagination } from '../utils/pagination.js';
 import { successResponse, errorResponse, paginatedResponse } from '../utils/response.js';
 import { issueSecurityCommand } from '../services/commandService.js';
+import { generatePhysicalPcapFile } from '../utils/pcapGenerator.js';
 
 export const getAllAlerts = async (req, res) => {
   try {
@@ -53,11 +54,11 @@ export const getAlertById = async (req, res) => {
   try {
     const alert = await Alert.findById(req.params.id)
       .populate('incident_id', 'title status severity');
-    
+
     if (!alert) {
       return errorResponse(res, 'Alert not found', null, 404);
     }
-    
+
     return successResponse(res, alert, 'Alert retrieved successfully');
   } catch (error) {
     console.error('getAlertById error:', error);
@@ -68,8 +69,8 @@ export const getAlertById = async (req, res) => {
 export const updateAlertStatus = async (req, res) => {
   try {
     const { status } = req.body;
-    
-    const validStatuses = ['new', 'acknowledged', 'resolved', 'false_positive'];
+
+    const validStatuses = ['new', 'acknowledged', 'resolved', 'false_positive', 'escalated'];
     if (!status || !validStatuses.includes(status)) {
       return errorResponse(res, 'Invalid status provided', null, 400);
     }
@@ -78,6 +79,41 @@ export const updateAlertStatus = async (req, res) => {
     if (status === 'resolved' || status === 'false_positive') {
       updateData.resolved_at = new Date();
       updateData.resolved_by = req.user ? req.user.username : 'system';
+    } else if (status === 'escalated') {
+      const existingAlert = await Alert.findById(req.params.id);
+      if (existingAlert) {
+        const newIncident = await Incident.create({
+          title: `[ESCALATED] ${existingAlert.title || existingAlert.rule_name || 'Cảnh báo an ninh OT'}`,
+          description: existingAlert.description || `Sự cố được leo thang từ cảnh báo ID ${existingAlert._id}. IP Nguồn: ${existingAlert.source_ip || 'N/A'}.`,
+          status: 'unassigned',
+          severity: existingAlert.severity === 'CRITICAL' ? 'CRITICAL' : 'HIGH',
+          alert_ids: [existingAlert._id],
+          forensics_artifacts: []
+        });
+
+        // Generate real physical PCAP file on disk
+        try {
+          const pcapInfo = await generatePhysicalPcapFile(newIncident._id);
+          newIncident.forensics_artifacts.push({
+            name: pcapInfo.filename,
+            type: 'PCAP',
+            size: `${(pcapInfo.sizeBytes / 1024).toFixed(1)} KB`,
+            size_bytes: pcapInfo.sizeBytes,
+            sha256: pcapInfo.sha256,
+            path: pcapInfo.pcapPath,
+            filename: pcapInfo.filename,
+            download_url: `/api/incidents/${newIncident._id}/pcap?filename=${encodeURIComponent(pcapInfo.filename)}`,
+            captured_at: new Date()
+          });
+          await newIncident.save();
+        } catch (pcapErr) {
+          console.warn('[alertController] Failed to generate physical PCAP file:', pcapErr.message);
+        }
+
+        updateData.incident_id = newIncident._id;
+        updateData.resolved_at = new Date();
+        updateData.resolved_by = req.user ? req.user.username : 'system';
+      }
     } else {
       updateData.resolved_at = null;
       updateData.resolved_by = null;
@@ -103,11 +139,11 @@ export const updateAlertStatus = async (req, res) => {
 export const deleteAlert = async (req, res) => {
   try {
     const alert = await Alert.findByIdAndDelete(req.params.id);
-    
+
     if (!alert) {
       return errorResponse(res, 'Alert not found', null, 404);
     }
-    
+
     return successResponse(res, null, 'Alert deleted successfully');
   } catch (error) {
     console.error('deleteAlert error:', error);

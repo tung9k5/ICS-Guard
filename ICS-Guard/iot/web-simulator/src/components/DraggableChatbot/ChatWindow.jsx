@@ -6,7 +6,7 @@ import './ChatWindow.scss';
 const ChatWindow = ({ onClose }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState([
-    { id: 1, text: "👋 Mình là trợ lý AI sẵn sàng hỗ trợ bạn về hệ thống ICS-Guard. Bạn cần giúp gì?", sender: 'bot' }
+    { id: 1, text: "Mình là trợ lý AI sẵn sàng hỗ trợ bạn về hệ thống ICS-Guard. Bạn cần giúp gì?", sender: 'bot' }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);

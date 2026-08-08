@@ -1,6 +1,7 @@
 param(
     [switch]$UpdateDependencies,
     [switch]$InstallDependencies,
+    [switch]$ResetDb,
     [switch]$ResetDemoData,
     [switch]$RunTests,
     [switch]$SkipInfrastructure,
@@ -222,10 +223,10 @@ if (-not $SkipInfrastructure) {
     } else { Write-Ok 'Ollama da san sang tai cong 11434.' }
 }
 
-if ($ResetDemoData) {
-    Write-Step 'Reset va tao lai du lieu demo'
-    Invoke-Checked (Join-Path $ProjectRoot 'backend') 'npm' @('run', 'seed:demo:reset')
-    Write-Ok 'Du lieu demo da duoc tao lai.'
+if ($ResetDb -or $ResetDemoData) {
+    Write-Step 'Reset va lam sach Database (Gui nguyen Users va Devices)'
+    Invoke-Checked (Join-Path $ProjectRoot 'backend') 'npm' @('run', 'reset-db')
+    Write-Ok 'Database da duoc lam sach thanh cong.'
 }
 
 if ($RunTests) {
@@ -278,13 +279,13 @@ if ($backendReady -and $frontendReady -and $aiReady -and $webReady -and $hardwar
     Write-Host 'MOT SO DICH VU CHUA SAN SANG - KIEM TRA CUA SO LOG' -ForegroundColor Yellow
 }
 Write-Host '============================================================' -ForegroundColor Green
-Write-Host "Frontend:      http://localhost:$frontendPort" -ForegroundColor White
+Write-Host "Frontend SOC:  http://localhost:$frontendPort" -ForegroundColor White
 Write-Host "Backend API:   http://localhost:$backendPort" -ForegroundColor White
-Write-Host "Swagger:       http://localhost:$backendPort/docs" -ForegroundColor White
+Write-Host "Swagger Docs:  http://localhost:$backendPort/docs" -ForegroundColor White
 if (-not $SkipAiEngine) { Write-Host 'AI Engine:     http://localhost:5000/docs' -ForegroundColor White }
 if (-not $SkipWebSimulator) {
     Write-Host "Web Simulator: http://localhost:$webSimulatorPort" -ForegroundColor White
-    Write-Host "Web Attacker:  http://localhost:$webSimulatorPort/attacker/login" -ForegroundColor White
+    Write-Host "Web Attacker:  http://localhost:$webSimulatorPort/attacker-console" -ForegroundColor White
 }
 if (-not $SkipHardwareBff) {
     Write-Host "Hardware BFF:  http://localhost:$hardwareBffPort" -ForegroundColor White
@@ -293,12 +294,11 @@ if (-not $SkipAttackAdapter) {
     Write-Host "Attack Adapter:http://localhost:$attackAdapterPort" -ForegroundColor White
 }
 
-Write-Host "`nTai khoan: admin_user | analyst_user | hr_management_user | device_management_user" -ForegroundColor Gray
-Write-Host 'Mat khau: gia tri DEMO_USER_PASSWORD trong .env (mac dinh seed: Demo@12345)' -ForegroundColor Gray
-Write-Host "`nLan chay thong thuong:" -ForegroundColor Cyan
+Write-Host "`nTai khoan mac dinh: admin | analyst | hr_management | device_management" -ForegroundColor Gray
+Write-Host 'Mat khau mac dinh: Admin123! (Hoac mat khau thiet lap tai buoc Onboarding)' -ForegroundColor Gray
+Write-Host "`nLan chay khoi dong thong thuong (Khong reset DB):" -ForegroundColor Cyan
 Write-Host '  .\scripts\run_local.ps1' -ForegroundColor Gray
-Write-Host 'Sau khi package/requirements thay doi:' -ForegroundColor Cyan
-Write-Host '  .\scripts\run_local.ps1 -UpdateDependencies' -ForegroundColor Gray
-Write-Host 'Reset data va test truoc buoi bao ve:' -ForegroundColor Cyan
-Write-Host '  .\scripts\run_local.ps1 -ResetDemoData -RunTests' -ForegroundColor Gray
+Write-Host 'Neu muon reset Database ve trang thai sach (Giua Users & Devices):' -ForegroundColor Cyan
+Write-Host '  .\scripts\run_local.ps1 -ResetDb' -ForegroundColor Gray
+Write-Host 'Hoac chay truc tiep tai backend: npm run reset-db' -ForegroundColor Gray
 Write-Host "`nNhan Ctrl+C trong tung cua so dich vu de dung du an." -ForegroundColor Yellow

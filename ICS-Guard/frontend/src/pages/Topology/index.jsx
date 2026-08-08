@@ -65,32 +65,59 @@ const Topology = () => {
         else zones['Zone-A'].push(d);
       });
 
-      const zoneXOffsets = {
-        'Zone-A': 50,
-        'Zone-B': 950,
-        'Zone-C': 1850,
-        'Other': 2750
-      };
+      const CM_2_PX = 76; // 2cm in CSS pixels (1cm ≈ 37.8px)
+      const NODE_W = 180;
+      const NODE_H = 76;
+      const H_STEP = NODE_W + CM_2_PX; // 256px -> 76px edge-to-edge gap between adjacent nodes
+      const V_STEP = NODE_H + CM_2_PX; // 152px -> 76px edge-to-edge gap between rows
+
+      let currentZoneX = CM_2_PX;
 
       Object.entries(zones).forEach(([zoneKey, items]) => {
         if (items.length === 0) return;
-        const baseX = zoneXOffsets[zoneKey] || 50;
 
-        // Separate Gateways (roots) and leaf devices
         const roots = items.filter(i => !i.parent_id || i.type === 'Gateway');
         const children = items.filter(i => i.parent_id && i.type !== 'Gateway');
 
-        // Place roots at top
+        const rootCols = Math.max(1, roots.length);
+        const childCols = Math.min(4, Math.max(1, children.length));
+        const numCols = Math.max(rootCols, childCols);
+        const childRows = Math.ceil(children.length / 4);
+
+        const zoneInnerWidth = numCols * NODE_W + (numCols - 1) * CM_2_PX;
+        const zoneWidth = CM_2_PX + zoneInnerWidth + CM_2_PX;
+        const zoneHeaderHeight = 40;
+
+        const rootY = CM_2_PX + zoneHeaderHeight; // Top margin 76px (2cm) under header
+        const childrenStartY = roots.length > 0 ? rootY + NODE_H + CM_2_PX : rootY;
+        const zoneHeight = rootY + (roots.length > 0 ? NODE_H + CM_2_PX : 0) + (childRows > 0 ? childRows * NODE_H + (childRows - 1) * CM_2_PX : 0) + CM_2_PX;
+
+        const groupId = `group-${zoneKey}`;
+        newNodes.push({
+          id: groupId,
+          type: 'group',
+          data: { label: zoneKey },
+          position: { x: currentZoneX, y: CM_2_PX },
+          style: {
+            width: zoneWidth,
+            height: zoneHeight,
+            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+            border: '2px dashed rgba(59, 130, 246, 0.4)',
+            borderRadius: '12px',
+          }
+        });
+
         roots.forEach((r, idx) => {
           newNodes.push({
             id: r._id || r.id,
             type: 'custom',
-            position: { x: baseX + (idx * 240), y: 50 },
+            parentNode: groupId,
+            extent: 'parent',
+            position: { x: CM_2_PX + idx * H_STEP, y: rootY },
             data: { label: r.name, ip: r.ipAddress || r.ip_address, zone: r.zone, status: r.status, icon: <Network size={20} /> }
           });
         });
 
-        // Place children in a clean grid below
         children.forEach((c, idx) => {
           const row = Math.floor(idx / 4);
           const col = idx % 4;
@@ -98,7 +125,9 @@ const Topology = () => {
           newNodes.push({
             id,
             type: 'custom',
-            position: { x: baseX + (col * 210), y: 200 + (row * 140) },
+            parentNode: groupId,
+            extent: 'parent',
+            position: { x: CM_2_PX + col * H_STEP, y: childrenStartY + row * V_STEP },
             data: { 
               label: c.name, 
               ip: c.ipAddress || c.ip_address, 
@@ -119,6 +148,8 @@ const Topology = () => {
             });
           }
         });
+
+        currentZoneX += zoneWidth + CM_2_PX; // 2cm (76px) gap between zone boxes
       });
 
       setNodes(newNodes);

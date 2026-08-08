@@ -337,6 +337,7 @@ class RuntimeEngine:
             )
             if (
                 device.get("operational_status", "active") not in INACTIVE_STATUSES
+                and device.get("approval_status", "approved") == "approved"
                 and device_id not in self.running_devices
                 and self.loop
             ):
@@ -370,6 +371,8 @@ class RuntimeEngine:
                 return False
             if device.get("operational_status", "active") in INACTIVE_STATUSES:
                 return False
+            if device.get("approval_status", "approved") != "approved":
+                return False
             current = device.get("parent_id")
         return True
 
@@ -378,6 +381,9 @@ class RuntimeEngine:
         try:
             while device_id in self.devices:
                 device = self.devices[device_id]
+                if device.get("approval_status", "approved") != "approved":
+                    await asyncio.sleep(5)
+                    continue
                 if not self.is_device_reachable(device_id):
                     await asyncio.sleep(5)
                     continue
@@ -1100,7 +1106,9 @@ class RuntimeEngine:
         await self.reconcile_inventory()
 
         service_key = (
-            os.getenv("HARDWARE_SERVICE_KEY")
+            os.getenv("HARDWARE_RUNTIME_SERVICE_KEY")
+            or os.getenv("ATTACK_RUNTIME_SERVICE_KEY")
+            or os.getenv("HARDWARE_SERVICE_KEY")
             or os.getenv("INTERNAL_SERVICE_KEY")
             or os.getenv("SIMULATOR_API_KEY")
         )

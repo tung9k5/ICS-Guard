@@ -40,43 +40,11 @@ export default {
       method: 'POST',
       data: {
         device_id: deviceId,
+        target_id: deviceId,
         attack_type: attackType,
+        scenario_id: attackType,
       },
       ...options
     });
   },
-
-  getRun(runId, options = {}) {
-    return attackApi({
-      url: `/attacks/runs/${runId}`,
-      method: 'GET',
-      ...options
-    });
-  },
-
-  stopRun(runId, options = {}) {
-    return attackApi({
-      url: `/attacks/runs/${runId}/stop`,
-      method: 'POST',
-      data: {},
-      ...options
-    });
-  },
-
-  killSwitch(options = {}) {
-    return attackApi({
-      url: '/attacks/kill-switch',
-      method: 'POST',
-      data: {},
-      ...options
-    });
-  },
-
-  deleteDevice() {
-    return Promise.reject(new Error('Attack targets are runtime-owned and cannot be deleted here'));
-  },
-
-  bulkDeleteDevices() {
-    return Promise.reject(new Error('Attack targets are runtime-owned and cannot be deleted here'));
-  }
 };

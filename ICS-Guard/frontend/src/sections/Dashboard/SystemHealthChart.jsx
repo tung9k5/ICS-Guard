@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
-const COLORS = ['var(--green-500)', 'var(--amber-500)', 'var(--red-500)'];
+const SYSTEM_HEALTH_COLORS = ['#22c55e', '#f97316', '#8b5cf6'];
 
 const SystemHealthChart = ({ rawData = [] }) => {
   const { t } = useTranslation();
@@ -31,7 +31,7 @@ const SystemHealthChart = ({ rawData = [] }) => {
             dataKey="value"
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              <Cell key={`cell-${index}`} fill={SYSTEM_HEALTH_COLORS[index % SYSTEM_HEALTH_COLORS.length]} />
             ))}
           </Pie>
           <Tooltip 

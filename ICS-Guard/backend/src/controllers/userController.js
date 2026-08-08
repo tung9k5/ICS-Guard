@@ -10,9 +10,7 @@ export const getAllUsers = async (req, res) => {
     const { search, status, order, role, page = 1, per_page = 10 } = req.query;
 
     let query = {};
-    if (req.user && req.user.id) {
-      query._id = { $ne: req.user.id };
-    }
+
     if (search) {
       const searchRegex = new RegExp(search, 'i');
       query.$or = [
@@ -23,7 +21,22 @@ export const getAllUsers = async (req, res) => {
     }
 
     if (status) {
-      if (status === 'active' || status === 'true') {
+      if (status === 'activated') {
+        query.isFirstLogin = false;
+        query.is_active = true;
+        query.deletion_pending = { $ne: true };
+        query.status = { $ne: 'locked' };
+      } else if (status === 'pending') {
+        query.isFirstLogin = true;
+        query.deletion_pending = { $ne: true };
+        query.status = { $ne: 'locked' };
+      } else if (status === 'locked') {
+        query.$or = [
+          { status: 'locked' },
+          { deletion_pending: true },
+          { is_active: false }
+        ];
+      } else if (status === 'active' || status === 'true') {
         query.is_active = true;
       } else if (status === 'inactive' || status === 'false') {
         query.is_active = false;
@@ -57,7 +70,7 @@ export const getAllUsers = async (req, res) => {
     return paginatedResponse(res, paginated.data, paginated.pagination, 'Lấy danh sách người dùng thành công');
   } catch (error) {
     console.error('GetAllUsers error:', error);
-    return errorResponse(res, 'Failed to retrieve users', error.message);
+    return errorResponse(res, 'Failed to retrieve users', error.message, 500);
   }
 };
 
@@ -71,7 +84,7 @@ export const getUserById = async (req, res) => {
     return successResponse(res, user, 'Lấy thông tin người dùng thành công');
   } catch (error) {
     console.error('GetUserById error:', error);
-    return errorResponse(res, 'Failed to retrieve user', error.message);
+    return errorResponse(res, 'Failed to retrieve user', error.message, 500);
   }
 };
 
@@ -79,39 +92,44 @@ export const createUser = async (req, res) => {
   const { username, password, role, email, full_name, contactInfo, isAlertEnabled } = req.body;
 
   if (!email || !role) {
-    return errorResponse(res, 'Email and role are required', null, 400);
+    return errorResponse(res, 'Email và vai trò là bắt buộc', null, 400);
   }
 
   try {
+    const cleanEmail = email.trim().toLowerCase();
+
     // Check if email already exists
-    const existingEmail = await User.findOne({ email });
+    const existingEmail = await User.findOne({ email: cleanEmail });
     if (existingEmail) {
-      return errorResponse(res, 'Email already exists', null, 409);
+      return errorResponse(res, 'Email này đã tồn tại trong hệ thống', null, 409);
     }
 
     if (!['admin', 'hr_management', 'device_management', 'analyst'].includes(role)) {
-      return res.status(400).json({ error: 'Bad Request', message: 'Invalid role. Must be admin, hr_management, device_management, or analyst.' });
+      return errorResponse(res, 'Lỗi vai trò không hợp lệ', null, 400);
     }
 
-    // Generate username from email if not supplied
-    let finalUsername = username;
+    // Generate username from email if not supplied, append random suffix if collided
+    let finalUsername = username ? username.trim() : '';
     if (!finalUsername) {
-      let baseUsername = email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+      let baseUsername = cleanEmail.split('@')[0].replace(/[^a-z0-9]/g, '');
+      if (!baseUsername) baseUsername = 'user';
       finalUsername = baseUsername;
-      let counter = 1;
-      while (await User.findOne({ username: finalUsername })) {
-        finalUsername = `${baseUsername}${counter}`;
-        counter++;
+      let existing = await User.findOne({ username: finalUsername });
+      while (existing) {
+        const suffix = Math.random().toString(36).substring(2, 6);
+        finalUsername = `${baseUsername}_${suffix}`;
+        existing = await User.findOne({ username: finalUsername });
       }
     } else {
-      const existingUser = await User.findOne({ username: finalUsername });
-      if (existingUser) {
-        return errorResponse(res, 'Username already exists', null, 409);
+      let existing = await User.findOne({ username: finalUsername });
+      if (existing) {
+        const suffix = Math.random().toString(36).substring(2, 6);
+        finalUsername = `${finalUsername}_${suffix}`;
       }
     }
 
     // Generate strong temporary password if not supplied
-    let finalPassword = password;
+    let finalPassword = password ? password.trim() : '';
     let generatedTempPassword = null;
     let isFirstLogin = true;
 
@@ -130,23 +148,29 @@ export const createUser = async (req, res) => {
     const newUser = await User.create({
       username: finalUsername,
       password_hash: passwordHash,
-      email,
-      full_name: full_name || '',
+      email: cleanEmail,
+      full_name: full_name ? full_name.trim() : '',
       role,
       is_active: true,
+      status: 'active',
       isFirstLogin,
+      temp_password_plain: isFirstLogin ? (generatedTempPassword || finalPassword) : null,
       contactInfo: contactInfo || { telegramChatId: null, telegramUsername: null, phoneNumber: null },
       isAlertEnabled: isAlertEnabled !== undefined ? isAlertEnabled : true
     });
 
     const userResponse = {
       _id: newUser._id,
+      id: newUser._id,
       username: newUser.username,
       email: newUser.email,
       full_name: newUser.full_name,
       role: newUser.role,
       is_active: newUser.is_active,
+      status: newUser.status,
       isFirstLogin: newUser.isFirstLogin,
+      temp_password_plain: newUser.temp_password_plain,
+      tempPassword: generatedTempPassword,
       contactInfo: newUser.contactInfo,
       isAlertEnabled: newUser.isAlertEnabled,
       createdAt: newUser.createdAt,
@@ -158,14 +182,10 @@ export const createUser = async (req, res) => {
       io.emit('USER_SYNC', { action: 'create', user: userResponse });
     }
 
-    if (generatedTempPassword) {
-      userResponse.tempPassword = generatedTempPassword;
-    }
-
     return successResponse(res, userResponse, 'Thêm người dùng mới thành công', 201);
   } catch (error) {
     console.error('CreateUser error:', error);
-    return errorResponse(res, 'Failed to create user', error.message);
+    return errorResponse(res, 'Không thể tạo người dùng mới: ' + error.message, error.message, 500);
   }
 };
 
@@ -181,7 +201,7 @@ export const updateUser = async (req, res) => {
 
     if (role !== undefined) {
       if (!['admin', 'hr_management', 'device_management', 'analyst'].includes(role)) {
-        return res.status(400).json({ error: 'Bad Request', message: 'Invalid role.' });
+        return errorResponse(res, 'Invalid role.', null, 400);
       }
       user.role = role;
     }
@@ -228,7 +248,7 @@ export const updateUser = async (req, res) => {
     return res.status(200).json({ message: 'User updated successfully.', user: updatedUser });
   } catch (error) {
     console.error('UpdateUser error:', error);
-    return errorResponse(res, 'Failed to update user', error.message);
+    return errorResponse(res, 'Failed to update user', error.message, 500);
   }
 };
 
@@ -242,13 +262,12 @@ export const deleteUser = async (req, res) => {
       return errorResponse(res, 'User not found', null, 404);
     }
 
-    // Prevent admin from deleting themselves
     if (req.user && req.user.id === user._id.toString()) {
       return errorResponse(res, 'You cannot delete your own account', null, 400);
     }
 
-    // Pending/unverified users or force hard-delete
-    if (user.status === 'pending' || force === 'true') {
+    // Direct hard-delete for unprovisioned users (isFirstLogin === true)
+    if (user.isFirstLogin === true || user.status === 'pending' || force === 'true') {
       backupDeletedUser(user._id.toString(), user.toObject());
       await user.deleteOne();
 
@@ -256,10 +275,16 @@ export const deleteUser = async (req, res) => {
       if (io) {
         io.emit('USER_SYNC', { action: 'delete', userId: id });
       }
-      return res.status(200).json({ message: 'Tài khoản đã được xóa vĩnh viễn.' });
+
+      // Send Telegram alert notification
+      const adminUsername = req.user ? req.user.username : 'Admin';
+      sendTelegramAlert(
+        `🗑️ [THÔNG BÁO XÓA TÀI KHOẢN]\n\nQuản trị viên *${adminUsername}* đã xóa vĩnh viễn tài khoản *${user.username}* (${user.email} - Vai trò: ${user.role}).`
+      );
+
+      return res.status(200).json({ message: 'Tài khoản chưa kích hoạt đã được xóa vĩnh viễn.' });
     }
 
-    // Active user: 2-step soft delete (lock account & wait 7 days for confirmation)
     user.status = 'locked';
     user.is_active = false;
     user.deletion_pending = true;
@@ -268,7 +293,6 @@ export const deleteUser = async (req, res) => {
     user.deletion_requested_by = req.user ? req.user.username : 'Admin';
     await user.save();
 
-    // Instantly revoke all refresh tokens for this user
     await RefreshToken.updateMany({ userId: user._id }, { revoked: true });
 
     const io = socketService.getIo();
@@ -278,37 +302,59 @@ export const deleteUser = async (req, res) => {
     }
     socketService.disconnectUserSockets(id);
 
-    // Send Telegram notification to target user if chat ID exists
+    // Fetch Deleter (Person A) info for targeted Telegram confirmation
+    const deleterId = req.user ? req.user.id : null;
+    let deleterChatId = null;
+    let adminUsername = 'Admin';
+
+    if (deleterId) {
+      const deleterObj = await User.findById(deleterId);
+      if (deleterObj) {
+        adminUsername = deleterObj.username;
+        deleterChatId = deleterObj.contactInfo?.telegramChatId || null;
+      }
+    }
+
+    const inlineButtons = [
+      { text: '❌ Xác Nhận Xóa Ngay', callback_data: `confirm_delete_user:${user._id}` },
+      { text: '🔄 Khôi Phục Tài Khoản', callback_data: `restore_user:${user._id}` }
+    ];
+
+    const deleterConfirmMsg = 
+      `🔒 [YÊU CẦU XÁC NHẬN XÓA TÀI KHOẢN]\n\n` +
+      `Kính gửi Quản trị viên *${adminUsername}*,\n` +
+      `Bạn vừa thực hiện vô hiệu hóa tài khoản *${user.username}* (${user.email}) và đưa vào danh sách đệm chờ hủy 7 ngày.\n\n` +
+      `⏰ HƯỚNG DẪN THAO TÁC XÁC NHẬN:\n` +
+      `- Bấm *[Xác Nhận Xóa Ngay]* bên dưới nếu muốn xóa vĩnh viễn tài khoản này ngay lập tức.\n` +
+      `- Bấm *[Khôi Phục Tài Khoản]* nếu muốn hủy thao tác.\n` +
+      `- Nếu KHÔNG bấm: Hệ thống sẽ tự động xóa vĩnh viễn sau 7 ngày.`;
+
+    // 1. Gửi thông báo xác nhận kèm nút bấm TRỰC TIẾP TỚI TELEGRAM CỦA NGƯỜI XÓA (Person A)
+    if (deleterChatId) {
+      sendTelegramAlert(deleterConfirmMsg, inlineButtons, deleterChatId);
+    } else {
+      // Fallback về kênh Telegram chung nếu Người xóa chưa cài đặt Telegram Chat ID cá nhân
+      sendTelegramAlert(deleterConfirmMsg, inlineButtons);
+    }
+
+    // 2. Gửi thông báo vô hiệu hóa TRỰC TIẾP TỚI TELEGRAM CỦA NGƯỜI BỊ XÓA (Person B)
     if (user.contactInfo?.telegramChatId) {
       sendTelegramAlert(
-        `⚠️ *THÔNG BÁO TÀI KHOẢN VÔ HIỆU HÓA*\n\nTài khoản *${user.username}* của bạn đã bị tạm thời vô hiệu hóa bởi Quản trị viên. Phiên làm việc của bạn sẽ kết thúc sau 60 giây.`,
+        `🚨 [THÔNG BÁO TÀI KHOẢN CỦA BẠN ĐÃ BỊ VÔ HIỆU HÓA]\n\n` +
+        `Kính gửi *${user.full_name || user.username}*,\n` +
+        `Tài khoản *${user.username}* (${user.email}) của bạn vừa bị Quản trị viên *${adminUsername}* vô hiệu hóa và chuyển vào danh sách chờ hủy 7 ngày.\n\n` +
+        `⚠️ Phiên làm việc của bạn trên toàn hệ thống đã bị hủy bỏ ngay lập tức.`,
         [],
         user.contactInfo.telegramChatId
       );
     }
 
-    // Send/update batch approval message to Admin Telegram
-    const operator = req.user ? await User.findById(req.user.id) : null;
-    const adminChatId = operator?.contactInfo?.telegramChatId || process.env.TELEGRAM_CHAT_ID;
-
-    if (adminChatId) {
-      const pendingUsers = await User.find({ deletion_pending: true });
-      const pendingNames = pendingUsers.map(u => u.username).join(', ');
-      const alertMsg = `⚠️ *YÊU CẦU XÁC NHẬN XÓA TÀI KHOẢN (${pendingUsers.length})*\n\nTài khoản mới yêu cầu xóa: *${user.username}*\nDanh sách chờ xóa (${pendingUsers.length}): ${pendingNames}\nNgười thực hiện: *${req.user ? req.user.username : 'Admin'}*\nHạn xác nhận: 7 ngày (Tự động khôi phục nếu không xác nhận).\n\nNhấn nút bên dưới để xác nhận xóa:`;
-      const inlineButtons = [
-        { text: `✅ Xác Nhận Xóa Tất Cả (${pendingUsers.length})`, callback_data: `confirm_bulk_delete:${pendingUsers.length}` },
-        { text: '🔄 Hủy lệnh xóa mới nhất', callback_data: `undo_delete:${user._id.toString()}` }
-      ];
-      await sendTelegramAlert(alertMsg, inlineButtons, adminChatId);
-    }
-
     return res.status(200).json({ message: 'Tài khoản đã chuyển sang trạng thái chờ hủy trong 7 ngày và bị khóa tạm thời.', user });
   } catch (error) {
     console.error('DeleteUser error:', error);
-    return errorResponse(res, 'Failed to delete user', error.message);
+    return errorResponse(res, 'Failed to delete user', error.message, 500);
   }
 };
-
 
 export const deleteMultipleUsers = async (req, res) => {
   const { ids } = req.body;
@@ -318,38 +364,45 @@ export const deleteMultipleUsers = async (req, res) => {
   }
 
   try {
-    // Prevent admin from deleting themselves in bulk
     if (req.user && ids.includes(req.user.id)) {
       return errorResponse(res, 'Bạn không thể tự xóa tài khoản của chính mình', null, 400);
     }
 
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-    const result = await User.updateMany(
-      { _id: { $in: ids } },
-      {
-        $set: {
-          status: 'locked',
-          is_active: false,
-          deletion_pending: true,
-          deletion_requested_at: new Date(),
-          deletion_expires_at: expiresAt,
-          deletion_requested_by: req.user ? req.user.username : 'Admin'
-        }
-      }
-    );
+    const usersToDelete = await User.find({ _id: { $in: ids } });
+    const pendingUserIds = usersToDelete.filter(u => u.isFirstLogin === true || u.status === 'pending').map(u => u._id);
+    const activeUserIds = usersToDelete.filter(u => u.isFirstLogin !== true && u.status !== 'pending').map(u => u._id);
 
-    // Instantly revoke refresh tokens for all affected users
-    await RefreshToken.updateMany({ userId: { $in: ids } }, { revoked: true });
+    if (pendingUserIds.length > 0) {
+      await User.deleteMany({ _id: { $in: pendingUserIds } });
+    }
+
+    if (activeUserIds.length > 0) {
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      await User.updateMany(
+        { _id: { $in: activeUserIds } },
+        {
+          $set: {
+            status: 'locked',
+            is_active: false,
+            deletion_pending: true,
+            deletion_requested_at: new Date(),
+            deletion_expires_at: expiresAt,
+            deletion_requested_by: req.user ? req.user.username : 'Admin'
+          }
+        }
+      );
+      await RefreshToken.updateMany({ userId: { $in: activeUserIds } }, { revoked: true });
+    }
 
     const io = socketService.getIo();
     if (io) {
       ids.forEach(id => io.emit('ACCOUNT_STATUS_CHANGED', { userId: id, status: 'locked', is_active: false }));
     }
 
-    return successResponse(res, { modifiedCount: result.modifiedCount }, `Đã chuyển ${result.modifiedCount} tài khoản vào danh sách chờ hủy 7 ngày`);
+    return successResponse(res, { modifiedCount: ids.length }, `Đã xử lý xóa ${ids.length} tài khoản.`);
   } catch (error) {
     console.error('DeleteMultipleUsers error:', error);
-    return errorResponse(res, 'Lỗi khi xóa danh sách người dùng', error.message);
+    return errorResponse(res, 'Lỗi khi xóa danh sách người dùng', error.message, 500);
   }
 };
 
@@ -406,7 +459,7 @@ export const restoreUser = async (req, res) => {
     return successResponse(res, user, 'Khôi phục tài khoản thành công');
   } catch (error) {
     console.error('RestoreUser error:', error);
-    return errorResponse(res, 'Không thể khôi phục tài khoản', error.message);
+    return errorResponse(res, 'Không thể khôi phục tài khoản', error.message, 500);
   }
 };
 
@@ -416,9 +469,55 @@ export const getPendingDeletions = async (req, res) => {
     return successResponse(res, users, 'Lấy danh sách chờ xác nhận xóa thành công');
   } catch (error) {
     console.error('GetPendingDeletions error:', error);
-    return errorResponse(res, 'Lỗi lấy danh sách chờ xóa', error.message);
+    return errorResponse(res, 'Lỗi lấy danh sách chờ xóa', error.message, 500);
   }
 };
+
+// ----------------------------------------------------
+// Dọn dẹp tự động các tài khoản hết hạn 7 ngày chờ hủy
+// ----------------------------------------------------
+export const cleanupExpiredUsers = async () => {
+  try {
+    const expiredUsers = await User.find({
+      deletion_pending: true,
+      deletion_expires_at: { $lte: new Date() }
+    });
+
+    if (expiredUsers.length > 0) {
+      console.log(`[AutoCleanup] Tìm thấy ${expiredUsers.length} tài khoản hết hạn 7 ngày chờ hủy. Tiến hành xóa vĩnh viễn...`);
+      for (const u of expiredUsers) {
+        const username = u.username;
+        const email = u.email;
+        const targetTelegramId = u.contactInfo?.telegramChatId;
+        await u.deleteOne();
+
+        // 1. Broadcast to SOC
+        sendTelegramAlert(
+          `🗑️ [HỆ THỐNG TỰ ĐỘNG XÓA VĨNH VIỄN 7 NGÀY]\n\nTài khoản *${username}* (${email}) đã hết 7 ngày chờ hủy và đã được hệ thống tự động xóa vĩnh viễn khỏi Database.`
+        );
+
+        // 2. Direct notification to Target User (Person B)
+        if (targetTelegramId) {
+          sendTelegramAlert(
+            `⛔ [THÔNG BÁO XÓA TÀI KHOẢN VĨNH VIỄN SAU 7 NGÀY]\n\n` +
+            `Kính gửi *${u.full_name || username}*,\n` +
+            `Tài khoản *${username}* (${email}) của bạn đã hết 7 ngày chờ hủy và vừa được hệ thống tự động XÓA VĨNH VIỄN khỏi cơ sở dữ liệu.`,
+            [],
+            targetTelegramId
+          );
+        }
+      }
+    }
+  } catch (err) {
+    console.error('[AutoCleanup] Lỗi dọn dẹp tài khoản chờ hủy hết hạn:', err);
+  }
+};
+
+// Chạy dọn dẹp mỗi 1 giờ
+const cleanupInterval = setInterval(cleanupExpiredUsers, 60 * 60 * 1000);
+if (cleanupInterval.unref) {
+  cleanupInterval.unref();
+}
 
 export default {
   getAllUsers,
@@ -430,5 +529,5 @@ export default {
   updateProfile,
   restoreUser,
   getPendingDeletions,
+  cleanupExpiredUsers,
 };
-

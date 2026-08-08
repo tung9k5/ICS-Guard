@@ -24,6 +24,8 @@ import { connectQueue } from './services/queueService.js';
 import { connectMqtt } from './services/mqttService.js';
 import { initInflux } from './services/influxService.js';
 import { initSocket } from './services/socketService.js';
+import { decayRiskScores, checkAndUpdateAgingAdvisory } from './services/riskService.js';
+import cron from 'node-cron';
 
 // Routes
 import authRoutes from './routes/authRoutes.js';
@@ -76,7 +78,7 @@ app.use(ipBlockMiddleware);
 // 1.5 Rate Limiting (Redis-based)
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // Limit each IP to 200 requests per windowMs
+  max: 10000, // Allow up to 10,000 requests per 15 minutes for real-time OT monitoring
   message: { error: 'TooManyRequests', message: 'Quá nhiều truy vấn từ IP của bạn, vui lòng thử lại sau 15 phút.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -196,16 +198,29 @@ const startServer = async () => {
   } catch (err) {
     console.warn('[Bootstrap] Queue connection warning: RabbitMQ might be starting up in Docker. Worker will try auto-reconnecting...');
   }
-  
+
   // Initialize Telegram Bot
   initTelegramBot();
 
   // Initialize Socket.io service
   initSocket(server);
 
+  // === Background Cron Jobs ===
+  // Every 48h: decay risk scores by 1 point for all approved devices
+  cron.schedule('0 0 */2 * *', async () => {
+    console.log('[Cron] Running 48h risk score decay...');
+    await decayRiskScores();
+  });
+
+  // Daily at 01:00 AM: check aging advisories for all devices
+  cron.schedule('0 1 * * *', async () => {
+    console.log('[Cron] Running daily aging advisory check...');
+    await checkAndUpdateAgingAdvisory();
+  });
+
   server.listen(PORT, () => {
     console.log(`\n=============================================================`);
-    console.log(`🛡️  ICS-GUARD SECURITY API RUNNING ON PORT ${PORT}  🛡️`);
+    console.log(`[ICS-GUARD] SECURITY API RUNNING ON PORT ${PORT}`);
     console.log(`Database (MongoDB): ${process.env.MONGO_URI || 'mongodb://localhost:27017/ics_guard'}`);
     console.log(`Time: ${new Date().toLocaleString()}`);
     console.log(`=============================================================\n`);

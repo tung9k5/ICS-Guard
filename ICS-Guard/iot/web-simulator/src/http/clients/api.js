@@ -17,7 +17,7 @@ const getAuthKeys = () => {
   return {
     accessTokenKey: isAttacker ? 'attacker_access_token' : 'access_token',
     refreshTokenKey: isAttacker ? 'attacker_refresh_token' : 'refresh_token',
-    loginUrl: isAttacker ? '/attacker/login' : '/login',
+    loginUrl: isAttacker ? '/attacker' : '/login',
   };
 };
 

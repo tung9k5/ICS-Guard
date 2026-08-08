@@ -70,6 +70,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  temp_password_plain: {
+    type: String,
+    default: null,
+  },
   contactInfo: {
     telegramChatId: {
       type: String,

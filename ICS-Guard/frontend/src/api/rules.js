@@ -69,5 +69,14 @@ export default {
       params,
       ...options
     });
+  },
+
+  syncRuleTemplates(data = {}, options = {}) {
+    return http({
+      url: '/rules/templates/sync',
+      method: 'POST',
+      data,
+      ...options
+    });
   }
 };

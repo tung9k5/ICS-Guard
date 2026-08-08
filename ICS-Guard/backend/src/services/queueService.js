@@ -14,17 +14,40 @@ export const connectQueue = async () => {
   try {
     console.log(`[QueueService] Connecting to RabbitMQ at: ${RABBITMQ_URL}...`);
     connection = await amqp.connect(RABBITMQ_URL);
+
+    connection.on('error', (err) => {
+      console.warn('[QueueService] RabbitMQ connection error caught:', err.message);
+      connection = null;
+      channel = null;
+    });
+
+    connection.on('close', () => {
+      console.warn('[QueueService] RabbitMQ connection closed.');
+      connection = null;
+      channel = null;
+    });
+
     channel = await connection.createChannel();
-    
+
+    channel.on('error', (err) => {
+      console.warn('[QueueService] RabbitMQ channel error caught:', err.message);
+      channel = null;
+    });
+
+    channel.on('close', () => {
+      console.warn('[QueueService] RabbitMQ channel closed.');
+      channel = null;
+    });
+
     // Ensure queues exist
     await channel.assertQueue(AI_ANALYSIS_QUEUE, { durable: true });
     await channel.assertQueue(AI_RESPONSE_QUEUE, { durable: true });
 
     console.log('[QueueService] RabbitMQ connected and queues asserted.');
-    
+
     // Start listening to AI responses immediately upon connection
     startListeningToAiResponses();
-    
+
     return { connection, channel };
   } catch (error) {
     console.warn('[QueueService] RabbitMQ connection failed. Mocking queue service for Windows environment (AI Engine alerts will be bypassed).');
@@ -44,9 +67,11 @@ export const connectQueue = async () => {
 export const sendToQueue = async (queueName, data) => {
   try {
     const { channel } = await connectQueue();
-    const payload = JSON.stringify(data);
-    channel.sendToQueue(queueName, Buffer.from(payload), { persistent: true });
-    console.log(`[QueueService] Message sent to queue "${queueName}".`);
+    if (channel && channel.sendToQueue) {
+      const payload = JSON.stringify(data);
+      channel.sendToQueue(queueName, Buffer.from(payload), { persistent: true });
+      console.log(`[QueueService] Message sent to queue "${queueName}".`);
+    }
   } catch (error) {
     console.error(`[QueueService] Error sending to queue "${queueName}":`, error.message);
   }
@@ -54,6 +79,7 @@ export const sendToQueue = async (queueName, data) => {
 
 const startListeningToAiResponses = async () => {
   try {
+    if (!channel || typeof channel.consume !== 'function') return;
     channel.consume(AI_RESPONSE_QUEUE, async (msg) => {
       if (msg !== null) {
         try {
@@ -87,7 +113,7 @@ const startListeningToAiResponses = async () => {
                 incident_id: incident._id,
                 actor: 'AI Engine Security Assistant',
                 action_type: 'ai_analysis',
-                description: `Phân tích AI cho thấy hành vi tấn công ${attackType}. Khuyến nghị khắc phục:\n` + 
+                description: `Phân tích AI cho thấy hành vi tấn công ${attackType}. Khuyến nghị khắc phục:\n` +
                   remediationSteps.map((step, index) => `${index + 1}. ${step}`).join('\n'),
                 metadata: {
                   attackType,

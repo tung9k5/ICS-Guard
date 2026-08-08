@@ -10,6 +10,13 @@ export const getDeviceLogs = async (req, res) => {
   const parsedLimit = parseInt(limit, 10) || 100;
 
   try {
+    if (device_id) {
+      const dev = await Device.findById(device_id).lean();
+      if (dev && (dev.approval_status === 'pending' || dev.status === 'unprovisioned' || dev.status === 'decommissioned' || dev.approval_status === 'rejected')) {
+        return res.status(200).json([]);
+      }
+    }
+
     let logs = await influxService.queryDeviceEvents(device_id || null, severity || null, parsedLimit);
     
     // If influxDB has no logs or returns empty, enrich with detailed physical OT logs
@@ -33,12 +40,12 @@ export const getDeviceLogs = async (req, res) => {
         ];
       } else if (devType === 'sensor' || devType === 'sensor_pressure') {
         logs = [
-          { time: new Date(now).toISOString(), severity: 'INFO', event: 'ANALOG_4_20MA_SAMPLE', log_type: 'PHYSICAL_TELEMETRY', message: `Loop Current Signal: 12.48 mA ➔ Telemetry Conversion: 42.8 °C / 122.5 PSI (Calibrated OK)`, source_ip: devIp, hex_dump: 'ADC_RAW_0X07FE' },
+          { time: new Date(now).toISOString(), severity: 'INFO', event: 'ANALOG_4_20MA_SAMPLE', log_type: 'PHYSICAL_TELEMETRY', message: `Loop Current Signal: 12.48 mA -> Telemetry Conversion: 42.8 °C / 122.5 PSI (Calibrated OK)`, source_ip: devIp, hex_dump: 'ADC_RAW_0X07FE' },
           { time: new Date(now - 60000).toISOString(), severity: 'INFO', event: 'SENSOR_CALIBRATION_CHECK', log_type: 'PHYSICAL_TELEMETRY', message: `4-20mA Sensor Zero-Span Drift Check: Passed (Drift < 0.01%)`, source_ip: devIp, hex_dump: 'ADC_RAW_0X0801' }
         ];
       } else {
         logs = [
-          { time: new Date(now).toISOString(), severity: 'INFO', event: 'RELAY_FEEDBACK_SIGNAL', log_type: 'ACTUATOR_HARDWARE', message: `Relay Coil #1 TRIP ➔ Actuator Position: 100% OPEN (Feedback Voltage: 24.2V DC, Load Current: 3.4A)`, source_ip: devIp, hex_dump: 'COIL_STATE_0X01' },
+          { time: new Date(now).toISOString(), severity: 'INFO', event: 'RELAY_FEEDBACK_SIGNAL', log_type: 'ACTUATOR_HARDWARE', message: `Relay Coil #1 TRIP -> Actuator Position: 100% OPEN (Feedback Voltage: 24.2V DC, Load Current: 3.4A)`, source_ip: devIp, hex_dump: 'COIL_STATE_0X01' },
           { time: new Date(now - 75000).toISOString(), severity: 'WARNING', event: 'LIMIT_SWITCH_ENGAGED', log_type: 'ACTUATOR_HARDWARE', message: `Physical Limit Switch LS-01 Engaged at Max Mechanical Travel Position`, source_ip: devIp, hex_dump: 'COIL_STATE_0X80' }
         ];
       }

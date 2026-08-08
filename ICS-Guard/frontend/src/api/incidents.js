@@ -1,6 +1,6 @@
 import http from '@/api/httpClient';
 
-export default {
+const incidentsApi = {
   getAll(params = {}, options = {}) {
     return http({
       url: '/incidents',
@@ -119,5 +119,41 @@ export default {
       method: 'GET',
       ...options
     });
+  },
+
+  addForensicsArtifact(id, data, options = {}) {
+    return http({
+      url: `/incidents/${id}/forensics`,
+      method: 'POST',
+      data,
+      ...options
+    });
+  },
+
+  acceptIncident(id, options = {}) {
+    return http({
+      url: `/incidents/${id}/accept`,
+      method: 'POST',
+      ...options
+    });
+  },
+
+  markFullySafe(id, data = {}, options = {}) {
+    return http({
+      url: `/incidents/${id}/mark-safe`,
+      method: 'POST',
+      data,
+      ...options
+    });
+  },
+
+  deleteForensicsArtifact(id, artifactId, options = {}) {
+    return http({
+      url: `/incidents/${id}/forensics/${artifactId}`,
+      method: 'DELETE',
+      ...options
+    });
   }
 };
+
+export default incidentsApi;

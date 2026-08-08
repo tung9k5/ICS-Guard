@@ -1,4 +1,4 @@
-import { Playbook, Device, BlockedIp, IncidentTimeline } from '../models/index.js';
+import { Playbook, Device, BlockedIp, IncidentTimeline, AuditLog } from '../models/index.js';
 import redisClient from '../config/redis.js';
 import { issueSecurityCommand } from './commandService.js';
 import { sendTelegramAlert } from './telegramService.js';
@@ -44,6 +44,17 @@ export const executePlaybook = async (rule_name, device_id, context = {}) => {
               console.warn(`[Playbook:${pb.name}] issueSecurityCommand warning: ${cmdErr.message}`);
             }
 
+            // AUDIT: Auto isolation by SOAR
+            try {
+              await AuditLog.create({
+                action: 'AUTO_SOAR_ISOLATE_DEVICE',
+                username: `Playbook:${pb.name}`,
+                ipAddress: 'Internal-SOAR',
+                details: { device_id, playbook_id: String(pb._id), rule_name, context },
+                status: 'SUCCESS',
+              });
+            } catch (auditErr) { console.warn('[Playbook] AuditLog write failed:', auditErr.message); }
+
           } else if (actionType === 'send_email') {
             console.log(`[Playbook:${pb.name}] Action: Sending email notification for rule ${rule_name}`);
             await sendEmailAlert({
@@ -67,6 +78,17 @@ export const executePlaybook = async (rule_name, device_id, context = {}) => {
                 { upsert: true, new: true }
               );
 
+              // AUDIT: Auto IP block by SOAR
+              try {
+                await AuditLog.create({
+                  action: 'AUTO_SOAR_BLOCK_IP',
+                  username: `Playbook:${pb.name}`,
+                  ipAddress: 'Internal-SOAR',
+                  details: { blocked_ip: targetIp, device_id, rule_name, expires_at: expiresAt },
+                  status: 'SUCCESS',
+                });
+              } catch (auditErr) { console.warn('[Playbook] AuditLog write failed:', auditErr.message); }
+
               // 2. Call Defense Agent layer-3 block
               if (DEFENSE_AGENT_URL && DEFENSE_AGENT_KEY) {
                 try {
@@ -87,7 +109,7 @@ export const executePlaybook = async (rule_name, device_id, context = {}) => {
 
           } else if (actionType === 'notify_telegram' || actionType === 'send_telegram') {
             console.log(`[Playbook:${pb.name}] Action: Dispatching Telegram alert`);
-            const msg = `⚡ [SOAR PLAYBOOK AUTO] Rule *${rule_name}* trên thiết bị *${device_id}*.\nHành động: *${actionType}*\nMức độ: *${context.severity || 'CRITICAL'}*`;
+            const msg = `[SOAR PLAYBOOK AUTO] Rule *${rule_name}* trên thiết bị *${device_id}*.\nHành động: *${actionType}*\nMức độ: *${context.severity || 'CRITICAL'}*`;
             await sendTelegramAlert(msg);
           }
 
@@ -97,7 +119,7 @@ export const executePlaybook = async (rule_name, device_id, context = {}) => {
               incident_id: context.incident_id,
               actor: `Playbook:${pb.name}`,
               action_type: 'playbook_execution',
-              description: `⚡ Tự động thực thi SOAR Action "${actionType}" cho quy tắc "${rule_name}" (Trạng thái: THÀNH CÔNG)`,
+              description: `Tự động thực thi SOAR Action "${actionType}" cho quy tắc "${rule_name}" (Trạng thái: THÀNH CÔNG)`,
               metadata: { playbook_id: pb._id, action_type: actionType, rule_name, device_id }
             });
           }

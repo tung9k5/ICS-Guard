@@ -38,7 +38,7 @@ class ModbusTCPServer:
                 
                 # IP Whitelisting Check
                 if client_ip not in self.allowed_ips:
-                    logging.warning(f"🛡️ [Modbus Security] Blocked connection from unauthorized IP: {client_ip}")
+                    logging.warning(f"[Modbus Security] Blocked connection from unauthorized IP: {client_ip}")
                     client_socket.close()
                     continue
                     
@@ -84,7 +84,7 @@ class ModbusTCPServer:
                     state = coil_val == 0xFF00
                     with self.lock:
                         self.coils[coil_addr] = state
-                    logging.info(f"🔌 [Modbus Server] Write Coil {coil_addr} = {state}")
+                    logging.info(f"[Modbus Server] Write Coil {coil_addr} = {state}")
                     # Echo back request
                     response_pdu.extend(pdu)
                     
@@ -92,7 +92,7 @@ class ModbusTCPServer:
                     reg_addr, reg_val = struct.unpack(">HH", pdu[1:5])
                     with self.lock:
                         self.holding_registers[reg_addr] = reg_val
-                    logging.info(f"⚙️ [Modbus Server] Write Register {reg_addr} = {reg_val}")
+                    logging.info(f"[Modbus Server] Write Register {reg_addr} = {reg_val}")
                     # Echo back request
                     response_pdu.extend(pdu)
                 else:

@@ -219,6 +219,7 @@ export const issueSecurityCommand = async ({
 
     device.security_status = command_type === 'isolate' ? 'isolated' : 'normal';
     device.status = command_type === 'isolate' ? 'isolated' : 'active';
+    device.operational_status = command_type === 'isolate' ? 'quarantined' : 'active';
     await saveDeviceHelper(device);
     emitCommandState(commandRecord, device);
   }
@@ -267,6 +268,7 @@ export const issueSecurityCommand = async ({
               if (currentDev) {
                 currentDev.security_status = command_type === 'isolate' ? 'isolated' : 'normal';
                 currentDev.status = command_type === 'isolate' ? 'isolated' : 'active';
+                currentDev.operational_status = command_type === 'isolate' ? 'quarantined' : 'active';
                 await saveDeviceHelper(currentDev);
                 emitCommandState(currentCmd, currentDev);
               }
@@ -395,6 +397,8 @@ export const processCommandAck = async (ackPayload, topicContext = {}) => {
   if (device) {
     if (ackStatus === 'succeeded') {
       device.security_status = command.command_type === 'isolate' ? 'isolated' : 'normal';
+      device.status = command.command_type === 'isolate' ? 'isolated' : 'active';
+      device.operational_status = command.command_type === 'isolate' ? 'quarantined' : 'active';
     } else {
       device.security_status = restoreStatusAfterFailure(command);
     }

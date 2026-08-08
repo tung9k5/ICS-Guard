@@ -94,13 +94,6 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen }) => {
               <span>Thành viên</span>
             </NavLink>
           )}
-
-          {canSeeReports && (
-            <NavLink to="/reports" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`} onClick={handleClose}>
-              <FileText size={20} />
-              <span>Nhật ký</span>
-            </NavLink>
-          )}
         </nav>
 
         <div className="sidebar-footer">

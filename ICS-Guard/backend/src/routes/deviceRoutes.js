@@ -14,6 +14,9 @@ import {
   decommissionDeviceEndpoint,
   handleSimulatorHardwareCrud,
   updateOperationalStatus,
+  approveDevice,
+  rejectDevice,
+  restoreDevice,
 } from '../controllers/deviceController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';
 import { authorize } from '../middlewares/rbacMiddleware.js';
@@ -276,5 +279,14 @@ router.delete('/:id/decommission', authorize(['admin', 'device_management']), au
 
 // PATCH /api/devices/:id/operational-status — simulator reconnect
 router.patch('/:id/operational-status', simulatorOrUserAuthMiddleware, auditLogger('DEVICE_STATUS_UPDATE'), updateOperationalStatus);
+
+// PATCH /api/devices/:id/approve — Admin/Device Manager approves a pending device
+router.patch('/:id/approve', authorize(['admin', 'device_management']), auditLogger('DEVICE_APPROVED'), approveDevice);
+
+// PATCH /api/devices/:id/reject — Admin/Device Manager rejects a pending device
+router.patch('/:id/reject', authorize(['admin', 'device_management']), auditLogger('DEVICE_REJECTED'), rejectDevice);
+
+// PATCH /api/devices/:id/restore — Restore a soft-deleted (decommissioned) device
+router.patch('/:id/restore', authorize(['admin', 'device_management']), auditLogger('DEVICE_RESTORED'), restoreDevice);
 
 export default router;

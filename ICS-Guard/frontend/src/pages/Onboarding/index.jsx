@@ -1,5 +1,5 @@
 import './Onboarding.scss';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import authApi from '@/api/auth';
 import http from '@/api/httpClient';
@@ -56,6 +56,38 @@ const Onboarding = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+
+  useEffect(() => {
+    const loadInitialUserInfo = async () => {
+      try {
+        const res = await authApi.me();
+        const currentUser = res?.user || res?.data?.user;
+        if (currentUser) {
+          if (currentUser.username) setUsername(currentUser.username);
+          if (currentUser.email) setEmail(currentUser.email);
+          if (currentUser.contactInfo?.telegramChatId) {
+            setTelegramChatId(currentUser.contactInfo.telegramChatId);
+          }
+          return;
+        }
+      } catch (e) {
+        console.warn('Could not fetch /auth/me for onboarding prefill:', e);
+      }
+
+      // Fallback from JWT token payload
+      try {
+        const token = localStorage.getItem('access_token');
+        if (token) {
+          const payload = jwtDecode(token);
+          if (payload.username) setUsername(payload.username);
+          if (payload.email) setEmail(payload.email);
+          if (payload.telegramChatId) setTelegramChatId(payload.telegramChatId);
+        }
+      } catch (e) {}
+    };
+
+    loadInitialUserInfo();
+  }, []);
 
   const getUsername = () => {
     try {
@@ -226,11 +258,11 @@ const Onboarding = () => {
         {/* Form */}
         <form className="onboarding-form" onSubmit={handleSubmit}>
 
-          {/* Username mới — Tùy chọn */}
+          {/* Username — Tùy chọn */}
           <div className="form-group">
             <label>
-              TÊN ĐĂNG NHẬP MỚI
-              <span className="optional-tag"> (Tùy chọn)</span>
+              TÊN ĐĂNG NHẬP
+              <span className="optional-tag"> (Có thể đổi hoặc giữ nguyên)</span>
             </label>
             <div className="input-wrapper">
               <span className="input-icon"><User size={16} /></span>
@@ -238,7 +270,7 @@ const Onboarding = () => {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder={`Để trống giữ nguyên: ${getUsername()}`}
+                placeholder="Nhập tên đăng nhập mới..."
                 autoComplete="username"
               />
             </div>
@@ -446,7 +478,7 @@ const Onboarding = () => {
             {otpSent && !otpVerified && (
               <div className="otp-input-row">
                 <div className="otp-hint">
-                  <span>📱 Kiểm tra Telegram, nhập mã 6 số bên dưới:</span>
+                  <span>Kiểm tra Telegram, nhập mã 6 số bên dưới:</span>
                 </div>
                 <div className="telegram-input-row">
                   <div className="input-wrapper" style={{ flex: 1 }}>

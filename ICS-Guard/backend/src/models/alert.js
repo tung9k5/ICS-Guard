@@ -24,11 +24,11 @@ const alertSchema = new mongoose.Schema({
     type: String,
     enum: [Severity.LOW, Severity.MEDIUM, Severity.HIGH, Severity.CRITICAL, 'INFO'],
     default: Severity.MEDIUM,
-    index: true,
+ index: true,
   },
   status: {
     type: String,
-    enum: ['new', 'acknowledged', 'resolved', 'false_positive'],
+    enum: ['new', 'acknowledged', 'resolved', 'false_positive', 'escalated'],
     default: 'new',
     index: true,
   },

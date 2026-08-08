@@ -29,32 +29,26 @@ async function seedDatabase() {
     await IncidentTimeline.deleteMany();
     await BlockedIp.deleteMany();
 
-    // 1. Seed Users (canonical admin + operational roles)
+    // 1. Seed Users (Exactly 1 account per role)
     const demoPassword = process.env.DEMO_USER_PASSWORD || 'Demo@12345';
     const users = [];
 
-    const canonicalAdmin = new User({
-      username: 'admin',
-      password_hash: await bcrypt.hash('Admin@123', 10),
-      email: 'admin@example.com',
-      full_name: 'System Administrator',
-      role: 'admin',
-      is_active: true,
-      isFirstLogin: false
-    });
-    await canonicalAdmin.save();
-    users.push(canonicalAdmin);
+    const userSeeds = [
+      { username: 'admin', email: 'admin@ics-guard.com', full_name: 'SOC Administrator', role: 'admin', password: 'Demo@12345' },
+      { username: 'analyst_user', email: 'analyst@ics-guard.com', full_name: 'SOC Analyst User', role: 'analyst', password: demoPassword },
+      { username: 'device_management_user', email: 'device_management@ics-guard.com', full_name: 'Device Management User', role: 'device_management', password: demoPassword },
+      { username: 'hr_management_user', email: 'hr_management@ics-guard.com', full_name: 'HR Management User', role: 'hr_management', password: demoPassword },
+    ];
 
-    const roles = ['hr_management', 'device_management', 'analyst'];
-    for (let i = 0; i < roles.length; i++) {
+    for (const seed of userSeeds) {
       const user = new User({
-        username: `${roles[i]}_user`,
-        password_hash: await bcrypt.hash(demoPassword, 10),
-        email: `${roles[i]}@ics-guard.com`,
-        full_name: `${roles[i].replace('_', ' ').toUpperCase()} User`,
-        role: roles[i],
-        is_active: false,
-        isFirstLogin: true
+        username: seed.username,
+        password_hash: await bcrypt.hash(seed.password, 10),
+        email: seed.email,
+        full_name: seed.full_name,
+        role: seed.role,
+        is_active: true,
+        isFirstLogin: false
       });
       await user.save();
       users.push(user);

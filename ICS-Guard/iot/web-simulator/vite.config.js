@@ -29,16 +29,16 @@ export default defineConfig(({ mode }) => {
 
       proxy: {
         '/api': {
-          target: env.VITE_PROXY_TARGET || env.VITE_BACKEND_URL || 'http://localhost:8000',
+          target: env.VITE_PROXY_TARGET || env.VITE_BACKEND_URL || 'http://127.0.0.1:8000',
           changeOrigin: true,
         },
         '/hardware-api': {
-          target: env.VITE_HARDWARE_BFF_URL || env.VITE_BACKEND_URL || 'http://localhost:8000',
+          target: env.VITE_HARDWARE_BFF_URL || env.VITE_BACKEND_URL || 'http://127.0.0.1:5001',
           changeOrigin: true,
           rewrite: (requestPath) => requestPath.replace(/^\/hardware-api/, '/api'),
         },
         '/attack-api': {
-          target: env.VITE_ATTACK_ADAPTER_URL || env.VITE_BACKEND_URL || 'http://localhost:8000',
+          target: env.VITE_ATTACK_ADAPTER_URL || env.VITE_BACKEND_URL || 'http://127.0.0.1:5003',
           changeOrigin: true,
           rewrite: (requestPath) => requestPath.replace(/^\/attack-api/, '/api'),
         },

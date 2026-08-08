@@ -54,7 +54,7 @@ async function main() {
         for (const query of initQueries) {
             await sendQuery(query);
         }
-        console.log(`✅ Database "${DB_NAME}" and Retention Policy initialized.`);
+        console.log(`[SUCCESS] Database "${DB_NAME}" and Retention Policy initialized.`);
 
         // Tạo dữ liệu mẫu mô phỏng 24 giờ qua (mỗi 5 phút một điểm dữ liệu)
         console.log('Generating seed telemetry data...');
@@ -77,9 +77,9 @@ async function main() {
         }
         
         await writeData(lines);
-        console.log('✅ InfluxDB Seed Data written successfully!');
+        console.log('[SUCCESS] InfluxDB Seed Data written successfully!');
     } catch (e) {
-        console.error('❌ Error seeding InfluxDB:', e.message);
+        console.error('[ERROR] Error seeding InfluxDB:', e.message);
         console.log('Vui lòng đảm bảo InfluxDB đang chạy tại http://localhost:8086');
     }
 }

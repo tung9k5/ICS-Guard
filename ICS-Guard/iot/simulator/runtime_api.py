@@ -54,17 +54,21 @@ class RuntimeAPIServer:
                     sort_keys=True,
                     separators=(",", ":"),
                 ).encode("utf-8")
-                self.send_response(status)
-                self.send_header("Content-Type", "application/json; charset=utf-8")
-                self.send_header("Content-Length", str(len(body)))
-                self.send_header("Cache-Control", "no-store")
-                self.end_headers()
-                self.wfile.write(body)
+                try:
+                    self.send_response(status)
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.send_header("Content-Length", str(len(body)))
+                    self.send_header("Cache-Control", "no-store")
+                    self.end_headers()
+                    self.wfile.write(body)
+                except (ConnectionAbortedError, BrokenPipeError, ConnectionResetError, OSError):
+                    pass
 
             def _provided_key(self):
                 direct = (
                     self.headers.get("x-service-key")
                     or self.headers.get("x-internal-service-key")
+                    or self.headers.get("x-runtime-service-key")
                 )
                 if direct:
                     return direct
@@ -132,7 +136,7 @@ class RuntimeAPIServer:
                     return
                 if not self._require_auth():
                     return
-                if path == "/api/plant/devices":
+                if path in ("/api/plant/devices", "/api/plant/targets"):
                     self._send_json(200, plant_db.get_all_devices())
                     return
                 device_id = self._device_id(path)

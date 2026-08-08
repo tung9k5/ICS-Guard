@@ -5,6 +5,7 @@ import AuditLog from './auditLog.js';
 import BlockedIp from './blockedIp.js';
 import RefreshToken from './refreshToken.js';
 import Rule from './rule.js';
+import RuleTemplate from './ruleTemplate.js';
 import Alert from './alert.js';
 import Incident from './incident.js';
 import IncidentTimeline from './incidentTimeline.js';
@@ -21,6 +22,7 @@ const db = {
   BlockedIp,
   RefreshToken,
   Rule,
+  RuleTemplate,
   Alert,
   Incident,
   IncidentTimeline,
@@ -38,6 +40,7 @@ export {
   BlockedIp,
   RefreshToken,
   Rule,
+  RuleTemplate,
   Alert,
   Incident,
   IncidentTimeline,

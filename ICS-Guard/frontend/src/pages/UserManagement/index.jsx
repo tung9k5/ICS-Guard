@@ -154,6 +154,17 @@ const UserManagement = () => {
     }
   };
 
+  const handleRestoreUser = async (id) => {
+    try {
+      await ApiUser.restoreUser(id);
+      toast.success('Khôi phục tài khoản thành công');
+      fetchUsers();
+    } catch (err) {
+      console.error('Restore error:', err);
+      toast.error(err?.response?.data?.message || 'Có lỗi xảy ra khi khôi phục tài khoản');
+    }
+  };
+
   const handleFormSuccess = () => {
     setIsFormOpen(false);
     fetchUsers();
@@ -198,9 +209,10 @@ const UserManagement = () => {
               }}
               style={{ paddingRight: status ? '28px' : undefined }}
             >
-              <option value="">{t('users.filter_status_all')}</option>
-              <option value="active">{t('users.filter_status_active')}</option>
-              <option value="inactive">{t('users.filter_status_inactive')}</option>
+              <option value="">{t('users.filter_status_all', 'Tất cả trạng thái')}</option>
+              <option value="activated">Đã kích hoạt</option>
+              <option value="pending">Chưa kích hoạt</option>
+              <option value="locked">Đã khóa / Chờ hủy</option>
             </select>
             {status && (
               <X
@@ -254,6 +266,7 @@ const UserManagement = () => {
           loading={loading}
           onEdit={handleEditUser}
           onDelete={handleDeleteUser}
+          onRestore={handleRestoreUser}
           selectedIds={selectedIds}
           onSelect={handleSelectUser}
           onSelectAll={handleSelectAll}

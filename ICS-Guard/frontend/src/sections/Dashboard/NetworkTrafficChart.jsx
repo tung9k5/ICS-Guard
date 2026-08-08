@@ -2,6 +2,11 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
+const NETWORK_TRAFFIC_COLORS = {
+  incoming: '#38bdf8',
+  outgoing: '#f97316',
+};
+
 const NetworkTrafficChart = ({ data = [] }) => {
   const { t } = useTranslation();
 
@@ -23,12 +28,12 @@ const NetworkTrafficChart = ({ data = [] }) => {
         >
           <defs>
             <linearGradient id="colorIncoming" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--blue-500)" stopOpacity={0.8}/>
-              <stop offset="95%" stopColor="var(--blue-500)" stopOpacity={0}/>
+              <stop offset="5%" stopColor={NETWORK_TRAFFIC_COLORS.incoming} stopOpacity={0.8}/>
+              <stop offset="95%" stopColor={NETWORK_TRAFFIC_COLORS.incoming} stopOpacity={0}/>
             </linearGradient>
             <linearGradient id="colorOutgoing" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--green-500)" stopOpacity={0.8}/>
-              <stop offset="95%" stopColor="var(--green-500)" stopOpacity={0}/>
+              <stop offset="5%" stopColor={NETWORK_TRAFFIC_COLORS.outgoing} stopOpacity={0.8}/>
+              <stop offset="95%" stopColor={NETWORK_TRAFFIC_COLORS.outgoing} stopOpacity={0}/>
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--gray-700)" />
@@ -44,8 +49,8 @@ const NetworkTrafficChart = ({ data = [] }) => {
             contentStyle={{ backgroundColor: 'var(--gray-800)', border: 'none', borderRadius: '8px', color: 'var(--white-short)' }}
             itemStyle={{ color: 'var(--white-short)' }}
           />
-          <Area type="monotone" name={t('dashboard.traffic.incoming', 'Incoming')} dataKey="incoming" stroke="var(--blue-500)" fillOpacity={1} fill="url(#colorIncoming)" />
-          <Area type="monotone" name={t('dashboard.traffic.outgoing', 'Outgoing')} dataKey="outgoing" stroke="var(--green-500)" fillOpacity={1} fill="url(#colorOutgoing)" />
+          <Area type="monotone" name={t('dashboard.traffic.incoming', 'Incoming')} dataKey="incoming" stroke={NETWORK_TRAFFIC_COLORS.incoming} fillOpacity={1} fill="url(#colorIncoming)" />
+          <Area type="monotone" name={t('dashboard.traffic.outgoing', 'Outgoing')} dataKey="outgoing" stroke={NETWORK_TRAFFIC_COLORS.outgoing} fillOpacity={1} fill="url(#colorOutgoing)" />
         </AreaChart>
       </ResponsiveContainer>
     </div>

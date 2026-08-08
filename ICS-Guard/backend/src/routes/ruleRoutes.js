@@ -8,6 +8,7 @@ import {
   deleteMultipleRules,
   backtestRule,
   getRuleTemplates,
+  syncRuleTemplates,
   getRuleEffectiveness
 } from '../controllers/ruleController.js';
 import authMiddleware from '../middlewares/authMiddleware.js';

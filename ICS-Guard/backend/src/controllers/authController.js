@@ -99,7 +99,7 @@ export const login = async (req, res) => {
       }
     }
 
-    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+    if (!user || !user.password_hash || !(await bcrypt.compare(password, user.password_hash))) {
       // Failed login
       if (user) {
         await handleFailedLogin(user, ipAddress);
@@ -290,28 +290,42 @@ export const setupOnboarding = async (req, res) => {
       return res.status(404).json({ error: 'Not Found', message: 'Không tìm thấy tài khoản.' });
     }
 
-    // Cập nhật username nếu được cung cấp (và khác username hiện tại)
+    // 1. Kiểm tra trùng lặp username
     if (username && username.trim() && username.trim() !== user.username) {
-      const taken = await User.findOne({ username: username.trim(), _id: { $ne: userId } });
-      if (taken) {
-        return res.status(409).json({ error: 'Conflict', message: 'Tên đăng nhập đã được sử dụng bởi tài khoản khác.' });
+      const cleanUsername = username.trim();
+      const takenUser = await User.findOne({ username: cleanUsername, _id: { $ne: userId } });
+      if (takenUser) {
+        return res.status(409).json({ error: 'Conflict', message: `Tên đăng nhập "${cleanUsername}" đã được sử dụng bởi tài khoản khác trong hệ thống.` });
       }
-      user.username = username.trim();
+      user.username = cleanUsername;
+    }
+
+    // 2. Kiểm tra trùng lặp email
+    if (email && email.trim() && email.trim().toLowerCase() !== user.email) {
+      const cleanEmail = email.trim().toLowerCase();
+      const takenEmail = await User.findOne({ email: cleanEmail, _id: { $ne: userId } });
+      if (takenEmail) {
+        return res.status(409).json({ error: 'Conflict', message: `Địa chỉ Email "${cleanEmail}" đã được sử dụng bởi tài khoản khác trong hệ thống.` });
+      }
+      user.email = cleanEmail;
+    }
+
+    // 3. Kiểm tra trùng lặp Telegram Chat ID
+    if (telegramChatId && String(telegramChatId).trim()) {
+      const cleanChatId = String(telegramChatId).trim();
+      const takenTelegram = await User.findOne({
+        'contactInfo.telegramChatId': cleanChatId,
+        _id: { $ne: userId }
+      });
+      if (takenTelegram) {
+        return res.status(409).json({ error: 'Conflict', message: `ID Telegram "${cleanChatId}" đã được liên kết với một tài khoản khác trong hệ thống.` });
+      }
+      if (!user.contactInfo) user.contactInfo = {};
+      user.contactInfo.telegramChatId = cleanChatId;
     }
 
     // Băm mật khẩu mới
     user.password_hash = await bcrypt.hash(newPassword, 10);
-
-    // Cập nhật email chỉ nếu được cung cấp
-    if (email && email.trim()) {
-      user.email = email.trim();
-    }
-
-    // Cập nhật thông tin liên hệ
-    if (!user.contactInfo) {
-      user.contactInfo = {};
-    }
-    user.contactInfo.telegramChatId = telegramChatId || null;
     user.isFirstLogin = false;
 
     await user.save();
@@ -336,7 +350,7 @@ export const setupOnboarding = async (req, res) => {
 
   } catch (error) {
     console.error('SetupOnboarding error:', error);
-    return res.status(500).json({ error: 'Internal Server Error', message: 'Lỗi thiết lập onboarding.' });
+    return res.status(500).json({ error: 'Internal Server Error', message: 'Lỗi thiết lập onboarding: ' + error.message });
   }
 };
 
@@ -347,13 +361,27 @@ export const setupOnboarding = async (req, res) => {
 // ------------------------------------
 export const sendTelegramOtp = async (req, res) => {
   const { telegramChatId } = req.body;
+  const userId = req.user ? req.user.id : null;
 
-  if (!telegramChatId) {
+  if (!telegramChatId || !String(telegramChatId).trim()) {
     return res.status(400).json({ error: 'Bad Request', message: 'telegramChatId là bắt buộc.' });
   }
 
+  const cleanChatId = String(telegramChatId).trim();
+
+  // Kiểm tra nếu Telegram Chat ID đã được đăng ký cho tài khoản khác
+  if (userId) {
+    const takenTelegram = await User.findOne({
+      'contactInfo.telegramChatId': cleanChatId,
+      _id: { $ne: userId }
+    });
+    if (takenTelegram) {
+      return res.status(409).json({ error: 'Conflict', message: `ID Telegram "${cleanChatId}" đã được liên kết với một tài khoản khác trong hệ thống.` });
+    }
+  }
+
   // Kiểm tra gửi quá nhanh (còn OTP cũ chưa hết hạn và mới gửi < 30s)
-  const existing = telegramOtpStore.get(String(telegramChatId));
+  const existing = telegramOtpStore.get(cleanChatId);
   if (existing && Date.now() < existing.expiresAt && Date.now() < existing.sentAt + 30_000) {
     const waitSec = Math.ceil((existing.sentAt + 30_000 - Date.now()) / 1000);
     return res.status(429).json({ error: 'Too Many Requests', message: `Vui lòng đợi ${waitSec} giây trước khi gửi lại.` });
@@ -370,7 +398,7 @@ export const sendTelegramOtp = async (req, res) => {
     console.log(`[AuthController] Gửi OTP (masked) đến Chat ID: ${telegramChatId}`);
 
     const sent = await sendTelegramAlert(
-      `🔐 *ICS\-GUARD XÁC THỰC*\n\nMã xác nhận liên kết tài khoản của bạn là:\n\n*${code}*\n\n⏰ Mã này có hiệu lực trong *5 phút*\. Không chia sẻ mã này với bất kỳ ai\.`,
+      `*ICS\\-GUARD XÁC THỰC*\n\nMã xác nhận liên kết tài khoản của bạn là:\n\n*${code}*\n\nMã này có hiệu lực trong *5 phút*\\. Không chia sẻ mã này với bất kỳ ai\\.`,
       [],
       telegramChatId
     );

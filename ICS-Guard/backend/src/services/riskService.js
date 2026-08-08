@@ -174,3 +174,190 @@ export const calculateAndUpdateRiskScore = async (deviceId) => {
 export default {
   calculateAndUpdateRiskScore
 };
+
+// ===========================================================
+// AGING SCORE & MAINTENANCE/REPLACEMENT ADVISORY
+// ===========================================================
+
+/**
+ * Kiểm tra tuổi đời thiết bị (aging_score = số năm từ commissioned_date).
+ * - Mỗi lần aging_score tăng → gửi cảnh báo BẢO DƯỠNG
+ * - Khi aging_score >= 15 → gửi cảnh báo THAY THẾ THIẾT BỊ
+ * Thực thi hàng ngày qua cron job.
+ */
+export const checkAndUpdateAgingAdvisory = async () => {
+  try {
+    const devices = await Device.find({
+      approval_status: 'approved',
+      status: { $ne: 'decommissioned' },
+      commissioned_date: { $ne: null }
+    });
+
+    const now = new Date();
+
+    for (const device of devices) {
+      const commissDate = new Date(device.commissioned_date);
+      const ageInYears = (now - commissDate) / (1000 * 60 * 60 * 24 * 365.25);
+      const newAgingScore = Math.floor(ageInYears);
+
+      if (newAgingScore > (device.aging_score || 0)) {
+        // Aging score increased — send maintenance advisory
+        device.aging_score = newAgingScore;
+
+        const thisYear = now.getFullYear();
+        const alreadySentThisYear = device.last_advisory_sent_year === thisYear;
+
+        if (!alreadySentThisYear) {
+          if (newAgingScore >= 15) {
+            device.maintenance_advisory = 'replacement';
+            device.last_advisory_sent_year = thisYear;
+
+            // Notify via Telegram
+            try {
+              const { sendTelegramAlert } = await import('./telegramService.js');
+              await sendTelegramAlert(
+                `[CẢNH BÁO THAY THẾ THIẾT BỊ]\n\n` +
+                `Thiết bị *${device.name}* (ID: ${device._id}, IP: ${device.ipAddress})\n` +
+                `Tuổi đời: *${newAgingScore} năm* ≥ 15 năm\n` +
+                `Đề xuất: Lên kế hoạch THAY MỚI thiết bị này ngay.`
+              );
+            } catch (e) { console.warn('[AgingAdvisory] Telegram error:', e.message); }
+
+            // Emit to dashboard for device_management role
+            try {
+              const io = socketService.getIo();
+              if (io) {
+                io.emit('DEVICE_ADVISORY', {
+                  device_id: device._id,
+                  device_name: device.name,
+                  aging_score: newAgingScore,
+                  advisory_type: 'replacement',
+                  message: `Thiết bị ${device.name} đã hoạt động ${newAgingScore} năm. Cần thay mới!`
+                });
+              }
+            } catch (e) { }
+
+          } else {
+            device.maintenance_advisory = 'maintenance';
+            device.last_advisory_sent_year = thisYear;
+
+            try {
+              const { sendTelegramAlert } = await import('./telegramService.js');
+              await sendTelegramAlert(
+                `[NHẮC NHỞ BẢO DƯỠNG THIẾT BỊ]\n\n` +
+                `Thiết bị *${device.name}* (ID: ${device._id}, IP: ${device.ipAddress})\n` +
+                `Tuổi đời: *${newAgingScore} năm*\n` +
+                `Đề xuất: Thực hiện kiểm tra và bảo dưỡng định kỳ.`
+              );
+            } catch (e) { console.warn('[AgingAdvisory] Telegram error:', e.message); }
+
+            try {
+              const io = socketService.getIo();
+              if (io) {
+                io.emit('DEVICE_ADVISORY', {
+                  device_id: device._id,
+                  device_name: device.name,
+                  aging_score: newAgingScore,
+                  advisory_type: 'maintenance',
+                  message: `Thiết bị ${device.name} đã hoạt động ${newAgingScore} năm. Cần bảo dưỡng.`
+                });
+              }
+            } catch (e) { }
+          }
+
+          await device.save();
+        } else {
+          await device.save();
+        }
+      }
+    }
+
+    console.log(`[AgingAdvisory] Checked ${devices.length} devices for aging advisories.`);
+  } catch (err) {
+    console.error('[AgingAdvisory] Error:', err.message);
+  }
+};
+
+// ===========================================================
+// 48H DECAY JOB — Giảm dần risk_score theo thời gian nếu không có incident mới
+// Chạy mỗi 48h qua cron job trong app.js
+// ===========================================================
+
+/**
+ * Giảm 1 điểm risk_score cho các thiết bị không có incident trong 48h.
+ * Sau khi khắc phục sự cố, risk_score giảm ngay 15-30pt, sau đó decay dần.
+ */
+export const decayRiskScores = async () => {
+  try {
+    const approvedDevices = await Device.find({
+      approval_status: 'approved',
+      status: { $ne: 'decommissioned' },
+      risk_score: { $gt: 0 }
+    });
+
+    let updated = 0;
+    for (const device of approvedDevices) {
+      const currentScore = device.risk_score || 0;
+      const decayed = Math.max(0, currentScore - 1); // decay 1 point
+      if (decayed !== currentScore) {
+        device.risk_score = decayed;
+        await device.save();
+
+        // Notify dashboard
+        const io = socketService.getIo();
+        if (io) {
+          io.emit('DEVICE_RISK_UPDATED', { device_id: device._id, risk_score: decayed });
+        }
+        updated++;
+      }
+    }
+    console.log(`[RiskDecay] Decayed risk scores for ${updated} devices.`);
+  } catch (err) {
+    console.error('[RiskDecay] Error:', err.message);
+  }
+};
+
+/**
+ * Immediate resolution drop: giảm điểm ngay khi admin khôi phục xong một incident.
+ * - CRITICAL: -15pt (85pt)
+ * - HIGH: -20pt (80pt)
+ * - MEDIUM: -25pt (75pt)
+ * - LOW: -30pt (70pt)
+ * @param {string} deviceId
+ * @param {string|number} dropOrSeverity - Severity string hoặc điểm giảm (15-30)
+ */
+export const applyResolutionDrop = async (deviceId, dropOrSeverity = 'HIGH') => {
+  try {
+    const device = await Device.findById(deviceId);
+    if (!device) return;
+
+    let drop = 20;
+    if (typeof dropOrSeverity === 'string') {
+      const sev = dropOrSeverity.toUpperCase();
+      if (sev === 'CRITICAL') drop = 15;
+      else if (sev === 'HIGH') drop = 20;
+      else if (sev === 'MEDIUM') drop = 25;
+      else if (sev === 'LOW') drop = 30;
+      else drop = 20;
+    } else if (typeof dropOrSeverity === 'number') {
+      drop = Math.max(15, Math.min(30, dropOrSeverity));
+    }
+
+    const currentScore = Number(device.risk_score || 100);
+    const newScore = Math.max(0, currentScore - drop);
+    device.risk_score = newScore;
+    await device.save();
+
+    const io = socketService.getIo();
+    if (io) {
+      io.emit('DEVICE_RISK_UPDATED', { device_id: deviceId, risk_score: newScore, reason: 'resolution_drop' });
+      io.emit('DEVICE_SYNC', { action: 'update', device });
+    }
+
+    console.log(`[RiskService] Resolution drop applied for ${deviceId}: ${currentScore} -> ${newScore} (-${drop}pts for severity ${dropOrSeverity})`);
+    return newScore;
+  } catch (err) {
+    console.error('[RiskService] applyResolutionDrop error:', err.message);
+  }
+};
+

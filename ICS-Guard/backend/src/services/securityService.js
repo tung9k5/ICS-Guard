@@ -58,7 +58,7 @@ export const registerFailedIpAttempt = async (ipAddress) => {
       });
 
       // Send Alert Telegram
-      const telegramText = `🚨 *SECURITY ALERT: IP BLOCKED*\n\nIP Address *${ipAddress}* has been auto-blocked for ${blockHours} hours.\n*Reason:* ${reason}`;
+      const telegramText = `*SECURITY ALERT: IP BLOCKED*\n\nIP Address *${ipAddress}* has been auto-blocked for ${blockHours} hours.\n*Reason:* ${reason}`;
       await sendTelegramAlert(telegramText);
 
       console.log(`[SecurityService] IP ${ipAddress} successfully auto-blocked.`);
@@ -105,9 +105,9 @@ export const handleFailedLogin = async (user, ipAddress) => {
     });
 
     await sendTelegramAlert(
-      `🚨 *SECURITY ALERT: ACCOUNT LOCKEDOUT*\n\nUser *${user.username}* has been locked for ${lockMinutes} minutes due to multiple login failures.\n*Origin IP:* ${ipAddress}`,
+      `*SECURITY ALERT: ACCOUNT LOCKEDOUT*\n\nUser *${user.username}* has been locked for ${lockMinutes} minutes due to multiple login failures.\n*Origin IP:* ${ipAddress}`,
       [
-        { text: `🚫 Block IP ${ipAddress}`, callback_data: `block_ip:${ipAddress}` }
+        { text: `Block IP ${ipAddress}`, callback_data: `block_ip:${ipAddress}` }
       ]
     );
   }
@@ -171,7 +171,7 @@ export const isolateDevice = async (device, triggeredBy = 'System', ipAddress = 
   });
 
   await sendTelegramAlert(
-    `🚨 *CRITICAL INFRASTRUCTURE ALERT*\n\nDevice *${device.name}* (IP: ${device.ipAddress}) has been *ISOLATED* from the network.\nTriggered by: ${triggeredBy}`
+    `*CRITICAL INFRASTRUCTURE ALERT*\n\nDevice *${device.name}* (IP: ${device.ipAddress}) has been *ISOLATED* from the network.\nTriggered by: ${triggeredBy}`
   );
 };
 

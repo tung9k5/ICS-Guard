@@ -44,6 +44,38 @@ const deviceSchema = new mongoose.Schema({
     enum: ['active', 'inactive', 'isolated', 'online', 'offline', 'quarantined', 'unprovisioned', 'decommissioned'],
     default: 'unprovisioned',
   },
+  // === Device Approval Workflow ===
+  approval_status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending',
+  },
+  approved_by: {
+    type: String,
+    default: null,
+  },
+  approved_at: {
+    type: Date,
+    default: null,
+  },
+  // === Device Aging & Advisory ===
+  commissioned_date: {
+    type: Date,
+    default: null,
+  },
+  aging_score: {
+    type: Number,
+    default: 0,
+  },
+  maintenance_advisory: {
+    type: String,
+    enum: ['none', 'maintenance', 'replacement'],
+    default: 'none',
+  },
+  last_advisory_sent_year: {
+    type: Number,
+    default: null,
+  },
   source_id: {
     type: String,
     default: 'hardware-01',
@@ -62,7 +94,7 @@ const deviceSchema = new mongoose.Schema({
   },
   operational_status: {
     type: String,
-    enum: ['active', 'inactive', 'online', 'offline', 'unprovisioned', 'decommissioned'],
+    enum: ['active', 'inactive', 'online', 'offline', 'quarantined', 'unprovisioned', 'decommissioned'],
     default: 'active',
   },
   security_status: {

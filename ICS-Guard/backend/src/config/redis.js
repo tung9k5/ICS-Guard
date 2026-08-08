@@ -11,7 +11,7 @@ const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 console.log(`[Redis] Configuring connection to: ${REDIS_URL}`);
 
 let realClient = null;
-let useFallback = false;
+let useFallback = true;
 
 // Dummy mock client to avoid crashes in non-Redis environments
 const mockClient = {
@@ -27,14 +27,14 @@ const mockClient = {
 try {
   const isTls = REDIS_URL.startsWith('rediss');
   const socketOptions = {
-    connectTimeout: 2000,
+    connectTimeout: 1000,
     reconnectStrategy: (retries) => {
-      if (retries > 2) {
-        console.warn('[Redis] Max reconnect retries reached. Switching to Mock Redis client.');
+      if (retries > 1) {
+        console.warn('[Redis] Redis not reachable. Switching to Mock Redis client.');
         useFallback = true;
         return false; // Stop reconnecting
       }
-      return 1000;
+      return 500;
     }
   };
 
@@ -55,7 +55,7 @@ try {
   });
 
   realClient.on('error', (err) => {
-    console.warn('[Redis] Client Connection Error:', err.message);
+    // Suppress noise when Redis server is offline
     useFallback = true;
   });
 

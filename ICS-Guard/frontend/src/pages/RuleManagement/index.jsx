@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, X, Trash2, Cpu, Play, Layers, Sparkles, CheckCircle, AlertTriangle, FileCode } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Plus, X, Trash2, Play, Layers, Sparkles, Eye, Globe, Search, Filter, ShieldAlert, RefreshCw, Radio, Wifi } from 'lucide-react';
 import VButton from '@/components/VButton';
-import VInput from '@/components/VInput';
 import rulesApi from '@/api/rules';
 import RuleList from '@/sections/RuleManagement/RuleList';
 import RuleForm from '@/sections/RuleManagement/RuleForm';
@@ -18,7 +17,7 @@ import './RuleManagement.scss';
 
 const RuleManagement = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('list'); // 'list' | 'composer' | 'templates'
+  const [activeTab, setActiveTab] = useState('list'); // 'list' | 'templates'
   const [rules, setRules] = useState([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
@@ -44,17 +43,18 @@ const RuleManagement = () => {
   const [backtestLoading, setBacktestLoading] = useState(false);
   const [backtestResults, setBacktestResults] = useState(null);
 
-  // Rule Templates
-  const [templates, setTemplates] = useState([]);
+  // View Rule Detail Modal State
+  const [selectedRuleDetail, setSelectedRuleDetail] = useState(null);
 
-  // Visual Rule Composer Canvas Nodes State
-  const [nodeProtocol, setNodeProtocol] = useState('MODBUS_TCP');
-  const [nodeField, setNodeField] = useState('holding_register');
-  const [nodeOperator, setNodeOperator] = useState('>');
-  const [nodeValue, setNodeValue] = useState(100);
-  const [nodeAction, setNodeAction] = useState('CREATE_CRITICAL_ALERT');
-  const [composerName, setComposerName] = useState('');
-  const [composerDesc, setComposerDesc] = useState('');
+  // Rule Templates Online Sync State
+  const [templates, setTemplates] = useState([]);
+  const [lastSyncedAt, setLastSyncedAt] = useState(null);
+  const [isSyncingTemplates, setIsSyncingTemplates] = useState(false);
+  const [templateSearch, setTemplateSearch] = useState('');
+  const [templateProtocolFilter, setTemplateProtocolFilter] = useState('ALL');
+  const [templateSeverityFilter, setTemplateSeverityFilter] = useState('ALL');
+  const [selectedTemplateDetail, setSelectedTemplateDetail] = useState(null);
+  const [togglingTemplateName, setTogglingTemplateName] = useState(null);
 
   const fetchRules = useCallback(async () => {
     try {
@@ -67,12 +67,15 @@ const RuleManagement = () => {
         is_active: status,
         order
       });
-      if (res.status === 'success') {
-        setRules(res.data);
-        setTotal(res.pagination?.total || 0);
+      if (res && (res.status === 'success' || Array.isArray(res.data))) {
+        setRules(res.data || []);
+        setTotal(res.pagination?.total || (res.data?.length || 0));
       }
     } catch (error) {
-      toast.error(t('error_general', 'Có lỗi xảy ra'));
+      console.error('fetchRules error:', error);
+      if (error?.response && error.response.status >= 500) {
+        toast.error(t('error_general', 'Có lỗi xảy ra khi tải danh sách quy tắc'));
+      }
     } finally {
       setLoading(false);
     }
@@ -82,12 +85,31 @@ const RuleManagement = () => {
     try {
       const res = await rulesApi.getRuleTemplates();
       if (res.status === 'success') {
-        setTemplates(res.data);
+        const rawTemplates = Array.isArray(res.data) ? res.data : (res.data?.templates || []);
+        setTemplates(rawTemplates);
+        setLastSyncedAt(res.data?.last_synced_at || new Date().toISOString());
       }
     } catch (e) {
-      console.error(e);
+      console.error('Fetch templates error:', e);
     }
   }, []);
+
+  const handleSyncTemplates = async () => {
+    try {
+      setIsSyncingTemplates(true);
+      const res = await rulesApi.syncRuleTemplates();
+      if (res.status === 'success') {
+        const updatedList = res.data?.templates || [];
+        setTemplates(updatedList);
+        setLastSyncedAt(res.data?.last_synced_at || new Date().toISOString());
+        toast.success(res.data?.message || 'Đã đồng bộ quy tắc mới từ Thư viện Quốc tế thành công!');
+      }
+    } catch (error) {
+      toast.error('Lỗi khi đồng bộ quy tắc từ server!');
+    } finally {
+      setIsSyncingTemplates(false);
+    }
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -182,43 +204,57 @@ const RuleManagement = () => {
     }
   };
 
-  const handleSaveComposerRule = async () => {
-    if (!composerName) {
-      toast.error('Vui lòng nhập tên quy tắc');
-      return;
-    }
-    const newRuleData = {
-      rule_name: composerName,
-      description: composerDesc || `Dựng từ Visual Composer (${nodeProtocol})`,
-      severity: 'HIGH',
-      category: 'ICS_PROTOCOL',
-      time_window_seconds: 60,
-      trigger_count: 1,
-      conditions: [{ field: nodeField, operator: nodeOperator, value: nodeValue }],
-      logic_nodes: { protocol: nodeProtocol, action: nodeAction }
-    };
+  // Helper to check if a template rule is installed in rules list
+  const getInstalledRuleForTemplate = (tpl) => {
+    return rules.find(r => r.rule_name === tpl.rule_name || (r.mitre_technique && r.mitre_technique === tpl.mitre_technique));
+  };
+
+  // Toggle button handler: Install or Remove template rule directly in Tab 2 without tab switching
+  const handleToggleTemplate = async (tpl) => {
+    const installed = getInstalledRuleForTemplate(tpl);
+    setTogglingTemplateName(tpl.rule_name);
+
     try {
-      await rulesApi.createRule(newRuleData);
-      toast.success('Đã lưu Quy tắc thành công từ Visual Composer!');
-      setActiveTab('list');
-      fetchRules();
-    } catch (e) {
-      toast.error('Lỗi tạo quy tắc');
+      if (installed) {
+        // Delete the rule
+        await rulesApi.deleteRule(installed._id);
+        toast.success(`Đã xóa quy tắc tiêu chuẩn "${tpl.rule_name}" khỏi bộ tác chiến!`);
+      } else {
+        // Create the rule as a standard rule
+        const newRuleData = {
+          rule_name: tpl.rule_name,
+          description: tpl.description,
+          severity: tpl.severity || 'HIGH',
+          category: tpl.category || 'ICS_PROTOCOL',
+          mitre_technique: tpl.mitre_technique || '',
+          time_window_seconds: tpl.time_window_seconds || 30,
+          trigger_count: tpl.trigger_count || 1,
+          conditions: tpl.conditions || [],
+          is_active: true,
+          is_international: true
+        };
+        await rulesApi.createRule(newRuleData);
+        toast.success(`Đã áp dụng quy tắc tiêu chuẩn "${tpl.rule_name}" vào bộ tác chiến!`);
+      }
+      await fetchRules();
+    } catch (error) {
+      console.error('Toggle template error:', error);
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật quy tắc');
+    } finally {
+      setTogglingTemplateName(null);
     }
   };
 
-  const handleApplyTemplate = (tpl) => {
-    setSelectedRule({
-      rule_name: tpl.rule_name,
-      description: tpl.description,
-      severity: tpl.severity,
-      category: tpl.category,
-      time_window_seconds: tpl.time_window_seconds,
-      trigger_count: tpl.trigger_count,
-      conditions: tpl.conditions
+  // Filter templates list
+  const filteredTemplates = useMemo(() => {
+    const query = templateSearch.trim().toLowerCase();
+    return templates.filter(tpl => {
+      const nameMatches = !query || (tpl.rule_name || '').toLowerCase().includes(query) || (tpl.mitre_technique || '').toLowerCase().includes(query) || (tpl.description || '').toLowerCase().includes(query);
+      const sevMatches = templateSeverityFilter === 'ALL' || String(tpl.severity || '').toUpperCase() === templateSeverityFilter;
+      const protoMatches = templateProtocolFilter === 'ALL' || (tpl.category || '').toLowerCase().includes(templateProtocolFilter.toLowerCase()) || (tpl.rule_name || '').toLowerCase().includes(templateProtocolFilter.toLowerCase());
+      return nameMatches && sevMatches && protoMatches;
     });
-    setIsFormOpen(true);
-  };
+  }, [templates, templateSearch, templateSeverityFilter, templateProtocolFilter]);
 
   return (
     <div className="rules-page">
@@ -232,38 +268,28 @@ const RuleManagement = () => {
                 {t('rules.delete_selected', { count: selectedRuleIds.length, defaultValue: `Xóa đã chọn (${selectedRuleIds.length})` })}
               </VButton>
             )}
-            <VButton variant="primary" onClick={handleCreate} className="d-flex align-items-center gap-2">
-              <Plus size={18} />
-              {t('rules.add', 'Thêm Quy tắc')}
-            </VButton>
           </div>
         }
       />
 
-      {/* Mode Navigation Tabs */}
-      <div className="rules-tab-nav">
+      {/* Mode Navigation Tabs - Placed directly above content with white bottom line */}
+      <div className="rules-tab-nav" style={{ borderBottom: '1px solid #ffffff', marginBottom: '20px', paddingBottom: '0' }}>
         <button
           className={`rules-tab-btn ${activeTab === 'list' ? 'active' : ''}`}
           onClick={() => setActiveTab('list')}
         >
-          <Layers size={18} /> Danh sách Quy tắc ({total})
-        </button>
-
-        <button
-          className={`rules-tab-btn ${activeTab === 'composer' ? 'active' : ''}`}
-          onClick={() => setActiveTab('composer')}
-        >
-          <Cpu size={18} /> Visual Node Composer (Kéo-Thả Logic)
+          <Layers size={18} /> Danh Sách Quy Tắc ({total})
         </button>
 
         <button
           className={`rules-tab-btn ${activeTab === 'templates' ? 'active' : ''}`}
           onClick={() => setActiveTab('templates')}
         >
-          <Sparkles size={18} /> Thư viện MITRE ATT&CK for ICS
+          <Sparkles size={18} /> Thư Viện MITRE ATT&CK for ICS ({templates.length})
         </button>
       </div>
 
+      {/* TAB 1: LIST VIEW */}
       {activeTab === 'list' && (
         <div className="rules-content">
           {isFormOpen && (
@@ -273,6 +299,8 @@ const RuleManagement = () => {
               onCancel={() => setIsFormOpen(false)}
             />
           )}
+
+          {/* Filter Bar with [+ Thêm quy tắc] button placed inside same row */}
           <VFilterPage
             searchPlaceholder={t('rules.search_placeholder', 'Tìm tên quy tắc...')}
             searchValue={search}
@@ -337,10 +365,33 @@ const RuleManagement = () => {
               <option value="desc">Mới nhất</option>
               <option value="asc">Cũ nhất</option>
             </select>
+
+            {/* Nút [+ Thêm quy tắc] nằm cùng hàng với thanh tìm kiếm và bộ lọc */}
+            <button
+              className="btn-add-rule-black"
+              onClick={handleCreate}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: '#000000',
+                color: '#ffffff',
+                border: '1px solid #334155',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                fontWeight: 600,
+                fontSize: '13px',
+                cursor: 'pointer',
+                marginLeft: 'auto'
+              }}
+            >
+              <Plus size={16} />
+              {t('rules.add', 'Thêm Quy tắc')}
+            </button>
           </VFilterPage>
 
           {loading ? (
-            <div className="user-loading">{t('common.loading', 'Đang tải...')}</div>
+            <div className="user-loading">{t('common.loading', 'Đang tải danh sách quy tắc…')}</div>
           ) : (
             <>
               <RuleList
@@ -348,6 +399,7 @@ const RuleManagement = () => {
                 onEdit={handleEdit}
                 onDelete={confirmDelete}
                 onBacktest={handleRunBacktest}
+                onViewDetail={(rule) => setSelectedRuleDetail(rule)}
                 selectedIds={selectedRuleIds}
                 setSelectedIds={setSelectedRuleIds}
               />
@@ -371,141 +423,245 @@ const RuleManagement = () => {
         </div>
       )}
 
-      {/* Visual Rule Node Composer */}
-      {activeTab === 'composer' && (
-        <div style={{ background: '#0f172a', padding: '24px', borderRadius: '12px', color: '#f8fafc', border: '1px solid #334155' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <div>
-              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: '#38bdf8' }}>
-                <Cpu size={22} /> Visual Block-Based Rule Composer
-              </h3>
-              <p style={{ margin: '4px 0 0', color: '#94a3b8', fontSize: '14px' }}>
-                Ghép nối các khối logic giao thức OT/ICS để khởi tạo luật phát hiện bất thường mà không cần viết mã.
-              </p>
-            </div>
-            <VButton variant="primary" onClick={handleSaveComposerRule}>
-              Lưu Quy Tắc Phát Hiện
-            </VButton>
+      {/* TAB 2: MITRE ATT&CK TEMPLATE MARKETPLACE */}
+      {activeTab === 'templates' && (
+        <div style={{ padding: '4px' }}>
+          {/* Section Title placed directly below tab nav */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: '#000000', fontSize: '1.2rem', fontWeight: 800 }}>
+              <Sparkles size={22} color="#2563eb" /> Mẫu Quy tắc Phát hiện Chuẩn Quốc Tế (Sigma & MITRE ATT&CK for ICS)
+            </h3>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px' }}>Tên Quy tắc:</label>
-              <input
-                type="text"
-                placeholder="VD: Modbus FC05 Unauthorized Single Coil Force"
-                value={composerName}
-                onChange={(e) => setComposerName(e.target.value)}
-                style={{ width: '100%', padding: '10px', background: '#1e293b', border: '1px solid #475569', borderRadius: '6px', color: '#fff' }}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '13px', color: '#cbd5e1', marginBottom: '6px' }}>Mô tả ngắn:</label>
-              <input
-                type="text"
-                placeholder="VD: Giám sát gói tin Modbus TCP vi phạm quy trình ghi đè thanh ghi"
-                value={composerDesc}
-                onChange={(e) => setComposerDesc(e.target.value)}
-                style={{ width: '100%', padding: '10px', background: '#1e293b', border: '1px solid #475569', borderRadius: '6px', color: '#fff' }}
-              />
-            </div>
-          </div>
-
-          {/* Node Graph Canvas */}
-          <div style={{ background: '#1e293b', padding: '24px', borderRadius: '10px', border: '1px dashed #475569', display: 'flex', alignItems: 'center', justifyContent: 'space-around', position: 'relative' }}>
-            {/* Node 1: Protocol */}
-            <div style={{ background: '#0f172a', border: '2px solid #38bdf8', padding: '16px', borderRadius: '8px', minWidth: '180px', textAlign: 'center' }}>
-              <div style={{ fontSize: '12px', color: '#38bdf8', fontWeight: 600 }}>1. GIAO THỨC ICS</div>
+          {/* Template Search & Filter Controls - Rendered in a single inline row matching Tab 1 */}
+          <VFilterPage
+            searchPlaceholder="Nhập mã MITRE (vd: T0855) hoặc tên kịch bản tấn công…"
+            searchValue={templateSearch}
+            onSearchChange={(e) => setTemplateSearch(e.target.value)}
+          >
+            <div className="filter-select-wrapper">
               <select
-                value={nodeProtocol}
-                onChange={(e) => setNodeProtocol(e.target.value)}
-                style={{ marginTop: '8px', background: '#1e293b', color: '#fff', border: '1px solid #475569', padding: '6px', borderRadius: '4px', width: '100%' }}
+                className="v-filter-select"
+                value={templateProtocolFilter}
+                onChange={(e) => setTemplateProtocolFilter(e.target.value)}
+                style={{ paddingRight: templateProtocolFilter !== 'ALL' ? '28px' : undefined }}
               >
-                <option value="MODBUS_TCP">Modbus TCP (Port 502)</option>
-                <option value="SIEMENS_S7">Siemens S7comm (Port 102)</option>
-                <option value="DNP3">DNP3 Substation</option>
-                <option value="CIP_ETHERNETIP">EtherNet/IP (CIP)</option>
+                <option value="ALL">Tất cả Giao thức</option>
+                <option value="modbus">Modbus TCP</option>
+                <option value="s7">Siemens S7comm</option>
+                <option value="dnp3">DNP3 Substation</option>
+                <option value="cip">CIP / EtherNetIP</option>
               </select>
+              {templateProtocolFilter !== 'ALL' && (
+                <X
+                  size={14}
+                  className="clear-icon"
+                  onClick={() => setTemplateProtocolFilter('ALL')}
+                />
+              )}
             </div>
 
-            <div style={{ color: '#38bdf8', fontSize: '20px', fontWeight: 700 }}>➔</div>
-
-            {/* Node 2: Condition */}
-            <div style={{ background: '#0f172a', border: '2px solid #eab308', padding: '16px', borderRadius: '8px', minWidth: '220px', textAlign: 'center' }}>
-              <div style={{ fontSize: '12px', color: '#eab308', fontWeight: 600 }}>2. ĐIỀU KIỆN VI PHẠM</div>
-              <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
-                <input
-                  type="text"
-                  value={nodeField}
-                  onChange={(e) => setNodeField(e.target.value)}
-                  style={{ background: '#1e293b', color: '#fff', border: '1px solid #475569', padding: '4px', borderRadius: '4px', width: '90px', fontSize: '12px' }}
+            <div className="filter-select-wrapper">
+              <select
+                className="v-filter-select"
+                value={templateSeverityFilter}
+                onChange={(e) => setTemplateSeverityFilter(e.target.value)}
+                style={{ paddingRight: templateSeverityFilter !== 'ALL' ? '28px' : undefined }}
+              >
+                <option value="ALL">Tất cả mức độ</option>
+                <option value="CRITICAL">CRITICAL - Nghiêm trọng</option>
+                <option value="HIGH">HIGH - Cao</option>
+              </select>
+              {templateSeverityFilter !== 'ALL' && (
+                <X
+                  size={14}
+                  className="clear-icon"
+                  onClick={() => setTemplateSeverityFilter('ALL')}
                 />
-                <select
-                  value={nodeOperator}
-                  onChange={(e) => setNodeOperator(e.target.value)}
-                  style={{ background: '#1e293b', color: '#fff', border: '1px solid #475569', padding: '4px', borderRadius: '4px', fontSize: '12px' }}
+              )}
+            </div>
+          </VFilterPage>
+
+          {/* Templates Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '16px' }}>
+            {filteredTemplates.map((tpl, idx) => {
+              const installedRule = getInstalledRuleForTemplate(tpl);
+              const isInstalled = Boolean(installedRule);
+              const isToggling = togglingTemplateName === tpl.rule_name;
+
+              return (
+                <div
+                  key={idx}
+                  style={{
+                    background: '#0f172a',
+                    border: '1px solid #334155',
+                    borderRadius: '12px',
+                    padding: '18px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justify: 'space-between',
+                    boxShadow: '0 4px 6px -1px rgba(0,0,0,0.3)',
+                    color: '#f8fafc'
+                  }}
                 >
-                  <option value=">">&gt;</option>
-                  <option value="==">==</option>
-                  <option value="!=">!=</option>
-                  <option value="<">&lt;</option>
-                </select>
-                <input
-                  type="number"
-                  value={nodeValue}
-                  onChange={(e) => setNodeValue(Number(e.target.value))}
-                  style={{ background: '#1e293b', color: '#fff', border: '1px solid #475569', padding: '4px', borderRadius: '4px', width: '60px', fontSize: '12px' }}
-                />
-              </div>
-            </div>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                      <span style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)', padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                        <Globe size={12} /> {tpl.mitre_technique || 'MITRE ICS'}
+                      </span>
+                      <span className={`sev-${(tpl.severity || 'HIGH').toLowerCase()}`}>
+                        {tpl.severity || 'HIGH'}
+                      </span>
+                    </div>
 
-            <div style={{ color: '#eab308', fontSize: '20px', fontWeight: 700 }}>➔</div>
+                    <h4 style={{ margin: '8px 0 6px', fontSize: '15px', color: '#f8fafc', fontWeight: 600 }}>
+                      {tpl.rule_name}
+                    </h4>
+                    <p style={{ fontSize: '13px', color: '#94a3b8', margin: '0 0 10px', lineHeight: 1.5 }}>
+                      {tpl.description}
+                    </p>
 
-            {/* Node 3: Action */}
-            <div style={{ background: '#0f172a', border: '2px solid #ef4444', padding: '16px', borderRadius: '8px', minWidth: '180px', textAlign: 'center' }}>
-              <div style={{ fontSize: '12px', color: '#ef4444', fontWeight: 600 }}>3. HÀNH ĐỘNG</div>
-              <select
-                value={nodeAction}
-                onChange={(e) => setNodeAction(e.target.value)}
-                style={{ marginTop: '8px', background: '#1e293b', color: '#fff', border: '1px solid #475569', padding: '6px', borderRadius: '4px', width: '100%' }}
-              >
-                <option value="CREATE_CRITICAL_ALERT">Tạo Cảnh báo CRITICAL</option>
-                <option value="BLOCK_IP_CONTAINMENT">Chặn IP Nguồn (Containment)</option>
-                <option value="TRIGGER_SOAR_PLAYBOOK">Kích hoạt SOAR Playbook</option>
-              </select>
-            </div>
+                    <div style={{ fontSize: '11px', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.25)', padding: '2px 8px', borderRadius: '4px', display: 'inline-block', marginBottom: '12px' }}>
+                      Nguồn Live Feed: <strong>{tpl.source_feed || 'SigmaHQ & MITRE ATT&CK for ICS'}</strong>
+                    </div>
+                  </div>
+
+                  {/* Actions Row */}
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #1e293b' }}>
+                    <button
+                      title="Xem chi tiết thông số quy tắc mẫu"
+                      onClick={() => setSelectedTemplateDetail(tpl)}
+                      style={{
+                        padding: '8px 12px',
+                        background: '#1e293b',
+                        border: '1px solid #475569',
+                        color: '#cbd5e1',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justify: 'center'
+                      }}
+                    >
+                      <Eye size={16} />
+                    </button>
+
+                    <button
+                      disabled={isToggling}
+                      onClick={() => handleToggleTemplate(tpl)}
+                      style={{
+                        flex: 1,
+                        padding: '8px 14px',
+                        background: isInstalled ? 'rgba(239, 68, 68, 0.15)' : '#2563eb',
+                        border: isInstalled ? '1px solid #ef4444' : '1px solid #3b82f6',
+                        color: isInstalled ? '#f87171' : '#ffffff',
+                        borderRadius: '6px',
+                        cursor: isToggling ? 'not-allowed' : 'pointer',
+                        fontWeight: 600,
+                        fontSize: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justify: 'center',
+                        gap: '6px',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {isToggling ? (
+                        'Đang xử lý…'
+                      ) : isInstalled ? (
+                        <>
+                          <Trash2 size={15} /> Xóa quy tắc này
+                        </>
+                      ) : (
+                        <>
+                          <Plus size={15} /> Sử dụng quy tắc này
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
+
+          {!filteredTemplates.length && (
+            <p style={{ textAlign: 'center', color: '#64748b', padding: '40px 0' }}>
+              Không tìm thấy mẫu quy tắc nào phù hợp với điều kiện tìm kiếm.
+            </p>
+          )}
         </div>
       )}
 
-      {/* MITRE ATT&CK for ICS Template Marketplace */}
-      {activeTab === 'templates' && (
-        <div style={{ padding: '8px' }}>
-          <h3 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Sparkles size={20} color="#2563eb" /> Mẫu Quy tắc Phát hiện Chuẩn Quốc Tế (Sigma & MITRE ATT&CK for ICS)
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '16px' }}>
-            {templates.map((tpl, idx) => (
-              <div key={idx} style={{ background: 'var(--white)', border: '1px solid var(--slate-200)', borderRadius: '10px', padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 2px 4px rgba(0,0,0,0.05)' }}>
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
-                    <span style={{ background: '#eff6ff', color: '#2563eb', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 600 }}>
-                      {tpl.mitre_technique || 'MITRE ICS'}
-                    </span>
-                    <span className={`badge badge-${tpl.severity === 'CRITICAL' ? 'danger' : 'outline'}`}>
-                      {tpl.severity}
-                    </span>
+      {/* Active Rule Detail Modal */}
+      {selectedRuleDetail && (
+        <VDialog
+          visible={Boolean(selectedRuleDetail)}
+          onHide={() => setSelectedRuleDetail(null)}
+          header={`Chi Tiết Quy Tắc: ${selectedRuleDetail.rule_name}`}
+        >
+          <div style={{ padding: '8px 0', color: '#f8fafc' }}>
+            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 14px' }}>
+              {selectedRuleDetail.description || 'Không có mô tả chi tiết.'}
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', background: '#0f172a', padding: '12px', borderRadius: '8px', fontSize: '12px', marginBottom: '14px', border: '1px solid #334155' }}>
+              <div><span style={{ color: '#94a3b8' }}>Tên đầy đủ:</span> <strong style={{ color: '#ffffff' }}>{selectedRuleDetail.rule_name}</strong></div>
+              <div><span style={{ color: '#94a3b8' }}>Mã MITRE ICS:</span> <strong style={{ color: '#38bdf8' }}>{selectedRuleDetail.mitre_technique || 'N/A'}</strong></div>
+              <div><span style={{ color: '#94a3b8' }}>Mức độ nghiêm trọng:</span> <span className={`sev-${(selectedRuleDetail.severity || 'HIGH').toLowerCase()}`}>{selectedRuleDetail.severity}</span></div>
+              <div><span style={{ color: '#94a3b8' }}>Trạng thái:</span> <strong style={{ color: selectedRuleDetail.is_active ? '#34d399' : '#94a3b8' }}>{selectedRuleDetail.is_active ? 'Đang hoạt động' : 'Tạm dừng'}</strong></div>
+              <div><span style={{ color: '#94a3b8' }}>Cửa sổ quan sát:</span> <strong style={{ color: '#f8fafc' }}>{selectedRuleDetail.time_window_seconds}s</strong></div>
+              <div><span style={{ color: '#94a3b8' }}>Ngưỡng vi phạm:</span> <strong style={{ color: '#f8fafc' }}>{selectedRuleDetail.trigger_count} lần</strong></div>
+            </div>
+
+            <h4 style={{ fontSize: '13px', color: '#cbd5e1', marginBottom: '8px' }}>Biểu thức Điều kiện Vi phạm (Conditions):</h4>
+            <div style={{ background: '#0f172a', border: '1px solid #1e293b', padding: '12px', borderRadius: '6px', fontSize: '12px' }}>
+              {selectedRuleDetail.conditions && selectedRuleDetail.conditions.length > 0 ? (
+                selectedRuleDetail.conditions.map((cond, i) => (
+                  <div key={i} style={{ display: 'flex', gap: '8px', color: '#38bdf8', fontFamily: 'monospace' }}>
+                    <span>Trường: <strong>{cond.field}</strong></span>
+                    <span>{cond.operator}</span>
+                    <span style={{ color: '#f43f5e' }}>{String(cond.value)}</span>
                   </div>
-                  <h4 style={{ margin: '8px 0', fontSize: '15px', color: 'var(--slate-900)' }}>{tpl.rule_name}</h4>
-                  <p style={{ fontSize: '13px', color: 'var(--slate-600)', margin: '0 0 12px', lineHeight: 1.4 }}>{tpl.description}</p>
-                </div>
-                <VButton variant="primary" style={{ width: '100%' }} onClick={() => handleApplyTemplate(tpl)}>
-                  Sử dụng Quy tắc mẫu này
-                </VButton>
-              </div>
-            ))}
+                ))
+              ) : (
+                <span style={{ color: '#94a3b8' }}>Không có điều kiện trường tùy chỉnh.</span>
+              )}
+            </div>
           </div>
-        </div>
+        </VDialog>
+      )}
+
+      {/* Template Detail Modal */}
+      {selectedTemplateDetail && (
+        <VDialog
+          visible={Boolean(selectedTemplateDetail)}
+          onHide={() => setSelectedTemplateDetail(null)}
+          header={`Thông số Quy Tắc Mẫu: ${selectedTemplateDetail.rule_name}`}
+        >
+          <div style={{ padding: '8px 0', color: '#f8fafc' }}>
+            <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 14px' }}>
+              {selectedTemplateDetail.description}
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', background: '#0f172a', padding: '12px', borderRadius: '8px', fontSize: '12px', marginBottom: '14px' }}>
+              <div><span style={{ color: '#94a3b8' }}>Mã MITRE ICS:</span> <strong style={{ color: '#38bdf8' }}>{selectedTemplateDetail.mitre_technique || 'N/A'}</strong></div>
+              <div><span style={{ color: '#94a3b8' }}>Mức độ:</span> <span className={`sev-${(selectedTemplateDetail.severity || 'HIGH').toLowerCase()}`}>{selectedTemplateDetail.severity}</span></div>
+              <div><span style={{ color: '#94a3b8' }}>Cửa sổ quan sát (Window):</span> <strong style={{ color: '#cbd5e1' }}>{selectedTemplateDetail.time_window_seconds}s</strong></div>
+              <div><span style={{ color: '#94a3b8' }}>Ngưỡng kích hoạt:</span> <strong style={{ color: '#cbd5e1' }}>{selectedTemplateDetail.trigger_count} lần</strong></div>
+            </div>
+
+            <h4 style={{ fontSize: '13px', color: '#cbd5e1', marginBottom: '8px' }}>Biểu thức Điều kiện Vi phạm (Conditions):</h4>
+            <div style={{ background: '#0f172a', border: '1px solid #1e293b', padding: '12px', borderRadius: '6px', fontSize: '12px' }}>
+              {selectedTemplateDetail.conditions?.map((cond, i) => (
+                <div key={i} style={{ display: 'flex', gap: '8px', color: '#38bdf8', fontFamily: 'monospace' }}>
+                  <span>Trường: <strong>{cond.field}</strong></span>
+                  <span>{cond.operator}</span>
+                  <span style={{ color: '#f43f5e' }}>{String(cond.value)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </VDialog>
       )}
 
       {/* Backtesting Sandbox Modal */}
@@ -517,30 +673,30 @@ const RuleManagement = () => {
         >
           <div style={{ padding: '12px 0' }}>
             {backtestLoading ? (
-              <div style={{ textAlign: 'center', padding: '24px', color: 'var(--slate-600)' }}>
+              <div style={{ textAlign: 'center', padding: '24px', color: '#94a3b8' }}>
                 Đang chạy mô phỏng Backtest trên dữ liệu nhật ký quá khứ...
               </div>
             ) : backtestResults ? (
               <div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '12px', color: '#64748b' }}>Số lần khớp mẫu</div>
-                    <div style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a' }}>{backtestResults.hitsCount}</div>
+                  <div style={{ background: '#0f172a', border: '1px solid #1e293b', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>Số lần khớp mẫu</div>
+                    <div style={{ fontSize: '20px', fontWeight: 700, color: '#f8fafc' }}>{backtestResults.hitsCount}</div>
                   </div>
-                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '12px', color: '#64748b' }}>Tỷ lệ báo động giả</div>
-                    <div style={{ fontSize: '20px', fontWeight: 700, color: '#16a34a' }}>{backtestResults.falsePositiveRate}</div>
+                  <div style={{ background: '#0f172a', border: '1px solid #1e293b', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>Tỷ lệ báo động giả</div>
+                    <div style={{ fontSize: '20px', fontWeight: 700, color: '#10b981' }}>{backtestResults.falsePositiveRate}</div>
                   </div>
-                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '12px', color: '#64748b' }}>Đánh giá độ tin cậy</div>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#2563eb', marginTop: '4px' }}>{backtestResults.status}</div>
+                  <div style={{ background: '#0f172a', border: '1px solid #1e293b', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>Đánh giá độ tin cậy</div>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#38bdf8', marginTop: '4px' }}>{backtestResults.status}</div>
                   </div>
                 </div>
 
-                <h4 style={{ fontSize: '14px', marginBottom: '8px' }}>Mẫu sự kiện lịch sử bị phát hiện:</h4>
+                <h4 style={{ fontSize: '14px', marginBottom: '8px', color: '#f8fafc' }}>Mẫu sự kiện lịch sử bị phát hiện:</h4>
                 <div style={{ background: '#0f172a', color: '#38bdf8', padding: '12px', borderRadius: '6px', fontFamily: 'monospace', fontSize: '12px', maxHeight: '180px', overflowY: 'auto' }}>
                   {backtestResults.samples?.map((s, idx) => (
-                    <div key={idx} style={{ marginBottom: '6px', borderBottom: '1px solid #1e293b', pb: '4px' }}>
+                    <div key={idx} style={{ marginBottom: '6px', borderBottom: '1px solid #1e293b', paddingBottom: '4px' }}>
                       [{s.timestamp}] Device: {s.device} | Metric: {s.metric} = {s.value}
                     </div>
                   ))}

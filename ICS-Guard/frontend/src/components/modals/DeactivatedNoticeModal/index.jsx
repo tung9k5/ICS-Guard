@@ -44,7 +44,7 @@ const DeactivatedNoticeModal = ({ visible, onLogout }) => {
           <span className="countdown-highlight">{seconds}s</span>.
         </p>
         <span className="lock-badge-subtext">
-          🔒 Hệ thống đang khóa quyền thao tác và chỉ hiển thị Tổng quan Dashboard.
+          Hệ thống đang khóa quyền thao tác và chỉ hiển thị Tổng quan Dashboard.
         </span>
       </div>
     </div>

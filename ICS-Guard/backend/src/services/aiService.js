@@ -81,7 +81,7 @@ class AiService {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ evidence: compact(evidence), language: 'vi' }),
-        signal: AbortSignal.timeout(125000),
+        signal: AbortSignal.timeout(8000),
       });
       if (!response.ok) throw new Error(`AI Engine returned status ${response.status}`);
       const data = await response.json();

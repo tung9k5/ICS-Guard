@@ -122,6 +122,13 @@ export const connectMqtt = () => {
         console.error('[MqttService] ACK subscription failed:', err.message);
       }
     });
+
+    client.subscribe('ics/control/attack', (err) => {
+      if (!err) console.log('[MqttService] Subscribed to topic "ics/control/attack" successfully.');
+    });
+    client.subscribe('lab/v1/commands/attack/#', (err) => {
+      if (!err) console.log('[MqttService] Subscribed to topic "lab/v1/commands/attack/#" successfully.');
+    });
   });
 
   client.on('message', async (topic, message) => {
@@ -131,6 +138,12 @@ export const connectMqtt = () => {
       // Decrypt E2E Payload if encrypted
       if (payload.encrypted_data) {
         payload = decryptPayload(payload);
+      }
+
+      // Handle Attack Simulation Commands
+      if (topic === 'ics/control/attack' || topic.startsWith('lab/v1/commands/attack/')) {
+        await processAttackCommand(payload);
+        return;
       }
 
       // Handle Full Snapshot from Hardware Runtime Engine
@@ -561,8 +574,145 @@ const processStructuredLogs = async (payload) => {
   }
 };
 
+const recentAttackLocks = new Map();
+
+export async function processAttackCommand(payload) {
+  const deviceId = payload.device_id || payload.target_id;
+  const attackType = payload.attack_type || payload.scenario_id;
+  const action = payload.action || (attackType === 'stop' || payload.scenario_id === 'stop' ? 'stop' : 'start');
+
+  if (!deviceId || !attackType) return;
+
+  // 1. Deduplication Lock (3-second window)
+  const lockKey = `${deviceId}:${action}:${attackType}`;
+  const now = Date.now();
+  if (recentAttackLocks.has(lockKey) && (now - recentAttackLocks.get(lockKey) < 3000)) {
+    console.log(`[MqttService] Deduplicated repeated attack command for ${lockKey}`);
+    return;
+  }
+  recentAttackLocks.set(lockKey, now);
+
+  // Clean old locks periodically
+  if (recentAttackLocks.size > 200) {
+    for (const [k, ts] of recentAttackLocks.entries()) {
+      if (now - ts > 10000) recentAttackLocks.delete(k);
+    }
+  }
+
+  try {
+    const device = await Device.findById(deviceId);
+    if (!device) return;
+
+    const io = socketService.getIo();
+    const attackerIp = payload.source_ip || payload.metadata?.source_ip || '192.168.10.100';
+
+    if (device.status === 'isolated' && action !== 'stop' && attackType !== 'stop') {
+      console.log(`[MqttService] Device "${device.name}" is ISOLATED. Attack command blocked.`);
+      if (io) {
+        io.emit('HARDWARE_LOG_STREAM', {
+          timestamp: new Date().toISOString(),
+          device_id: device._id,
+          device_name: device.name,
+          log_level: 'WARNING',
+          event: 'ATTACK_BLOCKED',
+          message: `[ATTACK BLOCKED] Thiết bị "${device.name}" đã bị CÔ LẬP. Lệnh tấn công (${attackType}) từ IP ${attackerIp} bị chặn hoàn toàn bởi Firewall!`
+        });
+      }
+      return;
+    }
+
+    if (action === 'stop' || attackType === 'stop') {
+      device.status = 'active';
+      device.operational_status = 'active';
+      await device.save();
+
+      if (io) {
+        io.emit('DEVICE_SYNC', { action: 'restore', device_id: device._id, device });
+        io.emit('DEVICE_STATUS_CHANGED', device);
+        io.emit('HARDWARE_LOG_STREAM', {
+          timestamp: new Date().toISOString(),
+          device_id: device._id,
+          device_name: device.name,
+          log_level: 'INFO',
+          event: 'ATTACK_STOPPED',
+          message: `[RESTORE] Đã dừng tấn công và khôi phục hoạt động cho thiết bị ${device.name}.`
+        });
+      }
+      console.log(`[MqttService] Attack stopped on device "${device.name}" (${device._id}). Restored to active.`);
+    } else {
+      device.status = 'quarantined';
+      device.operational_status = 'quarantined';
+      device.risk_score = 100;
+      await device.save();
+
+      const category = 'CYBER_ATTACK';
+
+      const alert = await Alert.create({
+        device_id: device._id,
+        device_name: device.name,
+        severity: 'CRITICAL',
+        source_ip: attackerIp,
+        title: `⚔️ TẤN CÔNG MẠNG: ${String(attackType).toUpperCase()}`,
+        description: `Phát hiện chiến dịch tấn công mạng OT "${attackType}" từ IP ${attackerIp} tác động lên thiết bị ${device.name} (${device.ipAddress || '192.168.10.15'}).`,
+        status: 'new',
+        category
+      });
+
+      const incident = await Incident.create({
+        title: `SỰ CỐ AN NINH: ${String(attackType).toUpperCase()} trên ${device.name}`,
+        severity: 'CRITICAL',
+        status: 'investigating',
+        affected_devices: [device._id],
+        description: `Tác động từ kịch bản "${attackType}" (IP nguồn: ${attackerIp}) làm thay đổi trạng thái vận hành của ${device.name}.`,
+        root_cause: `Thao tác kích hoạt giả lập tấn công từ IP nguồn ${attackerIp}.`,
+        alert_ids: [alert._id],
+        created_at: new Date()
+      });
+
+      alert.incident_id = incident._id;
+      await alert.save();
+
+      // Realtime WebSocket Emissions
+      if (io) {
+        io.emit('DEVICE_RISK_UPDATED', { device_id: String(device._id), risk_score: 100 });
+        io.emit('DEVICE_SYNC', { action: 'attack', device_id: device._id, device, attack_type: attackType });
+        io.emit('DEVICE_STATUS_CHANGED', device);
+        io.emit('INCIDENT_CREATED', incident);
+        io.emit('NEW_INCIDENT', incident);
+        io.emit('ALERT_CREATED', alert);
+        io.emit('NEW_ALERT', alert);
+
+        // Live Log Stream for Hardware Simulator Raw Logs
+        io.emit('HARDWARE_LOG_STREAM', {
+          timestamp: new Date().toISOString(),
+          device_id: device._id,
+          device_name: device.name,
+          log_level: 'CRITICAL',
+          event: attackType.toUpperCase(),
+          message: `[ATTACK WARNING] Phát hiện hành vi ${isHardwareHazard ? 'SỰ CỐ PHẦN CỨNG' : 'TẤN CÔNG MẠNG'} "${attackType}" tác động lên thiết bị ${device.name}!`
+        });
+      }
+
+      // Telegram Alert
+      const telegramButtons = [
+        { text: '🔒 Cô lập thiết bị', callback_data: `isolate_device:${device._id}` }
+      ];
+      const telegramText = `⚔️ *[CẢNH BÁO TẤN CÔNG MẠNG OT/ICS]*\n\nThiết bị: *${device.name}* (ID: \`${device._id}\`)\nVùng: *${device.zone || 'Zone-A'}*\nKịch bản tấn công: *${attackType.toUpperCase()}*\nĐịa chỉ IP: \`${device.ipAddress || '192.168.10.15'}\`\nTrạng thái: *QUARANTINED*\nMức độ: *CRITICAL*`;
+
+      sendTelegramAlert(telegramText, telegramButtons, ['admin', 'analyst']).catch(err => {
+        console.error('[MqttService] Telegram send error:', err.message);
+      });
+
+      console.log(`[MqttService] Attack "${attackType}" launched on device "${device.name}" (${device._id}). Status set to quarantined.`);
+    }
+  } catch (err) {
+    console.error('[MqttService] Error processing attack command:', err);
+  }
+}
+
 export default {
   connectMqtt,
   publishMqtt,
-  publishMqttAsync
+  publishMqttAsync,
+  processAttackCommand
 };

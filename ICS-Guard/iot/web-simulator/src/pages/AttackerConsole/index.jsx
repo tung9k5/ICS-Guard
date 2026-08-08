@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ApiAttacks from '@/api/attacks';
 import { 
   Network, Cpu, Radio, Thermometer, Droplets, Zap, Wind, Gauge, 
   ToggleLeft, ToggleRight, Volume2, Fan, Bell, ShieldAlert, Play, Square,
-  ChevronDown, ChevronRight, RefreshCw, Activity, ShieldCheck, LogOut
+  ChevronDown, ChevronRight, RefreshCw, Activity, ShieldCheck, LogOut,
+  AlertTriangle, WifiOff
 } from 'lucide-react';
 import './AttackerConsole.scss';
 
@@ -20,26 +21,35 @@ const loadActiveRuns = () => {
 };
 
 const ATTACK_SCENARIOS = {
-  gateway: [
-    { type: 'wan_dos', name: 'Tấn công Từ chối dịch vụ WAN (WAN DoS)', desc: 'Spam handshake TLS làm cạn kiệt tài nguyên xử lý của Gateway.' },
-    { type: 'route_poisoning', name: 'Đầu độc định tuyến (Route Poisoning)', desc: 'Chèn tuyến tĩnh giả mạo chuyển hướng lưu lượng về IP hacker.' }
-  ],
   controller: [
-    { type: 'logic_tampering', name: 'Thay đổi Logic Ladder (Logic Tampering)', desc: 'Ghi đè chương trình điều khiển OB1 trên PLC gây lỗi Checksum.' },
-    { type: 'modbus_flooding', name: 'Tràn kết nối Modbus TCP (Modbus Flood)', desc: 'Mở hàng loạt session Modbus TCP giả mạo làm treo cổng 502.' }
-  ],
-  chip: [
-    { type: 'ota_tampering', name: 'Nạp Firmware độc hại qua OTA', desc: 'Mạo danh máy chủ OTA gửi firmware sai chữ ký số làm hỏng phân vùng nạp.' },
-    { type: 'watchdog_reset', name: 'Kích hoạt lỗi Watchdog (WDT Reset)', desc: 'Kích hoạt vòng lặp vô hạn làm tràn bộ nhớ Heap và reset chip nhúng.' }
+    { type: 'modbus_overwrite', name: 'Ghi đè Thanh ghi Modbus FC06/FC05', desc: 'Ép đóng van xả khẩn cấp nhưng bơm vẫn chạy -> Áp suất vọt 18 bar -> Nổ vỡ đường ống vật lý (Pipe Burst).' },
+    { type: 'plc_scan_stop', name: 'Đóng băng Vòng quét PLC (OB1 Freeze / Logic Stop)', desc: 'Gửi mã ngắt khẩn cấp làm ngưng trệ vòng quét điều khiển OB1 của PLC.' },
+    { type: 'ladder_tamper', name: 'Nạp Chương trình Ladder Trái Phép (Ladder Logic Upload)', desc: 'Thay đổi thuật toán điều khiển tự động trên bộ điều khiển lập trình.' },
+    { type: 'modbus_flooding', name: 'Tràn kết nối Modbus TCP (Modbus Flood)', desc: 'Mở hàng loạt phiên Modbus TCP giả lập để gây nghẽn kênh điều khiển.' }
   ],
   sensor: [
-    { type: 'sensor_spoofing', name: 'Giả mạo dữ liệu ADC (Data Spoofing)', desc: 'Chèn chỉ số điện áp giả lập gây báo động giả trị vật lý vượt ngưỡng.' },
-    { type: 'signal_loss', name: 'Gây nhiễu ngắt sóng cảm biến (Signal Loss)', desc: 'Làm mất gói tin truyền dẫn vô tuyến gây ngoại tuyến (Offline) thiết bị.' }
+    { type: 'false_telemetry_injection', name: 'Bơm Chỉ Số Cảm Biến Giả (False Telemetry Injection)', desc: 'Bơm dữ liệu nhiệt độ/áp suất giả khiến hệ thống SCADA ra quyết định sai lệch.' },
+    { type: 'signal_freeze', name: 'Đóng Băng Chỉ Số Cảm Biến (Signal Freeze)', desc: 'Cố định chỉ số nhiệt độ 35°C dù thực tế 90°C -> Lò hơi tiếp tục đốt gây nổ lò hơi.' },
+    { type: 'sensor_spoofing', name: 'Giả Mạo Dữ Liệu Cảm Biến (Sensor Spoofing)', desc: 'Chèn dữ liệu đo giả lập để làm lệch quyết định điều khiển và cảnh báo.' }
   ],
   actuator: [
-    { type: 'command_flooding', name: 'Gửi dồn dập lệnh điều khiển (Wear & Tear)', desc: 'Gửi liên tiếp lệnh đóng/mở làm quá tải động cơ và kẹt phần cứng.' },
-    { type: 'unauthorized_actuation', name: 'Kích hoạt van/rơ-le trái phép', desc: 'Bỏ qua logic bảo vệ của PLC ghi trực tiếp lệnh kích hoạt cơ cấu chấp hành.' }
+    { type: 'rapid_oscillation', name: 'Nhấp Nhả Rơ-le Tần Suất Cao (Rapid Oscillation)', desc: 'Bật/tắt rơ-le 100 lần/phút -> Quá dòng khởi động liên tục -> Cháy động cơ vật lý (Motor Burnout).' },
+    { type: 'unsolicited_override', name: 'Ghi Đè Van Chấp Hành Khẩn Cấp (Unsolicited Valve Override)', desc: 'Ép van đóng/mở trái quy trình điều khiển gây hiện tượng búa nước (Water Hammer).' }
   ]
+};
+
+const getAttackNodeType = (nodeType) => {
+  const normalized = String(nodeType || '').trim().toLowerCase();
+  if (normalized.includes('sensor')) return 'sensor';
+  if (['actuator', 'pump', 'motor', 'breaker', 'alarm', 'valve'].some(k => normalized.includes(k))) return 'actuator';
+  return 'controller';
+};
+
+const getApiErrorMessage = (error, fallback) => {
+  if (error?.response?.status === 401) {
+    return 'Phiên attacker đã hết hạn hoặc chưa hợp lệ. Vui lòng tải lại trang tại /attacker.';
+  }
+  return error?.response?.data?.message || error?.response?.data?.error || error?.message || fallback;
 };
 
 const getIcon = (iconName) => {
@@ -66,17 +76,16 @@ const AttackerConsole = () => {
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedNodes, setSelectedNodes] = useState([]);
-  const [selectedAttacks, setSelectedAttacks] = useState({}); // format: { [device_type]: attack_type }
+  const [selectedAttacks, setSelectedAttacks] = useState({});
   const [triggering, setTriggering] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [collapsedZones, setCollapsedZones] = useState({});
-  const [activeRunIds, setActiveRunIds] = useState(loadActiveRuns);
 
   const handleLogout = () => {
     localStorage.removeItem('attacker_access_token');
     localStorage.removeItem('attacker_refresh_token');
     sessionStorage.removeItem(ACTIVE_RUNS_KEY);
-    navigate('/attacker/login');
+    navigate('/');
   };
 
   const fetchDevices = async (isInitial = false) => {
@@ -89,23 +98,21 @@ const AttackerConsole = () => {
         const id = device._id ?? device.id ?? device.device_id;
         const parentId = device.parent_id ?? device.parentId ?? null;
         return {
-        ...device,
-        _id: id == null ? '' : String(id),
-        name: device.name || id || 'Device',
-        node_type: device.node_type || device.type || 'sensor',
-        zone: device.zone || 'Zone-A',
-        status: device.status || device.operational_status || 'active',
-        parent_id: parentId == null || parentId === '' ? null : String(parentId),
-      };
-      }).filter(device => device._id);
+          ...device,
+          _id: id == null ? '' : String(id),
+          name: device.name || id || 'Device',
+          node_type: device.node_type || device.type || 'sensor',
+          zone: device.zone || 'Zone-A',
+          status: device.status || device.operational_status || 'active',
+          parent_id: parentId == null || parentId === '' ? null : String(parentId),
+        };
+      }).filter(device =>
+        device._id &&
+        device.status !== 'decommissioned' &&
+        device.approval_status !== 'pending' &&
+        device.approval_status !== 'rejected'
+      );
       setDevices(normalized);
-      setActiveRunIds((previous) => {
-        const next = { ...previous };
-        normalized.forEach((device) => {
-          if (device.active_run_id) next[device._id] = device.active_run_id;
-        });
-        return next;
-      });
       setSelectedNodes(prev => prev.filter(id => {
         const dev = normalized.find(d => d._id === id);
         return dev && dev.status !== 'isolated';
@@ -122,13 +129,9 @@ const AttackerConsole = () => {
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => fetchDevices(false), 2000);
+    const interval = setInterval(() => fetchDevices(false), 5000);
     return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    sessionStorage.setItem(ACTIVE_RUNS_KEY, JSON.stringify(activeRunIds));
-  }, [activeRunIds]);
 
   const toggleZone = (zoneName) => {
     setCollapsedZones(prev => ({
@@ -147,10 +150,88 @@ const AttackerConsole = () => {
     });
   };
 
+  // Chaos Mode State
+  const [isChaosActive, setIsChaosActive] = useState(false);
+  const [chaosIntervalSec, setChaosIntervalSec] = useState(15);
+  const chaosTimerRef = useRef(null);
+  const runChaosAttackWave = useCallback(async () => {
+    const activeEligibleDevs = devices.filter(d =>
+      d.status !== 'isolated' &&
+      d.status !== 'offline' &&
+      d.status !== 'decommissioned' &&
+      d.approval_status !== 'pending' &&
+      d.approval_status !== 'rejected'
+    );
+
+    if (activeEligibleDevs.length === 0) return;
+
+    // Randomize 1 to 5 devices per wave
+    const numTargets = Math.min(activeEligibleDevs.length, Math.floor(Math.random() * 5) + 1);
+    const shuffled = [...activeEligibleDevs].sort(() => 0.5 - Math.random());
+    const targetDevs = shuffled.slice(0, numTargets);
+
+    try {
+      await Promise.all(targetDevs.map(dev => {
+        const scenarioId = getRandomScenarioForNode(dev.node_type);
+        const randomIp = getRandomSubnetIp(dev.zone);
+
+        return ApiAttacks.launchAttack(dev._id, scenarioId, {
+          data: {
+            device_id: dev._id,
+            target_id: dev._id,
+            scenario_id: scenarioId,
+            attack_type: scenarioId,
+            source_ip: randomIp
+          }
+        });
+      }));
+
+      setSuccessMsg(`⚡ [CHAOS MODE] Đã bắn bão tấn công tự động trên ${targetDevs.length} thiết bị ngẫu nhiên!`);
+      fetchDevices();
+    } catch (err) {
+      console.error('[ChaosMode] Wave error:', err);
+    }
+  }, [devices, fetchDevices]);
+
+  useEffect(() => {
+    if (isChaosActive) {
+      runChaosAttackWave();
+      chaosTimerRef.current = setInterval(() => {
+        runChaosAttackWave();
+      }, chaosIntervalSec * 1000);
+    } else {
+      if (chaosTimerRef.current) clearInterval(chaosTimerRef.current);
+    }
+    return () => {
+      if (chaosTimerRef.current) clearInterval(chaosTimerRef.current);
+    };
+  }, [isChaosActive, chaosIntervalSec, runChaosAttackWave]);
+
+  const getRandomSubnetIp = (zone) => {
+    const subnetMap = {
+      'Zone-A': '192.168.10',
+      'Zone-B': '10.0.4',
+      'Zone-C': '172.16.20',
+      'Default-Zone': '192.168.1'
+    };
+    const prefix = subnetMap[zone] || '192.168.10';
+    const host = Math.floor(Math.random() * 200) + 10;
+    return `${prefix}.${host}`;
+  };
+
+  const getRandomScenarioForNode = (nodeType) => {
+    const group = getAttackNodeType(nodeType);
+    const available = ATTACK_SCENARIOS[group] || [];
+    if (available.length === 0) return 'modbus_overwrite';
+    const randIdx = Math.floor(Math.random() * available.length);
+    return available[randIdx].type;
+  };
+
   const handleSelectAttack = (nodeType, attackType) => {
+    if (isChaosActive) return; // Locked during Chaos Mode
     setSelectedAttacks(prev => ({
       ...prev,
-      [nodeType]: attackType
+      [nodeType]: prev[nodeType] === attackType ? null : attackType
     }));
   };
 
@@ -165,7 +246,6 @@ const AttackerConsole = () => {
     };
 
     const branchIds = collectChildrenIds(parentDevice);
-    
     const nonIsolatedBranchIds = branchIds.filter(id => {
       const dev = deviceList.find(d => d._id === id);
       return dev && dev.status !== 'isolated';
@@ -190,7 +270,7 @@ const AttackerConsole = () => {
     }
 
     const selectedDevices = devices.filter(d => selectedNodes.includes(d._id));
-    const typesToAttack = Array.from(new Set(selectedDevices.map(d => d.node_type)));
+    const typesToAttack = Array.from(new Set(selectedDevices.map(d => getAttackNodeType(d.node_type))));
 
     const missingAttackTypes = typesToAttack.filter(type => !selectedAttacks[type]);
     if (missingAttackTypes.length > 0) {
@@ -202,58 +282,20 @@ const AttackerConsole = () => {
       setTriggering(true);
       setSuccessMsg('');
 
-      const attackResults = await Promise.all(selectedDevices.map((device) =>
-        ApiAttacks.launchAttack(device._id, selectedAttacks[device.node_type])
-      ));
-      setActiveRunIds((previous) => {
-        const next = { ...previous };
-        attackResults.forEach((response, index) => {
-          const run = response?.data || response;
-          if (run?.run_id) next[selectedDevices[index]._id] = run.run_id;
-        });
-        return next;
-      });
-      setSuccessMsg(`🚀 Đã khởi động chiến dịch tấn công thành công trên ${selectedDevices.length} thiết bị!`);
+      await Promise.all(selectedDevices.map((device) => {
+        const typeGroup = getAttackNodeType(device.node_type);
+        const attackType = selectedAttacks[typeGroup] || (
+          typeGroup === 'sensor' ? 'false_telemetry_injection' :
+          typeGroup === 'actuator' ? 'rapid_oscillation' : 'modbus_overwrite'
+        );
+        return ApiAttacks.launchAttack(device._id, attackType);
+      }));
+
+      setSuccessMsg(`Đã khởi động chiến dịch tấn công thành công trên ${selectedDevices.length} thiết bị!`);
       fetchDevices();
     } catch (error) {
       console.error('Lỗi khi kích hoạt tấn công:', error);
-      alert('Kích hoạt chiến dịch tấn công thất bại. Vui lòng kiểm tra kết nối Backend API.');
-    } finally {
-      setTriggering(false);
-    }
-  };
-
-  const handleStopAttack = async () => {
-    if (selectedNodes.length === 0) {
-      alert('Vui lòng chọn các thiết bị cần ngăn chặn/dừng tấn công.');
-      return;
-    }
-
-    try {
-      setTriggering(true);
-      setSuccessMsg('');
-
-      const selectedDevices = devices.filter((device) =>
-        selectedNodes.includes(device._id) &&
-        Boolean(activeRunIds[device._id] || device.active_run_id)
-      );
-      if (selectedDevices.length === 0) {
-        setSuccessMsg('No active attack lease exists on the selected targets.');
-        return;
-      }
-      await Promise.all(selectedDevices.map((device) =>
-        ApiAttacks.stopRun(activeRunIds[device._id] || device.active_run_id)
-      ));
-      setActiveRunIds((previous) => {
-        const next = { ...previous };
-        selectedDevices.forEach((device) => delete next[device._id]);
-        return next;
-      });
-      setSuccessMsg(`✅ Đã dừng tấn công và phục hồi trạng thái cho ${selectedDevices.length} thiết bị!`);
-      fetchDevices();
-    } catch (error) {
-      console.error('Lỗi khi dừng tấn công:', error);
-      alert('Dừng tấn công thất bại.');
+      alert(getApiErrorMessage(error, 'Kích hoạt chiến dịch tấn công thất bại. Vui lòng kiểm tra Backend API.'));
     } finally {
       setTriggering(false);
     }
@@ -357,11 +399,10 @@ const AttackerConsole = () => {
   };
 
   const getSelectedTypeCounts = () => {
-    const counts = { gateway: 0, controller: 0, chip: 0, sensor: 0, actuator: 0 };
+    const counts = { controller: 0, sensor: 0, actuator: 0 };
     devices.filter(d => selectedNodes.includes(d._id)).forEach(d => {
-      if (counts[d.node_type] !== undefined) {
-        counts[d.node_type]++;
-      }
+      const attackType = getAttackNodeType(d.node_type);
+      if (attackType && counts[attackType] !== undefined) counts[attackType]++;
     });
     return counts;
   };
@@ -378,33 +419,33 @@ const AttackerConsole = () => {
           <h1>ICS-Guard Attacker Control Panel</h1>
         </div>
         <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <button className="refresh-btn" onClick={fetchDevices} title="Tải lại thiết bị">
+          {/* Chaos Mode Auto Attacker Toggle */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '8px',
+            background: isChaosActive ? 'rgba(239, 68, 68, 0.2)' : 'rgba(30, 41, 59, 0.8)',
+            border: `1px solid ${isChaosActive ? '#ef4444' : 'rgba(255,255,255,0.1)'}`,
+            padding: '6px 12px', borderRadius: '8px'
+          }}>
+            <Zap size={18} color={isChaosActive ? '#ef4444' : '#94a3b8'} className={isChaosActive ? 'pulse-icon red' : ''} />
+            <span style={{ fontSize: '12px', fontWeight: 600, color: isChaosActive ? '#f87171' : '#cbd5e1' }}>
+              TẤN CÔNG TỰ ĐỘNG (CHAOS MODE)
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsChaosActive(prev => !prev)}
+              style={{
+                background: isChaosActive ? '#ef4444' : '#334155',
+                color: '#fff', border: 'none', padding: '4px 10px',
+                borderRadius: '6px', cursor: 'pointer', fontSize: '11px', fontWeight: 700
+              }}
+            >
+              {isChaosActive ? 'TẮT CHAOS MODE' : 'BẬT CHAOS MODE'}
+            </button>
+          </div>
+
+          <button className="refresh-btn" onClick={() => fetchDevices(true)} title="Tải lại thiết bị">
             <RefreshCw size={18} />
             <span>Làm mới</span>
-          </button>
-          <button 
-            onClick={handleLogout} 
-            className="logout-header-btn" 
-            title="Đăng xuất"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: 'rgba(244, 63, 94, 0.1)',
-              color: '#f43f5e',
-              border: '1px solid rgba(244, 63, 94, 0.3)',
-              padding: '6px 12px',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '13px',
-              fontWeight: '600',
-              transition: 'all 0.2s ease',
-              height: '34px',
-              boxSizing: 'border-box'
-            }}
-          >
-            <LogOut size={16} />
-            <span>Đăng xuất</span>
           </button>
         </div>
       </div>
@@ -460,7 +501,20 @@ const AttackerConsole = () => {
           </div>
 
           {/* Right panel: Attack Configurator */}
-          <div className="console-panel right-panel">
+          <div className="console-panel right-panel" style={{ position: 'relative', opacity: isChaosActive ? 0.6 : 1, pointerEvents: isChaosActive ? 'none' : 'auto' }}>
+            {isChaosActive && (
+              <div style={{
+                position: 'absolute', inset: 0, zIndex: 10, background: 'rgba(15, 23, 42, 0.85)',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                color: '#f87171', fontWeight: 700, borderRadius: '12px', padding: '20px', textAlign: 'center'
+              }}>
+                <Zap size={40} style={{ marginBottom: '12px' }} />
+                <span>🔒 TẤN CÔNG TỰ ĐỘNG (CHAOS MODE) ĐANG BẬT</span>
+                <p style={{ fontSize: '12px', color: '#94a3b8', margin: '8px 0 0', fontWeight: 400 }}>
+                  Bảng cấu hình thủ công tạm thời bị vô hiệu hóa để tránh xung đột mã nguồn. Hãy tắt Chaos Mode để tấn công chủ động.
+                </p>
+              </div>
+            )}
             <h2>Cấu hình kịch bản tấn công</h2>
             
             {totalSelected === 0 ? (
@@ -528,15 +582,6 @@ const AttackerConsole = () => {
                   >
                     <Play size={20} />
                     <span>KÍCH HOẠT TẤN CÔNG</span>
-                  </button>
-                  <button 
-                    onClick={handleStopAttack} 
-                    className="action-btn stop-btn"
-                    disabled={triggering}
-                    style={{ flex: 1, justifyContent: 'center' }}
-                  >
-                    <Square size={20} />
-                    <span>DỪNG TẤN CÔNG (RESTORE)</span>
                   </button>
                 </div>
 
