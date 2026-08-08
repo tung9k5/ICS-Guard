@@ -1,49 +1,51 @@
 .operation-reports-page {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  min-height: calc(100vh - 100px);
-  padding: 10px;
-  font-family: 'Outfit', 'Inter', sans-serif;
-  color: var(--text-primary);
+  gap: 16px;
+  min-height: 100%;
+  padding: 0;
+  font-family: inherit;
+  color: var(--text-primary, #f8fafc);
+  background: transparent;
 
   .reports-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 1px solid var(--border-light);
-    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border-subtle, #1e293b);
+    padding-bottom: 14px;
 
     .title-section {
       h1 {
-        margin: 0 0 5px 0;
-        font-size: 24px;
+        margin: 0 0 4px 0;
+        font-size: 20px;
         font-weight: 700;
+        color: var(--text-primary, #f8fafc);
       }
       p {
         margin: 0;
-        font-size: 14px;
-        color: var(--text-muted);
+        font-size: 13px;
+        color: var(--text-muted, #94a3b8);
       }
     }
 
     .csv-export-btn {
       display: flex;
       align-items: center;
-      gap: 8px;
-      background-color: #059669;
-      border: 1px solid #10b981;
-      color: #ffffff;
-      padding: 8px 16px;
-      border-radius: 6px;
+      gap: 6px;
+      background-color: var(--surface-secondary, #131d33);
+      border: 1px solid var(--border-primary, #27354d);
+      color: var(--text-primary, #ffffff);
+      padding: 8px 14px;
+      border-radius: var(--radius-md, 6px);
       cursor: pointer;
       font-size: 13px;
       font-weight: 600;
-      transition: all 0.2s;
+      transition: all 0.15s ease-out;
 
       &:hover {
-        background-color: #10b981;
-        box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+        background-color: var(--surface-hover, #1e293b);
+        border-color: var(--border-strong, #3b4d6b);
       }
     }
   }
@@ -53,11 +55,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 15px;
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-light);
-    border-radius: 8px;
-    padding: 12px 18px;
+    gap: 12px;
+    background-color: var(--surface-primary, #0f172a);
+    border: 1px solid var(--border-primary, #27354d);
+    border-radius: var(--radius-md, 6px);
+    padding: 10px 14px;
     flex-wrap: wrap;
 
     .search-box {

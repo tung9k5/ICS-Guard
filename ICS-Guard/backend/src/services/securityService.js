@@ -105,10 +105,13 @@ export const handleFailedLogin = async (user, ipAddress) => {
     });
 
     await sendTelegramAlert(
-      `*SECURITY ALERT: ACCOUNT LOCKEDOUT*\n\nUser *${user.username}* has been locked for ${lockMinutes} minutes due to multiple login failures.\n*Origin IP:* ${ipAddress}`,
-      [
-        { text: `Block IP ${ipAddress}`, callback_data: `block_ip:${ipAddress}` }
-      ]
+      `🔒 *[CẢNH BÁO BẢO MẬT: TÀI KHOẢN BỊ KHÓA]*\n\n` +
+      `👤 Tài khoản: *${user.username}*\n` +
+      `🖥️ IP đăng nhập: \`${ipAddress}\`\n` +
+      `⏱️ Thời gian khóa: *${lockMinutes} phút*\n` +
+      `❌ Lý do: Sai mật khẩu ${maxAttempts} lần liên tiếp\n` +
+      `⏰ Thời điểm: ${new Date().toLocaleString('vi-VN')}\n\n` +
+      `ℹ️ Hãy đăng nhập ICS-Guard để kiểm tra.`
     );
   }
 

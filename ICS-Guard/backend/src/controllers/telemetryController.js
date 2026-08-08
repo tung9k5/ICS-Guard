@@ -4,7 +4,7 @@ import { publishMqtt } from '../services/mqttService.js';
 import socketService from '../services/socketService.js';
 import { sendTelegramAlert } from '../services/telegramService.js';
 import { getActiveAdminSessions, addEmergencyAlert } from '../services/sessionRegistry.js';
-import { calculateAndUpdateRiskScore } from '../services/riskService.js';
+import { calculateAndUpdateRiskScore, setRiskScoreOnAttack } from '../services/riskService.js';
 import { parseSyslog, parseCSV } from '../utils/logParser.js';
 import { writeTelemetry, writeDeviceEvent } from '../services/influxService.js';
 import ruleEngineService from '../services/ruleEngineService.js';
@@ -159,36 +159,46 @@ export const ingestTelemetryLog = async (req, res) => {
           metadata: { source_ip, failedAttempts: failedCount }
         });
 
+        // Đặt risk_score = 100 khi phát hiện brute force (HTTP endpoint)
+        setRiskScoreOnAttack(device_id).catch(() => {});
+
         // 6. Phát sự kiện WebSocket
         socketService.emitNewAlert(alert);
         socketService.emitNewIncident(incident);
 
-        // 5. Send notifications via appropriate channel (Smart Alert Routing)
+        // Luôn gửi Telegram bất kể admin có online hay không
+        const alertText = [
+          `🔴 *[CẢNH BÁO TẤN CÔNG: SSH BRUTE FORCE]*`,
+          ``,
+          `📌 Thiết bị: *${device_id}*`,
+          `🌐 Vùng: *${zone}*`,
+          `🖥️ IP tấn công: \`${source_ip || 'unknown'}\``,
+          `✅ IP đã bị tự động chặn`,
+          `🔴 Mức độ: *CRITICAL*`,
+          `⏰ Thời điểm: ${new Date().toLocaleString('vi-VN')}`,
+          ``,
+          `ℹ️ Hãy đăng nhập ICS-Guard để xử lý sự cố.`
+        ].join('\n');
+        sendTelegramAlert(alertText, []).catch(err => console.error('[TelemetryController] Telegram send error:', err));
+
+        // Bổ sung vào emergency queue nếu admin đang trực tuyến
         const activeAdmins = getActiveAdminSessions();
         if (activeAdmins.length > 0) {
-          console.log(`[AlertRouter] Active Admins online: ${activeAdmins.join(', ')}. Suppressing email/Telegram, adding to Emergency Queue.`);
           addEmergencyAlert({
             device_id,
             attack_type: 'brute_force',
-            message: `Đang có thiết bị [${device_id}] bị tấn công Brute Force và có người dùng Admin [${activeAdmins.join(', ')}] đang đăng nhập!`,
+            message: `Thiết bị [${device_id}] bị tấn công Brute Force. Admin [${activeAdmins.join(', ')}] đang trực.`,
             admin_users: activeAdmins
           });
-        } else {
-          console.log('[AlertRouter] No active Admins online. Sending notifications via Email and Telegram.');
-          const alertText = `*CRITICAL SECURITY ALERT: SSH BRUTE FORCE*\n\nDevice: *${device_id}*\nZone: *${zone}*\nAttacker IP: *${source_ip || 'unknown'}*\nAction: *IP Auto-Blocked*\nSeverity: *CRITICAL*`;
-          
-          sendTelegramAlert(alertText, [
-            { text: `Cô lập thiết bị ${device_id}`, callback_data: `isolate_device:${device_id}` }
-          ]).catch(err => console.error('[TelemetryController] Telegram send error:', err));
-          
-          sendEmailAlert({
-            subject: `[ICS-GUARD CRITICAL] SSH Brute Force Attack on ${device_id}`,
-            text: `Critical Alert: SSH Brute force attack detected on device ${device_id} from IP ${source_ip}. IP has been auto-blocked.`,
-            html: `<h3>Critical Infrastructure Security Alert</h3>
+        }
+
+        sendEmailAlert({
+          subject: `[ICS-GUARD CRITICAL] SSH Brute Force Attack on ${device_id}`,
+          text: `Critical Alert: SSH Brute force attack detected on device ${device_id} from IP ${source_ip}. IP has been auto-blocked.`,
+          html: `<h3>Critical Infrastructure Security Alert</h3>
                    <p>SSH Brute force attack detected on device <strong>${device_id}</strong> in <strong>${zone}</strong> from IP <strong>${source_ip}</strong>.</p>
                    <p><strong>Action Taken:</strong> Source IP address has been automatically blocked on application gateways.</p>`
-          }).catch(err => console.error('[TelemetryController] Email send error:', err));
-        }
+        }).catch(err => console.error('[TelemetryController] Email send error:', err));
       }
     }
 
@@ -336,6 +346,9 @@ const processTelemetryLogEntry = async (entry) => {
         // Đồng bộ thời gian thực qua socket
         socketService.emitNewAlert(alert);
         socketService.emitNewIncident(incident);
+
+        // Đặt risk_score = 100 khi rule engine phát hiện bất thường
+        setRiskScoreOnAttack(device_id).catch(() => {});
       }
     } catch (err) {
       console.error('[TelemetryController] Error processing metrics entry:', err.message);
@@ -398,21 +411,35 @@ const processTelemetryLogEntry = async (entry) => {
       socketService.emitNewAlert(alert);
       socketService.emitNewIncident(incident);
 
+      // Đặt risk_score = 100 khi phát hiện brute force (Syslog/CSV)
+      setRiskScoreOnAttack(device_id).catch(() => {});
+
+      // Luôn gửi Telegram bất kể admin có online hay không
+      const alertText = [
+        `🔴 *[CẢNH BÁO TẤN CÔNG: SSH BRUTE FORCE]*`,
+        ``,
+        `📌 Thiết bị: *${device_id}*`,
+        `🌐 Vùng: *${zone}*`,
+        `🖥️ IP tấn công: \`${source_ip || 'unknown'}\``,
+        `✅ IP đã bị tự động chặn`,
+        `🔴 Mức độ: *CRITICAL*`,
+        `⏰ Thời điểm: ${new Date().toLocaleString('vi-VN')}`,
+        ``,
+        `ℹ️ Hãy đăng nhập ICS-Guard để xử lý sự cố.`
+      ].join('\n');
+      sendTelegramAlert(alertText, []).catch(() => {});
+
+      // Bổ sung vào emergency queue nếu admin đang trực tuyến
       const activeAdmins = getActiveAdminSessions();
       if (activeAdmins.length > 0) {
         addEmergencyAlert({ device_id, attack_type: 'brute_force', admin_users: activeAdmins });
-      } else {
-        const alertText = `*CRITICAL SECURITY ALERT: SSH BRUTE FORCE*\n\nDevice: *${device_id}*\nZone: *${zone}*\nAttacker IP: *${source_ip || 'unknown'}*\nAction: *IP Auto-Blocked*\nSeverity: *CRITICAL*`;
-        sendTelegramAlert(alertText, [
-          { text: `Cô lập thiết bị ${device_id}`, callback_data: `isolate_device:${device_id}` }
-        ]).catch(() => {});
-        
-        sendEmailAlert({
-          subject: `[ICS-GUARD CRITICAL] SSH Brute Force Attack on ${device_id}`,
-          text: `Critical Alert: SSH Brute force attack detected on device ${device_id} from IP ${source_ip}. IP has been auto-blocked.`,
-          html: `<h3>Critical Infrastructure Security Alert</h3>`
-        }).catch(() => {});
       }
+
+      sendEmailAlert({
+        subject: `[ICS-GUARD CRITICAL] SSH Brute Force Attack on ${device_id}`,
+        text: `Critical Alert: SSH Brute force attack detected on device ${device_id} from IP ${source_ip}. IP has been auto-blocked.`,
+        html: `<h3>Critical Infrastructure Security Alert</h3>`
+      }).catch(() => {});
     }
   }
 

@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
-const SYSTEM_HEALTH_COLORS = ['#22c55e', '#f97316', '#8b5cf6'];
+const SYSTEM_HEALTH_COLORS = ['#10b981', '#38bdf8', '#f59e0b'];
 
 const SystemHealthChart = ({ rawData = [] }) => {
   const { t } = useTranslation();
@@ -18,16 +18,16 @@ const SystemHealthChart = ({ rawData = [] }) => {
   }));
 
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: '300px' }}>
+    <div style={{ width: '100%', height: '100%', minHeight: '220px' }}>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
             data={data}
             cx="50%"
             cy="50%"
-            innerRadius={80}
-            outerRadius={100}
-            paddingAngle={2}
+            innerRadius={60}
+            outerRadius={80}
+            paddingAngle={3}
             dataKey="value"
           >
             {data.map((entry, index) => (
@@ -35,10 +35,17 @@ const SystemHealthChart = ({ rawData = [] }) => {
             ))}
           </Pie>
           <Tooltip 
-            contentStyle={{ backgroundColor: 'var(--gray-800)', border: 'none', borderRadius: '8px', color: 'var(--white-short)' }}
-            itemStyle={{ color: 'var(--white-short)' }}
+            contentStyle={{ 
+              backgroundColor: 'var(--surface-elevated, #1e293b)', 
+              border: '1px solid var(--border-strong, #3b4d6b)', 
+              borderRadius: '6px', 
+              color: 'var(--text-primary, #f8fafc)',
+              fontSize: '12px',
+              fontFamily: "'JetBrains Mono', monospace"
+            }}
+            itemStyle={{ color: 'var(--text-primary, #f8fafc)' }}
           />
-          <Legend verticalAlign="bottom" height={36} />
+          <Legend verticalAlign="bottom" height={32} wrapperStyle={{ fontSize: '12px', color: 'var(--text-muted, #94a3b8)' }} />
         </PieChart>
       </ResponsiveContainer>
     </div>

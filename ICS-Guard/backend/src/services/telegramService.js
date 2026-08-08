@@ -304,53 +304,68 @@ export const sendTelegramAlert = async (text, inlineButtons = [], targetRoles = 
     };
   }
 
+  // Parse_mode for markdown formatting
+  options.parse_mode = 'Markdown';
+
   if (typeof customChatId === 'string' && customChatId.length > 0) {
     try {
       const message = await bot.sendMessage(customChatId, text, options);
       return message;
     } catch (error) {
-      console.error(`[TelegramService] Failed to send Telegram to customChatId ${customChatId}:`, error);
+      console.error(`[TelegramService] Failed to send Telegram to customChatId ${customChatId}:`, error.message);
       return null;
     }
   }
 
   try {
     const rolesFilter = Array.isArray(targetRoles) ? targetRoles : ['admin', 'analyst'];
+
+    // Lấy tất cả user có role phù hợp, isAlertEnabled=true, và có telegramChatId hợp lệ
     const activeResponders = await User.find({
       role: { $in: rolesFilter },
-      'contactInfo.telegramChatId': { $ne: null },
-      isAlertEnabled: true
+      isAlertEnabled: true,
+      'contactInfo.telegramChatId': { $exists: true, $ne: null, $ne: '' },
     });
 
     if (activeResponders && activeResponders.length > 0) {
-      console.log(`[TelegramService] Định tuyến cảnh báo Telegram đến ${activeResponders.length} tài khoản (${rolesFilter.join(', ')})...`);
+      console.log(`[TelegramService] Gửi cảnh báo đến ${activeResponders.length} tài khoản: ${activeResponders.map(u => u.username).join(', ')}`);
       let lastMessage = null;
       for (const responder of activeResponders) {
         const targetChat = responder.contactInfo.telegramChatId;
         try {
           lastMessage = await bot.sendMessage(targetChat, text, options);
+          console.log(`[TelegramService] ✅ Đã gửi đến ${responder.username} (chatId: ${targetChat})`);
         } catch (err) {
-          console.error(`[TelegramService] Gửi tin nhắn lỗi cho ${responder.username} (${targetChat}):`, err);
+          console.error(`[TelegramService] ❌ Gửi lỗi cho ${responder.username} (${targetChat}): ${err.message}`);
         }
       }
       return lastMessage;
     } else {
+      // Fallback: gửi về chatId từ .env
       const targetChat = isBotConfigured ? chatId : 'MOCK_CHAT_ID';
-      console.log(`[TelegramService] Chưa có Chat ID động cho role ${rolesFilter.join('/')}. Fallback tin nhắn: ${targetChat}`);
+      console.log(`[TelegramService] Không có user nào có telegramChatId. Fallback về chatId từ .env: ${targetChat}`);
+      if (!targetChat || targetChat === 'MOCK_CHAT_ID') {
+        console.warn('[TelegramService] ⚠️ TELEGRAM_CHAT_ID chưa được cấu hình trong .env. Tin nhắn không được gửi.');
+        return null;
+      }
       const message = await bot.sendMessage(targetChat, text, options);
+      console.log(`[TelegramService] ✅ Đã gửi về fallback chatId: ${targetChat}`);
       return message;
     }
   } catch (error) {
-    console.error('[TelegramService] Lỗi định tuyến thông báo Telegram:', error);
-    const targetChat = isBotConfigured ? chatId : 'MOCK_CHAT_ID';
+    console.error('[TelegramService] Lỗi định tuyến thông báo Telegram:', error.message);
+    const targetChat = isBotConfigured ? chatId : null;
+    if (!targetChat) return null;
     try {
       const message = await bot.sendMessage(targetChat, text, options);
       return message;
     } catch (err) {
+      console.error('[TelegramService] ❌ Fallback gửi cũng thất bại:', err.message);
       return null;
     }
   }
 };
+
 
 // Help helper to trigger a simulated telegram action (e.g. for testing)
 export const simulateTelegramCallback = async (callbackData, messageText = 'Alert') => {

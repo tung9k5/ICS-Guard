@@ -1,43 +1,45 @@
 .rules-page {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  min-height: calc(100vh - 118px);
-  animation: fadeIn 0.3s ease-out;
-  color: #ffffff;
+  gap: 16px;
+  min-height: 100%;
+  padding: 0;
+  font-family: inherit;
+  color: var(--text-primary, #f8fafc);
+  background: transparent;
 
   .v-page-header, .v-header-page, h1, .v-page-title {
-    color: #000000 !important;
-    font-weight: 800 !important;
+    color: var(--text-primary, #f8fafc) !important;
+    font-weight: 700 !important;
   }
 
   .v-filter-page {
-    border: 2px solid #000000 !important;
-    border-radius: 10px !important;
-    background: #ffffff !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
-    margin-bottom: 20px;
+    border: 1px solid var(--border-primary, #27354d) !important;
+    border-radius: var(--radius-lg, 8px) !important;
+    background: var(--surface-primary, #0f172a) !important;
+    box-shadow: none !important;
+    margin-bottom: 16px;
 
     .v-input-field, .v-filter-select, select {
-      border: 1.5px solid #000000 !important;
-      background: #ffffff !important;
-      color: #000000 !important;
-      font-weight: 600;
-    }
-
-    input, select, option, label, span, p, .v-input-field, .v-filter-select, .icon {
-      color: #000000 !important;
-      font-weight: 600;
-    }
-
-    input::placeholder, .v-input-field::placeholder {
-      color: #475569 !important;
+      border: 1px solid var(--border-subtle, #1e293b) !important;
+      background: var(--surface-secondary, #131d33) !important;
+      color: var(--text-primary, #f8fafc) !important;
       font-weight: 500;
     }
 
+    input, select, option, label, span, p, .v-input-field, .v-filter-select, .icon {
+      color: var(--text-primary, #f8fafc) !important;
+      font-weight: 500;
+    }
+
+    input::placeholder, .v-input-field::placeholder {
+      color: var(--text-muted, #94a3b8) !important;
+      font-weight: 400;
+    }
+
     select option {
-      color: #000000 !important;
-      background: #ffffff !important;
+      color: var(--text-primary, #f8fafc) !important;
+      background: var(--surface-secondary, #131d33) !important;
     }
   }
 
@@ -50,11 +52,11 @@
     font-size: 14px;
   }
 
-  /* Mode Navigation Tabs - White border bottom line directly separating content */
+  /* Mode Navigation Tabs */
   .rules-tab-nav {
     display: flex;
-    gap: 16px;
-    border-bottom: 1px solid #ffffff !important;
+    gap: 12px;
+    border-bottom: 1px solid var(--border-subtle, #1e293b) !important;
     padding-bottom: 8px;
     margin-bottom: 16px;
 
@@ -62,25 +64,25 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      padding: 10px 18px;
-      color: #94a3b8;
+      padding: 8px 16px;
+      color: var(--text-muted, #94a3b8);
       background: transparent;
       border: none;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      border-radius: 8px;
-      transition: all 0.2s ease;
+      border-radius: var(--radius-md, 6px);
+      transition: all 0.15s ease-out;
 
       &:hover {
-        color: #ffffff;
-        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-primary, #f8fafc);
+        background: var(--surface-hover, #1e293b);
       }
 
       &.active {
-        color: #ffffff;
-        background: #1e293b;
-        border: 1px solid #334155;
+        color: var(--accent-primary, #38bdf8);
+        background: var(--surface-secondary, #131d33);
+        border: 1px solid var(--border-primary, #27354d);
         font-weight: 700;
       }
     }

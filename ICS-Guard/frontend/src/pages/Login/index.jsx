@@ -8,7 +8,6 @@ import { toast } from '@/utils/toast';
 import { useAuth } from '@/hooks/useAuth';
 import authApi from '@/api/auth';
 import { refreshSocketAuthentication } from '@/services/socket';
-
 import { useTranslation } from 'react-i18next';
 
 const Login = ({ isAttacker = false }) => {
@@ -88,17 +87,14 @@ const Login = ({ isAttacker = false }) => {
     } finally {
       setLocalLoading(false);
     }
-
-
   };
 
   return (
     <div className="auth-form-card">
-      <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: '600', color: '#ffffff', marginBottom: '8px' }}>{t('auth.login.welcome')}</h2>
-        <p style={{ color: '#e2e8f0', fontSize: '14px' }}>{t('auth.login.enter_info')}</p>
+      <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+        <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary, #f8fafc)', marginBottom: '6px' }}>{t('auth.login.welcome')}</h2>
+        <p style={{ color: 'var(--text-muted, #94a3b8)', fontSize: '13px', margin: 0 }}>{t('auth.login.enter_info')}</p>
       </div>
-
 
       <form onSubmit={handleSubmit}>
         <VInput

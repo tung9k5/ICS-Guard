@@ -4,8 +4,8 @@
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(4px);
+  background-color: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(8px);
   z-index: 9999;
   display: flex;
   align-items: center;
@@ -14,10 +14,10 @@
   animation: fadeIn 0.2s ease-out;
 
   .v-dialog-content {
-    background-color: var(--white-100);
-    border: 1px solid var(--slate-200);
-    border-radius: 16px;
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35), 0 10px 20px rgba(0, 0, 0, 0.15) !important;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
@@ -25,6 +25,7 @@
     animation: slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     display: flex;
     flex-direction: column;
+    color: #1e293b !important;
 
     /* Configurable via style prop */
     max-width: 500px;
@@ -35,39 +36,94 @@
     justify-content: space-between;
     align-items: center;
     padding: 20px 24px;
-    border-bottom: 1px solid var(--slate-100);
+    border-bottom: 1px solid #e2e8f0 !important;
+    background-color: #ffffff !important;
 
     h3 {
       margin: 0;
-      color: #000000;
-      font-size: 1.25rem;
-      font-weight: 600;
+      color: #0f172a !important;
+      font-size: 1.2rem;
+      font-weight: 700;
     }
 
     .v-dialog-close-btn {
-      background: none;
-      border: none;
-      color: var(--slate-400);
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      color: #64748b;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 6px;
-      border-radius: 8px;
+      border-radius: 50%;
       transition: all 0.2s;
 
       &:hover {
-        background-color: var(--slate-100);
-        color: var(--slate-900);
+        background-color: #fee2e2;
+        color: #ef4444;
+        border-color: #fca5a5;
       }
     }
   }
 
   .v-dialog-body {
     padding: 24px;
-    color: var(--slate-700);
+    color: #1e293b !important;
+    background-color: #ffffff !important;
     flex-grow: 1;
     overflow-y: auto;
+
+    .v-input-label,
+    label {
+      color: #334155 !important;
+      font-weight: 600 !important;
+      font-size: 13px !important;
+    }
+
+    .v-input-field,
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    select.v-input,
+    select {
+      background-color: #f8fafc !important;
+      border: 1px solid #cbd5e1 !important;
+      color: #0f172a !important;
+      border-radius: 8px !important;
+
+      &::placeholder {
+        color: #94a3b8 !important;
+      }
+
+      &:focus {
+        border-color: #0284c7 !important;
+        background-color: #ffffff !important;
+        box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+      }
+
+      &:disabled {
+        background-color: #f1f5f9 !important;
+        color: #64748b !important;
+        border-color: #e2e8f0 !important;
+      }
+
+      option {
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+      }
+    }
+
+    .btn-outline {
+      border: 1px solid #cbd5e1 !important;
+      color: #334155 !important;
+      background: #ffffff !important;
+      box-shadow: none !important;
+
+      &:hover {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+      }
+    }
   }
 
   .v-dialog-footer {
@@ -75,8 +131,8 @@
     justify-content: flex-end;
     gap: 12px;
     padding: 16px 24px;
-    border-top: 1px solid var(--slate-100);
-    background-color: var(--slate-50);
+    border-top: 1px solid #e2e8f0 !important;
+    background-color: #f8fafc !important;
     border-radius: 0 0 16px 16px;
   }
 }

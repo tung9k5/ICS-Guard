@@ -21,9 +21,7 @@ const unwrapList = value => {
 };
 const deviceId = value => String(value?._id || value?.id || value?.device_id || '');
 const riskOf = device => {
-  let score = Number(device?.risk_score ?? device?.riskScore ?? 0);
-  const aging = Number(device?.aging_score ?? 0);
-  if (aging > 0) score += aging; // Mỗi năm +1 trực tiếp vào điểm rủi ro
+  const score = Number(device?.risk_score ?? device?.riskScore ?? 0);
   return Math.min(100, Math.max(0, score));
 };
 const zoneOf = device => device?.zone || 'Unassigned';
@@ -179,11 +177,11 @@ const OtZoneMatrix = () => {
     <div className="zone-posture-page">
       <header className="zone-page-header">
         <div>
-          <p>OT SECURITY POSTURE</p>
-          <h1 style={{ color: '#ffffff', fontWeight: 800 }}>
-            <Shield size={28} color="#2563eb" /> An ninh Phân vùng OT
+          <p className="zone-kicker">OT SECURITY POSTURE</p>
+          <h1>
+            <Shield size={24} className="accent-icon" /> An ninh Phân vùng OT (Purdue Model Zone Matrix)
           </h1>
-          <span style={{ color: '#ffffff', fontWeight: 600 }}>Giám sát chỉ số rủi ro, phân khu an toàn và cảnh báo sự cố theo từng vùng.</span>
+          <span className="zone-subtitle">Giám sát chỉ số rủi ro, phân khu an toàn và cảnh báo sự cố theo từng phân vùng OT/ICS.</span>
         </div>
       </header>
 

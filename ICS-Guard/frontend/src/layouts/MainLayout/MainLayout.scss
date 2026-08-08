@@ -2,9 +2,8 @@
   display: flex;
   height: 100vh;
   overflow: hidden;
-  background-color: var(--bg-primary); /* Dùng màu từ variables */
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  color: var(--text-primary);
+  background-color: var(--bg-canvas, #080c14);
+  color: var(--text-primary, #f8fafc);
 
   /* Main content area */
   .main-content-wrapper {
@@ -13,7 +12,7 @@
     flex-direction: column;
     height: 100vh;
     overflow: hidden;
-    background-color: var(--apple-gray-1); /* Soft slate background */
+    background-color: var(--bg-canvas, #080c14);
     position: relative;
   }
 
@@ -21,7 +20,7 @@
     flex: 1;
     padding: 24px;
     overflow-y: auto;
-    color: var(--text-content);
+    color: var(--text-primary, #f8fafc);
   }
 
   /* Emergency Alert Modal (Cyberpunk Red style) */

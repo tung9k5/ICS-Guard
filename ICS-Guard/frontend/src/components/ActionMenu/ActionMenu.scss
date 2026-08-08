@@ -5,18 +5,18 @@
   .action-menu-trigger {
     background: transparent;
     border: none;
-    color: var(--slate-500);
+    color: var(--text-muted, #94a3b8);
     cursor: pointer;
     padding: 6px;
     border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease-out;
 
     &:hover {
-      background: var(--slate-100);
-      color: var(--slate-900);
+      background: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
     }
   }
 
@@ -25,21 +25,21 @@
     right: 0;
     top: 100%;
     margin-top: 4px;
-    background: var(--white);
-    border: 1px solid var(--slate-200);
-    border-radius: 8px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    min-width: 160px;
-    padding: 8px 0;
-    z-index: 50;
-    animation: dropdownFadeIn 0.2s ease-out;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35), 0 4px 10px rgba(0, 0, 0, 0.15) !important;
+    min-width: 210px;
+    padding: 6px 0;
+    z-index: 1000;
+    animation: dropdownFadeIn 0.15s ease-out;
 
     &.direction-up {
       top: auto;
       bottom: 100%;
       margin-top: 0;
       margin-bottom: 4px;
-      animation: dropdownFadeInUp 0.2s ease-out;
+      animation: dropdownFadeInUp 0.15s ease-out;
     }
 
     .action-menu-item {
@@ -47,25 +47,45 @@
       align-items: center;
       gap: 10px;
       width: 100%;
-      padding: 10px 16px;
+      padding: 9px 14px;
       background: transparent;
       border: none;
-      color: var(--slate-700);
-      font-size: 14px;
+      color: #1e293b !important;
+      font-size: 12px;
+      font-weight: 600;
       text-align: left;
       cursor: pointer;
-      transition: all 0.2s ease;
+      white-space: nowrap;
+      transition: all 0.15s ease-out;
+
+      svg {
+        color: #475569 !important;
+        flex-shrink: 0;
+      }
 
       &:hover {
-        background: var(--slate-50);
-        color: var(--slate-900);
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+
+        svg {
+          color: #0f172a !important;
+        }
       }
 
       &.text-danger {
-        color: var(--red-500);
+        color: #dc2626 !important;
+
+        svg {
+          color: #dc2626 !important;
+        }
         
         &:hover {
-          background: var(--red-50);
+          background: #fef2f2 !important;
+          color: #b91c1c !important;
+
+          svg {
+            color: #b91c1c !important;
+          }
         }
       }
     }

@@ -2,137 +2,137 @@
   position: relative;
   display: flex;
   min-height: 100vh;
-  font-family: 'Metropolis', system-ui, -apple-system, sans-serif;
-  background-color: var(--bg-primary);
-  justify-content: flex-end;
+  width: 100vw;
+  font-family: inherit;
+  color: var(--text-primary, #f8fafc);
+  background-color: var(--bg-canvas, #080d1a);
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 2rem 0;
 }
 
 .auth-cover {
-  position: absolute;
-  inset: 0;
-  /* Dùng ảnh mạng tạm thời, bạn có thể thay bằng ảnh fingerprint của bạn bằng đường dẫn local /images/fingerprint.jpg */
-  background-image: url('https://timestech.in/wp-content/uploads/2025/02/1_Blog_Featured_Image-scaled-1.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  z-index: 0;
+  position: relative;
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4rem;
+  background: radial-gradient(circle at 30% 30%, rgba(56, 189, 248, 0.08) 0%, transparent 60%),
+              linear-gradient(180deg, #090e1d 0%, #060913 100%);
+  border-right: 1px solid var(--border-subtle, #1e293b);
+  z-index: 1;
 
-  &::after {
+  &::before {
     content: '';
     position: absolute;
     inset: 0;
-    /* Gradient nhẹ nhàng hơn để ảnh nền xuyên qua form rõ hơn */
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.6) 100%);
-    z-index: 1;
+    background-image: 
+      linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    opacity: 0.6;
+    pointer-events: none;
   }
 
   .auth-cover-content {
-    position: absolute;
-    top: 50%;
-    left: 5vw;
-    transform: translateY(-50%);
+    position: relative;
     z-index: 2;
-    text-align: left;
-    max-width: 600px;
+    max-width: 580px;
+
+    .auth-brand-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      margin-bottom: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: var(--accent-primary, #38bdf8);
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: var(--radius-sm, 4px);
+      text-transform: uppercase;
+    }
 
     h1 {
-      font-size: 3.5rem;
+      font-size: 2.2rem;
       font-weight: 800;
-      color: var(--text-primary);
-      margin-bottom: 1.5rem;
-      text-align: center;
-      line-height: 1.2;
-      background: var(--accent-gradient-light);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      color: var(--text-primary, #f8fafc);
+      margin-bottom: 1rem;
+      line-height: 1.25;
+      letter-spacing: -0.02em;
     }
 
     p {
-      font-size: 1.25rem;
-      color: rgba(255, 255, 255, 0.85);
+      font-size: 1rem;
+      color: var(--text-muted, #94a3b8);
       line-height: 1.6;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      margin: 0;
     }
   }
 }
 
 .auth-panel {
-  position: relative;
-  z-index: 10;
-  width: 100%;
-  max-width: 480px;
-  background-color: var(--bg-glass); 
-  backdrop-filter: blur(24px) saturate(160%);
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  border: 1px solid var(--border-light);
-  border-radius: 1.5rem;
-  padding: 3rem;
-  margin: auto 5vw; /* Margin auto cho phép tự động căn giữa mà không bị kẹt khi cuộn */
-  box-shadow: var(--shadow-glass);
+  flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
-}
+  align-items: center;
+  padding: 3rem 2rem;
+  background-color: var(--bg-canvas, #080d1a);
+  position: relative;
+  z-index: 10;
 
-.auth-header {
-  text-align: center;
-  margin-bottom: 1.5rem; /* Giảm margin một chút để bù cho logo to ra */
-
-  .auth-logo {
-    height: 140px; /* Phóng to logo */
-    width: auto;
-    max-width: 100%; /* Đảm bảo không bao giờ vỡ khung */
-    object-fit: contain;
-    margin: 0 auto; /* Giữ logo luôn căn giữa */
-  }
-
-  .auth-subtitle {
-    color: var(--text-muted);
-    margin-top: 0.5rem;
-    font-size: 1rem;
+  .auth-panel-inner {
+    width: 100%;
+    max-width: 400px;
+    background-color: var(--surface-primary, #0f172a);
+    border: 1px solid var(--border-primary, #27354d);
+    border-radius: var(--radius-lg, 8px);
+    padding: 2.25rem 2rem;
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.4);
   }
 }
 
-/* Responsive cho điện thoại */
-@media (max-width: 900px) {
+/* Responsive */
+@media (max-width: 960px) {
   .auth-layout {
-    justify-content: center;
+    flex-direction: column;
   }
   
-  .auth-cover .auth-cover-content {
-    display: none; /* Ẩn text trên điện thoại cho gọn */
-  }
-  
-  .auth-panel {
-    max-width: 90%;
-    margin: 2rem auto;
+  .auth-cover {
+    flex: none;
     padding: 2.5rem 1.5rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-subtle, #1e293b);
+
+    .auth-cover-content {
+      max-width: 100%;
+      h1 { font-size: 1.6rem; }
+    }
+  }
+
+  .auth-panel {
+    padding: 2rem 1rem;
   }
 }
 
-/* Theme cho Attacker Login */
+/* Attacker Portal Theme */
 .auth-layout.attacker-theme {
   .auth-cover {
-    filter: hue-rotate(130deg) brightness(0.55) contrast(1.15);
-  }
+    background: radial-gradient(circle at 30% 30%, rgba(239, 68, 68, 0.08) 0%, transparent 60%),
+                linear-gradient(180deg, #18090d 0%, #0d0608 100%);
+    border-right-color: var(--severity-critical-border);
 
-  .auth-cover-content h1 {
-    background: linear-gradient(135deg, var(--red-500) 0%, var(--orange-500) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
-  }
-
-  .auth-panel {
-    border-color: rgba(239, 68, 68, 0.25);
-    box-shadow: 0 8px 32px 0 rgba(239, 68, 68, 0.15);
-    
-    .auth-subtitle {
-      color: var(--red-500);
+    .auth-brand-kicker {
+      color: var(--severity-critical);
+      background: var(--severity-critical-bg);
+      border-color: var(--severity-critical-border);
     }
+  }
+
+  .auth-panel-inner {
+    border-color: var(--severity-critical-border);
   }
 }

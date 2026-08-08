@@ -374,11 +374,11 @@ const RuleManagement = () => {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                background: '#000000',
-                color: '#ffffff',
-                border: '1px solid #334155',
+                background: 'var(--surface-secondary, #131d33)',
+                color: 'var(--text-primary, #ffffff)',
+                border: '1px solid var(--border-primary, #27354d)',
                 padding: '8px 16px',
-                borderRadius: '8px',
+                borderRadius: 'var(--radius-md, 6px)',
                 fontWeight: 600,
                 fontSize: '13px',
                 cursor: 'pointer',
@@ -428,8 +428,8 @@ const RuleManagement = () => {
         <div style={{ padding: '4px' }}>
           {/* Section Title placed directly below tab nav */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: '#000000', fontSize: '1.2rem', fontWeight: 800 }}>
-              <Sparkles size={22} color="#2563eb" /> Mẫu Quy tắc Phát hiện Chuẩn Quốc Tế (Sigma & MITRE ATT&CK for ICS)
+            <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary, #ffffff)', fontSize: '1.2rem', fontWeight: 800 }}>
+              <Sparkles size={22} color="#38bdf8" /> Mẫu Quy tắc Phát hiện Chuẩn Quốc Tế (Sigma & MITRE ATT&CK for ICS)
             </h3>
           </div>
 

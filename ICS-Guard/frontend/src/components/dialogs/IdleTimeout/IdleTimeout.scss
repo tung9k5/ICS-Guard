@@ -1,14 +1,11 @@
 .idle-timeout-dialog {
-  background: rgba(11, 15, 30, 0.95) !important;
-  border: 1px solid rgba(245, 158, 11, 0.5) !important;
-  border-radius: 20px !important;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85),
-              0 0 40px rgba(245, 158, 11, 0.25),
-              inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
-  backdrop-filter: blur(20px) !important;
+  background: var(--surface-elevated, #1e293b) !important;
+  border: 1px solid var(--severity-medium-border, #eab308) !important;
+  border-radius: var(--radius-xl, 12px) !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85) !important;
 
   .v-dialog-header {
-    display: none !important; // Custom body header for maximum visual impact
+    display: none !important;
   }
 
   .v-dialog-body {
@@ -22,71 +19,63 @@
     text-align: center;
 
     .idle-icon-badge {
-      width: 68px;
-      height: 68px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
-      background: rgba(245, 158, 11, 0.14);
-      border: 1.5px solid rgba(245, 158, 11, 0.5);
+      background: var(--severity-medium-bg);
+      border: 1px solid var(--severity-medium-border);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #f59e0b;
+      color: var(--severity-medium);
       margin-bottom: 20px;
-      box-shadow: 0 0 28px rgba(245, 158, 11, 0.35);
-      animation: pulseGlow 2s infinite ease-in-out;
     }
 
     .idle-title {
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       font-weight: 700;
-      color: #ffffff !important;
-      margin: 0 0 14px 0;
-      letter-spacing: -0.01em;
+      color: var(--text-primary, #f8fafc) !important;
+      margin: 0 0 12px 0;
     }
 
     .idle-description {
-      font-size: 0.95rem;
-      color: #cbd5e1 !important;
+      font-size: 0.9rem;
+      color: var(--text-muted, #94a3b8) !important;
       line-height: 1.6;
-      margin: 0 0 26px 0;
+      margin: 0 0 24px 0;
 
       .idle-countdown-box {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: rgba(239, 68, 68, 0.18);
-        border: 1px solid rgba(239, 68, 68, 0.5);
+        background: var(--severity-critical-bg);
+        border: 1px solid var(--severity-critical-border);
         padding: 4px 10px;
-        border-radius: 8px;
-        color: #ff4d4d !important;
-        font-weight: 800;
-        font-size: 1.05rem;
+        border-radius: var(--radius-md, 6px);
+        color: var(--severity-critical);
+        font-weight: 700;
+        font-size: 1rem;
+        font-family: 'JetBrains Mono', monospace;
         margin: 0 4px;
-        box-shadow: 0 0 14px rgba(239, 68, 68, 0.3);
       }
     }
 
     .idle-continue-btn {
       width: 100%;
       max-width: 280px;
-      height: 48px;
-      font-size: 1rem;
-      font-weight: 700;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
-      border: none !important;
-      color: #ffffff !important;
-      box-shadow: 0 4px 20px rgba(16, 185, 129, 0.45) !important;
+      height: 40px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: var(--radius-md, 6px);
+      background: var(--surface-secondary, #131d33) !important;
+      border: 1px solid var(--border-primary, #27354d) !important;
+      color: var(--text-primary, #ffffff) !important;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease-out;
 
       &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 26px rgba(16, 185, 129, 0.6) !important;
-      }
-
-      &:active {
-        transform: translateY(0);
+        background: var(--surface-hover, #1e293b) !important;
+        border-color: var(--border-strong, #3b4d6b) !important;
       }
     }
   }

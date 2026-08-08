@@ -461,9 +461,9 @@ export const verifyAndCloseIncident = async (req, res) => {
       metadata: { verification, closure_note: closureNote, device_id: String(deviceId), verified_at: new Date().toISOString() },
     });
 
-    // Apply immediate risk score drop (15-30 points) after resolution
+    // Apply immediate risk score drop (15-30 points) based on incident severity after resolution
     try {
-      await applyResolutionDrop(deviceId, 20);
+      await applyResolutionDrop(deviceId, incident.severity || 'HIGH');
     } catch (riskErr) {
       console.warn('[verifyAndCloseIncident] applyResolutionDrop error:', riskErr.message);
     }
@@ -1058,12 +1058,23 @@ export const markFullySafe = async (req, res) => {
     }
 
     if (device) {
-      device.risk_score = 29;
+      // Tính đời giảm điểm theo mức độ nguy hiểm của sự cố
+      const sev = String(incident.severity || 'HIGH').toUpperCase();
+      let drop = 20;
+      if (sev === 'CRITICAL') drop = 15;
+      else if (sev === 'HIGH') drop = 20;
+      else if (sev === 'MEDIUM') drop = 25;
+      else if (sev === 'LOW') drop = 30;
+
+      const currentScore = Number(device.risk_score || 100);
+      // Đảm bảo score xuống dưới 30 để thẻ biến mất khỏi cột "Đã Khôi Phục"
+      const newScore = Math.max(0, Math.min(29, currentScore - drop));
+      device.risk_score = newScore;
       device.status = 'active';
       device.operational_status = 'active';
       await device.save();
     } else {
-      // Fallback: update any active device risk_score to 29 and status to active
+      // Fallback: giảm risk_score xuống dưới 30 cho tất cả device có score cao
       await Device.updateMany({ risk_score: { $gte: 30 } }, { $set: { risk_score: 29, status: 'active', operational_status: 'active' } });
     }
 

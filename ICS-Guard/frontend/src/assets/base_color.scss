@@ -1,4 +1,72 @@
 :root {
+  /* ==========================================================================
+     DEEP SLATE MISSION CONTROL — GLOBAL DESIGN TOKENS
+     ========================================================================== */
+
+  /* Application Canvas & Base Shell */
+  --bg-canvas: #080c14;
+  --bg-sidebar: #0b0f17;
+  --bg-topbar: #0d121f;
+
+  /* Surface Hierarchy */
+  --surface-primary: #0f172a;
+  --surface-secondary: #131d33;
+  --surface-elevated: #1e293b;
+  --surface-hover: #1e293b;
+  --surface-active: #24334a;
+
+  /* Borders & Hairlines */
+  --border-subtle: #1e293b;
+  --border-primary: #27354d;
+  --border-strong: #3b4d6b;
+  --border-focus: #38bdf8;
+
+  /* Typography Colors */
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-disabled: #64748b;
+
+  /* Interactive Accents (Non-Semantic) */
+  --accent-primary: #38bdf8;
+  --accent-hover: #0284c7;
+  --accent-active: #0369a1;
+  --accent-subtle: rgba(56, 189, 248, 0.12);
+
+  /* Semantic Security Severity Tokens */
+  --severity-critical: #ef4444;
+  --severity-critical-bg: rgba(239, 68, 68, 0.16);
+  --severity-critical-border: rgba(239, 68, 68, 0.4);
+
+  --severity-high: #f97316;
+  --severity-high-bg: rgba(249, 115, 22, 0.16);
+  --severity-high-border: rgba(249, 115, 22, 0.4);
+
+  --severity-medium: #f59e0b;
+  --severity-medium-bg: rgba(245, 158, 11, 0.16);
+  --severity-medium-border: rgba(245, 158, 11, 0.4);
+
+  --severity-low: #38bdf8;
+  --severity-low-bg: rgba(56, 189, 248, 0.14);
+  --severity-low-border: rgba(56, 189, 248, 0.35);
+
+  /* Status Tokens */
+  --status-success: #10b981;
+  --status-success-bg: rgba(16, 185, 129, 0.14);
+  --status-warning: #f59e0b;
+  --status-offline: #64748b;
+  --status-offline-bg: rgba(100, 116, 139, 0.16);
+
+  /* Radius & Spacing Tokens */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --transition-fast: 0.15s ease-out;
+
+  /* ==========================================================================
+     LEGACY SCSS COLOR SCALES (PRESERVED FOR BACKWARD COMPATIBILITY)
+     ========================================================================== */
   /* Blue Scale */
   --blue-50: #eff6ff;
   --blue-100: #dbeafe;

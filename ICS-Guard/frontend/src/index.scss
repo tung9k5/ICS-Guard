@@ -3,32 +3,32 @@
 @tailwind utilities;
 
 :root {
-  --bg-primary: var(--primary-blue);
-  /* or a specific blue if needed */
-  --bg-secondary: var(--slate-800);
-  --bg-content: var(--gray-200);
-  --bg-glass: rgba(15, 20, 35, 0.35);
+  /* Legacy alias mappings to Deep Slate tokens */
+  --bg-primary: var(--bg-canvas, #080c14);
+  --bg-secondary: var(--surface-primary, #0f172a);
+  --bg-content: var(--surface-secondary, #131d33);
+  --bg-glass: rgba(15, 23, 42, 0.85);
 
-  --text-primary: var(--white);
-  --text-secondary: var(--slate-300);
-  --text-muted: var(--slate-400);
-  --text-content: var(--slate-900);
+  --text-primary: var(--text-primary, #f8fafc);
+  --text-secondary: var(--text-secondary, #cbd5e1);
+  --text-muted: var(--text-muted, #94a3b8);
+  --text-content: var(--text-primary, #f8fafc);
 
-  --primary-color: var(--blue-500);
-  --primary-hover: var(--blue-600);
-  --danger-color: var(--red-500);
+  --primary-color: var(--accent-primary, #38bdf8);
+  --primary-hover: var(--accent-hover, #0284c7);
+  --danger-color: var(--severity-critical, #ef4444);
 
-  --accent-gradient: linear-gradient(to right, var(--blue-400), var(--purple-500));
-  --accent-gradient-light: linear-gradient(to right, var(--blue-300), var(--purple-400));
+  --accent-gradient: linear-gradient(to right, var(--accent-primary), var(--blue-400));
+  --accent-gradient-light: linear-gradient(to right, var(--blue-300), var(--accent-primary));
 
-  --border-subtle: rgba(255, 255, 255, 0.05);
-  --border-light: rgba(255, 255, 255, 0.15);
-  --border-focus: rgba(96, 165, 250, 0.5);
+  --border-subtle: var(--border-subtle, #1e293b);
+  --border-light: var(--border-primary, #27354d);
+  --border-focus: var(--border-focus, #38bdf8);
 
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.25);
-  --shadow-glass: 0 30px 60px -10px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
+  --shadow-glass: 0 20px 30px -10px rgba(0, 0, 0, 0.7);
 }
 
 *,
@@ -52,12 +52,13 @@ dd {
 
 body {
   min-height: 100vh;
-  text-rendering: optimizeSpeed;
+  text-rendering: optimizeLegibility;
   line-height: 1.5;
-  background-color: var(--slate-900);
-  color: var(--slate-50);
-  font-family: 'Metropolis', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-canvas, #080c14);
+  color: var(--text-primary, #f8fafc);
+  font-family: Inter, 'Metropolis', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 input,
@@ -67,30 +68,90 @@ select {
   font: inherit;
 }
 
+/* Global Focus Outline for Keyboard Accessibility */
+:focus-visible {
+  outline: 2px solid var(--border-focus, #38bdf8) !important;
+  outline-offset: 2px !important;
+}
+
+/* Shared Surface Utilities */
+.surface-primary {
+  background-color: var(--surface-primary, #0f172a);
+  border: 1px solid var(--border-primary, #27354d);
+  border-radius: var(--radius-lg, 8px);
+}
+
+.surface-secondary {
+  background-color: var(--surface-secondary, #131d33);
+  border: 1px solid var(--border-subtle, #1e293b);
+  border-radius: var(--radius-md, 6px);
+}
+
+.surface-elevated {
+  background-color: var(--surface-elevated, #1e293b);
+  border: 1px solid var(--border-strong, #3b4d6b);
+  border-radius: var(--radius-lg, 8px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Shared Technical Data Utilities */
+.tech-value,
+.ip-address,
+.mac-address,
+.timestamp-val,
+.log-payload {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.ip-address,
+.mac-address {
+  color: var(--accent-primary, #38bdf8);
+  font-size: 0.8125rem;
+}
+
+.timestamp-val {
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.75rem;
+}
+
+.log-payload {
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  color: var(--text-secondary, #cbd5e1);
+}
+
 .Toastify__toast-container {
   z-index: 99999 !important;
 }
 
 // Global truncate utility
-.truncate-text {
+.truncate-text,
+.truncate-cell {
   display: inline-block;
-  max-width: 200px;
+  max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: middle;
 }
 
+.break-words {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
 // Global table cell word-break fix for long unbroken strings (IDs, emails, IPs)
 .v-table td {
   overflow-wrap: break-word;
-  word-break: break-word; // graceful break at word boundaries first
+  word-break: break-word;
 }
 
 // Custom scrollbar for table containers
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: var(--slate-300) transparent;
+  scrollbar-color: var(--slate-700) transparent;
 
   &::-webkit-scrollbar {
     height: 4px;
@@ -98,7 +159,7 @@ select {
   }
 
   &::-webkit-scrollbar-thumb {
-    background: var(--slate-300);
+    background: var(--slate-700);
     border-radius: 4px;
   }
 }

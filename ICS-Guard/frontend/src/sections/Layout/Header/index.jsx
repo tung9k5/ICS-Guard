@@ -1,82 +1,187 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Bell, User, Menu, CheckCircle2, AlertTriangle, X, ShieldAlert, Check } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Bell, User, Menu, CheckCircle2, AlertTriangle, X, ShieldAlert, Check, Volume2, VolumeX } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { socket } from '@/services/socket';
+import { toast as toastify } from 'react-toastify';
 import './Header.scss';
 
 const Header = ({ toggleSidebar, user, onUpdateUser, onOpenProfile }) => {
   const { t } = useTranslation();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'alert' | 'success'
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const popoverRef = useRef(null);
+  const audioContextRef = useRef(null);
 
   // Initial notification history
   const [notifications, setNotifications] = useState([
     {
       id: 'n-1',
       title: 'Hệ thống hoạt động ổn định',
-      message: 'Toàn bộ 12 thiết bị OT và phân vùng mạng đang ở trạng thái an toàn.',
+      message: 'Toàn bộ thiết bị OT và phân vùng mạng đang ở trạng thái an toàn.',
       type: 'success',
       read: false,
       timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString()
-    },
-    {
-      id: 'n-2',
-      title: 'Cảnh báo vi phạm giao thức Modbus',
-      message: 'Phát hiện câu lệnh Force Coil (FC05) không hợp lệ gửi tới PLC-Water-01 từ IP 192.168.10.100.',
-      type: 'warning',
-      read: false,
-      timestamp: new Date(Date.now() - 25 * 60 * 1000).toISOString()
-    },
-    {
-      id: 'n-3',
-      title: 'Xác thực tài khoản thành công',
-      message: 'Phiên làm việc bảo mật đã được kích hoạt thành công.',
-      type: 'info',
-      read: true,
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
     }
   ]);
+
+  // Play alert beep using Web Audio API (no external file needed)
+  const playAlertSound = useCallback(() => {
+    if (!soundEnabled) return;
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      audioContextRef.current = ctx;
+      // Create 3 short beeps
+      [0, 0.18, 0.36].forEach((startOffset) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(880, ctx.currentTime + startOffset);
+        gain.gain.setValueAtTime(0.25, ctx.currentTime + startOffset);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startOffset + 0.15);
+        osc.start(ctx.currentTime + startOffset);
+        osc.stop(ctx.currentTime + startOffset + 0.15);
+      });
+    } catch (e) {
+      // Ignore audio errors (user hasn't interacted yet)
+    }
+  }, [soundEnabled]);
+
+  // Request browser notification permission on mount
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  // Show browser push notification
+  const showBrowserNotification = useCallback((title, body) => {
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification(`⚠️ ICS-Guard: ${title}`, {
+          body,
+          icon: '/vite.svg',
+          tag: 'ics-alert',
+          requireInteraction: true,
+        });
+      } catch (e) {}
+    }
+  }, []);
 
   // Handle socket real-time events
   useEffect(() => {
     if (!socket) return;
 
+    // Handler for security alerts — listens to ALL event names the backend may emit
     const handleAlert = (data) => {
-      const newNotif = {
-        id: `socket-alert-${Date.now()}`,
-        title: data?.title || 'Phát hiện Cảnh Báo An Ninh Khẩn Cấp',
-        message: data?.description || data?.message || 'Hệ thống vừa ghi nhận sự cố bất thường trên đường truyền OT.',
+      const title = data?.title || 'Cảnh Báo An Ninh Khẩn Cấp';
+      const message = data?.description || data?.message || 'Hệ thống vừa ghi nhận sự cố bất thường trên đường truyền OT.';
+      const severity = String(data?.severity || 'HIGH').toUpperCase();
+      const deviceId = data?.device_id || data?.device_name || '';
+
+      // Add to notification bell
+      setNotifications(prev => [{
+        id: `alert-${Date.now()}-${Math.random()}`,
+        title,
+        message: deviceId ? `[${deviceId}] ${message}` : message,
         type: 'danger',
         read: false,
         timestamp: new Date().toISOString()
-      };
-      setNotifications(prev => [newNotif, ...prev]);
+      }, ...prev.slice(0, 49)]); // max 50 notifications
+
+      // Toast popup (cảnh báo nổi trên màn hình)
+      toastify.error(
+        <div style={{ padding: '0 4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+            <span style={{ fontSize: '18px' }}>⚔️</span>
+            <strong style={{ fontSize: '14px', color: '#fff' }}>TẤN CÔNG PHÁT HIỆN — {severity}</strong>
+          </div>
+          <div style={{ fontSize: '13px', lineHeight: '1.5', color: '#fca5a5' }}>{title}</div>
+          {deviceId && <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px' }}>Thiết bị: {deviceId}</div>}
+        </div>,
+        {
+          position: 'top-right',
+          autoClose: 8000,
+          hideProgressBar: false,
+          style: { background: '#1e0a0a', border: '1px solid #7f1d1d', borderRadius: '10px', width: '380px' },
+          icon: false,
+        }
+      );
+
+      // Browser push notification
+      showBrowserNotification(title, `${severity} — ${message}`);
+
+      // Alert sound
+      playAlertSound();
+    };
+
+    // Handler for new incidents
+    const handleIncident = (data) => {
+      const title = data?.title || 'Sự Cố An Ninh Mới';
+      const severity = String(data?.severity || 'HIGH').toUpperCase();
+
+      setNotifications(prev => [{
+        id: `inc-${Date.now()}-${Math.random()}`,
+        title: `[SỰ CỐ] ${title}`,
+        message: data?.description || 'Một sự cố an ninh mới đã được tạo và cần xử lý.',
+        type: 'danger',
+        read: false,
+        timestamp: new Date().toISOString()
+      }, ...prev.slice(0, 49)]);
+
+      toastify.error(
+        <div style={{ padding: '0 4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+            <span style={{ fontSize: '18px' }}>🚨</span>
+            <strong style={{ fontSize: '14px', color: '#fff' }}>SỰ CỐ MỚI — {severity}</strong>
+          </div>
+          <div style={{ fontSize: '13px', lineHeight: '1.5', color: '#fca5a5' }}>{title}</div>
+        </div>,
+        {
+          position: 'top-right',
+          autoClose: 10000,
+          style: { background: '#1a0e1a', border: '1px solid #6b21a8', borderRadius: '10px', width: '380px' },
+          icon: false,
+        }
+      );
+
+      showBrowserNotification(`SỰ CỐ: ${title}`, `Mức độ: ${severity}`);
+      playAlertSound();
     };
 
     const handleUserSync = (data) => {
       if (data?.action === 'update' || data?.action === 'create') {
-        const newNotif = {
-          id: `socket-user-${Date.now()}`,
+        setNotifications(prev => [{
+          id: `user-${Date.now()}`,
           title: 'Cập nhật tài khoản hệ thống',
-          message: `Tài khoản ${data?.user?.username || ''} đã được cập nhật trạng thái thành công.`,
+          message: `Tài khoản ${data?.user?.username || ''} đã được cập nhật.`,
           type: 'success',
           read: false,
           timestamp: new Date().toISOString()
-        };
-        setNotifications(prev => [newNotif, ...prev]);
+        }, ...prev.slice(0, 49)]);
       }
     };
 
-    socket.on('ALERT_TRIGGERED', handleAlert);
+    // Listen to ALL possible event names the backend may use
+    socket.on('NEW_ALERT', handleAlert);
+    socket.on('ALERT_CREATED', handleAlert);
+    socket.on('ALERT_TRIGGERED', handleAlert);    // legacy name
+    socket.on('NEW_INCIDENT', handleIncident);
+    socket.on('INCIDENT_CREATED', handleIncident);
     socket.on('USER_SYNC', handleUserSync);
 
     return () => {
+      socket.off('NEW_ALERT', handleAlert);
+      socket.off('ALERT_CREATED', handleAlert);
       socket.off('ALERT_TRIGGERED', handleAlert);
+      socket.off('NEW_INCIDENT', handleIncident);
+      socket.off('INCIDENT_CREATED', handleIncident);
       socket.off('USER_SYNC', handleUserSync);
     };
-  }, []);
+  }, [playAlertSound, showBrowserNotification]);
 
   // Close popover when clicking outside
   useEffect(() => {
@@ -90,6 +195,7 @@ const Header = ({ toggleSidebar, user, onUpdateUser, onOpenProfile }) => {
   }, []);
 
   const unreadCount = notifications.filter(n => !n.read).length;
+  const hasDangerAlert = notifications.some(n => !n.read && (n.type === 'danger' || n.type === 'warning'));
 
   const markAllAsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
@@ -143,31 +249,29 @@ const Header = ({ toggleSidebar, user, onUpdateUser, onOpenProfile }) => {
             className="notification-btn" 
             onClick={() => setIsNotifOpen(!isNotifOpen)}
             title="Thông báo hệ thống"
+            style={{ position: 'relative' }}
           >
-            <Bell size={20} />
-            {unreadCount > 0 && <span className="notification-dot"></span>}
+            <Bell size={20} style={hasDangerAlert ? { animation: 'bellShake 0.6s ease infinite', color: '#f87171' } : {}} />
+            {unreadCount > 0 && (
+              <span style={{
+                position: 'absolute', top: '-6px', right: '-6px',
+                background: '#ef4444', color: '#fff',
+                fontSize: '10px', fontWeight: 700,
+                minWidth: '16px', height: '16px',
+                borderRadius: '8px', display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+                padding: '0 4px', lineHeight: 1,
+                boxShadow: '0 0 0 2px #0f172a',
+                animation: 'pulse 1.5s ease infinite'
+              }}>
+                {unreadCount > 99 ? '99+' : unreadCount}
+              </span>
+            )}
           </button>
 
           {/* Notification Popover Dropdown */}
           {isNotifOpen && (
-            <div 
-              style={{
-                position: 'absolute',
-                top: '46px',
-                right: '0',
-                width: '360px',
-                maxHeight: '480px',
-                background: '#0f172a',
-                border: '1px solid #1e293b',
-                borderRadius: '12px',
-                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4)',
-                zIndex: 999,
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden'
-              }}
-            >
-              {/* Dropdown Header */}
+            <div className="notification-popover">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#1e293b', borderBottom: '1px solid #334155' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Bell size={16} style={{ color: '#38bdf8' }} />
@@ -178,7 +282,14 @@ const Header = ({ toggleSidebar, user, onUpdateUser, onOpenProfile }) => {
                     </span>
                   )}
                 </div>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  <button
+                    onClick={() => setSoundEnabled(v => !v)}
+                    title={soundEnabled ? 'Tắt âm thanh cảnh báo' : 'Bật âm thanh cảnh báo'}
+                    style={{ background: 'none', border: 'none', color: soundEnabled ? '#38bdf8' : '#475569', cursor: 'pointer', padding: '2px', display: 'flex', alignItems: 'center' }}
+                  >
+                    {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
+                  </button>
                   {unreadCount > 0 && (
                     <button 
                       onClick={markAllAsRead}

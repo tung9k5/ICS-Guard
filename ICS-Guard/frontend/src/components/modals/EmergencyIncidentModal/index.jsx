@@ -19,6 +19,7 @@ import {
   Server,
   ShieldAlert,
   Wifi,
+  X,
 } from 'lucide-react';
 import incidentApi from '@/api/incidents';
 import http from '@/api/httpClient';
@@ -76,6 +77,7 @@ const ResponseWorkspace = ({
   onNextIncident,
   currentIndex,
   totalIncidents,
+  onCloseModal,
 }) => {
   const incident = responseCase?.incident;
   const device = responseCase?.device;
@@ -99,7 +101,7 @@ const ResponseWorkspace = ({
   const recoveryRecorded = timeline.some(event => event?.metadata?.command_type === 'rollback' && event?.metadata?.status === 'succeeded');
   const restored = (responseCase?.recoveryCompleted === true || recoveryRecorded) && ['normal', 'active', 'online'].includes(deviceStatus);
 
-  const [isDocked, setIsDocked] = useState(true);
+  const [isDocked, setIsDocked] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const [acknowledged, setAcknowledged] = useState(false);
@@ -210,25 +212,7 @@ const ResponseWorkspace = ({
     }
   };
 
-  if (!visible) return null;
-
-  if (isDocked) {
-    return (
-      <div className="incident-dock-wrap">
-        <button className={`incident-dock severity-${severity.toLowerCase()}`} onClick={() => setIsDocked(false)} aria-expanded="false" aria-label={`Mở trung tâm ứng phó sự cố ${severity} trên ${device?.name || deviceId || 'thiết bị OT'}`}>
-          <ShieldAlert size={20} />
-          <span><strong>{severity}</strong><small>{device?.name || deviceId || 'Thiết bị OT'}</small></span>
-          <em>Bước {currentPhase + 1}/5</em>
-          {totalIncidents > 0 && (
-            <span style={{ background: '#ef4444', color: '#fff', padding: '2px 8px', borderRadius: '10px', fontSize: '11px', fontWeight: 700, marginLeft: '6px' }}>
-              {totalIncidents} sự cố đang tồn tại
-            </span>
-          )}
-          <ChevronRight size={18} />
-        </button>
-      </div>
-    );
-  }
+  if (!visible || isDocked) return null;
 
   const handleAcceptIncidentClick = async () => {
     try {
@@ -299,7 +283,7 @@ const ResponseWorkspace = ({
               </div>
             )}
             <button onClick={() => setIsExpanded(value => !value)} aria-label={isExpanded ? 'Thu gọn workspace' : 'Mở rộng workspace'}>{isExpanded ? <Minimize2 size={18}/> : <Maximize2 size={18}/>}</button>
-            <button onClick={() => setIsDocked(true)} aria-label="Thu nhỏ thành Incident Dock"><Minimize2 size={18}/></button>
+            <button onClick={() => { setIsDocked(false); onCloseModal?.(); }} aria-label="Đóng TRUNG TÂM ỨNG PHÓ SỰ CỐ" title="Đóng cửa sổ"><X size={18}/></button>
           </div>
         </header>
 

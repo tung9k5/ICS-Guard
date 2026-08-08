@@ -601,8 +601,8 @@ const DeviceManagement = () => {
     <div className="device-management-page">
       <div className="topology-header">
         <div className="title-section">
-          <h1 style={{ color: '#000000', fontWeight: 800 }}>Sơ đồ & Cấu hình Thiết bị IoT (Topology)</h1>
-          <p style={{ color: '#000000', fontWeight: 700 }}>Quản trị Tài sản & Thiết bị theo cấu trúc mạng ICS/SCADA phân cấp.</p>
+          <h1>Sơ đồ & Cấu hình Thiết bị IoT (Topology)</h1>
+          <p>Quản trị Tài sản & Thiết bị theo cấu trúc mạng ICS/SCADA phân cấp.</p>
         </div>
         <div className="topology-header-actions">
           <button className="refresh-btn" onClick={() => fetchDevices(false)} title="Làm mới sơ đồ">

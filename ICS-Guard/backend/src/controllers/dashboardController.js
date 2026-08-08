@@ -97,10 +97,13 @@ export const getRiskStatus = async (req, res) => {
       });
     }
 
+    // averageRisk = trung bình toàn hệ thống (kể cả device an toàn có score 0)
     const totalRisk = devices.reduce((sum, dev) => sum + (dev.risk_score || 0), 0);
     const averageRisk = Math.round((totalRisk / devices.length) * 10) / 10;
 
+    // topDevices = chỉ thiết bị nguy cơ cao (risk_score >= 30), sắp xếp giảm dần
     const topDevices = [...devices]
+      .filter(dev => (dev.risk_score || 0) >= 30)
       .sort((a, b) => (b.risk_score || 0) - (a.risk_score || 0))
       .slice(0, 5);
 

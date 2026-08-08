@@ -1,7 +1,72 @@
 .playbook-page {
+  min-height: 100%;
+  padding: 0;
+  color: var(--text-primary, #f8fafc);
+  background: transparent;
+
+  .playbook-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-subtle, #1e293b);
+    padding-bottom: 14px;
+
+    h2 {
+      margin: 0;
+      color: var(--text-primary, #f8fafc);
+      font-size: 20px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      .accent-icon {
+        color: var(--accent-primary, #38bdf8);
+      }
+    }
+
+    p {
+      margin: 4px 0 0;
+      color: var(--text-muted, #94a3b8);
+      font-size: 13px;
+    }
+  }
+
+  .playbook-card-container {
+    background: var(--surface-primary, #0f172a);
+    border: 1px solid var(--border-primary, #27354d);
+    border-radius: var(--radius-lg, 8px);
+    overflow: hidden;
+    padding: 0;
+  }
+
   table {
-    td, th {
-      border: none;
+    width: 100%;
+    border-collapse: collapse;
+
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted, #94a3b8);
+      text-transform: uppercase;
+      background: var(--surface-secondary, #131d33);
+      border-bottom: 1px solid var(--border-subtle, #1e293b);
+    }
+
+    td {
+      padding: 12px 16px;
+      font-size: 13px;
+      border-bottom: 1px solid var(--border-subtle, #1e293b);
+      color: var(--text-primary, #f8fafc);
+      vertical-align: middle;
+    }
+
+    tr:hover td {
+      background: var(--surface-hover, #1e293b);
     }
   }
 }

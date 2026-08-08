@@ -1,8 +1,5 @@
 import { Device, Alert } from '../models/index.js';
-import cveService from './cveService.js';
 import socketService from './socketService.js';
-
-const AI_ENGINE_URL = process.env.AI_ENGINE_URL || 'http://ai-engine:5000';
 
 /**
  * Tính toán và cập nhật điểm rủi ro cho một thiết bị
@@ -18,8 +15,6 @@ export const calculateAndUpdateRiskScore = async (deviceId) => {
       return 0;
     }
 
-    // 2. Lấy danh sách CVE tiềm ẩn từ cveService
-    const keyword = device.hardware_model || device.hardwareModel || device.node_type || device.type || 'PLC';
     const cvesRaw = await cveService.fetchDeviceCves(keyword);
 
     // Chuẩn hóa danh sách CVE theo Pydantic schema
@@ -171,8 +166,35 @@ export const calculateAndUpdateRiskScore = async (deviceId) => {
   }
 };
 
+/**
+ * Đặt risk_score = 100 ngay khi thiết bị bị tấn công / có incident mới.
+ * Gọi hàm này khi tạo Alert/Incident mới cho một thiết bị.
+ * @param {string} deviceId
+ */
+export const setRiskScoreOnAttack = async (deviceId) => {
+  try {
+    const device = await Device.findById(deviceId);
+    if (!device) return;
+    // Thiết bị chưa từng bị tấn công có risk_score = 0;
+    // Khi có sự cố, điểm nhảy lên 100 ngay lập tức.
+    if (device.risk_score >= 100) return; // Already at max
+    device.risk_score = 100;
+    await device.save();
+
+    const io = socketService.getIo();
+    if (io) {
+      io.emit('DEVICE_RISK_UPDATED', { device_id: String(deviceId), risk_score: 100, reason: 'attack_detected' });
+      io.emit('DEVICE_SYNC', { action: 'update', device });
+    }
+    console.log(`[RiskService] setRiskScoreOnAttack: device ${deviceId} risk_score set to 100.`);
+  } catch (err) {
+    console.error('[RiskService] setRiskScoreOnAttack error:', err.message);
+  }
+};
+
 export default {
-  calculateAndUpdateRiskScore
+  calculateAndUpdateRiskScore,
+  setRiskScoreOnAttack
 };
 
 // ===========================================================

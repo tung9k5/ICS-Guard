@@ -9,65 +9,61 @@ const ThreatActivityChart = ({ rawData = [] }) => {
   }
 
   const hours = Array.from({length: 24}, (_, i) => i);
-  // Rearrange days to start from Monday to Sunday for better UX, but let's stick to Sun-Sat (0-6)
   const days = [0, 1, 2, 3, 4, 5, 6];
   const maxCount = Math.max(...rawData.map(d => d.count), 1);
   
   const getColor = (count) => {
-    if (count === 0) return 'var(--gray-800)';
+    if (count === 0) return 'var(--surface-secondary, #131d33)';
     const intensity = count / maxCount;
-    if (intensity < 0.2) return '#7f1d1d'; // dark red
-    if (intensity < 0.5) return '#b91c1c'; // medium red
-    if (intensity < 0.8) return '#ef4444'; // red
-    return '#f87171'; // bright red
+    if (intensity < 0.25) return 'rgba(239, 68, 68, 0.25)';
+    if (intensity < 0.5) return 'rgba(239, 68, 68, 0.5)';
+    if (intensity < 0.75) return 'rgba(239, 68, 68, 0.75)';
+    return 'var(--severity-critical, #ef4444)';
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', minHeight: '300px', overflowX: 'auto', paddingBottom: '10px' }}>
-      <div style={{ display: 'flex', marginBottom: '8px' }}>
-        <div style={{ width: '40px' }}></div>
+    <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', minHeight: '220px', overflowX: 'auto', paddingBottom: '6px' }}>
+      <div style={{ display: 'flex', marginBottom: '6px' }}>
+        <div style={{ width: '36px' }}></div>
         {hours.map(h => (
-          <div key={h} style={{ flex: 1, textAlign: 'center', fontSize: '11px', color: 'var(--gray-400)' }}>{h}h</div>
+          <div key={h} style={{ flex: 1, textAlign: 'center', fontSize: '10px', color: 'var(--text-muted, #94a3b8)', fontFamily: "'JetBrains Mono', monospace" }}>{h}</div>
         ))}
       </div>
       {days.map(d => {
         const dayLabel = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d];
         return (
-          <div key={d} style={{ display: 'flex', marginBottom: '6px' }}>
-            <div style={{ width: '40px', fontSize: '12px', color: 'var(--gray-400)', display: 'flex', alignItems: 'center' }}>{dayLabel}</div>
+          <div key={d} style={{ display: 'flex', marginBottom: '4px' }}>
+            <div style={{ width: '36px', fontSize: '11px', color: 'var(--text-muted, #94a3b8)', display: 'flex', alignItems: 'center', fontWeight: 600 }}>{dayLabel}</div>
             {hours.map(h => {
               const cellData = rawData.find(x => x.dayIndex === d && x.hour === h) || { count: 0 };
               return (
                 <div 
                   key={h} 
-                  title={`${dayLabel} ${h}:00 - ${cellData.count} incidents`}
+                  title={`${dayLabel} ${h}:00 — ${cellData.count} incidents`}
                   style={{ 
                     flex: 1, 
-                    margin: '0 2px', 
+                    margin: '0 1px', 
                     backgroundColor: getColor(cellData.count), 
-                    borderRadius: '4px', 
-                    height: '32px',
-                    transition: 'all 0.2s ease',
+                    borderRadius: '3px', 
+                    height: '24px',
+                    transition: 'all 0.15s ease-out',
                     cursor: 'pointer',
-                    boxShadow: cellData.count > 0 ? '0 0 5px rgba(239, 68, 68, 0.2)' : 'none'
+                    border: '1px solid var(--border-subtle, #1e293b)'
                   }}
-                  onMouseOver={(e) => e.target.style.transform = 'scale(1.15)'}
-                  onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
                 />
-              )
+              );
             })}
           </div>
         );
       })}
       
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '16px', fontSize: '11px', color: 'var(--gray-400)', alignItems: 'center', gap: '8px' }}>
-        <span>Ít tấn công</span>
-        <div style={{ width: '12px', height: '12px', background: 'var(--gray-800)', borderRadius: '2px' }}></div>
-        <div style={{ width: '12px', height: '12px', background: '#7f1d1d', borderRadius: '2px' }}></div>
-        <div style={{ width: '12px', height: '12px', background: '#b91c1c', borderRadius: '2px' }}></div>
-        <div style={{ width: '12px', height: '12px', background: '#ef4444', borderRadius: '2px' }}></div>
-        <div style={{ width: '12px', height: '12px', background: '#f87171', borderRadius: '2px' }}></div>
-        <span>Nhiều tấn công</span>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px', fontSize: '11px', color: 'var(--text-muted, #94a3b8)', alignItems: 'center', gap: '6px' }}>
+        <span>Thấp</span>
+        <div style={{ width: '10px', height: '10px', background: 'var(--surface-secondary, #131d33)', borderRadius: '2px', border: '1px solid var(--border-subtle)' }}></div>
+        <div style={{ width: '10px', height: '10px', background: 'rgba(239, 68, 68, 0.25)', borderRadius: '2px' }}></div>
+        <div style={{ width: '10px', height: '10px', background: 'rgba(239, 68, 68, 0.5)', borderRadius: '2px' }}></div>
+        <div style={{ width: '10px', height: '10px', background: 'var(--severity-critical, #ef4444)', borderRadius: '2px' }}></div>
+        <span>Cao</span>
       </div>
     </div>
   );

@@ -12,7 +12,7 @@ import redisClient from '../config/redis.js';
 import ruleEngineService from './ruleEngineService.js';
 import { executePlaybook } from './playbookService.js';
 import { Device, Alert, Incident, IncidentTimeline } from '../models/index.js';
-import { calculateAndUpdateRiskScore } from './riskService.js';
+import { calculateAndUpdateRiskScore, setRiskScoreOnAttack } from './riskService.js';
 import { applyHardwareSnapshot } from './snapshotService.js';
 import { processCommandAck } from './commandService.js';
 import { processPolicyAck } from './otPolicyService.js';
@@ -329,30 +329,44 @@ const checkTelemetryAnomalies = async (payload) => {
         metadata: { payload }
       });
 
+      // Đặt risk_score = 100 khi có incident mới
+      setRiskScoreOnAttack(device_id).catch(() => {});
+
       // Phát sự kiện WebSocket
       socketService.emitNewAlert(alert);
       socketService.emitNewIncident(incident);
 
       // Smart Alert Routing
+      // Luôn gửi Telegram bất kể admin có online hay không
+      const alertText = [
+        `⚠️ *[CẢNH BÁO AN NINH: ${rule.rule_name}]*`,
+        ``,
+        `📌 Thiết bị: *${device_id}*`,
+        `🌐 Vùng: *${zone || 'unknown'}*`,
+        `🔴 Mức độ: *${rule.severity || 'HIGH'}*`,
+        `📄 Quy tắc vi phạm: *${rule.rule_name}*`,
+        `⏰ Thời điểm: ${new Date().toLocaleString('vi-VN')}`,
+        ``,
+        `ℹ️ Hãy đăng nhập ICS-Guard để xử lý sự cố.`
+      ].join('\n');
+      await sendTelegramAlert(alertText);
+
+      // Bổ sung vào emergency queue nếu admin đang trực tuyến
       const activeAdmins = getActiveAdminSessions();
       if (activeAdmins.length > 0) {
-        console.log(`[AlertRouter] Active Admins online: ${activeAdmins.join(', ')}. Suppressing email/Telegram, adding to Emergency Queue.`);
         addEmergencyAlert({
           device_id,
           attack_type: rule.rule_name,
-          message: `Thiết bị [${device_id}] vi phạm quy tắc [${rule.rule_name}] trong khi Admin [${activeAdmins.join(', ')}] đang trực tuyến!`,
+          message: `Thiết bị [${device_id}] vi phạm quỳ tắc [${rule.rule_name}]. Admin [​${activeAdmins.join(', ')}] đang trực.`,
           admin_users: activeAdmins
         });
-      } else {
-        console.log('[AlertRouter] No active Admins online. Sending notifications via Email and Telegram.');
-        const alertText = `🚨 *SECURITY ALERT: ${rule.rule_name}*\n\nDevice: *${device_id}*\nZone: *${zone || 'unknown'}*\nSeverity: *${rule.severity || 'HIGH'}*`;
-        await sendTelegramAlert(alertText);
-        await sendEmailAlert({
-          subject: `[ICS-GUARD ALERT] ${rule.rule_name} on ${device_id}`,
-          text: `Security Alert: Device ${device_id} in ${zone} violated rule ${rule.rule_name}.`,
-          html: `<p><strong>Security Alert:</strong> Device <strong>${device_id}</strong> in <strong>${zone}</strong> violated rule <strong>${rule.rule_name}</strong>.</p>`
-        });
       }
+
+      await sendEmailAlert({
+        subject: `[ICS-GUARD ALERT] ${rule.rule_name} on ${device_id}`,
+        text: `Security Alert: Device ${device_id} in ${zone} violated rule ${rule.rule_name}.`,
+        html: `<p><strong>Security Alert:</strong> Device <strong>${device_id}</strong> in <strong>${zone}</strong> violated rule <strong>${rule.rule_name}</strong>.</p>`
+      });
 
       // 4. Run automated playbooks for this rule
       await executePlaybook(rule.rule_name, device_id, { alert_id: alert._id });
@@ -432,6 +446,9 @@ const runAiClassification = async (payload) => {
               inference_at: new Date().toISOString(),
             }
           });
+
+          // Đặt risk_score = 100 khi AI phát hiện tấn công
+          setRiskScoreOnAttack(device_id).catch(() => {});
 
           socketService.emitNewAlert(alert);
           socketService.emitNewIncident(incident);
@@ -555,7 +572,18 @@ const processStructuredLogs = async (payload) => {
       });
 
       // Telegram / Email alerts
-      const alertText = `🚨 *CRITICAL SECURITY ALERT: ${rule_name}*\n\nDevice: *${device_id}*\nZone: *${zone || 'unknown'}*\nEvent: *${event}*\nMessage: _${message}_\nSeverity: *${severity}*`;
+      const alertText = [
+        `🚨 *[SỰ CỐ BẢO MẬT: ${rule_name}]*`,
+        ``,
+        `📌 Thiết bị: *${device_id}*`,
+        `🌐 Vùng: *${zone || 'unknown'}*`,
+        `⚡ Sự kiện: *${event}*`,
+        `📝 Chi tiết: _${message}_`,
+        `🔴 Mức độ: *${severity}*`,
+        `⏰ Thời điểm: ${new Date().toLocaleString('vi-VN')}`,
+        ``,
+        `ℹ️ Hãy đăng nhập ICS-Guard để xử lý sự cố.`
+      ].join('\n');
       sendTelegramAlert(alertText).catch(err => console.error('[MqttService] Telegram send error:', err));
       sendEmailAlert({
         subject: `[ICS-GUARD CRITICAL] ${rule_name} on ${device_id}`,
@@ -567,6 +595,9 @@ const processStructuredLogs = async (payload) => {
                <p><strong>Log Details:</strong> ${message}</p>
                <p><strong>Action Taken:</strong> Flagged in SOC Dashboard and registered for AI analysis.</p>`
       }).catch(err => console.error('[MqttService] Email send error:', err));
+
+      // Đặt risk_score = 100 khi phát hiện log bảo mật nghiêm trọng
+      setRiskScoreOnAttack(device_id).catch(() => {});
 
       // 4. Run automated playbooks for structured log anomaly
       await executePlaybook(rule_name, device_id, { alert_id: alert._id });
@@ -693,13 +724,22 @@ export async function processAttackCommand(payload) {
         });
       }
 
-      // Telegram Alert
-      const telegramButtons = [
-        { text: '🔒 Cô lập thiết bị', callback_data: `isolate_device:${device._id}` }
-      ];
-      const telegramText = `⚔️ *[CẢNH BÁO TẤN CÔNG MẠNG OT/ICS]*\n\nThiết bị: *${device.name}* (ID: \`${device._id}\`)\nVùng: *${device.zone || 'Zone-A'}*\nKịch bản tấn công: *${attackType.toUpperCase()}*\nĐịa chỉ IP: \`${device.ipAddress || '192.168.10.15'}\`\nTrạng thái: *QUARANTINED*\nMức độ: *CRITICAL*`;
+      // Telegram Alert — thông báo đươn thuần, không có button hành động
+      const telegramText = [
+        `⛔️ *[CẢNH BÁO TẤN CÔNG MẠNG OT/ICS]*`,
+        ``,
+        `📌 Thiết bị: *${device.name}*`,
+        `🌐 Vùng: *${device.zone || 'Zone-A'}*`,
+        `💥 Kiẻn trúc tấn công: *${attackType.toUpperCase()}*`,
+        `💻 Địa chỉ IP: \`${device.ipAddress || 'N/A'}\``,
+        `🚨 Trạng thái: *QUARANTINED*`,
+        `🔴 Mức độ: *CRITICAL*`,
+        `⏰ Thời điểm: ${new Date().toLocaleString('vi-VN')}`,
+        ``,
+        `ℹ️ Hãy đăng nhập ICS-Guard để xử lý sự cố.`
+      ].join('\n');
 
-      sendTelegramAlert(telegramText, telegramButtons, ['admin', 'analyst']).catch(err => {
+      sendTelegramAlert(telegramText, [], ['admin', 'analyst']).catch(err => {
         console.error('[MqttService] Telegram send error:', err.message);
       });
 

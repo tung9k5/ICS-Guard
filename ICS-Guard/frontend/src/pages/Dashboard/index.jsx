@@ -32,6 +32,7 @@ const Dashboard = () => {
   const [responseAction, setResponseAction] = useState('');
   const [activeCommand, setActiveCommand] = useState(null);
   const [commandPollingError, setCommandPollingError] = useState('');
+  const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState(false);
 
   const responseRequestRef = useRef(0);
   const commandPollAbortRef = useRef(null);
@@ -377,6 +378,7 @@ const Dashboard = () => {
       await incidentApi.verifyAndClose(incidentId, verificationPayload);
       toast.success('Sự cố đã được xác minh và đóng thành công.');
       setResponseCase(null);
+      setIsEmergencyModalOpen(false);
     } catch (error) {
       toast.error(error?.message || 'Không thể đóng sự cố.');
     } finally {
@@ -386,141 +388,239 @@ const Dashboard = () => {
 
   return (
     <div className="soc-dashboard-container">
-      {/* SOC Command Header */}
-      <div className="soc-header-summary">
-        <div className="soc-title-section">
-          <h1>Trung Tâm Giám Sát SOC & An Ninh Mạng Công Nghiệp (ICS/SCADA SOC)</h1>
-          <p>Hệ thống giám sát thời gian thực luồng dữ liệu Modbus TCP/S7comm, chỉ số đe dọa và điều khiển ứng phó sự cố.</p>
+      {/* Priority 1 — Immediate Security Command Strip */}
+      <div className="soc-command-strip">
+        <div className="command-metric-item">
+          <span className="metric-label">CHỈ SỐ RỦI RO (RISK INDEX)</span>
+          <div className="metric-value-wrap">
+            <span className={`risk-badge-pill ${getRiskClass(riskData.averageRisk)}`}>
+              {riskData.averageRisk}%
+            </span>
+            <span className="metric-subtext">{getRiskStatusText(riskData.averageRisk)}</span>
+          </div>
         </div>
+
+        <div className="command-metric-divider" />
+
+        <div className="command-metric-item">
+          <span className="metric-label">SỰ CỐ AN NINH HOẠT ĐỘNG</span>
+          <div className="metric-value-wrap">
+            <span className={`count-pill ${activeIncidentsList.length > 0 ? 'active-critical' : 'active-normal'}`}>
+              <ShieldAlert size={14} /> {activeIncidentsList.length} SỰ CỐ
+            </span>
+            <span className="metric-subtext">Cần xử lý tức thì</span>
+          </div>
+        </div>
+
+        <div className="command-metric-divider" />
+
+        <div className="command-metric-item">
+          <span className="metric-label">HẠ TẦNG GIÁM SÁT OT</span>
+          <div className="metric-value-wrap">
+            <span className="status-online-pill">
+              <span className="pulse-dot" /> OT-GUARD ACTIVE
+            </span>
+            <span className="metric-subtext">Modbus TCP / S7comm NIDS</span>
+          </div>
+        </div>
+
+        {activeIncidentsList.length > 0 && responseCase?.incident && (
+          <div className="command-strip-action">
+            <button 
+              className="btn-emergency-drawer-trigger"
+              onClick={() => {
+                fetchResponseCase({ skipLoading: true }, activeIncidentIndex);
+                setIsEmergencyModalOpen(true);
+              }}
+            >
+              <ShieldAlert size={14} /> ỨNG PHÓ KHẨN CẤP ({activeIncidentIndex + 1}/{activeIncidentsList.length})
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="soc-dashboard-grid">
-        {/* 1. Network Traffic Activity */}
-        <div className="soc-dashboard-card full-width">
-          <div className="soc-card-header">
-            <div className="icon-badge blue">
-              <Activity size={20} />
-            </div>
-            <div>
-              <h3>Lưu Lượng Truyền Tải Mạng OT (Network Traffic Stream)</h3>
-              <p className="card-subtitle">Tần suất và băng thông gói tin Modbus/S7comm 24h qua</p>
-            </div>
-          </div>
-          <div className="soc-card-body">
-            <NetworkTrafficChart data={networkData} />
-          </div>
-        </div>
-
-        {/* 2. Threat Activity Level */}
-        <div className="soc-dashboard-card">
-          <div className="soc-card-header">
-            <div className="icon-badge red">
-              <ShieldAlert size={20} />
-            </div>
-            <div>
-              <h3>Mức Độ Đe Dọa An Ninh (Threat Activity Level)</h3>
-              <p className="card-subtitle">Tần suất các vi phạm quy tắc NIDS phát hiện</p>
-            </div>
-          </div>
-          <div className="soc-card-body">
-            <ThreatActivityChart rawData={threatData} />
-          </div>
-        </div>
-
-        {/* 3. Average Network Risk */}
-        <div className="soc-dashboard-card">
-          <div className="soc-card-header">
-            <div className="icon-badge orange">
-              <Shield size={20} />
-            </div>
-            <div>
-              <h3>Chỉ Số Rủi Ro Mạng Lưới (Average Risk Level)</h3>
-              <p className="card-subtitle">Điểm tổng hợp độ nhạy rủi ro của toàn bộ tài sản OT</p>
-            </div>
-          </div>
-          <div className="soc-card-body risk-card-body">
-            <div className="risk-gauge-container">
-              <div className={`risk-value-circle ${getRiskClass(riskData.averageRisk)}`}>
-                <span className="risk-number">{riskData.averageRisk}</span>
-                <span className="risk-unit">%</span>
+      {/* Asymmetric Command-Center Layout (70% Primary / 30% Secondary) */}
+      <div className="soc-command-grid">
+        {/* Primary Workspace (Left Column — 70% Width) */}
+        <div className="soc-primary-column">
+          {/* Priority 2 — Critical Incidents Operational Queue */}
+          <div className="soc-panel surface-primary">
+            <div className="soc-panel-header">
+              <div className="panel-title-wrap">
+                <ShieldAlert size={16} className="title-icon critical-icon" />
+                <h2>Hàng Đợi Sự Cố An Ninh Khẩn Cấp (Active Security Incidents)</h2>
               </div>
+              <span className="panel-badge-count">{activeIncidentsList.length} sự cố</span>
             </div>
-            <div className="risk-info">
-              <div className={`risk-status-tag ${getRiskClass(riskData.averageRisk)}`}>
-                {getRiskStatusText(riskData.averageRisk)}
-              </div>
-              <p className="risk-subtext">Hệ thống phân tích rủi ro cập nhật thời gian thực từ NIDS và Nhật ký telemetry.</p>
-            </div>
-          </div>
-        </div>
 
-        {/* 4. System Health Status */}
-        <div className="soc-dashboard-card">
-          <div className="soc-card-header">
-            <div className="icon-badge green">
-              <HeartPulse size={20} />
-            </div>
-            <div>
-              <h3>Trạng Thái Sức Khỏe Hệ Thống (System Health Status)</h3>
-              <p className="card-subtitle">Tải CPU, Bộ nhớ RAM và Băng thông mạng SOC</p>
-            </div>
-          </div>
-          <div className="soc-card-body">
-            <SystemHealthChart rawData={healthData} />
-          </div>
-        </div>
-
-        {/* 5. Top 5 High-Risk Devices */}
-        <div className="soc-dashboard-card">
-          <div className="soc-card-header">
-            <div className="icon-badge purple">
-              <Server size={20} />
-            </div>
-            <div>
-              <h3>Thiết Bị Nguy Cơ Cao Hàng Đầu (Top High-Risk Assets)</h3>
-              <p className="card-subtitle">Các PLC/Gateway đang có điểm đe dọa cao nhất</p>
-            </div>
-          </div>
-          <div className="soc-card-body">
-            <table className="top-devices-table">
-              <thead>
-                <tr>
-                  <th>Tên thiết bị</th>
-                  <th>IP Address</th>
-                  <th>Phân vùng</th>
-                  <th>Rủi ro</th>
-                </tr>
-              </thead>
-              <tbody>
-                {riskData.topDevices && riskData.topDevices.length > 0 ? (
-                  riskData.topDevices.map((device, idx) => (
-                    <tr key={device._id || idx}>
-                      <td className="device-name-cell">
-                        <strong>{device.name}</strong>
-                      </td>
-                      <td><code>{device.ip_address || device.ipAddress}</code></td>
-                      <td><span className="zone-pill">{device.zone || 'Zone-A'}</span></td>
-                      <td>
-                        <span className={`risk-pill ${getRiskClass(device.risk_score)}`}>
-                          {device.risk_score || 0}%
-                        </span>
-                      </td>
+            <div className="soc-panel-body no-padding">
+              <div className="table-scroll-container">
+                <table className="v-table incident-queue-table">
+                  <thead>
+                    <tr>
+                      <th style={{ width: '120px' }}>Mức Độ</th>
+                      <th>Tên Sự Cố / Mã ID</th>
+                      <th style={{ width: '160px' }}>Mục Tiêu (IP)</th>
+                      <th style={{ width: '130px' }}>Trạng Thái</th>
+                      <th style={{ width: '140px' }}>Thời Gian</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="4" className="empty-table-cell">Hệ thống hoạt động an toàn, không có thiết bị nguy cơ cao.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {activeIncidentsList.length > 0 ? (
+                      activeIncidentsList.slice(0, 6).map((item, idx) => (
+                        <tr 
+                          key={item._id || item.id || idx} 
+                          className={idx === activeIncidentIndex ? 'selected-row' : ''}
+                          onClick={() => {
+                            fetchResponseCase({ skipLoading: true }, idx);
+                            setIsEmergencyModalOpen(true);
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          <td>
+                            <span className={`severity-badge ${getSeverityClass(item.severity || 'high')}`}>
+                              <ShieldAlert size={12} /> {String(item.severity || 'HIGH').toUpperCase()}
+                            </span>
+                          </td>
+                          <td className="truncate-cell" title={item.title || item.name || item._id}>
+                            <strong>{item.title || item.name || `INC-${String(item._id || '').slice(-6)}`}</strong>
+                          </td>
+                          <td>
+                            <span className="ip-address">
+                              {item.device_ip || item.target_ip || '192.168.10.100'}
+                            </span>
+                          </td>
+                          <td>
+                            <span className="status-tag">
+                              {String(item.status || 'UNASSIGNED').toUpperCase()}
+                            </span>
+                          </td>
+                          <td>
+                            <span className="timestamp-val">
+                              {new Date(item.created_at || item.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="5" className="empty-table-cell">
+                          <CheckCircle2 size={18} style={{ color: 'var(--status-success)', display: 'inline', marginRight: '6px' }} />
+                          Không có sự cố an ninh khẩn cấp nào cần xử lý. Hệ thống an toàn.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          {/* Priority 3 — OT Network Telemetry Stream */}
+          <div className="soc-panel surface-primary">
+            <div className="soc-panel-header">
+              <div className="panel-title-wrap">
+                <Activity size={16} className="title-icon accent-icon" />
+                <h2>Lưu Lượng Truyền Tải Mạng OT (24h Network Telemetry Stream)</h2>
+              </div>
+              <span className="panel-subtext">Modbus TCP / S7comm Packet Flow</span>
+            </div>
+            <div className="soc-panel-body">
+              <NetworkTrafficChart data={networkData} />
+            </div>
+          </div>
+        </div>
+
+        {/* Secondary Analysis Column (Right Column — 30% Width) */}
+        <div className="soc-secondary-column">
+          {/* Priority 4 — Threat Matrix */}
+          <div className="soc-panel surface-primary">
+            <div className="soc-panel-header">
+              <div className="panel-title-wrap">
+                <ShieldAlert size={16} className="title-icon critical-icon" />
+                <h2>Vi Phạm Quy Tắc NIDS (Threat Matrix)</h2>
+              </div>
+            </div>
+            <div className="soc-panel-body">
+              <ThreatActivityChart rawData={threatData} />
+            </div>
+          </div>
+
+          {/* Row: High-Risk OT Assets & System Health side-by-side */}
+          <div className="soc-panels-row">
+            {/* Top High-Risk OT Assets */}
+            <div className="soc-panel surface-primary">
+              <div className="soc-panel-header">
+                <div className="panel-title-wrap">
+                  <Server size={16} className="title-icon warning-icon" />
+                  <h2>Thiết Bị OT Nguy Cơ Cao</h2>
+                </div>
+                <span className="panel-subtext">Top Risk Assets</span>
+              </div>
+
+              <div className="soc-panel-body no-padding">
+                <div className="table-scroll-container">
+                  <table className="v-table top-devices-table">
+                    <thead>
+                      <tr>
+                        <th>Thiết Bị</th>
+                        <th style={{ width: '105px' }}>Địa Chỉ IP</th>
+                        <th style={{ width: '70px', textAlign: 'center' }}>Vùng</th>
+                        <th style={{ width: '80px', textAlign: 'right' }}>Điểm Risk</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {riskData.topDevices && riskData.topDevices.length > 0 ? (
+                        riskData.topDevices.map((device, idx) => (
+                          <tr key={device._id || idx}>
+                            <td className="device-name-cell" title={device.name}>
+                              <strong>{device.name}</strong>
+                            </td>
+                            <td>
+                              <span className="ip-address">
+                                {device.ip_address || device.ipAddress || '192.168.1.10'}
+                              </span>
+                            </td>
+                            <td style={{ textAlign: 'center' }}>
+                              <span className="zone-pill">{device.zone || 'Zone-A'}</span>
+                            </td>
+                            <td style={{ textAlign: 'right' }}>
+                              <span className={`risk-pill ${getRiskClass(device.risk_score)}`}>
+                                {device.risk_score || 0}%
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="4" className="empty-table-cell">Không có thiết bị nguy cơ cao.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* System Health */}
+            <div className="soc-panel surface-primary">
+              <div className="soc-panel-header">
+                <div className="panel-title-wrap">
+                  <HeartPulse size={16} className="title-icon success-icon" />
+                  <h2>Tải Hệ Thống SOC (System Health)</h2>
+                </div>
+              </div>
+              <div className="soc-panel-body">
+                <SystemHealthChart rawData={healthData} />
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Pop-up Modal Xử Lý Sự Cố Khẩn Cấp (Emergency Incident Command Drawer) */}
       <EmergencyIncidentModal
-        visible={Boolean(responseCase?.incident) && !['closed', 'resolved'].includes(String(responseCase?.incident?.status).toLowerCase())}
+        visible={isEmergencyModalOpen && Boolean(responseCase?.incident) && !['closed', 'resolved'].includes(String(responseCase?.incident?.status).toLowerCase())}
         responseCase={responseCase}
         responseLoading={responseLoading}
         responseAction={responseAction}
@@ -530,6 +630,7 @@ const Dashboard = () => {
         onAiRemediation={handleAiRemediation}
         onRestore={handleRestoreDevice}
         onCloseIncident={handleCloseIncident}
+        onCloseModal={() => setIsEmergencyModalOpen(false)}
         onAcceptIncident={() => fetchResponseCase({ skipLoading: true }, activeIncidentIndex)}
         onPrevIncident={activeIncidentsList.length > 1 ? () => fetchResponseCase({ skipLoading: true }, activeIncidentIndex - 1) : null}
         onNextIncident={activeIncidentsList.length > 1 ? () => fetchResponseCase({ skipLoading: true }, activeIncidentIndex + 1) : null}

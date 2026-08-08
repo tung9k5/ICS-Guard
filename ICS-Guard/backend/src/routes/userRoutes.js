@@ -4,6 +4,7 @@ import authMiddleware from '../middlewares/authMiddleware.js';
 import { authorize } from '../middlewares/rbacMiddleware.js';
 import auditLogger from '../middlewares/auditMiddleware.js';
 import { registerAdminHeartbeat } from '../services/sessionRegistry.js';
+import { sendTelegramAlert } from '../services/telegramService.js';
 
 const router = express.Router();
 
@@ -37,6 +38,25 @@ router.post('/heartbeat', (req, res) => {
     registerAdminHeartbeat(req.user.username);
   }
   return res.status(200).json({ status: 'ok' });
+});
+
+// POST /api/users/test-telegram - Test Telegram notification (admin only)
+router.post('/test-telegram', authorize(['admin']), async (req, res) => {
+  try {
+    const msg = [
+      `🧪 *[TEST THÔNG BÁO ICS-GUARD]*`,
+      ``,
+      `✅ Bot Telegram đang hoạt động bình thường.`,
+      `👤 Gửi bởi: *${req.user?.username || 'Admin'}*`,
+      `⏰ Thời điểm: ${new Date().toLocaleString('vi-VN')}`,
+      ``,
+      `ℹ️ Nếu bạn nhận được tin nhắn này, cấu hình Telegram đã hoạt động.`
+    ].join('\n');
+    const result = await sendTelegramAlert(msg, [], ['admin', 'analyst']);
+    return res.status(200).json({ success: true, result });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // POST /api/users - admin, hr_manager (Audited)

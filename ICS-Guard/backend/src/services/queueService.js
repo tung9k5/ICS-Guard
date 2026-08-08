@@ -1,5 +1,6 @@
 import amqp from 'amqplib';
 import { Alert, Incident, IncidentTimeline } from '../models/index.js';
+import { setRiskScoreOnAttack } from './riskService.js';
 
 let connection = null;
 let channel = null;
@@ -122,6 +123,11 @@ const startListeningToAiResponses = async () => {
               });
 
               console.log(`[QueueService] Successfully created Incident ${incident._id} based on AI Response.`);
+
+              // Đặt risk_score = 100 cho device khi AI phát hiện tấn công
+              if (alert.device_id) {
+                setRiskScoreOnAttack(String(alert.device_id)).catch(() => {});
+              }
             }
           }
 

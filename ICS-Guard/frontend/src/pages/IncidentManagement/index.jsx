@@ -113,10 +113,24 @@ const IncidentManagement = ({ initialTab = 'war-room' }) => {
       });
     };
 
+    // Cập nhật devicesMap khi risk score thay đổi (real-time cho logic ẩn cột 4)
+    const handleDeviceRiskUpdated = ({ device_id, risk_score }) => {
+      if (!device_id) return;
+      setDevicesMap(prev => {
+        const updated = { ...prev };
+        const key = String(device_id);
+        if (updated[key]) {
+          updated[key] = { ...updated[key], risk_score };
+        }
+        return updated;
+      });
+    };
+
     if (socket) {
       socket.on('INCIDENT_CREATED', handleNewIncident);
       socket.on('NEW_INCIDENT', handleNewIncident);
       socket.on('INCIDENT_UPDATED', handleIncidentUpdated);
+      socket.on('DEVICE_RISK_UPDATED', handleDeviceRiskUpdated);
     }
 
     return () => {
@@ -124,6 +138,7 @@ const IncidentManagement = ({ initialTab = 'war-room' }) => {
         socket.off('INCIDENT_CREATED', handleNewIncident);
         socket.off('NEW_INCIDENT', handleNewIncident);
         socket.off('INCIDENT_UPDATED', handleIncidentUpdated);
+        socket.off('DEVICE_RISK_UPDATED', handleDeviceRiskUpdated);
       }
     };
   }, []);
@@ -278,6 +293,18 @@ const IncidentManagement = ({ initialTab = 'war-room' }) => {
     if (!inc) return false;
     // Hide ONLY when explicitly confirmed fully safe in Stage 4 (Mark Fully Safe)
     if (inc.is_fully_safe_hidden === true || inc.is_fully_safe === true) return false;
+
+    // Ẩn thẻ khỏi cột "4. Đã Khôi Phục" khi risk_score của device liên quan < 30
+    const st = String(inc.status || 'unassigned').toLowerCase();
+    if (st === 'closed' || st === 'remediated' || st === 'resolved') {
+      const devId = getIncidentDeviceId(inc);
+      const deviceObj = devId ? devicesMap[devId] : null;
+      if (deviceObj) {
+        const score = Number(deviceObj.risk_score ?? 0);
+        if (score < 30) return false;
+      }
+    }
+
     return true;
   };
 
@@ -291,15 +318,15 @@ const IncidentManagement = ({ initialTab = 'war-room' }) => {
   }, [incidents, devicesMap]);
 
   return (
-    <div className="unified-warroom-page" style={{ padding: '16px 24px', background: '#090d16', minHeight: 'calc(100vh - 70px)', color: '#f8fafc' }}>
+    <div className="unified-warroom-page" style={{ padding: '0', minHeight: '100%', color: 'var(--text-primary, #f8fafc)' }}>
       {/* Compact Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', background: 'rgba(15,23,42,0.8)', border: '1px solid rgba(59,130,246,0.2)', padding: '12px 18px', borderRadius: '10px', backdropFilter: 'blur(10px)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', background: 'var(--surface-primary, #0f172a)', border: '1px solid var(--border-primary, #27354d)', padding: '12px 18px', borderRadius: 'var(--radius-lg, 8px)' }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '8px', color: '#fff' }}>
-            <ShieldAlert size={20} color="#ef4444" />
+          <h1 style={{ margin: 0, fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-primary, #fff)' }}>
+            <ShieldAlert size={20} color="var(--severity-critical, #ef4444)" />
             Trung Tâm SOC & Tác Chiến OT (Unified War Room)
           </h1>
-          <p style={{ margin: '2px 0 0', color: '#94a3b8', fontSize: '0.8rem' }}>
+          <p style={{ margin: '2px 0 0', color: 'var(--text-muted, #94a3b8)', fontSize: '0.8rem' }}>
             Kanban 4 giai đoạn & PCAP Forensics Vault — Cập nhật real-time qua WebSocket
           </p>
         </div>

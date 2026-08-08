@@ -21,20 +21,20 @@ const NavGroup = ({ title, icon: Icon, children, collapsed, pathPrefixes }) => {
   return (
     <div className={'nav-group ' + (isOpen ? 'open' : '') + (isActiveGroup ? ' active-group' : '')}>
       <button
-        className={'nav-item nav-group-header ' + (isActiveGroup && collapsed ? 'active' : '')}
+        className={'nav-item nav-group-header ' + (isActiveGroup ? 'active-group' : '')}
         onClick={() => setIsOpen(!isOpen)}
-        style={{ justifyContent: 'space-between', width: '100%', background: 'transparent', border: 'none' }}
+        title={title}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Icon size={20} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Icon size={18} />
           {!collapsed && <span>{title}</span>}
         </div>
         {!collapsed && (
-          isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />
+          isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />
         )}
       </button>
       {(!collapsed && isOpen) && (
-        <div className="nav-group-content" style={{ paddingLeft: '32px' }}>
+        <div className="nav-group-content">
           {children}
         </div>
       )}
@@ -93,7 +93,7 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, collapsed, setCollapsed }) =
             <Viewlogo
               animate={false}
               className="logo-icon"
-              style={{ width: '40px', height: '40px', cursor: 'pointer', objectFit: 'cover' }}
+              style={{ width: '32px', height: '32px', cursor: 'pointer', objectFit: 'contain' }}
               onClick={() => setIsFullscreenLogo(true)}
             />
             <span className="logo-text">ICS Guard</span>
@@ -102,63 +102,63 @@ const Sidebar = ({ isSidebarOpen, setIsSidebarOpen, collapsed, setCollapsed }) =
             className="close-sidebar-btn"
             onClick={() => setIsSidebarOpen(false)}
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         <nav className="sidebar-nav">
-          <NavLink to="/" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} end onClick={handleClose}>
-            <LayoutDashboard size={20} />
+          <NavLink to="/" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} end onClick={handleClose} title={t('layout.sidebar.overview')}>
+            <LayoutDashboard size={18} />
             <span>{t('layout.sidebar.overview')}</span>
           </NavLink>
 
           {canAccess(['analyst']) && (
             <NavGroup title={t('sidebar.security_group', 'An ninh & Sự cố')} icon={Shield} collapsed={!isSidebarOpen} pathPrefixes={['/incident-management', '/alert-management', '/rule-management', '/threat-intel']}>
-              <NavLink to="/incident-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '8px 12px', minHeight: '40px' }}>
-                <ShieldAlert size={18} />
-                <span style={{ fontSize: '13px' }}>Quản lý Sự cố & Cảnh báo</span>
+              <NavLink to="/incident-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} title="Quản lý Sự cố & Cảnh báo">
+                <ShieldAlert size={16} />
+                <span>Quản lý Sự cố & Cảnh báo</span>
               </NavLink>
-              <NavLink to="/threat-intel" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '8px 12px', minHeight: '40px' }}>
-                <Crosshair size={18} />
-                <span style={{ fontSize: '13px' }}>Threat Intelligence</span>
+              <NavLink to="/threat-intel" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} title="Threat Intelligence">
+                <Crosshair size={16} />
+                <span>Threat Intelligence</span>
               </NavLink>
-              <NavLink to="/rule-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '8px 12px', minHeight: '40px' }}>
-                <ClipboardList size={18} />
-                <span style={{ fontSize: '13px' }}>{t('sidebar.rule_management', 'Quy tắc')}</span>
+              <NavLink to="/rule-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} title={t('sidebar.rule_management', 'Quy tắc')}>
+                <ClipboardList size={16} />
+                <span>{t('sidebar.rule_management', 'Quy tắc')}</span>
               </NavLink>
             </NavGroup>
           )}
 
           {canAccess(['device_management']) && (
             <NavGroup title={t('sidebar.system_group', 'Hệ thống & Thiết bị')} icon={Server} collapsed={!isSidebarOpen} pathPrefixes={['/device-management', '/ot-zone-matrix']}>
-              <NavLink to="/device-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '8px 12px', minHeight: '40px' }}>
-                <Server size={18} />
-                <span style={{ fontSize: '13px' }}>{t('layout.sidebar.assets', 'Thiết bị OT')}</span>
+              <NavLink to="/device-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} title={t('layout.sidebar.assets', 'Thiết bị OT')}>
+                <Server size={16} />
+                <span>{t('layout.sidebar.assets', 'Thiết bị OT')}</span>
               </NavLink>
-              <NavLink to="/ot-zone-matrix" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '8px 12px', minHeight: '40px' }}>
-                <Activity size={18} />
-                <span style={{ fontSize: '13px' }}>An ninh Phân vùng</span>
+              <NavLink to="/ot-zone-matrix" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} title="An ninh Phân vùng">
+                <Activity size={16} />
+                <span>An ninh Phân vùng</span>
               </NavLink>
             </NavGroup>
           )}
 
           {canAccess(['hr_management']) && (
             <NavGroup title={t('sidebar.admin_group', 'Quản trị hệ thống')} icon={Settings} collapsed={!isSidebarOpen} pathPrefixes={['/user-management', '/audit-management']}>
-              <NavLink to="/user-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '8px 12px', minHeight: '40px' }}>
-                <User size={18} />
-                <span style={{ fontSize: '13px' }}>{t('layout.sidebar.users', 'Người dùng')}</span>
+              <NavLink to="/user-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} title={t('layout.sidebar.users', 'Người dùng')}>
+                <User size={16} />
+                <span>{t('layout.sidebar.users', 'Người dùng')}</span>
               </NavLink>
-              <NavLink to="/audit-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} style={{ padding: '8px 12px', minHeight: '40px' }}>
-                <FileText size={18} />
-                <span style={{ fontSize: '13px' }}>{t('layout.sidebar.audit', 'Nhật ký hệ thống')}</span>
+              <NavLink to="/audit-management" className={({ isActive }) => 'nav-item ' + (isActive ? 'active' : '')} onClick={handleClose} title={t('layout.sidebar.audit', 'Nhật ký hệ thống')}>
+                <FileText size={16} />
+                <span>{t('layout.sidebar.audit', 'Nhật ký hệ thống')}</span>
               </NavLink>
             </NavGroup>
           )}
         </nav>
 
         <div className="sidebar-footer">
-          <button className="nav-item logout-btn" onClick={handleLogout}>
-            <LogOut size={20} />
+          <button className="nav-item logout-btn" onClick={handleLogout} title={t('layout.sidebar.logout')}>
+            <LogOut size={18} />
             <span>{t('layout.sidebar.logout')}</span>
           </button>
         </div>

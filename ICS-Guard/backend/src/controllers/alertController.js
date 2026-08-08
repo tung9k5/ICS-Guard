@@ -3,6 +3,7 @@ import { formatPagination } from '../utils/pagination.js';
 import { successResponse, errorResponse, paginatedResponse } from '../utils/response.js';
 import { issueSecurityCommand } from '../services/commandService.js';
 import { generatePhysicalPcapFile } from '../utils/pcapGenerator.js';
+import { setRiskScoreOnAttack } from '../services/riskService.js';
 
 export const getAllAlerts = async (req, res) => {
   try {
@@ -113,6 +114,11 @@ export const updateAlertStatus = async (req, res) => {
         updateData.incident_id = newIncident._id;
         updateData.resolved_at = new Date();
         updateData.resolved_by = req.user ? req.user.username : 'system';
+
+        // Đặt risk_score = 100 cho device khi alert được escalate thành incident
+        if (existingAlert.device_id) {
+          setRiskScoreOnAttack(String(existingAlert.device_id)).catch(() => {});
+        }
       }
     } else {
       updateData.resolved_at = null;
